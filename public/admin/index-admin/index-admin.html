@@ -40,7 +40,6 @@
             display: flex;
             flex-direction: column;
         }
-        /* Navbar */
         .dashboard-nav {
             display: flex;
             justify-content: space-between;
@@ -92,7 +91,6 @@
             background: #c82333;
             transform: translateY(-2px);
         }
-        /* Conteneur principal */
         .container {
             max-width: 1200px;
             margin: 30px auto;
@@ -120,7 +118,7 @@
             margin-bottom: 5px;
             color: var(--primary-dark);
         }
-        input {
+        input, textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid var(--light-gray);
@@ -270,7 +268,6 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-        /* Footer */
         .dashboard-footer {
             background: #050505;
             color: white;
@@ -331,24 +328,7 @@
         </div>
     </nav>
 
-    <div class="container" id="app">
-        <!-- Le contenu sera injecté dynamiquement -->
-        <div class="login-container">
-            <h2>Authentification requise</h2>
-            <form id="loginForm" class="login-form">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="email" required placeholder="adminpublic.hubisoccer@gmail.com">
-                </div>
-                <div class="form-group">
-                    <label>Mot de passe</label>
-                    <input type="password" id="password" required placeholder="••••••••">
-                </div>
-                <button type="submit">Se connecter</button>
-                <div id="loginError" class="error-msg"></div>
-            </form>
-        </div>
-    </div>
+    <div class="container" id="app"></div>
 
     <footer class="dashboard-footer">
         <div class="footer-content">
@@ -372,12 +352,12 @@
     <script>
         const SUPABASE_URL = 'https://qdqkmsetcmtkdvilpwax.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkcWttc2V0Y210a2R2aWxwd2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzAyMTMsImV4cCI6MjA4OTg0NjIxM30.S_9XeKGsFVu6tP129HvswIJTwkDmbwZUkjL01l8MDvk';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseAdminPublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
         const app = document.getElementById('app');
 
         async function checkAuth() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseAdminPublic.auth.getSession();
             if (session) {
                 currentUser = session.user;
                 showAdminPanel();
@@ -414,7 +394,7 @@
                 btn.innerHTML = '<span class="spinner"></span> Connexion...';
                 btn.disabled = true;
 
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                const { error } = await supabaseAdminPublic.auth.signInWithPassword({ email, password });
                 if (error) {
                     errorDiv.textContent = error.message;
                     btn.innerHTML = 'Se connecter';
@@ -477,7 +457,7 @@
                 </div>
             `;
 
-            // Gestion des onglets
+            // Onglets
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -487,17 +467,14 @@
                 });
             });
 
-            // Chargement initial
             loadEngagements();
             loadRoles();
             loadStades();
 
-            // Rafraîchissements
             document.getElementById('refreshEngagements').addEventListener('click', loadEngagements);
             document.getElementById('refreshRoles').addEventListener('click', loadRoles);
             document.getElementById('refreshStades').addEventListener('click', loadStades);
 
-            // Formulaires
             document.getElementById('addEngagementForm').addEventListener('submit', addEngagement);
             document.getElementById('addRoleForm').addEventListener('submit', addRole);
             document.getElementById('addStadeForm').addEventListener('submit', addStade);
@@ -513,7 +490,7 @@
         }
 
         async function loadEngagements() {
-            const { data, error } = await supabase.from('public_data.engagements').select('*').order('order', { ascending: true });
+            const { data, error } = await supabaseAdminPublic.from('public_data.engagements').select('*').order('order', { ascending: true });
             if (error) { showMessage('Erreur chargement engagements', 'error'); return; }
             const container = document.getElementById('engagementsList');
             if (!data.length) { container.innerHTML = '<p>Aucun engagement</p>'; return; }
@@ -533,14 +510,14 @@
         }
 
         window.editEngagement = async (id) => {
-            const { data } = await supabase.from('public_data.engagements').select('*').eq('id', id).single();
+            const { data } = await supabaseAdminPublic.from('public_data.engagements').select('*').eq('id', id).single();
             if (!data) return;
             const newTitle = prompt('Nouveau titre', data.title);
             if (newTitle === null) return;
             const newDesc = prompt('Nouvelle description', data.description);
             const newIcon = prompt('Icône', data.icon);
             const newOrder = prompt('Ordre', data.order);
-            const { error } = await supabase.from('public_data.engagements').update({
+            const { error } = await supabaseAdminPublic.from('public_data.engagements').update({
                 title: newTitle,
                 description: newDesc,
                 icon: newIcon,
@@ -552,7 +529,7 @@
 
         window.deleteEngagement = async (id) => {
             if (!confirm('Supprimer définitivement ?')) return;
-            const { error } = await supabase.from('public_data.engagements').delete().eq('id', id);
+            const { error } = await supabaseAdminPublic.from('public_data.engagements').delete().eq('id', id);
             if (error) showMessage('Erreur suppression', 'error');
             else { showMessage('Supprimé', 'success'); loadEngagements(); }
         };
@@ -563,7 +540,7 @@
             const description = document.getElementById('engDesc').value;
             const icon = document.getElementById('engIcon').value;
             const order = parseInt(document.getElementById('engOrder').value) || 0;
-            const { error } = await supabase.from('public_data.engagements').insert({ title, description, icon, order });
+            const { error } = await supabaseAdminPublic.from('public_data.engagements').insert({ title, description, icon, order });
             if (error) showMessage('Erreur ajout: ' + error.message, 'error');
             else {
                 showMessage('Engagement ajouté', 'success');
@@ -573,7 +550,7 @@
         }
 
         async function loadRoles() {
-            const { data, error } = await supabase.from('public_data.roles').select('*').order('order', { ascending: true });
+            const { data, error } = await supabaseAdminPublic.from('public_data.roles').select('*').order('order', { ascending: true });
             if (error) { showMessage('Erreur chargement rôles', 'error'); return; }
             const container = document.getElementById('rolesList');
             if (!data.length) { container.innerHTML = '<p>Aucun rôle</p>'; return; }
@@ -593,14 +570,14 @@
         }
 
         window.editRole = async (id) => {
-            const { data } = await supabase.from('public_data.roles').select('*').eq('id', id).single();
+            const { data } = await supabaseAdminPublic.from('public_data.roles').select('*').eq('id', id).single();
             if (!data) return;
             const newTitle = prompt('Nouveau titre', data.title);
             if (newTitle === null) return;
             const newDesc = prompt('Nouvelle description', data.description);
             const newIcon = prompt('Icône', data.icon);
             const newOrder = prompt('Ordre', data.order);
-            const { error } = await supabase.from('public_data.roles').update({
+            const { error } = await supabaseAdminPublic.from('public_data.roles').update({
                 title: newTitle,
                 description: newDesc,
                 icon: newIcon,
@@ -612,7 +589,7 @@
 
         window.deleteRole = async (id) => {
             if (!confirm('Supprimer définitivement ?')) return;
-            const { error } = await supabase.from('public_data.roles').delete().eq('id', id);
+            const { error } = await supabaseAdminPublic.from('public_data.roles').delete().eq('id', id);
             if (error) showMessage('Erreur suppression', 'error');
             else { showMessage('Supprimé', 'success'); loadRoles(); }
         };
@@ -623,7 +600,7 @@
             const description = document.getElementById('roleDesc').value;
             const icon = document.getElementById('roleIcon').value;
             const order = parseInt(document.getElementById('roleOrder').value) || 0;
-            const { error } = await supabase.from('public_data.roles').insert({ title, description, icon, order });
+            const { error } = await supabaseAdminPublic.from('public_data.roles').insert({ title, description, icon, order });
             if (error) showMessage('Erreur ajout: ' + error.message, 'error');
             else {
                 showMessage('Rôle ajouté', 'success');
@@ -633,7 +610,7 @@
         }
 
         async function loadStades() {
-            const { data, error } = await supabase.from('public_data.stades').select('*').order('order', { ascending: true });
+            const { data, error } = await supabaseAdminPublic.from('public_data.stades').select('*').order('order', { ascending: true });
             if (error) { showMessage('Erreur chargement stades', 'error'); return; }
             const container = document.getElementById('stadesList');
             if (!data.length) { container.innerHTML = '<p>Aucun stade</p>'; return; }
@@ -655,9 +632,9 @@
         async function uploadStadeImage(file) {
             const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}.${fileExt}`;
-            const { error } = await supabase.storage.from('public_images').upload(fileName, file);
+            const { error } = await supabaseAdminPublic.storage.from('public_images').upload(fileName, file);
             if (error) throw error;
-            const { data: urlData } = supabase.storage.from('public_images').getPublicUrl(fileName);
+            const { data: urlData } = supabaseAdminPublic.storage.from('public_images').getPublicUrl(fileName);
             return urlData.publicUrl;
         }
 
@@ -676,7 +653,7 @@
                     return;
                 }
             }
-            const { error } = await supabase.from('public_data.stades').insert({ name, description, image_url: imageUrl, order });
+            const { error } = await supabaseAdminPublic.from('public_data.stades').insert({ name, description, image_url: imageUrl, order });
             if (error) showMessage('Erreur ajout: ' + error.message, 'error');
             else {
                 showMessage('Stade ajouté', 'success');
@@ -686,7 +663,7 @@
         }
 
         window.editStade = async (id) => {
-            const { data } = await supabase.from('public_data.stades').select('*').eq('id', id).single();
+            const { data } = await supabaseAdminPublic.from('public_data.stades').select('*').eq('id', id).single();
             if (!data) return;
             const newName = prompt('Nouveau nom', data.name);
             if (newName === null) return;
@@ -714,7 +691,7 @@
                 return;
             }
             async function updateStade() {
-                const { error } = await supabase.from('public_data.stades').update({
+                const { error } = await supabaseAdminPublic.from('public_data.stades').update({
                     name: newName,
                     description: newDesc,
                     image_url: newImageUrl,
@@ -731,7 +708,7 @@
 
         window.deleteStade = async (id) => {
             if (!confirm('Supprimer définitivement ?')) return;
-            const { error } = await supabase.from('public_data.stades').delete().eq('id', id);
+            const { error } = await supabaseAdminPublic.from('public_data.stades').delete().eq('id', id);
             if (error) showMessage('Erreur suppression', 'error');
             else {
                 showMessage('Supprimé', 'success');
@@ -750,7 +727,7 @@
         }
 
         document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await supabase.auth.signOut();
+            await supabaseAdminPublic.auth.signOut();
             checkAuth();
         });
 

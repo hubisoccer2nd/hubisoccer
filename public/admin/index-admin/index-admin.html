@@ -16,92 +16,127 @@
             <span class="dashboard-title">Admin / Page d'accueil</span>
         </div>
         <div class="nav-right">
-            <button id="logoutBtn" class="logout-btn" style="display: none;">Déconnexion</button>
+            <button id="logoutBtn" class="logout-btn">Déconnexion</button>
         </div>
     </nav>
 
-    <div class="admin-container">
-        <div class="admin-header">
-            <h1><i class="fas fa-home"></i> Gestion de la page d'accueil</h1>
-            <p>Gérez les engagements, rôles et stades</p>
-        </div>
-
-        <div class="section-buttons">
-            <button id="openEngagementsModalBtn" class="section-btn"><i class="fas fa-handshake"></i> Engagements</button>
-            <button id="openRolesModalBtn" class="section-btn"><i class="fas fa-users"></i> Rôles</button>
-            <button id="openStadesModalBtn" class="section-btn"><i class="fas fa-map-marker-alt"></i> Stades</button>
-        </div>
-
-        <!-- MODALE ENGAGEMENTS -->
-        <div id="engagementsModal" class="admin-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2><i class="fas fa-handshake"></i> Gestion des engagements</h2>
-                    <button class="close-modal" onclick="closeModal('engagementsModal')">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-section">
-                        <h3>Ajouter un engagement</h3>
-                        <form id="addEngagementForm">
-                            <div class="form-group"><label>Titre</label><input type="text" id="engTitle" required></div>
-                            <div class="form-group"><label>Description</label><textarea id="engDesc" rows="3"></textarea></div>
-                            <div class="form-group"><label>Icône (nom FontAwesome, ex: fa-gavel)</label><input type="text" id="engIcon" placeholder="fa-gavel"></div>
-                            <div class="form-group"><label>Ordre</label><input type="number" id="engOrder" value="0"></div>
-                            <button type="submit">Ajouter</button>
-                        </form>
-                    </div>
-                    <button id="refreshEngagements" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
-                    <div id="engagementsList" class="items-list"></div>
-                </div>
+    <!-- Section Engagements -->
+    <div class="admin-container engagements-page">
+        <h1>Gestion des engagements éthiques</h1>
+        <div class="admin-card">
+            <div class="card-header">
+                <h2><i class="fas fa-handshake"></i> Liste des engagements</h2>
+                <button class="btn-add" id="addEngagementBtn"><i class="fas fa-plus"></i> Ajouter</button>
             </div>
+            <div id="engagementsList" class="admin-list"></div>
         </div>
+    </div>
 
-        <!-- MODALE RÔLES -->
-        <div id="rolesModal" class="admin-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2><i class="fas fa-users"></i> Gestion des rôles</h2>
-                    <button class="close-modal" onclick="closeModal('rolesModal')">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-section">
-                        <h3>Ajouter un rôle</h3>
-                        <form id="addRoleForm">
-                            <div class="form-group"><label>Titre</label><input type="text" id="roleTitle" required></div>
-                            <div class="form-group"><label>Description</label><textarea id="roleDesc" rows="3"></textarea></div>
-                            <div class="form-group"><label>Icône (nom FontAwesome, ex: fa-user)</label><input type="text" id="roleIcon" placeholder="fa-user"></div>
-                            <div class="form-group"><label>Ordre</label><input type="number" id="roleOrder" value="0"></div>
-                            <button type="submit">Ajouter</button>
-                        </form>
-                    </div>
-                    <button id="refreshRoles" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
-                    <div id="rolesList" class="items-list"></div>
-                </div>
+    <!-- Section Rôles -->
+    <div class="admin-container roles-page">
+        <h1>Gestion des rôles / portails</h1>
+        <div class="admin-card">
+            <div class="card-header">
+                <h2><i class="fas fa-users-cog"></i> Liste des rôles</h2>
+                <button class="btn-add" id="addRoleBtn"><i class="fas fa-plus"></i> Ajouter</button>
             </div>
+            <div id="rolesList" class="admin-list"></div>
         </div>
+    </div>
 
-        <!-- MODALE STADES -->
-        <div id="stadesModal" class="admin-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2><i class="fas fa-map-marker-alt"></i> Gestion des stades</h2>
-                    <button class="close-modal" onclick="closeModal('stadesModal')">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-section">
-                        <h3>Ajouter un stade</h3>
-                        <form id="addStadeForm">
-                            <div class="form-group"><label>Nom</label><input type="text" id="stadeName" required></div>
-                            <div class="form-group"><label>Description</label><textarea id="stadeDesc" rows="3"></textarea></div>
-                            <div class="form-group"><label>Image</label><input type="file" id="stadeImage" accept="image/*"></div>
-                            <div class="form-group"><label>Ordre</label><input type="number" id="stadeOrder" value="0"></div>
-                            <button type="submit">Ajouter</button>
-                        </form>
-                    </div>
-                    <button id="refreshStades" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
-                    <div id="stadesList" class="items-list"></div>
-                </div>
+    <!-- Section Stades -->
+    <div class="admin-container stades-page">
+        <h1>Gestion des stades partenaires</h1>
+        <div class="admin-card">
+            <div class="card-header">
+                <h2><i class="fas fa-futbol"></i> Liste des stades</h2>
+                <button class="btn-add" id="addStadeBtn"><i class="fas fa-plus"></i> Ajouter</button>
             </div>
+            <div id="stadesList" class="admin-list"></div>
+        </div>
+    </div>
+
+    <!-- Modale Engagements -->
+    <div id="engagementModal" class="admin-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEngagementModal()">&times;</span>
+            <h3 id="engagementModalTitle">Ajouter un engagement</h3>
+            <form id="engagementForm">
+                <input type="hidden" id="engagementId">
+                <div class="form-group">
+                    <label>Titre</label>
+                    <input type="text" id="engTitre" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="engDescription" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Icône (nom FontAwesome, ex: fa-gavel)</label>
+                    <input type="text" id="engIcon" placeholder="fa-gavel">
+                </div>
+                <div class="form-group">
+                    <label>Ordre</label>
+                    <input type="number" id="engOrder" value="0">
+                </div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale Rôles -->
+    <div id="roleModal" class="admin-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRoleModal()">&times;</span>
+            <h3 id="roleModalTitle">Ajouter un rôle</h3>
+            <form id="roleForm">
+                <input type="hidden" id="roleId">
+                <div class="form-group">
+                    <label>Titre</label>
+                    <input type="text" id="roleTitre" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="roleDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Icône (nom FontAwesome, ex: fa-user)</label>
+                    <input type="text" id="roleIcon" placeholder="fa-user">
+                </div>
+                <div class="form-group">
+                    <label>Ordre</label>
+                    <input type="number" id="roleOrder" value="0">
+                </div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale Stades -->
+    <div id="stadeModal" class="admin-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeStadeModal()">&times;</span>
+            <h3 id="stadeModalTitle">Ajouter un stade</h3>
+            <form id="stadeForm">
+                <input type="hidden" id="stadeId">
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" id="stadeName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="stadeDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Image</label>
+                    <input type="file" id="stadeImage" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Ordre</label>
+                    <input type="number" id="stadeOrder" value="0">
+                </div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
         </div>
     </div>
 

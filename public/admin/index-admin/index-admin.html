@@ -3,19 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Admin page d'accueil | HubISoccer</title>
+    <title>Admin Page d'accueil | HubISoccer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --primary: #551B8C;
+            --primary-light: #7e3db0;
             --primary-dark: #3d1266;
             --gold: #FFCC00;
-            --danger: #dc3545;
+            --gold-dark: #e6b800;
+            --bg-light: #F0F8FF;
+            --white: #ffffff;
+            --dark: #1a1a1a;
             --gray: #6c757d;
             --light-gray: #e9ecef;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
+            --transition: all 0.3s ease;
+            --border-radius: 20px;
             --success: #28a745;
+            --danger: #dc3545;
         }
         * {
             margin: 0;
@@ -25,42 +34,116 @@
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            color: var(--dark);
+            line-height: 1.6;
             min-height: 100vh;
-            padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        header {
-            background: var(--primary);
-            color: white;
-            padding: 20px 30px;
+        /* Navbar */
+        .dashboard-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
+            padding: 10px 5%;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .nav-left {
+            display: flex;
+            align-items: center;
             gap: 15px;
         }
-        header h1 {
-            font-size: 1.5rem;
+        .logo-nav {
+            height: 40px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .logo-nav:hover {
+            transform: scale(1.05);
+        }
+        .dashboard-title {
             font-weight: 600;
+            color: var(--primary);
+            border-left: 2px solid var(--light-gray);
+            padding-left: 15px;
+        }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         .logout-btn {
-            background: rgba(255,255,255,0.2);
+            background: var(--danger);
+            color: white;
             border: none;
             padding: 8px 20px;
             border-radius: 30px;
-            color: white;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: var(--transition);
+            font-weight: 500;
         }
         .logout-btn:hover {
-            background: rgba(255,255,255,0.3);
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        /* Conteneur principal */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            background: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            flex: 1;
+        }
+        .login-container {
+            padding: 40px;
+            text-align: center;
+        }
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: var(--primary-dark);
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--light-gray);
+            border-radius: 30px;
+            font-family: 'Poppins', sans-serif;
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        .error-msg {
+            color: var(--danger);
+            margin-top: 10px;
         }
         .tabs {
             display: flex;
@@ -76,6 +159,7 @@
             cursor: pointer;
             transition: background 0.2s;
             font-size: 1rem;
+            color: var(--gray);
         }
         .tab-btn.active {
             background: white;
@@ -90,7 +174,7 @@
             display: block;
         }
         .form-section {
-            background: var(--light-gray);
+            background: var(--bg-light);
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 30px;
@@ -98,40 +182,6 @@
         .form-section h3 {
             margin-bottom: 15px;
             color: var(--primary);
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 5px;
-            color: var(--primary-dark);
-        }
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
-        }
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background: var(--primary-dark);
-        }
-        .btn-delete {
-            background: var(--danger);
-        }
-        .btn-delete:hover {
-            background: #c82333;
         }
         .items-list {
             display: flex;
@@ -164,7 +214,7 @@
             display: flex;
             gap: 10px;
         }
-        .edit-btn, .delete-btn {
+        .edit-btn, .delete-btn, .refresh-btn {
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 0.8rem;
@@ -179,16 +229,24 @@
             background: var(--danger);
             color: white;
         }
+        .refresh-btn {
+            background: var(--primary-light);
+            color: white;
+            margin-bottom: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
         .image-preview {
             max-width: 100px;
             max-height: 100px;
             border-radius: 8px;
             margin-top: 10px;
         }
-        .loader {
+        .spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border: 2px solid white;
             border-top-color: transparent;
             border-radius: 50%;
@@ -212,376 +270,491 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        /* Footer */
+        .dashboard-footer {
+            background: #050505;
+            color: white;
+            padding: 40px 5%;
+            margin-top: 50px;
+        }
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .compliance-badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .badge {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--gold);
+        }
+        .contact-info {
+            margin-bottom: 15px;
+        }
+        .contact-info a {
+            color: var(--gold);
+            text-decoration: none;
+            margin: 0 15px;
+        }
+        .legal p {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin: 5px 0;
+        }
+        @media (max-width: 700px) {
+            .item-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .item-actions {
+                justify-content: flex-end;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="container" id="app">
-    <header>
-        <h1>Administration - Page d'accueil</h1>
-        <button id="logoutBtn" class="logout-btn">Déconnexion</button>
-    </header>
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="engagements">Engagements</button>
-        <button class="tab-btn" data-tab="roles">Rôles</button>
-        <button class="tab-btn" data-tab="stades">Stades</button>
-    </div>
-    <div id="engagements" class="tab-content active">
-        <div class="form-section">
-            <h3>Ajouter un engagement</h3>
-            <form id="addEngagementForm">
-                <div class="form-group"><label>Titre</label><input type="text" id="engTitle" required></div>
-                <div class="form-group"><label>Description</label><textarea id="engDesc" rows="3"></textarea></div>
-                <div class="form-group"><label>Icône (nom FontAwesome, ex: fa-gavel)</label><input type="text" id="engIcon" placeholder="fa-gavel"></div>
-                <div class="form-group"><label>Ordre</label><input type="number" id="engOrder" value="0"></div>
-                <button type="submit">Ajouter</button>
+    <nav class="dashboard-nav">
+        <div class="nav-left">
+            <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../administration.html'">
+            <span class="dashboard-title">Admin / Page d'accueil</span>
+        </div>
+        <div class="nav-right">
+            <button id="logoutBtn" class="logout-btn" style="display: none;">Déconnexion</button>
+        </div>
+    </nav>
+
+    <div class="container" id="app">
+        <!-- Le contenu sera injecté dynamiquement -->
+        <div class="login-container">
+            <h2>Authentification requise</h2>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" required placeholder="adminpublic.hubisoccer@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <button type="submit">Se connecter</button>
+                <div id="loginError" class="error-msg"></div>
             </form>
         </div>
-        <div id="engagementsList" class="items-list"></div>
     </div>
-    <div id="roles" class="tab-content">
-        <div class="form-section">
-            <h3>Ajouter un rôle</h3>
-            <form id="addRoleForm">
-                <div class="form-group"><label>Titre</label><input type="text" id="roleTitle" required></div>
-                <div class="form-group"><label>Description</label><textarea id="roleDesc" rows="3"></textarea></div>
-                <div class="form-group"><label>Icône (nom FontAwesome, ex: fa-user)</label><input type="text" id="roleIcon" placeholder="fa-user"></div>
-                <div class="form-group"><label>Ordre</label><input type="number" id="roleOrder" value="0"></div>
-                <button type="submit">Ajouter</button>
-            </form>
+
+    <footer class="dashboard-footer">
+        <div class="footer-content">
+            <div class="compliance-badges">
+                <span class="badge">Conformité APDP Bénin</span>
+                <span class="badge">Règlementation FIFA</span>
+                <span class="badge">Triple Projet Sport-Études-Carrière</span>
+            </div>
+            <div class="contact-info">
+                <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+                <a href="mailto:contacthubisoccer@gmail.com"><i class="fas fa-envelope"></i> contacthubisoccer@gmail.com</a>
+            </div>
+            <div class="legal">
+                <p>HubISoccer - The Hub of Inspiration of Soccer</p>
+                <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+                <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+            </div>
         </div>
-        <div id="rolesList" class="items-list"></div>
-    </div>
-    <div id="stades" class="tab-content">
-        <div class="form-section">
-            <h3>Ajouter un stade</h3>
-            <form id="addStadeForm">
-                <div class="form-group"><label>Nom</label><input type="text" id="stadeName" required></div>
-                <div class="form-group"><label>Description</label><textarea id="stadeDesc" rows="3"></textarea></div>
-                <div class="form-group"><label>Image</label><input type="file" id="stadeImage" accept="image/*"></div>
-                <div class="form-group"><label>Ordre</label><input type="number" id="stadeOrder" value="0"></div>
-                <button type="submit">Ajouter</button>
-            </form>
-        </div>
-        <div id="stadesList" class="items-list"></div>
-    </div>
-</div>
+    </footer>
 
-<script>
-    const SUPABASE_URL = 'https://qdqkmsetcmtkdvilpwax.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkcWttc2V0Y210a2R2aWxwd2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzAyMTMsImV4cCI6MjA4OTg0NjIxM30.S_9XeKGsFVu6tP129HvswIJTwkDmbwZUkjL01l8MDvk';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <script>
+        const SUPABASE_URL = 'https://qdqkmsetcmtkdvilpwax.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkcWttc2V0Y210a2R2aWxwd2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzAyMTMsImV4cCI6MjA4OTg0NjIxM30.S_9XeKGsFVu6tP129HvswIJTwkDmbwZUkjL01l8MDvk';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = null;
+        const app = document.getElementById('app');
 
-    let currentUser = null;
-
-    // Vérifier la session et rediriger si non connecté
-    async function checkAuth() {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-            window.location.href = '../administration.html';
-            return false;
-        }
-        currentUser = session.user;
-        return true;
-    }
-
-    // Gestion des onglets
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.tab).classList.add('active');
-        });
-    });
-
-    // Fonction utilitaire pour afficher les messages
-    function showMessage(text, type) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${type}`;
-        msgDiv.textContent = text;
-        document.querySelector('.container').prepend(msgDiv);
-        msgDiv.style.display = 'block';
-        setTimeout(() => msgDiv.remove(), 3000);
-    }
-
-    // Charger les engagements
-    async function loadEngagements() {
-        const { data, error } = await supabase.from('public_data.engagements').select('*').order('order', { ascending: true });
-        if (error) {
-            showMessage('Erreur chargement engagements', 'error');
-            return;
-        }
-        const container = document.getElementById('engagementsList');
-        if (!data.length) {
-            container.innerHTML = '<p>Aucun engagement</p>';
-            return;
-        }
-        container.innerHTML = data.map(item => `
-            <div class="item-card" data-id="${item.id}">
-                <div class="item-info">
-                    <h4>${item.title}</h4>
-                    <p>${item.description || ''}</p>
-                    <small>Icône: ${item.icon || 'fa-handshake'}</small>
-                </div>
-                <div class="item-actions">
-                    <button class="edit-btn" onclick="editEngagement(${item.id})">Modifier</button>
-                    <button class="delete-btn" onclick="deleteEngagement(${item.id})">Supprimer</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // Ajouter un engagement
-    document.getElementById('addEngagementForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const title = document.getElementById('engTitle').value;
-        const description = document.getElementById('engDesc').value;
-        const icon = document.getElementById('engIcon').value;
-        const order = parseInt(document.getElementById('engOrder').value) || 0;
-        const { error } = await supabase.from('public_data.engagements').insert({ title, description, icon, order });
-        if (error) {
-            showMessage('Erreur ajout: ' + error.message, 'error');
-        } else {
-            showMessage('Engagement ajouté', 'success');
-            document.getElementById('addEngagementForm').reset();
-            loadEngagements();
-        }
-    });
-
-    // Modifier un engagement (exemple simple : prompt)
-    window.editEngagement = async (id) => {
-        const { data } = await supabase.from('public_data.engagements').select('*').eq('id', id).single();
-        if (!data) return;
-        const newTitle = prompt('Nouveau titre', data.title);
-        if (newTitle === null) return;
-        const newDesc = prompt('Nouvelle description', data.description);
-        const newIcon = prompt('Icône', data.icon);
-        const newOrder = prompt('Ordre', data.order);
-        const { error } = await supabase.from('public_data.engagements').update({
-            title: newTitle,
-            description: newDesc,
-            icon: newIcon,
-            order: parseInt(newOrder) || 0
-        }).eq('id', id);
-        if (error) showMessage('Erreur modification', 'error');
-        else {
-            showMessage('Modifié', 'success');
-            loadEngagements();
-        }
-    };
-
-    window.deleteEngagement = async (id) => {
-        if (!confirm('Supprimer définitivement ?')) return;
-        const { error } = await supabase.from('public_data.engagements').delete().eq('id', id);
-        if (error) showMessage('Erreur suppression', 'error');
-        else {
-            showMessage('Supprimé', 'success');
-            loadEngagements();
-        }
-    };
-
-    // Charger les rôles
-    async function loadRoles() {
-        const { data, error } = await supabase.from('public_data.roles').select('*').order('order', { ascending: true });
-        if (error) {
-            showMessage('Erreur chargement rôles', 'error');
-            return;
-        }
-        const container = document.getElementById('rolesList');
-        if (!data.length) {
-            container.innerHTML = '<p>Aucun rôle</p>';
-            return;
-        }
-        container.innerHTML = data.map(item => `
-            <div class="item-card" data-id="${item.id}">
-                <div class="item-info">
-                    <h4>${item.title}</h4>
-                    <p>${item.description || ''}</p>
-                    <small>Icône: ${item.icon || 'fa-user'}</small>
-                </div>
-                <div class="item-actions">
-                    <button class="edit-btn" onclick="editRole(${item.id})">Modifier</button>
-                    <button class="delete-btn" onclick="deleteRole(${item.id})">Supprimer</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    document.getElementById('addRoleForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const title = document.getElementById('roleTitle').value;
-        const description = document.getElementById('roleDesc').value;
-        const icon = document.getElementById('roleIcon').value;
-        const order = parseInt(document.getElementById('roleOrder').value) || 0;
-        const { error } = await supabase.from('public_data.roles').insert({ title, description, icon, order });
-        if (error) showMessage('Erreur ajout: ' + error.message, 'error');
-        else {
-            showMessage('Rôle ajouté', 'success');
-            document.getElementById('addRoleForm').reset();
-            loadRoles();
-        }
-    });
-
-    window.editRole = async (id) => {
-        const { data } = await supabase.from('public_data.roles').select('*').eq('id', id).single();
-        if (!data) return;
-        const newTitle = prompt('Nouveau titre', data.title);
-        if (newTitle === null) return;
-        const newDesc = prompt('Nouvelle description', data.description);
-        const newIcon = prompt('Icône', data.icon);
-        const newOrder = prompt('Ordre', data.order);
-        const { error } = await supabase.from('public_data.roles').update({
-            title: newTitle,
-            description: newDesc,
-            icon: newIcon,
-            order: parseInt(newOrder) || 0
-        }).eq('id', id);
-        if (error) showMessage('Erreur modification', 'error');
-        else {
-            showMessage('Modifié', 'success');
-            loadRoles();
-        }
-    };
-
-    window.deleteRole = async (id) => {
-        if (!confirm('Supprimer définitivement ?')) return;
-        const { error } = await supabase.from('public_data.roles').delete().eq('id', id);
-        if (error) showMessage('Erreur suppression', 'error');
-        else {
-            showMessage('Supprimé', 'success');
-            loadRoles();
-        }
-    };
-
-    // Charger les stades
-    async function loadStades() {
-        const { data, error } = await supabase.from('public_data.stades').select('*').order('order', { ascending: true });
-        if (error) {
-            showMessage('Erreur chargement stades', 'error');
-            return;
-        }
-        const container = document.getElementById('stadesList');
-        if (!data.length) {
-            container.innerHTML = '<p>Aucun stade</p>';
-            return;
-        }
-        container.innerHTML = data.map(item => `
-            <div class="item-card" data-id="${item.id}">
-                <div class="item-info">
-                    <h4>${item.name}</h4>
-                    <p>${item.description || ''}</p>
-                    <img class="image-preview" src="${item.image_url}" alt="${item.name}">
-                </div>
-                <div class="item-actions">
-                    <button class="edit-btn" onclick="editStade(${item.id})">Modifier</button>
-                    <button class="delete-btn" onclick="deleteStade(${item.id})">Supprimer</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // Upload d'image pour les stades
-    async function uploadStadeImage(file) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const { error } = await supabase.storage.from('public_images').upload(fileName, file);
-        if (error) throw error;
-        const { data: urlData } = supabase.storage.from('public_images').getPublicUrl(fileName);
-        return urlData.publicUrl;
-    }
-
-    document.getElementById('addStadeForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('stadeName').value;
-        const description = document.getElementById('stadeDesc').value;
-        const order = parseInt(document.getElementById('stadeOrder').value) || 0;
-        const fileInput = document.getElementById('stadeImage');
-        let imageUrl = '';
-        if (fileInput.files.length) {
-            try {
-                imageUrl = await uploadStadeImage(fileInput.files[0]);
-            } catch (err) {
-                showMessage('Erreur upload image', 'error');
-                return;
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                showAdminPanel();
+            } else {
+                showLogin();
             }
         }
-        const { error } = await supabase.from('public_data.stades').insert({ name, description, image_url: imageUrl, order });
-        if (error) showMessage('Erreur ajout: ' + error.message, 'error');
-        else {
-            showMessage('Stade ajouté', 'success');
-            document.getElementById('addStadeForm').reset();
-            loadStades();
-        }
-    });
 
-    window.editStade = async (id) => {
-        const { data } = await supabase.from('public_data.stades').select('*').eq('id', id).single();
-        if (!data) return;
-        const newName = prompt('Nouveau nom', data.name);
-        if (newName === null) return;
-        const newDesc = prompt('Nouvelle description', data.description);
-        const newOrder = prompt('Ordre', data.order);
-        let newImageUrl = data.image_url;
-        const changeImage = confirm('Changer l\'image ?');
-        if (changeImage) {
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = 'image/*';
-            fileInput.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    try {
-                        newImageUrl = await uploadStadeImage(file);
-                    } catch (err) {
-                        showMessage('Erreur upload', 'error');
-                        return;
-                    }
+        function showLogin() {
+            app.innerHTML = `
+                <div class="login-container">
+                    <h2>Authentification requise</h2>
+                    <form id="loginForm" class="login-form">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="email" required placeholder="adminpublic.hubisoccer@gmail.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Mot de passe</label>
+                            <input type="password" id="password" required placeholder="••••••••">
+                        </div>
+                        <button type="submit">Se connecter</button>
+                        <div id="loginError" class="error-msg"></div>
+                    </form>
+                </div>
+            `;
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const errorDiv = document.getElementById('loginError');
+                const btn = e.target.querySelector('button');
+
+                btn.innerHTML = '<span class="spinner"></span> Connexion...';
+                btn.disabled = true;
+
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) {
+                    errorDiv.textContent = error.message;
+                    btn.innerHTML = 'Se connecter';
+                    btn.disabled = false;
+                } else {
+                    await checkAuth();
                 }
-                await updateStade();
-            };
-            fileInput.click();
-            return;
+            });
         }
-        async function updateStade() {
-            const { error } = await supabase.from('public_data.stades').update({
-                name: newName,
+
+        function showAdminPanel() {
+            document.getElementById('logoutBtn').style.display = 'block';
+            app.innerHTML = `
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="engagements">Engagements</button>
+                    <button class="tab-btn" data-tab="roles">Rôles</button>
+                    <button class="tab-btn" data-tab="stades">Stades</button>
+                </div>
+                <div id="engagements" class="tab-content active">
+                    <div class="form-section">
+                        <h3>Ajouter un engagement</h3>
+                        <form id="addEngagementForm">
+                            <div class="form-group"><label>Titre</label><input type="text" id="engTitle" required></div>
+                            <div class="form-group"><label>Description</label><textarea id="engDesc" rows="3"></textarea></div>
+                            <div class="form-group"><label>Icône (nom FontAwesome, ex: fa-gavel)</label><input type="text" id="engIcon" placeholder="fa-gavel"></div>
+                            <div class="form-group"><label>Ordre</label><input type="number" id="engOrder" value="0"></div>
+                            <button type="submit">Ajouter</button>
+                        </form>
+                    </div>
+                    <button id="refreshEngagements" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                    <div id="engagementsList" class="items-list"></div>
+                </div>
+                <div id="roles" class="tab-content">
+                    <div class="form-section">
+                        <h3>Ajouter un rôle</h3>
+                        <form id="addRoleForm">
+                            <div class="form-group"><label>Titre</label><input type="text" id="roleTitle" required></div>
+                            <div class="form-group"><label>Description</label><textarea id="roleDesc" rows="3"></textarea></div>
+                            <div class="form-group"><label>Icône (nom FontAwesome, ex: fa-user)</label><input type="text" id="roleIcon" placeholder="fa-user"></div>
+                            <div class="form-group"><label>Ordre</label><input type="number" id="roleOrder" value="0"></div>
+                            <button type="submit">Ajouter</button>
+                        </form>
+                    </div>
+                    <button id="refreshRoles" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                    <div id="rolesList" class="items-list"></div>
+                </div>
+                <div id="stades" class="tab-content">
+                    <div class="form-section">
+                        <h3>Ajouter un stade</h3>
+                        <form id="addStadeForm">
+                            <div class="form-group"><label>Nom</label><input type="text" id="stadeName" required></div>
+                            <div class="form-group"><label>Description</label><textarea id="stadeDesc" rows="3"></textarea></div>
+                            <div class="form-group"><label>Image</label><input type="file" id="stadeImage" accept="image/*"></div>
+                            <div class="form-group"><label>Ordre</label><input type="number" id="stadeOrder" value="0"></div>
+                            <button type="submit">Ajouter</button>
+                        </form>
+                    </div>
+                    <button id="refreshStades" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                    <div id="stadesList" class="items-list"></div>
+                </div>
+            `;
+
+            // Gestion des onglets
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.add('active');
+                });
+            });
+
+            // Chargement initial
+            loadEngagements();
+            loadRoles();
+            loadStades();
+
+            // Rafraîchissements
+            document.getElementById('refreshEngagements').addEventListener('click', loadEngagements);
+            document.getElementById('refreshRoles').addEventListener('click', loadRoles);
+            document.getElementById('refreshStades').addEventListener('click', loadStades);
+
+            // Formulaires
+            document.getElementById('addEngagementForm').addEventListener('submit', addEngagement);
+            document.getElementById('addRoleForm').addEventListener('submit', addRole);
+            document.getElementById('addStadeForm').addEventListener('submit', addStade);
+        }
+
+        function showMessage(text, type) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.textContent = text;
+            document.querySelector('.container').prepend(msgDiv);
+            msgDiv.style.display = 'block';
+            setTimeout(() => msgDiv.remove(), 3000);
+        }
+
+        async function loadEngagements() {
+            const { data, error } = await supabase.from('public_data.engagements').select('*').order('order', { ascending: true });
+            if (error) { showMessage('Erreur chargement engagements', 'error'); return; }
+            const container = document.getElementById('engagementsList');
+            if (!data.length) { container.innerHTML = '<p>Aucun engagement</p>'; return; }
+            container.innerHTML = data.map(item => `
+                <div class="item-card" data-id="${item.id}">
+                    <div class="item-info">
+                        <h4>${escapeHtml(item.title)}</h4>
+                        <p>${escapeHtml(item.description || '')}</p>
+                        <small>Icône: ${item.icon || 'fa-handshake'}</small>
+                    </div>
+                    <div class="item-actions">
+                        <button class="edit-btn" onclick="editEngagement(${item.id})">Modifier</button>
+                        <button class="delete-btn" onclick="deleteEngagement(${item.id})">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.editEngagement = async (id) => {
+            const { data } = await supabase.from('public_data.engagements').select('*').eq('id', id).single();
+            if (!data) return;
+            const newTitle = prompt('Nouveau titre', data.title);
+            if (newTitle === null) return;
+            const newDesc = prompt('Nouvelle description', data.description);
+            const newIcon = prompt('Icône', data.icon);
+            const newOrder = prompt('Ordre', data.order);
+            const { error } = await supabase.from('public_data.engagements').update({
+                title: newTitle,
                 description: newDesc,
-                image_url: newImageUrl,
+                icon: newIcon,
                 order: parseInt(newOrder) || 0
             }).eq('id', id);
             if (error) showMessage('Erreur modification', 'error');
+            else { showMessage('Modifié', 'success'); loadEngagements(); }
+        };
+
+        window.deleteEngagement = async (id) => {
+            if (!confirm('Supprimer définitivement ?')) return;
+            const { error } = await supabase.from('public_data.engagements').delete().eq('id', id);
+            if (error) showMessage('Erreur suppression', 'error');
+            else { showMessage('Supprimé', 'success'); loadEngagements(); }
+        };
+
+        async function addEngagement(e) {
+            e.preventDefault();
+            const title = document.getElementById('engTitle').value;
+            const description = document.getElementById('engDesc').value;
+            const icon = document.getElementById('engIcon').value;
+            const order = parseInt(document.getElementById('engOrder').value) || 0;
+            const { error } = await supabase.from('public_data.engagements').insert({ title, description, icon, order });
+            if (error) showMessage('Erreur ajout: ' + error.message, 'error');
             else {
-                showMessage('Modifié', 'success');
+                showMessage('Engagement ajouté', 'success');
+                document.getElementById('addEngagementForm').reset();
+                loadEngagements();
+            }
+        }
+
+        async function loadRoles() {
+            const { data, error } = await supabase.from('public_data.roles').select('*').order('order', { ascending: true });
+            if (error) { showMessage('Erreur chargement rôles', 'error'); return; }
+            const container = document.getElementById('rolesList');
+            if (!data.length) { container.innerHTML = '<p>Aucun rôle</p>'; return; }
+            container.innerHTML = data.map(item => `
+                <div class="item-card" data-id="${item.id}">
+                    <div class="item-info">
+                        <h4>${escapeHtml(item.title)}</h4>
+                        <p>${escapeHtml(item.description || '')}</p>
+                        <small>Icône: ${item.icon || 'fa-user'}</small>
+                    </div>
+                    <div class="item-actions">
+                        <button class="edit-btn" onclick="editRole(${item.id})">Modifier</button>
+                        <button class="delete-btn" onclick="deleteRole(${item.id})">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.editRole = async (id) => {
+            const { data } = await supabase.from('public_data.roles').select('*').eq('id', id).single();
+            if (!data) return;
+            const newTitle = prompt('Nouveau titre', data.title);
+            if (newTitle === null) return;
+            const newDesc = prompt('Nouvelle description', data.description);
+            const newIcon = prompt('Icône', data.icon);
+            const newOrder = prompt('Ordre', data.order);
+            const { error } = await supabase.from('public_data.roles').update({
+                title: newTitle,
+                description: newDesc,
+                icon: newIcon,
+                order: parseInt(newOrder) || 0
+            }).eq('id', id);
+            if (error) showMessage('Erreur modification', 'error');
+            else { showMessage('Modifié', 'success'); loadRoles(); }
+        };
+
+        window.deleteRole = async (id) => {
+            if (!confirm('Supprimer définitivement ?')) return;
+            const { error } = await supabase.from('public_data.roles').delete().eq('id', id);
+            if (error) showMessage('Erreur suppression', 'error');
+            else { showMessage('Supprimé', 'success'); loadRoles(); }
+        };
+
+        async function addRole(e) {
+            e.preventDefault();
+            const title = document.getElementById('roleTitle').value;
+            const description = document.getElementById('roleDesc').value;
+            const icon = document.getElementById('roleIcon').value;
+            const order = parseInt(document.getElementById('roleOrder').value) || 0;
+            const { error } = await supabase.from('public_data.roles').insert({ title, description, icon, order });
+            if (error) showMessage('Erreur ajout: ' + error.message, 'error');
+            else {
+                showMessage('Rôle ajouté', 'success');
+                document.getElementById('addRoleForm').reset();
+                loadRoles();
+            }
+        }
+
+        async function loadStades() {
+            const { data, error } = await supabase.from('public_data.stades').select('*').order('order', { ascending: true });
+            if (error) { showMessage('Erreur chargement stades', 'error'); return; }
+            const container = document.getElementById('stadesList');
+            if (!data.length) { container.innerHTML = '<p>Aucun stade</p>'; return; }
+            container.innerHTML = data.map(item => `
+                <div class="item-card" data-id="${item.id}">
+                    <div class="item-info">
+                        <h4>${escapeHtml(item.name)}</h4>
+                        <p>${escapeHtml(item.description || '')}</p>
+                        <img class="image-preview" src="${item.image_url}" alt="${item.name}">
+                    </div>
+                    <div class="item-actions">
+                        <button class="edit-btn" onclick="editStade(${item.id})">Modifier</button>
+                        <button class="delete-btn" onclick="deleteStade(${item.id})">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function uploadStadeImage(file) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const { error } = await supabase.storage.from('public_images').upload(fileName, file);
+            if (error) throw error;
+            const { data: urlData } = supabase.storage.from('public_images').getPublicUrl(fileName);
+            return urlData.publicUrl;
+        }
+
+        async function addStade(e) {
+            e.preventDefault();
+            const name = document.getElementById('stadeName').value;
+            const description = document.getElementById('stadeDesc').value;
+            const order = parseInt(document.getElementById('stadeOrder').value) || 0;
+            const fileInput = document.getElementById('stadeImage');
+            let imageUrl = '';
+            if (fileInput.files.length) {
+                try {
+                    imageUrl = await uploadStadeImage(fileInput.files[0]);
+                } catch (err) {
+                    showMessage('Erreur upload image', 'error');
+                    return;
+                }
+            }
+            const { error } = await supabase.from('public_data.stades').insert({ name, description, image_url: imageUrl, order });
+            if (error) showMessage('Erreur ajout: ' + error.message, 'error');
+            else {
+                showMessage('Stade ajouté', 'success');
+                document.getElementById('addStadeForm').reset();
                 loadStades();
             }
         }
-        if (!changeImage) await updateStade();
-    };
 
-    window.deleteStade = async (id) => {
-        if (!confirm('Supprimer définitivement ?')) return;
-        const { error } = await supabase.from('public_data.stades').delete().eq('id', id);
-        if (error) showMessage('Erreur suppression', 'error');
-        else {
-            showMessage('Supprimé', 'success');
-            loadStades();
+        window.editStade = async (id) => {
+            const { data } = await supabase.from('public_data.stades').select('*').eq('id', id).single();
+            if (!data) return;
+            const newName = prompt('Nouveau nom', data.name);
+            if (newName === null) return;
+            const newDesc = prompt('Nouvelle description', data.description);
+            const newOrder = prompt('Ordre', data.order);
+            let newImageUrl = data.image_url;
+            const changeImage = confirm('Changer l\'image ?');
+            if (changeImage) {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        try {
+                            newImageUrl = await uploadStadeImage(file);
+                        } catch (err) {
+                            showMessage('Erreur upload', 'error');
+                            return;
+                        }
+                    }
+                    await updateStade();
+                };
+                fileInput.click();
+                return;
+            }
+            async function updateStade() {
+                const { error } = await supabase.from('public_data.stades').update({
+                    name: newName,
+                    description: newDesc,
+                    image_url: newImageUrl,
+                    order: parseInt(newOrder) || 0
+                }).eq('id', id);
+                if (error) showMessage('Erreur modification', 'error');
+                else {
+                    showMessage('Modifié', 'success');
+                    loadStades();
+                }
+            }
+            if (!changeImage) await updateStade();
+        };
+
+        window.deleteStade = async (id) => {
+            if (!confirm('Supprimer définitivement ?')) return;
+            const { error } = await supabase.from('public_data.stades').delete().eq('id', id);
+            if (error) showMessage('Erreur suppression', 'error');
+            else {
+                showMessage('Supprimé', 'success');
+                loadStades();
+            }
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
         }
-    };
 
-    // Déconnexion
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-        await supabase.auth.signOut();
-        window.location.href = '../administration.html';
-    });
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            checkAuth();
+        });
 
-    // Initialisation
-    (async () => {
-        const auth = await checkAuth();
-        if (!auth) return;
-        loadEngagements();
-        loadRoles();
-        loadStades();
-    })();
-</script>
+        checkAuth();
+    </script>
 </body>
 </html>

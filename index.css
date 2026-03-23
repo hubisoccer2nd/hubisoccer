@@ -1,4 +1,4 @@
-/* ===== GLOBAL STYLES ===== */
+/* ===== INDEX.CSS ===== */
 :root {
     --primary: #551B8C;
     --primary-light: #7e3db0;
@@ -30,7 +30,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Navigation */
+/* ===== NAVBAR ===== */
 nav {
     display: flex;
     justify-content: space-between;
@@ -64,12 +64,12 @@ nav {
 .nav-links {
     display: flex;
     align-items: center;
+    gap: 20px;
 }
 
 .nav-links a {
     color: var(--primary);
     text-decoration: none;
-    margin-left: 20px;
     font-weight: 600;
     font-size: 0.9rem;
     transition: var(--transition);
@@ -168,7 +168,7 @@ nav {
     transform: rotate(-45deg) translate(7px, -7px);
 }
 
-/* Hero */
+/* ===== HEADER ===== */
 header {
     height: 80vh;
     min-height: 600px;
@@ -249,7 +249,7 @@ header p {
     transform: translateY(-3px);
 }
 
-/* Sections */
+/* ===== SECTIONS GÉNÉRALES ===== */
 section {
     padding: 80px 10%;
 }
@@ -273,13 +273,21 @@ h2::after {
     border-radius: 2px;
 }
 
-.concept-grid, .roles-grid {
+.section-sub {
+    text-align: center;
+    color: var(--gray);
+    margin-bottom: 50px;
+    font-size: 1.1rem;
+}
+
+/* ===== CARTES (engagements et rôles) ===== */
+.grid-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 30px;
 }
 
-.concept-card, .role-card {
+.card {
     background: var(--white);
     padding: 35px 25px;
     border-radius: 20px;
@@ -291,16 +299,47 @@ h2::after {
     text-align: center;
 }
 
-.concept-card:hover, .role-card:hover {
+.card:hover {
     transform: translateY(-10px);
     border-color: var(--gold);
     box-shadow: var(--shadow-hover);
 }
 
-.concept-card h3, .role-card h3 {
+.card i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: var(--gold);
+}
+
+.card h3 {
     color: var(--primary);
     margin-bottom: 15px;
     font-size: 1.3rem;
+}
+
+.card p {
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+/* Styles pour les rôles (utilisés dans le JS) */
+.role-card {
+    background: var(--white);
+    padding: 35px 25px;
+    border-radius: 20px;
+    transition: var(--transition);
+    border: 1px solid var(--light-gray);
+    text-decoration: none;
+    color: var(--dark);
+    box-shadow: var(--shadow);
+    text-align: center;
+    display: block;
+}
+
+.role-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--gold);
+    box-shadow: var(--shadow-hover);
 }
 
 .role-icon {
@@ -309,7 +348,72 @@ h2::after {
     color: var(--gold);
 }
 
-/* Footer */
+.role-card h3 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+.role-card p {
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+/* ===== STADES ===== */
+.stades-section {
+    background: var(--bg-light);
+}
+
+.stades-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.stade-card {
+    background: var(--white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.stade-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.stade-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.stade-card:hover .stade-img {
+    transform: scale(1.05);
+}
+
+.stade-card .content {
+    padding: 20px;
+    text-align: center;
+}
+
+.stade-card h4 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: var(--primary);
+}
+
+.stade-card p {
+    color: var(--gray);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* ===== FOOTER ===== */
 footer {
     background: #0a0a0a;
     color: var(--white);
@@ -359,7 +463,7 @@ footer {
     margin: 5px 0;
 }
 
-/* Animations */
+/* ===== ANIMATIONS ===== */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -382,7 +486,7 @@ footer {
     }
 }
 
-/* Responsive */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 1008px) {
     h1 {
         font-size: 2.5rem;
@@ -404,14 +508,13 @@ footer {
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         border: 1px solid var(--light-gray);
         z-index: 999;
+        gap: 15px;
     }
     .nav-links.active {
         display: flex;
     }
     .nav-links a {
-        margin: 12px 0;
-        color: var(--primary);
-        margin-left: 0;
+        margin: 0;
         text-align: center;
     }
     .btn-auth {
@@ -419,12 +522,16 @@ footer {
     }
     .cta-group {
         flex-direction: column;
+        align-items: center;
     }
     section {
         padding: 60px 5%;
     }
     h2 {
         font-size: 2rem;
+    }
+    .grid-cards, .stades-grid {
+        gap: 20px;
     }
 }
 
@@ -439,49 +546,10 @@ footer {
     header p {
         font-size: 1rem;
     }
-    .concept-card, .role-card {
+    .card, .role-card {
         padding: 25px 15px;
     }
-}
-
-/* Styles pour les cartes dynamiques (utilisés par le JavaScript) */
-.grid-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-}
-
-.card {
-    background: var(--white);
-    padding: 35px 25px;
-    border-radius: 20px;
-    transition: var(--transition);
-    border: 1px solid var(--light-gray);
-    text-decoration: none;
-    color: var(--dark);
-    box-shadow: var(--shadow);
-    text-align: center;
-}
-
-.card:hover {
-    transform: translateY(-10px);
-    border-color: var(--gold);
-    box-shadow: var(--shadow-hover);
-}
-
-.card i {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    color: var(--gold);
-}
-
-.card h3 {
-    color: var(--primary);
-    margin-bottom: 15px;
-    font-size: 1.3rem;
-}
-
-.card p {
-    color: var(--gray);
-    font-size: 0.9rem;
+    .stade-img {
+        height: 180px;
+    }
 }

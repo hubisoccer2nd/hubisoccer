@@ -165,7 +165,7 @@ function escapeHtml(str) {
     });
 }
 
-// ===== INITIALISATION =====
+// ===== INITIALISATION glace =====
 document.getElementById('refreshEtapes').addEventListener('click', loadEtapes);
 document.getElementById('refreshStats').addEventListener('click', loadStats);
 

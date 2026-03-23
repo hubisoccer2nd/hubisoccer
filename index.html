@@ -17,558 +17,105 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --primary: #551B8C;
-            --primary-light: #7e3db0;
-            --primary-dark: #3d1266;
-            --gold: #FFCC00;
-            --gold-dark: #e6b800;
-            --bg-light: #F0F8FF;
-            --white: #ffffff;
-            --dark: #1a1a1a;
-            --gray: #6c757d;
-            --light-gray: #e9ecef;
-            --shadow: 0 10px 30px rgba(0,0,0,0.05);
-            --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
-            --transition: all 0.3s ease;
-            --border-radius: 20px;
-            --border-radius-sm: 12px;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-            color: var(--dark);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 5%;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .logo-link {
-            display: flex;
-            align-items: center;
-        }
-        .logo-nav {
-            height: 45px;
-            transition: transform 0.2s;
-        }
-        .logo-nav:hover {
-            transform: scale(1.05);
-        }
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            position: relative;
-        }
-        .lang-picker {
-            padding: 6px 12px;
-            border: 1px solid var(--light-gray);
-            border-radius: 30px;
-            background: white;
-            font-size: 0.85rem;
-            cursor: pointer;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .lang-picker:hover {
-            border-color: var(--gold);
-        }
-        .menu-toggle {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--gray);
-            cursor: pointer;
-            display: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            transition: background 0.2s, color 0.2s;
-        }
-        .menu-toggle:hover {
-            background: rgba(85,27,140,0.1);
-            color: var(--primary);
-        }
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-        .nav-links a {
-            text-decoration: none;
-            color: var(--dark);
-            font-weight: 500;
-            transition: var(--transition);
-            font-size: 0.9rem;
-        }
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-        .btn-auth {
-            padding: 8px 20px;
-            border-radius: 30px;
-            background: var(--primary);
-            color: white !important;
-            transition: var(--transition);
-        }
-        .btn-auth:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(85,27,140,0.2);
-        }
-        .btn-auth.gold {
-            background: var(--gold);
-            color: var(--dark) !important;
-        }
-        .btn-auth.gold:hover {
-            background: var(--gold-dark);
-        }
-        header {
-            text-align: center;
-            padding: 60px 5%;
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
-            color: white;
-            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
-        }
-        .badge-double-projet {
-            display: inline-block;
-            background: rgba(255,255,255,0.2);
-            padding: 6px 15px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            margin-bottom: 20px;
-            backdrop-filter: blur(5px);
-        }
-        header h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            line-height: 1.2;
-        }
-        header p {
-            max-width: 700px;
-            margin: 0 auto 30px;
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-        .cta-group {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .btn-main {
-            padding: 12px 30px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: var(--transition);
-            display: inline-block;
-        }
-        .btn-filled {
-            background: var(--gold);
-            color: var(--dark);
-        }
-        .btn-filled:hover {
-            background: var(--gold-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255,204,0,0.3);
-        }
-        .btn-border {
-            background: transparent;
-            border: 2px solid white;
-            color: white;
-        }
-        .btn-border:hover {
-            background: white;
-            color: var(--primary);
-            transform: translateY(-2px);
-        }
-        section {
-            padding: 80px 5%;
-        }
-        section h2 {
-            text-align: center;
-            font-size: 2rem;
-            color: var(--primary-dark);
-            margin-bottom: 15px;
-        }
-        .section-sub {
-            text-align: center;
-            color: var(--gray);
-            margin-bottom: 50px;
-        }
-        .grid-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 30px;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            text-align: center;
-        }
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: var(--shadow-hover);
-        }
-        .card i {
-            font-size: 2.5rem;
-            color: var(--gold);
-            margin-bottom: 20px;
-        }
-        .card h3 {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            color: var(--primary);
-        }
-        .card p {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-        .stades-section {
-            background: var(--bg-light);
-        }
-        .stades-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .stade-card {
-            background: white;
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-        }
-        .stade-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-hover);
-        }
-        .stade-img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-        .stade-card .content {
-            padding: 20px;
-        }
-        .stade-card h4 {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-        .stade-card p {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-        footer {
-            background: #050505;
-            color: white;
-            padding: 40px 5%;
-            text-align: center;
-        }
-        .compliance-badges {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-        .badge-item {
-            background: rgba(255,255,255,0.1);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: var(--gold);
-        }
-        .contact-box {
-            margin-bottom: 15px;
-        }
-        .contact-box a {
-            color: var(--gold);
-            text-decoration: none;
-            margin: 0 15px;
-        }
-        .legal p {
-            font-size: 0.8rem;
-            opacity: 0.7;
-            margin: 5px 0;
-        }
-        @media (max-width: 900px) {
-            .menu-toggle {
-                display: block;
-            }
-            .nav-links {
-                position: fixed;
-                top: 70px;
-                left: 0;
-                width: 100%;
-                background: white;
-                flex-direction: column;
-                align-items: center;
-                padding: 20px;
-                gap: 15px;
-                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
-                z-index: 99;
-            }
-            .nav-links.show {
-                transform: translateX(0);
-            }
-            header h1 {
-                font-size: 2rem;
-            }
-        }
-        @media (max-width: 600px) {
-            header h1 {
-                font-size: 1.5rem;
-            }
-            .cta-group {
-                flex-direction: column;
-                align-items: center;
-            }
-            .btn-main {
-                width: 80%;
-            }
-        }
-    </style>
-</head>
+    <link rel="stylesheet" href="index.css">
+ </head>
 <body>
-    <nav>
-        <a href="./" class="logo-link">
-            <img src="public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
-        </a>
-        <div class="nav-right">
-            <select class="lang-picker" id="langSelect">
-                <option value="fr">🇫🇷 Français</option>
-                <option value="en">🇺🇸 English</option>
-                <option value="yo">🇳🇬 Yoruba</option>
-                <option value="fon">🇧🇯 Fon</option>
-                <option value="mina">🇹🇬 Mina</option>
-                <option value="lin">🇨🇬 Lingala</option>
-                <option value="wol">🇸🇳 Wolof</option>
-                <option value="diou">🇨🇮 Dioula</option>
-                <option value="ha">🇳🇬 Hausa</option>
-                <option value="sw">🇰🇪 Kiswahili</option>
-                <option value="es">🇪🇸 Español</option>
-                <option value="pt">🇵🇹 Português</option>
-                <option value="de">🇩🇪 Deutsch</option>
-                <option value="it">🇮🇹 Italiano</option>
-                <option value="ar">🇸🇦 العربية</option>
-                <option value="zh">🇨🇳 中文</option>
-                <option value="ru">🇷🇺 Русский</option>
-                <option value="ja">🇯🇵 日本語</option>
-                <option value="tr">🇹🇷 Türkçe</option>
-                <option value="ko">🇰🇷 한국어</option>
-                <option value="hi">🇮🇳 हिन्दी</option>
-                <option value="nl">🇳🇱 Nederlands</option>
-                <option value="pl">🇵🇱 Polski</option>
-                <option value="vi">🇻🇳 Tiếng Việt</option>
-            </select>
-
+  <nav>
+    <a href="./" class="logo-link">
+      <img src="public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+    </a>
+    <div class="nav-right">
+      <select class="lang-picker" id="langSelect">
+        <option value="fr">🇫🇷 Français</option>
+        <option value="en">🇺🇸 English</option>
+        <option value="yo">🇳🇬 Yoruba</option>
+        <option value="fon">🇧🇯 Fon</option>
+        <option value="mina">🇹🇬 Mina</option>
+        <option value="lin">🇨🇬 Lingala</option>
+        <option value="wol">🇸🇳 Wolof</option>
+        <option value="diou">🇨🇮 Dioula</option>
+        <option value="ha">🇳🇬 Hausa</option>
+        <option value="sw">🇰🇪 Kiswahili</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="pt">🇵🇹 Português</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="ar">🇸🇦 العربية</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="ru">🇷🇺 Русский</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="tr">🇹🇷 Türkçe</option>
+        <option value="ko">🇰🇷 한국어</option>
+        <option value="hi">🇮🇳 हिन्दी</option>
+        <option value="nl">🇳🇱 Nederlands</option>
+        <option value="pl">🇵🇱 Polski</option>
+        <option value="vi">🇻🇳 Tiếng Việt</option>
+      </select>
+      
             <button class="menu-toggle" id="menuToggle">
-                <i class="fas fa-bars"></i>
+              <span></span><span></span><span></span>
             </button>
-
-            <div class="nav-links" id="navLinks">
-                <a href="e-marketing-hubisoccer.html" data-i18n="hub_market">HUBISOCCER MARKET</a>
-                <a href="hub-community.html" data-i18n="hub_community">HUB COMMUNITY</a>
-                <a href="scouting.html" data-i18n="scouting">SCOUTING</a>
-                <a href="processus.html" data-i18n="processus">PROCESSUS</a>
-                <a href="affiliation.html" data-i18n="affiliation">AFFILIATION</a>
-                <a href="premier-pas.html" data-i18n="premier-pas">PREMIER-PAS</a>
-                <a href="parrain.html" data-i18n="parrain">PARRAIN</a>
-                <a href="tournoi.html" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
-                <a href="esp.html" data-i18n="esp">SAVOIR+</a>
-                <a href="auth/role-select.html?action=login" class="btn-auth" data-i18n="connexion">Connexion</a>
-                <a href="auth/role-select.html?action=signup" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
-            </div>
-        </div>
-    </nav>
-
-    <header>
-        <div class="badge-double-projet" data-i18n="sport_etudes">Sport + Études + Métier</div>
-        <h1 data-i18n="talent_rue">LE TALENT DE LA RUE,<br>LE FUTUR DU FOOTBALL.</h1>
-        <p data-i18n="description">HubISoccer transforme la détection de rue en opportunité professionnelle. Nous certifions le parcours académique des talents et les connectons aux agents agréés.</p>
-        <div class="cta-group">
-            <a href="scouting.html" class="btn-main btn-filled" data-i18n="reseau_scouting">Réseau Scouting</a>
-            <a href="tournoi.html" class="btn-main btn-border" data-i18n="tournoi">Tournoi HubISoccer</a>
-        </div>
-    </header>
-
-    <section class="concept-section">
-        <h2 data-i18n="engagement_ethique">NOTRE ENGAGEMENT ÉTHIQUE & JURIDIQUE</h2>
-        <div class="section-sub">Des valeurs qui nous guident</div>
-        <div class="grid-cards" id="engagementsContainer"></div>
-    </section>
-
-    <section class="portail-selection">
-        <h2 data-i18n="hub_inspiration">THE HUB OF INSPIRATION OF SOCCER</h2>
-        <p data-i18n="tournoi_desc">Tournoi HubISoccer. Connectez-vous à votre destin footballistique mondial.</p>
-        <div class="grid-cards" id="rolesContainer"></div>
-    </section>
-
-    <section class="stades-section">
-        <h2>Nos stades partenaires</h2>
-        <div class="section-sub">Les terrains où naissent les légendes</div>
-        <div class="stades-grid" id="stadesContainer"></div>
-    </section>
-
-    <footer>
-        <div class="compliance-badges">
-            <div class="badge-item" data-i18n="footer_conformite">Conformité APDP Bénin</div>
-            <div class="badge-item" data-i18n="footer_reglementation">Règlementation FIFA</div>
-            <div class="badge-item" data-i18n="footer_double_projet">Triple Projet Sport-Études-Carrière</div>
-        </div>
-        <div class="contact-box">
-            <a href="tel:+2290195973157" class="contact-item" data-i18n="contact_tel">📞 +229 01 95 97 31 57</a>
-            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="contact_email">📧 contacthubisoccer@gmail.com</a>
-        </div>
-        <div class="legal">
-            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
-            <p data-i18n="rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
-            <p data-i18n="copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
-        </div>
-    </footer>
-
-    <script>
-        // ===== CONFIGURATION SUPABASE (espace public) =====
-        const SUPABASE_URL = 'https://qdqkmsetcmtkdvilpwax.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkcWttc2V0Y210a2R2aWxwd2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzAyMTMsImV4cCI6MjA4OTg0NjIxM30.S_9XeKGsFVu6tP129HvswIJTwkDmbwZUkjL01l8MDvk';
-        const supabaseSpacePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // Éléments DOM
-        const engagementsContainer = document.getElementById('engagementsContainer');
-        const rolesContainer = document.getElementById('rolesContainer');
-        const stadesContainer = document.getElementById('stadesContainer');
-        const menuToggle = document.getElementById('menuToggle');
-        const navLinks = document.getElementById('navLinks');
-
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('show');
-        });
-
-        async function loadEngagements() {
-            const { data, error } = await supabaseSpacePublic
-                .from('public_data.engagements')
-                .select('*')
-                .order('order', { ascending: true });
-            if (error) {
-                console.error('Erreur chargement engagements:', error);
-                engagementsContainer.innerHTML = `
-                    <div class="card"><i class="fas fa-gavel"></i><h3>Conformité APDP</h3><p>Respect des lois sur la protection des données au Bénin.</p></div>
-                    <div class="card"><i class="fas fa-futbol"></i><h3>Règlementation FIFA</h3><p>Agents et clubs certifiés.</p></div>
-                    <div class="card"><i class="fas fa-graduation-cap"></i><h3>Double Projet</h3><p>Sport, études et carrière.</p></div>
-                `;
-                return;
-            }
-            if (!data.length) {
-                engagementsContainer.innerHTML = '<p class="no-data">Aucun engagement pour le moment.</p>';
-                return;
-            }
-            engagementsContainer.innerHTML = data.map(eng => `
-                <div class="card">
-                    <i class="fas ${eng.icon || 'fa-handshake'}"></i>
-                    <h3>${eng.title}</h3>
-                    <p>${eng.description}</p>
-                </div>
-            `).join('');
-        }
-
-        async function loadRoles() {
-            const { data, error } = await supabaseSpacePublic
-                .from('public_data.roles')
-                .select('*')
-                .order('order', { ascending: true });
-            if (error) {
-                console.error('Erreur chargement rôles:', error);
-                rolesContainer.innerHTML = `
-                    <div class="card"><i class="fas fa-user"></i><h3>Joueur</h3><p>Accès aux tournois, CV Pro, recruteurs.</p></div>
-                    <div class="card"><i class="fas fa-chalkboard-user"></i><h3>Coach</h3><p>Proposez vos formations et suivez vos équipes.</p></div>
-                    <div class="card"><i class="fas fa-briefcase"></i><h3>Agent FIFA</h3><p>Gérez vos talents et vos contrats.</p></div>
-                `;
-                return;
-            }
-            if (!data.length) {
-                rolesContainer.innerHTML = '<p class="no-data">Aucun rôle pour le moment.</p>';
-                return;
-            }
-            rolesContainer.innerHTML = data.map(role => `
-                <div class="card">
-                    <i class="fas ${role.icon || 'fa-user'}"></i>
-                    <h3>${role.title}</h3>
-                    <p>${role.description}</p>
-                </div>
-            `).join('');
-        }
-
-        async function loadStades() {
-            const { data, error } = await supabaseSpacePublic
-                .from('public_data.stades')
-                .select('*')
-                .order('order', { ascending: true });
-            if (error) {
-                console.error('Erreur chargement stades:', error);
-                stadesContainer.innerHTML = `
-                    <div class="stade-card"><img class="stade-img" src="https://via.placeholder.com/400x200?text=Stade+de+Cotonou"><div class="content"><h4>Stade de Cotonou</h4><p>Le temple du football béninois.</p></div></div>
-                    <div class="stade-card"><img class="stade-img" src="https://via.placeholder.com/400x200?text=Stade+de+Calavi"><div class="content"><h4>Stade de Calavi</h4><p>Lieu de détection des talents.</p></div></div>
-                    <div class="stade-card"><img class="stade-img" src="https://via.placeholder.com/400x200?text=Stade+de+Parakou"><div class="content"><h4>Stade de Parakou</h4><p>Futur centre d'excellence.</p></div></div>
-                `;
-                return;
-            }
-            if (!data.length) {
-                stadesContainer.innerHTML = '<p class="no-data">Aucun stade pour le moment.</p>';
-                return;
-            }
-            stadesContainer.innerHTML = data.map(stade => `
-                <div class="stade-card">
-                    <img class="stade-img" src="${stade.image_url}" alt="${stade.name}">
-                    <div class="content">
-                        <h4>${stade.name}</h4>
-                        <p>${stade.description}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        loadEngagements();
-        loadRoles();
-        loadStades();
-
-        // Gestion de la langue (simple)
-        const langSelect = document.getElementById('langSelect');
-        langSelect.addEventListener('change', () => {
-            const lang = langSelect.value;
-            localStorage.setItem('hubisoccer_lang', lang);
-            window.location.search = `?lang=${lang}`;
-        });
-        const urlParams = new URLSearchParams(window.location.search);
-        const lang = urlParams.get('lang') || localStorage.getItem('hubisoccer_lang') || 'fr';
-        langSelect.value = lang;
-    </script>
-</body>
+      
+      <div class="nav-links" id="navLinks">
+        <a href="e-marketing-hubisoccer.html" data-i18n="hub_market">HUBISOCCER MARKET</a>
+        <a href="hub-community.html" data-i18n="hub_community">HUB COMMUNITY</a>
+        <a href="scouting.html" data-i18n="scouting">SCOUTING</a>
+        <a href="processus.html" data-i18n="processus">PROCESSUS</a>
+        <a href="affiliation.html" data-i18n="affiliation">AFFILIATION</a>
+        <a href="premier-pas.html" data-i18n="premier-pas">PREMIER-PAS</a>
+        <a href="parrain.html" data-i18n="parrain">PARRAIN</a>
+        <a href="tournoi.html" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
+        <a href="esp.html" data-i18n="esp">SAVOIR+</a>
+        <a href="#" class="btn-auth" data-i18n="connexion">Connexion</a>
+        <a href="#" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
+      </div>
+    </div>
+  </nav>
+  
+  <header>
+    <div class="badge-double-projet" data-i18n="sport_etudes">Sport + Études + Métier</div>
+    <h1 data-i18n="talent_rue">LE TALENT DE LA RUE,<br>LE FUTUR DU FOOTBALL.</h1>
+    <p data-i18n="description">HubISoccer transforme la détection de rue en opportunité professionnelle. Nous certifions le parcours académique des talents et les connectons aux agents agréés.</p>
+    <div class="cta-group">
+      <a href="scouting.html" class="btn-main btn-filled" data-i18n="reseau_scouting">Réseau Scouting</a>
+      <a href="tournoi.html" class="btn-main btn-border" data-i18n="tournoi">Tournoi HubISoccer</a>
+    </div>
+  </header>
+  
+  <section class="concept-section">
+    <h2 data-i18n="engagement_ethique">NOTRE ENGAGEMENT ÉTHIQUE & JURIDIQUE</h2>
+    <div class="section-sub">Des valeurs qui nous guident</div>
+    <div class="grid-cards" id="engagementsContainer"></div>
+  </section>
+  
+  <section class="portail-selection">
+    <h2 data-i18n="hub_inspiration">THE HUB OF INSPIRATION OF SOCCER</h2>
+    <p data-i18n="tournoi_desc">Tournoi HubISoccer. Connectez-vous à votre destin footballistique mondial.</p>
+    <div class="grid-cards" id="rolesContainer"></div>
+  </section>
+  
+  <section class="stades-section">
+    <h2>Nos stades partenaires</h2>
+    <div class="section-sub">Les terrains où naissent les légendes</div>
+    <div class="stades-grid" id="stadesContainer"></div>
+  </section>
+  
+  <footer>
+    <div class="compliance-badges">
+      <div class="badge-item" data-i18n="footer_conformite">Conformité APDP Bénin</div>
+      <div class="badge-item" data-i18n="footer_reglementation">Règlementation FIFA</div>
+      <div class="badge-item" data-i18n="footer_double_projet">Triple Projet Sport-Études-Carrière</div>
+    </div>
+    <div class="contact-box">
+      <a href="tel:+2290195973157" class="contact-item" data-i18n="contact_tel">📞 +229 01 95 97 31 57</a>
+      <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="contact_email">📧 contacthubisoccer@gmail.com</a>
+    </div>
+    <div class="legal">
+      <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+      <p data-i18n="rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+      <p data-i18n="copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+    </div>
+  </footer>
+      <script src="index.js"></script>
+  </body>
 </html>

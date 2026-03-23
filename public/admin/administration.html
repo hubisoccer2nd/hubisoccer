@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Administration publique | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #551B8C;
+            --primary-light: #7e3db0;
+            --primary-dark: #3d1266;
+            --gold: #FFCC00;
+            --gold-dark: #e6b800;
+            --bg-light: #F0F8FF;
+            --white: #ffffff;
+            --dark: #1a1a1a;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
+            --transition: all 0.3s ease;
+            --border-radius: 20px;
+            --border-radius-sm: 12px;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        /* ===== NAVBAR ===== */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo-link {
+            display: flex;
+            align-items: center;
+        }
+        .logo-nav {
+            height: 45px;
+            transition: transform 0.2s;
+        }
+        .logo-nav:hover {
+            transform: scale(1.05);
+        }
+        .nav-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-left: 15px;
+            font-size: 1.1rem;
+        }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .back-home {
+            background: var(--primary);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        .back-home:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        /* ===== MAIN ===== */
+        main {
+            flex: 1;
+            padding: 40px 5%;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .subtitle {
+            color: var(--gray);
+            margin-bottom: 40px;
+            border-left: 4px solid var(--gold);
+            padding-left: 15px;
+        }
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        .admin-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            text-decoration: none;
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .admin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+        .admin-card i {
+            font-size: 2.5rem;
+            color: var(--gold);
+            margin-bottom: 15px;
+        }
+        .admin-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        .admin-card p {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        /* ===== FOOTER ===== */
+        footer {
+            background: #050505;
+            color: white;
+            padding: 30px 5%;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .compliance-badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .badge-item {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--gold);
+        }
+        .contact-box {
+            margin-bottom: 15px;
+        }
+        .contact-box a {
+            color: var(--gold);
+            text-decoration: none;
+            margin: 0 15px;
+        }
+        .legal p {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin: 5px 0;
+        }
+        @media (max-width: 600px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-title {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="./" class="logo-link">
+            <img src="../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+            <span class="nav-title">Administration publique</span>
+        </a>
+        <div class="nav-right">
+            <a href="../../index.html" class="back-home">← Retour au site</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <h1><i class="fas fa-tachometer-alt"></i> Tableau de bord</h1>
+            <div class="subtitle">Gérez le contenu dynamique de chaque page publique</div>
+
+            <div class="admin-grid">
+                <!-- Page d'accueil -->
+                <a href="index-admin/index-admin.html" class="admin-card">
+                    <i class="fas fa-home"></i>
+                    <h3>Accueil</h3>
+                    <p>Engagements, rôles, stades partenaires</p>
+                </a>
+
+                <!-- Actualités -->
+                <a href="actualites-admin/actualites-admin.html" class="admin-card">
+                    <i class="fas fa-newspaper"></i>
+                    <h3>Actualités</h3>
+                    <p>Articles et communiqués</p>
+                </a>
+
+                <!-- Accéder suivi -->
+                <a href="acceder-suivi-admin/acceder-suivi-admin.html" class="admin-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Accéder suivi</h3>
+                    <p>Suivi des candidatures</p>
+                </a>
+
+                <!-- Affiliation -->
+                <a href="affiliation-admin/affiliation-admin.html" class="admin-card">
+                    <i class="fas fa-handshake"></i>
+                    <h3>Affiliation</h3>
+                    <p>Partenaires et réseaux</p>
+                </a>
+
+                <!-- Affilie Dashboard -->
+                <a href="affilie-dashboard-admin/affilie-dashboard-admin.html" class="admin-card">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <h3>Affilie Dashboard</h3>
+                    <p>Tableau de bord affilié</p>
+                </a>
+
+                <!-- Affilie Login -->
+                <a href="affilie-login-admin/affilie-login-admin.html" class="admin-card">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <h3>Affilie Login</h3>
+                    <p>Connexion affiliés</p>
+                </a>
+
+                <!-- Test pratique -->
+                <a href="test-pratique-admin/test-pratique-admin.html" class="admin-card">
+                    <i class="fas fa-video"></i>
+                    <h3>Test pratique</h3>
+                    <p>Analyse vidéo</p>
+                </a>
+
+                <!-- CGU -->
+                <a href="cgu-admin/cgu-admin.html" class="admin-card">
+                    <i class="fas fa-file-contract"></i>
+                    <h3>CGU</h3>
+                    <p>Conditions générales</p>
+                </a>
+
+                <!-- Contact -->
+                <a href="contact-admin/contact-admin.html" class="admin-card">
+                    <i class="fas fa-envelope"></i>
+                    <h3>Contact</h3>
+                    <p>Messages et formulaires</p>
+                </a>
+
+                <!-- E‑Marketing HubISoccer -->
+                <a href="e-marketing-hubisoccer-admin/e-marketing-hubisoccer-admin.html" class="admin-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>E‑Marketing</h3>
+                    <p>Campagnes et offres</p>
+                </a>
+
+                <!-- Épreuve -->
+                <a href="epreuve-admin/epreuve-admin.html" class="admin-card">
+                    <i class="fas fa-tasks"></i>
+                    <h3>Épreuve</h3>
+                    <p>Gestion des épreuves</p>
+                </a>
+
+                <!-- ESP (Savoir+) -->
+                <a href="esp-admin/esp-admin.html" class="admin-card">
+                    <i class="fas fa-brain"></i>
+                    <h3>ESP</h3>
+                    <p>Contenu Savoir+</p>
+                </a>
+
+                <!-- Test écrit -->
+                <a href="test-ecrit-admin/test-ecrit-admin.html" class="admin-card">
+                    <i class="fas fa-pen"></i>
+                    <h3>Test écrit</h3>
+                    <p>Examens de qualification</p>
+                </a>
+
+                <!-- FAQ -->
+                <a href="faq-admin/faq-admin.html" class="admin-card">
+                    <i class="fas fa-question-circle"></i>
+                    <h3>FAQ</h3>
+                    <p>Questions fréquentes</p>
+                </a>
+
+                <!-- Hub Community -->
+                <a href="hub-community-admin/hub-community-admin.html" class="admin-card">
+                    <i class="fas fa-users"></i>
+                    <h3>Hub Community</h3>
+                    <p>Publications et commentaires publics</p>
+                </a>
+
+                <!-- Mentions légales -->
+                <a href="mentions-legales-admin/mentions-legales-admin.html" class="admin-card">
+                    <i class="fas fa-gavel"></i>
+                    <h3>Mentions légales</h3>
+                    <p>Textes juridiques</p>
+                </a>
+
+                <!-- Parrain -->
+                <a href="parrain-admin/parrain-admin.html" class="admin-card">
+                    <i class="fas fa-user-friends"></i>
+                    <h3>Parrain</h3>
+                    <p>Programme de parrainage</p>
+                </a>
+
+                <!-- Partenaires -->
+                <a href="partenaires-admin/partenaires-admin.html" class="admin-card">
+                    <i class="fas fa-building"></i>
+                    <h3>Partenaires</h3>
+                    <p>Liste des partenaires</p>
+                </a>
+
+                <!-- Premier‑pas -->
+                <a href="premier-pas-admin/premier-pas-admin.html" class="admin-card">
+                    <i class="fas fa-shoe-prints"></i>
+                    <h3>Premier‑pas</h3>
+                    <p>Guide d'inscription</p>
+                </a>
+
+                <!-- Processus -->
+                <a href="processus-admin/processus-admin.html" class="admin-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Processus</h3>
+                    <p>Étapes et statistiques</p>
+                </a>
+
+                <!-- Profil -->
+                <a href="profil-admin/profil-admin.html" class="admin-card">
+                    <i class="fas fa-user-circle"></i>
+                    <h3>Profil</h3>
+                    <p>Profils utilisateurs</p>
+                </a>
+
+                <!-- Résultats -->
+                <a href="resultats-admin/resultats-admin.html" class="admin-card">
+                    <i class="fas fa-trophy"></i>
+                    <h3>Résultats</h3>
+                    <p>Classements et scores</p>
+                </a>
+
+                <!-- Global Scouting -->
+                <a href="global-scouting-admin/global-scouting-admin.html" class="admin-card">
+                    <i class="fas fa-globe"></i>
+                    <h3>Global Scouting</h3>
+                    <p>Observations internationales</p>
+                </a>
+
+                <!-- Succès -->
+                <a href="succes-admin/succes-admin.html" class="admin-card">
+                    <i class="fas fa-star"></i>
+                    <h3>Succès</h3>
+                    <p>Histoires de réussite</p>
+                </a>
+
+                <!-- Suivi -->
+                <a href="suivi-admin/suivi-admin.html" class="admin-card">
+                    <i class="fas fa-chart-simple"></i>
+                    <h3>Suivi</h3>
+                    <p>Indicateurs de performance</p>
+                </a>
+
+                <!-- Tournoi public -->
+                <a href="tournoi-admin/tournoi-admin.html" class="admin-card">
+                    <i class="fas fa-trophy"></i>
+                    <h3>Tournoi public</h3>
+                    <p>Tournois, résultats, diffusions</p>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="compliance-badges">
+                <div class="badge-item">Conformité APDP Bénin</div>
+                <div class="badge-item">Règlementation FIFA</div>
+                <div class="badge-item">Triple Projet Sport-Études-Carrière</div>
+            </div>
+            <div class="contact-box">
+                <a href="tel:+2290195973157">📞 +229 01 95 97 31 57</a>
+                <a href="mailto:contacthubisoccer@gmail.com">📧 contacthubisoccer@gmail.com</a>
+            </div>
+            <div class="legal">
+                <p>HubISoccer - The Hub of Inspiration of Soccer</p>
+                <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+                <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

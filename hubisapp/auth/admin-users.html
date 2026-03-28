@@ -1,1 +1,659 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des utilisateurs | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* mêmes styles que précédemment, inchangés */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            color: #1a1a2e;
+            overflow-x: hidden;
+        }
+        .bg-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .bg-shapes .shape {
+            position: absolute;
+            background: rgba(107, 59, 164, 0.05);
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+        .shape-1 { width: 500px; height: 500px; top: -200px; left: -200px; }
+        .shape-2 { width: 600px; height: 600px; bottom: -200px; right: -200px; background: rgba(107, 59, 164, 0.08); }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 48px;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(107,59,164,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .logo img { height: 42px; }
+        .logo span { font-size: 1.4rem; font-weight: 700; color: #6b3ba4; }
+        .nav-buttons {
+            display: flex;
+            gap: 16px;
+        }
+        .nav-btn-outline {
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid #6b3ba4;
+            color: #6b3ba4;
+            background: transparent;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        .nav-btn-outline:hover { background: #6b3ba4; color: white; transform: translateY(-2px); }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6b3ba4, #9b6bcd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .back-link {
+            color: #6b3ba4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .card {
+            background: #fbfbff;
+            border-radius: 32px;
+            padding: 32px;
+            margin-bottom: 40px;
+            border: 1px solid #e9e9f0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+        }
+        .card h2 {
+            font-size: 1.6rem;
+            margin-bottom: 24px;
+            color: #1a1a2e;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid #e9e9f0;
+            margin-bottom: 24px;
+        }
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 40px 40px 0 0;
+            font-weight: 500;
+            color: #5a5a72;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: #6b3ba4;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+            display: block;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9e9f0;
+        }
+        th {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-banned { background: #fee2e2; color: #b91c1c; }
+        .status-active { background: #e0f2fe; color: #0369a1; }
+        .status-online { background: #d1fae5; color: #065f46; }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-primary {
+            background: #6b3ba4;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #552e84;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #6b3ba4;
+            color: #6b3ba4;
+        }
+        .btn-secondary:hover {
+            background: #6b3ba4;
+            color: white;
+        }
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c53030;
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .modal-content h3 {
+            margin-bottom: 20px;
+        }
+        .modal-content .form-group {
+            margin-bottom: 20px;
+        }
+        .modal-content label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .modal-content input, .modal-content select, .modal-content textarea {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid #e2e2f0;
+            border-radius: 28px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 32px;
+            font-size: 0.8rem;
+            color: #aaa;
+            border-top: 1px solid #eee;
+            margin-top: 60px;
+        }
+        @media (max-width: 768px) {
+            .navbar { padding: 16px 24px; }
+            .container { padding: 24px 16px; }
+            .card { padding: 24px; }
+            th, td { padding: 8px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
 
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='../index.html'">
+            <img src="../public/img/logo-navbar.png" alt="HubISoccer">
+            <span>HubISoccer</span>
+        </div>
+        <div class="nav-buttons">
+            <a href="../index.html" class="nav-btn-outline">Accueil</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Gestion des utilisateurs</h1>
+            <a href="admin-dashboard.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour au tableau de bord</a>
+        </div>
+
+        <div class="card">
+            <h2>Utilisateurs</h2>
+            <div class="tabs">
+                <div class="tab active" data-tab="users">Tous les utilisateurs</div>
+                <div class="tab" data-tab="bans">Bannissements actifs</div>
+                <div class="tab" data-tab="history">Historique des bans</div>
+            </div>
+
+            <!-- Onglet : Tous les utilisateurs -->
+            <div id="usersTab" class="tab-content active">
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="searchUser" placeholder="Rechercher par email, nom ou rôle" style="padding: 10px 16px; border-radius: 40px; border: 1px solid #e2e2f0; width: 300px;">
+                </div>
+                <div style="overflow-x: auto;">
+                    <table id="usersTable">
+                        <thead>
+                            <tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>En ligne</th><th>Actions</th>+<
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Onglet : Bannissements actifs -->
+            <div id="bansTab" class="tab-content">
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr><th>Utilisateur</th><th>Email</th><th>Raison</th><th>Expire le</th><th>Actions</th>+<
+                        </thead>
+                        <tbody id="activeBansBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Onglet : Historique des bans (expirés ou révoqués) -->
+            <div id="historyTab" class="tab-content">
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                             early<th>Utilisateur</th><th>Email</th><th>Raison</th><th>Expiration</th><th>Statut</th>+<
+                        </thead>
+                        <tbody id="historyBansBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour bannir un utilisateur -->
+    <div id="banModal" class="modal">
+        <div class="modal-content">
+            <h3>Bannir un utilisateur</h3>
+            <div class="form-group">
+                <label>Utilisateur</label>
+                <input type="text" id="banUserName" readonly>
+                <input type="hidden" id="banUserId">
+            </div>
+            <div class="form-group">
+                <label>Durée</label>
+                <select id="banDuration">
+                    <option value="temporary">Temporaire</option>
+                    <option value="permanent">Permanent</option>
+                </select>
+            </div>
+            <div class="form-group" id="durationGroup">
+                <label>Durée (minutes)</label>
+                <input type="number" id="banMinutes" placeholder="ex: 30, 60, 1440" value="30">
+            </div>
+            <div class="form-group">
+                <label>Raison</label>
+                <textarea id="banReason" rows="3" placeholder="Motif du bannissement..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="cancelBanBtn">Annuler</button>
+                <button class="btn btn-danger" id="confirmBanBtn">Bannir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour valider une inscription (définitive) -->
+    <div id="validateModal" class="modal">
+        <div class="modal-content">
+            <h3>Valider l'inscription</h3>
+            <p>Êtes-vous sûr de vouloir valider définitivement l'inscription de <strong id="validateUserName"></strong> ?</p>
+            <p>L'utilisateur pourra alors se connecter avec son ID HubISoccer.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="cancelValidateBtn">Annuler</button>
+                <button class="btn btn-success" id="confirmValidateBtn">Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2026 HubISoccer - Administration sécurisée</p>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="admin-auth.js"></script>
+    <script>
+        let currentUserForBan = null;
+        let currentUserForValidate = null;
+
+        // Charger les utilisateurs (profiles)
+        async function loadUsers() {
+            const { data: profiles, error } = await window.supabaseAuthPrive
+                .from('profiles')
+                .select('id, email, full_name, role, hubisoccer_id');
+            if (error) {
+                console.error(error);
+                return;
+            }
+            // Récupérer les bans actifs
+            const { data: bans, error: banError } = await window.supabaseAuthPrive
+                .from('bans')
+                .select('user_id, expires_at')
+                .or('expires_at.is.null,expires_at.gt.now()');
+            const activeBanMap = {};
+            if (bans) {
+                bans.forEach(ban => { activeBanMap[ban.user_id] = ban.expires_at ? new Date(ban.expires_at) : null; });
+            }
+            // Récupérer les présences en ligne (dernière activité < 5 min)
+            const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+            const { data: presence, error: presError } = await window.supabaseAuthPrive
+                .from('user_presence')
+                .select('user_id')
+                .gt('last_seen', fiveMinAgo);
+            const onlineSet = new Set();
+            if (presence) presence.forEach(p => onlineSet.add(p.user_id));
+
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            profiles.forEach(user => {
+                const isBanned = activeBanMap[user.id] !== undefined;
+                const statusHtml = isBanned ? '<span class="status-badge status-banned">Banni</span>' : '<span class="status-badge status-active">Actif</span>';
+                const onlineHtml = onlineSet.has(user.id) ? '<span class="status-badge status-online">En ligne</span>' : '-';
+                const actionsHtml = `
+                    <button class="btn btn-secondary validate-btn" data-id="${user.id}" data-name="${user.full_name || user.email}" data-hubid="${user.hubisoccer_id || ''}" ${user.hubisoccer_id ? '' : 'disabled'} title="${user.hubisoccer_id ? 'Valider l\'inscription' : 'Aucun ID HubISoccer'}">Valider</button>
+                    ${isBanned ? 
+                        `<button class="btn btn-secondary unban-btn" data-id="${user.id}">Lever le ban</button>` : 
+                        `<button class="btn btn-danger ban-btn" data-id="${user.id}" data-name="${user.full_name || user.email}" data-email="${user.email}">Bannir</button>`
+                    }
+                `;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${user.full_name || '-'}</td>
+                        <td>${user.email}</td>
+                        <td>${user.role}</td>
+                        <td>${statusHtml}</td>
+                        <td>${onlineHtml}</td>
+                        <td>${actionsHtml}</td>
+                    </tr>
+                `;
+            });
+            // Attacher les événements
+            document.querySelectorAll('.ban-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const userId = btn.getAttribute('data-id');
+                    const userName = btn.getAttribute('data-name');
+                    const userEmail = btn.getAttribute('data-email');
+                    openBanModal(userId, userName, userEmail);
+                });
+            });
+            document.querySelectorAll('.unban-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const userId = btn.getAttribute('data-id');
+                    if (confirm('Lever le bannissement de cet utilisateur ?')) {
+                        const { error } = await window.supabaseAuthPrive
+                            .from('bans')
+                            .delete()
+                            .eq('user_id', userId);
+                        if (error) window.showToast('Erreur : ' + error.message, 'error');
+                        else {
+                            window.showToast('Bannissement levé', 'success');
+                            loadUsers();
+                            loadBans();
+                        }
+                    }
+                });
+            });
+            document.querySelectorAll('.validate-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const userId = btn.getAttribute('data-id');
+                    const userName = btn.getAttribute('data-name');
+                    const hubId = btn.getAttribute('data-hubid');
+                    if (!hubId) {
+                        window.showToast('Cet utilisateur n’a pas d’ID HubISoccer', 'error');
+                        return;
+                    }
+                    openValidateModal(userId, userName);
+                });
+            });
+        }
+
+        function openBanModal(userId, userName, userEmail) {
+            currentUserForBan = { id: userId, name: userName, email: userEmail };
+            document.getElementById('banUserName').value = userName + ' (' + userEmail + ')';
+            document.getElementById('banUserId').value = userId;
+            document.getElementById('banDuration').value = 'temporary';
+            document.getElementById('durationGroup').style.display = 'block';
+            document.getElementById('banMinutes').value = '30';
+            document.getElementById('banReason').value = '';
+            document.getElementById('banModal').style.display = 'flex';
+        }
+
+        document.getElementById('banDuration').addEventListener('change', (e) => {
+            const durationGroup = document.getElementById('durationGroup');
+            if (e.target.value === 'permanent') {
+                durationGroup.style.display = 'none';
+            } else {
+                durationGroup.style.display = 'block';
+            }
+        });
+
+        document.getElementById('confirmBanBtn').addEventListener('click', async () => {
+            const userId = document.getElementById('banUserId').value;
+            const durationType = document.getElementById('banDuration').value;
+            const reason = document.getElementById('banReason').value.trim() || 'Bannissement administratif';
+            let expires_at = null;
+            if (durationType === 'temporary') {
+                const minutes = parseInt(document.getElementById('banMinutes').value, 10);
+                if (isNaN(minutes) || minutes <= 0) {
+                    window.showToast('Durée invalide', 'error');
+                    return;
+                }
+                expires_at = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+            }
+            const { error } = await window.supabaseAuthPrive
+                .from('bans')
+                .insert([{
+                    user_id: userId,
+                    reason: reason,
+                    expires_at: expires_at,
+                    created_by: window.adminUser?.id || null
+                }]);
+            if (error) {
+                window.showToast('Erreur : ' + error.message, 'error');
+            } else {
+                window.showToast('Utilisateur banni avec succès', 'success');
+                closeBanModal();
+                loadUsers();
+                loadBans();
+            }
+        });
+
+        function closeBanModal() {
+            document.getElementById('banModal').style.display = 'none';
+            currentUserForBan = null;
+        }
+
+        function openValidateModal(userId, userName) {
+            currentUserForValidate = userId;
+            document.getElementById('validateUserName').innerText = userName;
+            document.getElementById('validateModal').style.display = 'flex';
+        }
+
+        function closeValidateModal() {
+            document.getElementById('validateModal').style.display = 'none';
+            currentUserForValidate = null;
+        }
+
+        document.getElementById('confirmValidateBtn').addEventListener('click', async () => {
+            if (!currentUserForValidate) return;
+            // Ici on met à jour le statut de l'ID HubISoccer si nécessaire, et on active le compte
+            // Pour l'instant, on suppose que l'utilisateur a déjà un hubisoccer_id. On peut marquer le compte comme validé.
+            // On peut aussi changer le statut dans hubisoccer_ids (de pending à used) si ce n'est pas déjà fait.
+            // Dans notre flux, l'ID est utilisé lors de l'inscription, donc il est déjà marqué used.
+            // On peut simplement notifier.
+            window.showToast('Inscription validée (fonctionnalité à implémenter selon votre workflow)', 'success');
+            closeValidateModal();
+        });
+
+        document.getElementById('cancelBanBtn').addEventListener('click', closeBanModal);
+        document.getElementById('cancelValidateBtn').addEventListener('click', closeValidateModal);
+        window.onclick = (event) => {
+            if (event.target === document.getElementById('banModal')) closeBanModal();
+            if (event.target === document.getElementById('validateModal')) closeValidateModal();
+        };
+
+        // Charger les bannissements actifs
+        async function loadActiveBans() {
+            const { data: bans, error } = await window.supabaseAuthPrive
+                .from('bans')
+                .select('*, profiles(id, email, full_name)')
+                .or('expires_at.is.null,expires_at.gt.now()');
+            if (error) return;
+            const tbody = document.getElementById('activeBansBody');
+            tbody.innerHTML = '';
+            if (!bans || bans.length === 0) {
+                tbody.innerHTML = '.<td colspan="5">Aucun bannissement actif</td>';
+                return;
+            }
+            bans.forEach(ban => {
+                const user = ban.profiles;
+                const expires = ban.expires_at ? new Date(ban.expires_at).toLocaleString() : 'Permanent';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${user?.full_name || '-'}</td>
+                        <td>${user?.email || '-'}</td>
+                        <td>${ban.reason || '-'}</td>
+                        <td>${expires}</td>
+                        <td><button class="btn btn-secondary unban-btn" data-id="${ban.user_id}">Lever le ban</button></td>
+                    </tr>
+                `;
+            });
+            document.querySelectorAll('#activeBansBody .unban-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const userId = btn.getAttribute('data-id');
+                    if (confirm('Lever le bannissement ?')) {
+                        const { error } = await window.supabaseAuthPrive
+                            .from('bans')
+                            .delete()
+                            .eq('user_id', userId);
+                        if (error) window.showToast('Erreur : ' + error.message, 'error');
+                        else {
+                            window.showToast('Ban levé', 'success');
+                            loadUsers();
+                            loadActiveBans();
+                            loadBanHistory();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Charger l'historique des bans (expirés)
+        async function loadBanHistory() {
+            const { data: bans, error } = await window.supabaseAuthPrive
+                .from('bans')
+                .select('*, profiles(id, email, full_name)')
+                .lt('expires_at', new Date().toISOString());
+            if (error) return;
+            const tbody = document.getElementById('historyBansBody');
+            tbody.innerHTML = '';
+            if (!bans || bans.length === 0) {
+                tbody.innerHTML = '.<td colspan="5">Aucun historique</td>';
+                return;
+            }
+            bans.forEach(ban => {
+                const user = ban.profiles;
+                const expires = ban.expires_at ? new Date(ban.expires_at).toLocaleString() : 'Permanent';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${user?.full_name || '-'}</td>
+                        <td>${user?.email || '-'}</td>
+                        <td>${ban.reason || '-'}</td>
+                        <td>${expires}</td>
+                        <td>Expiré</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Gestion des onglets
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const target = tab.getAttribute('data-tab');
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(`${target}Tab`).classList.add('active');
+                if (target === 'users') loadUsers();
+                if (target === 'bans') loadActiveBans();
+                if (target === 'history') loadBanHistory();
+            });
+        });
+
+        // Recherche utilisateur
+        const searchInput = document.getElementById('searchUser');
+        searchInput.addEventListener('input', () => {
+            const filter = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('#usersTableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+
+        // Chargement initial
+        loadUsers();
+        loadActiveBans();
+        loadBanHistory();
+    </script>
+</body>
+</html>

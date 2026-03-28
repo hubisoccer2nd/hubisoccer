@@ -1,1 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choix du rôle | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #551B8C;
+            --primary-light: #7e3db0;
+            --primary-dark: #3d1266;
+            --gold: #ffcc00;
+            --gold-dark: #e6b800;
+            --bg-light: #F0F8FF;
+            --white: #ffffff;
+            --dark: #1a1a1a;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 40px rgba(85,27,140,0.1);
+            --transition: all 0.3s ease;
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* Loader */
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid var(--gold);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #globalLoader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.2rem;
+            display: none;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background: var(--white);
+            box-shadow: var(--shadow);
+            border-bottom: 1px solid var(--light-gray);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .logo img {
+            height: 45px;
+        }
+
+        .logo span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .nav-btn {
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .nav-btn-outline {
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            background: transparent;
+        }
+
+        .nav-btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Contenu principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Grille des rôles */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .role-card {
+            background: var(--white);
+            border-radius: 28px;
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+            box-shadow: var(--shadow);
+        }
+
+        .role-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--gold);
+            box-shadow: var(--shadow-hover);
+            background: var(--white);
+        }
+
+        .role-icon {
+            font-size: 56px;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .role-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--dark);
+        }
+
+        .role-desc {
+            font-size: 0.9rem;
+            color: var(--gray);
+            line-height: 1.5;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--light-gray);
+            margin-top: 60px;
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+
+        .compliance-badges {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .badge-item {
+            background: rgba(85,27,140,0.05);
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            color: var(--primary);
+        }
+        .contact-box {
+            margin-bottom: 15px;
+        }
+        .contact-item {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 15px;
+        }
+        .legal p {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* Toast container */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid;
+            animation: slideIn 0.3s forwards;
+        }
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+        .toast.info { border-left-color: var(--primary); }
+        .toast.warning { border-left-color: #ffc107; }
+        .toast-icon { font-size: 1.2rem; }
+        .toast-content { flex: 1; font-size: 0.9rem; color: #333; }
+        .toast-close {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 5%;
+            }
+            .logo span {
+                font-size: 1.2rem;
+            }
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .hero p {
+                font-size: 1rem;
+            }
+            .role-card {
+                padding: 24px 16px;
+            }
+            .role-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="globalLoader">
+        <div class="spinner"></div> Chargement...
+    </div>
+
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='../../index.html'">
+            <img src="/public/img/logo-navbar.png" alt="HubISoccer" onerror="this.src='../img/logo-navbar.png'">
+            <span>HubISoccer</span>
+        </div>
+        <div class="nav-buttons">
+            <a href="../../index.html" class="nav-btn nav-btn-outline">Accueil</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1 id="pageTitle">Chargement...</h1>
+            <p id="pageSubtitle">Sélectionnez votre espace pour continuer</p>
+        </div>
+        <div class="roles-grid" id="rolesGrid"></div>
+    </div>
+
+    <div class="footer">
+        <div class="compliance-badges">
+            <div class="badge-item">Conformité APDP Bénin</div>
+            <div class="badge-item">Règlementation FIFA</div>
+            <div class="badge-item">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+
+        const pageTitle = document.getElementById('pageTitle');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+
+        if (action === 'login') {
+            pageTitle.innerText = 'Connexion';
+            pageSubtitle.innerText = 'Choisissez votre espace pour vous connecter';
+        } else if (action === 'signup') {
+            pageTitle.innerText = 'Inscription';
+            pageSubtitle.innerText = 'Choisissez votre espace pour créer votre compte';
+        } else {
+            window.location.href = '../../index.html';
+        }
+
+        function showToast(message, type = 'info') {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i></div>
+                <div class="toast-content">${escapeHtml(message)}</div>
+                <button class="toast-close"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            toast.querySelector('.toast-close').addEventListener('click', () => {
+                toast.style.animation = 'fadeOut 0.3s forwards';
+                setTimeout(() => toast.remove(), 300);
+            });
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.style.animation = 'fadeOut 0.3s forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        const roles = [
+            { id: 'footballer', name: 'Footballeur', icon: 'fas fa-futbol', desc: 'Accédez à votre espace footballeur, suivez vos stats et gérez votre carrière.', folder: 'footballer' },
+            { id: 'basketball', name: 'Basketteur', icon: 'fas fa-basketball-ball', desc: 'Espace basket : statistiques, vidéos, recrutement.', folder: 'basketball' },
+            { id: 'tennis', name: 'Tennisman', icon: 'fas fa-table-tennis', desc: 'Espace tennis : classement, tournois, analyse.', folder: 'tennis' },
+            { id: 'athlete', name: 'Athlète', icon: 'fas fa-running', desc: 'Espace athlétisme : performances, compétitions.', folder: 'athlete' },
+            { id: 'handball', name: 'Handballeur', icon: 'fas fa-futbol', desc: 'Espace handball : stats, matchs, recrutement.', folder: 'handball' },
+            { id: 'volleyball', name: 'Volleyeur', icon: 'fas fa-volleyball-ball', desc: 'Espace volley-ball : entraînements, compétitions.', folder: 'volleyball' },
+            { id: 'rugby', name: 'Rugbyman', icon: 'fas fa-football-ball', desc: 'Espace rugby : équipe, matchs, tactique.', folder: 'rugby' },
+            { id: 'swimming', name: 'Nageur', icon: 'fas fa-swimmer', desc: 'Espace natation : chronos, entraînements.', folder: 'swimming' },
+            { id: 'cycling', name: 'Cycliste', icon: 'fas fa-bicycle', desc: 'Espace cyclisme : courses, performances.', folder: 'cycling' },
+            { id: 'martialarts', name: 'Judoka / Arts martiaux', icon: 'fas fa-fist-raised', desc: 'Espace arts martiaux : ceintures, compétitions.', folder: 'martialarts' },
+            { id: 'referee', name: 'Arbitre', icon: 'fas fa-whistle', desc: 'Espace arbitres : matchs, rapports, disponibilités.', folder: 'referee' },
+            { id: 'coach', name: 'Coach', icon: 'fas fa-chalkboard-user', desc: 'Gérez vos séances, suivez vos athlètes.', folder: 'coach' },
+            { id: 'agent', name: 'Agent FIFA', icon: 'fas fa-handshake', desc: 'Gérez vos footballeurs, contrats et commissions.', folder: 'agent' },
+            { id: 'academy', name: 'Académie', icon: 'fas fa-school', desc: 'Gérez votre centre de formation.', folder: 'academy' },
+            { id: 'sponsor', name: 'Parrain', icon: 'fas fa-star', desc: 'Soutenez les talents et recevez des avantages.', folder: 'sponsor' },
+            { id: 'medicalstaff', name: 'Staff médical', icon: 'fas fa-notes-medical', desc: 'Suivi médical, blessures et réhabilitation.', folder: 'medicalstaff' },
+            { id: 'tournamentmanager', name: 'Gestionnaire de tournoi', icon: 'fas fa-trophy', desc: 'Organisez et gérez des compétitions.', folder: 'tournamentmanager' }
+        ];
+
+        const grid = document.getElementById('rolesGrid');
+        roles.forEach(role => {
+            const card = document.createElement('div');
+            card.className = 'role-card';
+            card.innerHTML = `
+                <div class="role-icon"><i class="${role.icon}"></i></div>
+                <div class="role-title">${role.name}</div>
+                <div class="role-desc">${role.desc}</div>
+            `;
+            card.addEventListener('click', () => {
+                if (action === 'login') {
+                    window.location.href = `login.html?role=${role.id}`;
+                } else if (action === 'signup') {
+                    window.location.href = `signup.html?role=${role.id}`;
+                } else {
+                    showToast('Action non reconnue', 'error');
+                }
+            });
+            grid.appendChild(card);
+        });
+    </script>
+</body>
+</html>

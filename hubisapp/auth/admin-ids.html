@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <script src="admin-auth.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -47,10 +49,6 @@
         .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .logo img { height: 42px; }
         .logo span { font-size: 1.4rem; font-weight: 700; color: #6b3ba4; }
-        .nav-buttons {
-            display: flex;
-            gap: 16px;
-        }
         .nav-btn-outline {
             padding: 8px 24px;
             border-radius: 40px;
@@ -158,13 +156,6 @@
             background: #6b3ba4;
             color: white;
         }
-        .btn-danger {
-            background: #e53e3e;
-            color: white;
-        }
-        .btn-danger:hover {
-            background: #c53030;
-        }
         .tabs {
             display: flex;
             gap: 8px;
@@ -234,6 +225,28 @@
             border-top: 1px solid #eee;
             margin-top: 60px;
         }
+        .footer .compliance-badges {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .footer .badge {
+            background: rgba(85,27,140,0.05);
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            color: #6b3ba4;
+        }
+        .footer .contact-box {
+            margin-bottom: 15px;
+        }
+        .footer .contact-item {
+            color: #6b3ba4;
+            text-decoration: none;
+            margin: 0 15px;
+        }
         @media (max-width: 768px) {
             .navbar { padding: 16px 24px; }
             .container { padding: 24px 16px; }
@@ -250,12 +263,12 @@
     </div>
 
     <nav class="navbar">
-        <div class="logo" onclick="window.location.href='../index.html'">
-            <img src="../public/img/logo-navbar.png" alt="HubISoccer">
+        <div class="logo" onclick="window.location.href='../../index.html'">
+            <img src="logo-navbar.png" alt="HubISoccer">
             <span>HubISoccer</span>
         </div>
         <div class="nav-buttons">
-            <a href="../index.html" class="nav-btn-outline">Accueil</a>
+            <a href="../../index.html" class="nav-btn-outline">Accueil</a>
         </div>
     </nav>
 
@@ -265,14 +278,12 @@
             <a href="admin-dashboard.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour au tableau de bord</a>
         </div>
 
-        <!-- Formulaire de génération -->
         <div class="card">
             <h2>Générer un nouvel ID</h2>
             <div class="form-row">
                 <div class="form-group">
                     <label>ID PP (complet) *</label>
                     <input type="text" id="idpp" placeholder="Ex: a5b7c3-VA-032714-HubIS-FT-123-00001">
-                    <small class="form-text text-muted">L'ID PP servira à extraire les 6 premiers caractères (ex: a5b7c3).</small>
                 </div>
                 <div class="form-group">
                     <label>Rôle *</label>
@@ -312,7 +323,6 @@
             <button class="btn btn-secondary" id="saveIdBtn" style="display: none; margin-top: 12px;">Enregistrer dans la base</button>
         </div>
 
-        <!-- Liste des IDs existants -->
         <div class="card">
             <h2>IDs existants</h2>
             <div class="tabs">
@@ -322,41 +332,44 @@
             </div>
             <div id="pendingTab" class="tab-content active">
                 <table>
-                    <thead>
-                        <tr><th>ID</th><th>Rôle</th><th>Date de création</th><th>Actions</th></tr>
-                    </thead>
+                    <thead><tr><th>ID</th><th>Rôle</th><th>Date de création</th><th>Actions</th></tr></thead>
                     <tbody id="pendingTable"></tbody>
                 </table>
             </div>
             <div id="usedTab" class="tab-content">
                 <table>
-                    <thead>
-                        <tr><th>ID</th><th>Rôle</th><th>Date d'utilisation</th><th>Utilisateur</th></tr>
-                    </thead>
+                    <thead><tr><th>ID</th><th>Rôle</th><th>Date d'utilisation</th><th>Utilisateur</th></tr></thead>
                     <tbody id="usedTable"></tbody>
                 </table>
             </div>
             <div id="revokedTab" class="tab-content">
                 <table>
-                    <thead>
-                        <tr><th>ID</th><th>Rôle</th><th>Date de révocation</th></tr>
-                    </thead>
+                    <thead><tr><th>ID</th><th>Rôle</th><th>Date de révocation</th></tr></thead>
                     <tbody id="revokedTable"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div class="footer">
-        <p>© 2026 HubISoccer - Administration sécurisée</p>
-    </div>
+    <footer class="footer">
+        <div class="compliance-badges">
+            <div class="badge">Conformité APDP Bénin</div>
+            <div class="badge">Règlementation FIFA</div>
+            <div class="badge">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>© Ozawa-Hubisoccer</p>
+        </div>
+    </footer>
 
-    <script src="auth.js"></script>
-    <script src="admin-auth.js"></script>
+    <div id="toastContainer" class="toast-container"></div>
+
     <script>
-        // Fonctions de génération d'ID
         async function getNextCounter(roleCode) {
-            // Récupère le compteur journalier pour ce rôle
             const today = new Date().toISOString().slice(0,10);
             const { data, error } = await window.supabaseAuthPrive
                 .from('id_counters')
@@ -364,49 +377,32 @@
                 .eq('role', roleCode)
                 .eq('date', today)
                 .maybeSingle();
-            if (error) {
-                console.error(error);
-                return 1;
-            }
+            if (error) return 1;
             if (data) {
                 const next = data.counter + 1;
-                await window.supabaseAuthPrive
-                    .from('id_counters')
-                    .update({ counter: next })
-                    .eq('role', roleCode)
-                    .eq('date', today);
+                await window.supabaseAuthPrive.from('id_counters').update({ counter: next }).eq('role', roleCode).eq('date', today);
                 return next;
             } else {
-                await window.supabaseAuthPrive
-                    .from('id_counters')
-                    .insert([{ role: roleCode, date: today, counter: 1 }]);
+                await window.supabaseAuthPrive.from('id_counters').insert([{ role: roleCode, date: today, counter: 1 }]);
                 return 1;
             }
         }
 
-        function generateHubId(idpp, countryCode, phone, roleCode) {
-            // Extraire les 6 premiers caractères de l'ID PP (si l'ID PP contient des tirets, on prend avant le premier tiret ? Pour l'exemple, on prend les 6 premiers caractères)
+        async function generateHubId(idpp, countryCode, phone, roleCode) {
             let idppPart = idpp.replace(/-/g, '').substring(0, 6);
-            // Si l'ID PP fait moins de 6 caractères, on complète avec des '0'
             if (idppPart.length < 6) idppPart = idppPart.padEnd(6, '0');
-            // Date au format JJMMAAAA
             const now = new Date();
             const day = now.getDate().toString().padStart(2, '0');
             const month = (now.getMonth() + 1).toString().padStart(2, '0');
             const year = now.getFullYear().toString();
             const datePart = day + month + year;
-            // Extraire les 5 derniers chiffres du téléphone
             const phoneDigits = phone.replace(/\D/g, '');
             const phonePart = phoneDigits.slice(-5).padStart(5, '0');
-            // Le compteur sera récupéré après avoir généré l'ID (on le mettra après)
-            // On retourne une promesse qui attend le compteur
-            return getNextCounter(roleCode).then(counter => {
-                const counterStr = counter.toString().padStart(5, '0');
-                return `${idppPart}Hu${countryCode.toUpperCase()}bI${datePart}${phonePart}${counterStr}${roleCode}`;
-            });
+            const counter = await getNextCounter(roleCode);
+            const counterStr = counter.toString().padStart(5, '0');
+            return `${idppPart}Hu${countryCode.toUpperCase()}bI${datePart}${phonePart}${counterStr}${roleCode}`;
         }
 
-        // Gestion de la génération
         let lastGeneratedId = '';
         let lastGeneratedRole = '';
         const generateBtn = document.getElementById('generateBtn');
@@ -418,21 +414,19 @@
             const roleCode = document.getElementById('roleSelect').value;
             const countryCode = document.getElementById('countryCode').value.trim();
             const phone = document.getElementById('phoneNumber').value.trim();
-
             if (!idpp || !countryCode || !phone) {
-                window.showToast('Veuillez remplir tous les champs', 'error');
+                showToast('Veuillez remplir tous les champs', 'error');
                 return;
             }
             if (countryCode.length !== 2) {
-                window.showToast('Le code pays doit comporter 2 lettres', 'error');
+                showToast('Le code pays doit comporter 2 lettres', 'error');
                 return;
             }
             const phoneDigits = phone.replace(/\D/g, '');
             if (phoneDigits.length < 5) {
-                window.showToast('Le numéro de téléphone doit comporter au moins 5 chiffres', 'error');
+                showToast('Le numéro de téléphone doit comporter au moins 5 chiffres', 'error');
                 return;
             }
-
             try {
                 const generatedId = await generateHubId(idpp, countryCode, phone, roleCode);
                 lastGeneratedId = generatedId;
@@ -441,110 +435,58 @@
                 generatedIdDisplay.style.display = 'block';
                 saveIdBtn.style.display = 'inline-block';
             } catch (err) {
-                window.showToast('Erreur lors de la génération : ' + err.message, 'error');
+                showToast('Erreur génération : ' + err.message, 'error');
             }
         });
 
-        // Sauvegarde dans la base
         saveIdBtn.addEventListener('click', async () => {
             if (!lastGeneratedId) return;
             const roleName = document.getElementById('roleSelect').options[document.getElementById('roleSelect').selectedIndex].text;
-            const { error } = await window.supabaseAuthPrive
-                .from('hubisoccer_ids')
-                .insert([{ id: lastGeneratedId, role: roleName, status: 'pending' }]);
+            const { error } = await window.supabaseAuthPrive.from('hubisoccer_ids').insert([{ id: lastGeneratedId, role: roleName, status: 'pending' }]);
             if (error) {
-                window.showToast('Erreur : ' + error.message, 'error');
+                showToast('Erreur : ' + error.message, 'error');
             } else {
-                window.showToast('ID enregistré avec succès', 'success');
+                showToast('ID enregistré avec succès', 'success');
                 generatedIdDisplay.style.display = 'none';
                 saveIdBtn.style.display = 'none';
-                loadIds(); // recharge les listes
+                loadIds();
             }
         });
 
-        // Charger les IDs depuis la base
         async function loadIds() {
-            // Pending
-            const { data: pending, error: pendingError } = await window.supabaseAuthPrive
-                .from('hubisoccer_ids')
-                .select('*')
-                .eq('status', 'pending')
-                .order('created_at', { ascending: false });
-            if (!pendingError) renderTable('pending', pending);
-
-            // Used
-            const { data: used, error: usedError } = await window.supabaseAuthPrive
-                .from('hubisoccer_ids')
-                .select('*, profiles(full_name)')
-                .eq('status', 'used')
-                .order('created_at', { ascending: false });
-            if (!usedError) renderTable('used', used);
-
-            // Revoked
-            const { data: revoked, error: revokedError } = await window.supabaseAuthPrive
-                .from('hubisoccer_ids')
-                .select('*')
-                .eq('status', 'revoked')
-                .order('created_at', { ascending: false });
-            if (!revokedError) renderTable('revoked', revoked);
+            const { data: pending } = await window.supabaseAuthPrive.from('hubisoccer_ids').select('*').eq('status', 'pending').order('created_at', { ascending: false });
+            const { data: used } = await window.supabaseAuthPrive.from('hubisoccer_ids').select('*, profiles(full_name)').eq('status', 'used').order('created_at', { ascending: false });
+            const { data: revoked } = await window.supabaseAuthPrive.from('hubisoccer_ids').select('*').eq('status', 'revoked').order('created_at', { ascending: false });
+            renderTable('pending', pending);
+            renderTable('used', used);
+            renderTable('revoked', revoked);
         }
 
         function renderTable(status, data) {
             const tbody = document.getElementById(`${status}Table`);
             if (!tbody) return;
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5">Aucun ID</td></tr>';
-                return;
-            }
+            if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Aucun ID</td></tr>'; return; }
             tbody.innerHTML = data.map(item => {
                 if (status === 'pending') {
-                    return `
-                        <tr>
-                            <td>${item.id}</td>
-                            <td>${item.role}</td>
-                            <td>${new Date(item.created_at).toLocaleString()}</td>
-                            <td><i class="fas fa-trash-alt action-icon" data-id="${item.id}" data-action="revoke" style="color:#e53e3e;"></i> Révoquer</td>
-                        </tr>
-                    `;
+                    return `<tr><td>${item.id}</td><td>${item.role}</td><td>${new Date(item.created_at).toLocaleString()}</td><td><i class="fas fa-trash-alt action-icon" data-id="${item.id}" data-action="revoke" style="color:#e53e3e;"></i> Révoquer</td></tr>`;
                 } else if (status === 'used') {
-                    return `
-                        <tr>
-                            <td>${item.id}</td>
-                            <td>${item.role}</td>
-                            <td>${item.assigned_to ? 'Utilisé' : '-'}</td>
-                            <td>${item.profiles?.full_name || '-'}</td>
-                        </tr>
-                    `;
+                    return `<tr><td>${item.id}</td><td>${item.role}</td><td>${item.assigned_to ? 'Utilisé' : '-'}</td><td>${item.profiles?.full_name || '-'}</td></tr>`;
                 } else {
-                    return `
-                        <tr>
-                            <td>${item.id}</td>
-                            <td>${item.role}</td>
-                            <td>${new Date(item.created_at).toLocaleString()}</td>
-                        </tr>
-                    `;
+                    return `<tr><td>${item.id}</td><td>${item.role}</td><td>${new Date(item.created_at).toLocaleString()}</td></tr>`;
                 }
             }).join('');
-            // Attacher les événements de révocation
             document.querySelectorAll('[data-action="revoke"]').forEach(el => {
                 el.addEventListener('click', async (e) => {
                     const id = el.getAttribute('data-id');
                     if (confirm(`Révoquer l'ID ${id} ?`)) {
-                        const { error } = await window.supabaseAuthPrive
-                            .from('hubisoccer_ids')
-                            .update({ status: 'revoked' })
-                            .eq('id', id);
-                        if (error) window.showToast('Erreur : ' + error.message, 'error');
-                        else {
-                            window.showToast('ID révoqué', 'success');
-                            loadIds();
-                        }
+                        const { error } = await window.supabaseAuthPrive.from('hubisoccer_ids').update({ status: 'revoked' }).eq('id', id);
+                        if (error) showToast('Erreur : ' + error.message, 'error');
+                        else { showToast('ID révoqué', 'success'); loadIds(); }
                     }
                 });
             });
         }
 
-        // Gestion des onglets
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));

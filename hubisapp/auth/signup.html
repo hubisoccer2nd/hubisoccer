@@ -4,187 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription | HubISoccer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="designauth.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #ffffff;
-            color: #1a1a2e;
-            overflow-x: hidden;
-        }
-        .bg-shapes {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-        .bg-shapes .shape {
-            position: absolute;
-            background: rgba(107, 59, 164, 0.05);
-            border-radius: 50%;
-            filter: blur(80px);
-        }
-        .shape-1 { width: 500px; height: 500px; top: -200px; left: -200px; }
-        .shape-2 { width: 600px; height: 600px; bottom: -200px; right: -200px; background: rgba(107, 59, 164, 0.08); }
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 48px;
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(107,59,164,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .logo img { height: 42px; }
-        .logo span { font-size: 1.4rem; font-weight: 700; color: #6b3ba4; }
-        .nav-buttons { display: flex; gap: 16px; }
-        .nav-btn-outline {
-            padding: 8px 24px;
-            border-radius: 40px;
-            font-weight: 500;
-            text-decoration: none;
-            border: 1px solid #6b3ba4;
-            color: #6b3ba4;
-            background: transparent;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-        .nav-btn-outline:hover { background: #6b3ba4; color: white; transform: translateY(-2px); }
-        .container {
-            min-height: calc(100vh - 90px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 24px;
-        }
-        .signup-card {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 48px;
-            padding: 48px 56px;
-            width: 100%;
-            max-width: 800px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.05), 0 0 0 1px rgba(107,59,164,0.05);
-            transition: transform 0.3s ease;
-            border: 1px solid rgba(107,59,164,0.15);
-        }
-        .signup-card:hover { transform: translateY(-5px); box-shadow: 0 40px 70px rgba(107,59,164,0.1); }
-        .signup-header { text-align: center; margin-bottom: 32px; }
-        .signup-header h2 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #6b3ba4, #9b6bcd);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 8px;
-        }
-        .signup-header p { color: #5a5a72; font-size: 0.95rem; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: 500; margin-bottom: 8px; color: #2d2d3a; font-size: 0.9rem; }
-        .input-wrapper { position: relative; display: flex; align-items: center; }
-        .input-wrapper input, .input-wrapper select {
-            width: 100%;
-            padding: 12px 48px 12px 18px;
-            font-size: 1rem;
-            border: 1px solid #e2e2f0;
-            border-radius: 28px;
-            background: #fbfbff;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-        .input-wrapper select { appearance: none; background: #fbfbff; }
-        .input-wrapper input:focus, .input-wrapper select:focus {
-            outline: none;
-            border-color: #6b3ba4;
-            box-shadow: 0 0 0 3px rgba(107,59,164,0.1);
-        }
-        .input-wrapper .toggle-password {
-            position: absolute;
-            right: 16px;
-            cursor: pointer;
-            color: #aaa;
-            transition: color 0.2s;
-        }
-        .input-wrapper .toggle-password:hover { color: #6b3ba4; }
-        .password-strength {
-            margin-top: 5px;
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .strength-bar {
-            height: 4px;
-            background: #e2e2f0;
-            border-radius: 2px;
-            flex: 1;
-            overflow: hidden;
-        }
-        .strength-fill {
-            height: 100%;
-            width: 0%;
-            background: #e53e3e;
-            transition: width 0.2s;
-        }
-        .inline-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        .btn-signup {
-            width: 100%;
-            padding: 14px;
-            background: #6b3ba4;
-            border: none;
-            border-radius: 40px;
-            color: white;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 12px;
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-signup:hover { background: #552e84; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(107,59,164,0.3); }
-        .login-link { text-align: center; margin-top: 24px; font-size: 0.9rem; color: #5a5a72; }
-        .login-link a { color: #6b3ba4; text-decoration: none; font-weight: 600; }
-        .login-link a:hover { text-decoration: underline; }
-        .footer { text-align: center; padding: 24px; font-size: 0.8rem; color: #aaa; border-top: 1px solid #eee; }
-        .role-badge {
-            background: #f0eaff;
-            color: #6b3ba4;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            display: inline-block;
-            margin-bottom: 16px;
-        }
-        @media (max-width: 640px) {
-            .navbar { padding: 16px 24px; }
-            .signup-card { padding: 32px 24px; margin: 0 16px; }
-            .signup-header h2 { font-size: 1.8rem; }
-            .inline-group { grid-template-columns: 1fr; gap: 0; }
-        }
-    </style>
+    <script src="auth.js"></script>
 </head>
 <body>
-    <div class="bg-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-    </div>
+    <div id="globalLoader" style="display: none;"><div class="spinner"></div> Chargement...</div>
 
     <nav class="navbar">
         <div class="logo" onclick="window.location.href='../../index.html'">
@@ -192,145 +19,123 @@
             <span>HubISoccer</span>
         </div>
         <div class="nav-buttons">
-            <a href="role-select.html" class="nav-btn-outline">SELECTIONNER VOTRE ESPACE</a>
+            <a href="role-select.html?action=signup" class="nav-btn-outline">Changer d'espace</a>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="signup-card">
-            <div class="signup-header">
-                <h2>Créer un compte</h2>
-                <p>Remplissez les informations ci-dessous</p>
+    <div class="auth-card" style="max-width: 800px;">
+        <h2>Créer un compte</h2>
+        <form id="signupForm">
+            <div class="form-group">
+                <label>Espace *</label>
+                <select id="roleSelect" required>
+                    <option value="">-- Choisissez votre rôle --</option>
+                    <option value="FT">Footballeur</option>
+                    <option value="BK">Basketteur</option>
+                    <option value="TN">Tennisman</option>
+                    <option value="AT">Athlète</option>
+                    <option value="HB">Handballeur</option>
+                    <option value="VB">Volleyeur</option>
+                    <option value="RG">Rugbyman</option>
+                    <option value="NA">Nageur</option>
+                    <option value="CY">Cycliste</option>
+                    <option value="AM">Judoka / Arts martiaux</option>
+                    <option value="AR">Arbitre</option>
+                    <option value="CO">Coach</option>
+                    <option value="AG">Agent FIFA</option>
+                    <option value="AC">Académie</option>
+                    <option value="SP">Parrain</option>
+                    <option value="SM">Staff médical</option>
+                    <option value="TM">Gestionnaire de tournoi</option>
+                </select>
             </div>
 
-            <form id="signupForm">
-                <!-- Espace (rôle) -->
-                <div class="form-group">
-                    <label>Espace *</label>
-                    <div class="input-wrapper">
-                        <select id="roleSelect" required>
-                            <option value="">-- Choisissez votre rôle --</option>
-                            <option value="FT">Footballeur</option>
-                            <option value="BK">Basketteur</option>
-                            <option value="TN">Tennisman</option>
-                            <option value="AT">Athlète</option>
-                            <option value="HB">Handballeur</option>
-                            <option value="VB">Volleyeur</option>
-                            <option value="RG">Rugbyman</option>
-                            <option value="NA">Nageur</option>
-                            <option value="CY">Cycliste</option>
-                            <option value="AM">Judoka / Arts martiaux</option>
-                            <option value="AR">Arbitre</option>
-                            <option value="CO">Coach</option>
-                            <option value="AG">Agent FIFA</option>
-                            <option value="AC">Académie</option>
-                            <option value="SP">Parrain</option>
-                            <option value="SM">Staff médical</option>
-                            <option value="TM">Gestionnaire de tournoi</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- ID HubISoccer -->
-                <div class="form-group">
-                    <label>ID HubISoccer *</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="hubisoccerId" required placeholder="ex: a5b7c3HuBJbI26032025SOH99012345FT">
-                    </div>
-                </div>
-
-                <!-- Email -->
-                <div class="form-group">
-                    <label>Email *</label>
-                    <div class="input-wrapper">
-                        <input type="email" id="email" required placeholder="votre@email.com">
-                    </div>
-                </div>
-
-                <!-- Mot de passe + confirmation -->
-                <div class="inline-group">
-                    <div class="form-group">
-                        <label>Mot de passe *</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="password" required placeholder="8 caractères min.">
-                            <i class="fas fa-eye toggle-password" data-target="password"></i>
-                        </div>
-                        <div class="password-strength">
-                            <span>Force :</span>
-                            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
-                            <span id="strengthText">Faible</span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Confirmer mot de passe *</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="confirmPassword" required>
-                            <i class="fas fa-eye toggle-password" data-target="confirmPassword"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Nom complet -->
-                <div class="form-group">
-                    <label>Nom complet (comme sur pièce d'identité) *</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="fullName" required placeholder="Ozawa Alexandre Jesugon COULIBALY">
-                    </div>
-                </div>
-
-                <!-- Pays -->
-                <div class="form-group">
-                    <label>Pays *</label>
-                    <div class="input-wrapper">
-                        <select id="country" required></select>
-                    </div>
-                </div>
-
-                <!-- Téléphone -->
-                <div class="form-group">
-                    <label>Téléphone (WhatsApp/Telegram) *</label>
-                    <div class="input-wrapper">
-                        <input type="tel" id="phone" required placeholder="+229 XX XX XX XX">
-                    </div>
-                </div>
-
-                <!-- Pseudo -->
-                <div class="form-group">
-                    <label>Pseudo *</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="pseudo" required placeholder="@Leboss">
-                    </div>
-                </div>
-
-                <!-- Date de naissance -->
-                <div class="form-group">
-                    <label>Date de naissance *</label>
-                    <div class="input-wrapper">
-                        <input type="date" id="birthDate" required>
-                    </div>
-                </div>
-
-                <!-- Zone dynamique pour les champs spécifiques au rôle -->
-                <div id="roleSpecificFields"></div>
-
-                <button type="submit" class="btn-signup">S'inscrire</button>
-            </form>
-
-            <div class="login-link">
-                Déjà un compte ? <a href="login.html">Se connecter</a>
+            <div class="form-group">
+                <label>ID HubISoccer *</label>
+                <input type="text" id="hubisoccerId" required placeholder="ex: a5b7c3HuBJbI26032025SOH99012345FT">
             </div>
+
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="email" required>
+            </div>
+
+            <div class="inline-group">
+                <div class="form-group">
+                    <label>Mot de passe *</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" required>
+                        <i class="fas fa-eye toggle-password" data-target="password"></i>
+                    </div>
+                    <div class="password-strength">
+                        <span>Force :</span>
+                        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                        <span id="strengthText">Faible</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirmer mot de passe *</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="confirmPassword" required>
+                        <i class="fas fa-eye toggle-password" data-target="confirmPassword"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Nom complet *</label>
+                <input type="text" id="fullName" required>
+            </div>
+
+            <div class="form-group">
+                <label>Pays *</label>
+                <select id="country" required></select>
+            </div>
+
+            <div class="form-group">
+                <label>Téléphone *</label>
+                <input type="tel" id="phone" required>
+            </div>
+
+            <div class="form-group">
+                <label>Pseudo *</label>
+                <input type="text" id="pseudo" required>
+            </div>
+
+            <div class="form-group">
+                <label>Date de naissance *</label>
+                <input type="date" id="birthDate" required>
+            </div>
+
+            <div id="roleSpecificFields"></div>
+
+            <button type="submit" class="btn-submit">S'inscrire</button>
+        </form>
+        <div class="auth-footer">
+            Déjà un compte ? <a href="login.html">Se connecter</a>
         </div>
     </div>
 
-    <div class="footer">
-        <p>© 2026 HubISoccer - The Hub of Inspiration of Soccer</p>
-    </div>
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge">© Ozawa-Hubisoccer</div>
+            <div class="badge">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer - The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <script src="auth.js"></script>
     <script>
-        // ========== LISTE DES PAYS ==========
+        // Liste des pays
         const countries = [
             "Afghanistan", "Afrique du Sud", "Albanie", "Algérie", "Allemagne", "Andorre", "Angola", "Antigua-et-Barbuda", "Arabie saoudite", "Argentine",
             "Arménie", "Australie", "Autriche", "Azerbaïdjan", "Bahamas", "Bahreïn", "Bangladesh", "Barbade", "Belgique", "Belize", "Bénin", "Bhoutan",
@@ -359,105 +164,105 @@
             countrySelect.appendChild(option);
         });
 
-        // ========== DÉFINITION DES CHAMPS SPÉCIFIQUES PAR RÔLE ==========
+        // Champs spécifiques par rôle (17 rôles, 4 champs chacun)
         const roleSpecificFields = {
-            FT: [  // Footballeur
+            FT: [
                 { name: 'position', label: 'Poste de prédilection', type: 'text', required: true },
                 { name: 'preferred_foot', label: 'Pied dominant', type: 'select', options: ['Droitier', 'Gaucher', 'Ambidextre'], required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'weight', label: 'Poids (kg)', type: 'number', required: true }
             ],
-            BK: [  // Basketteur
+            BK: [
                 { name: 'position', label: 'Poste', type: 'select', options: ['Meneur', 'Arrière', 'Ailier', 'Ailier fort', 'Pivot'], required: true },
                 { name: 'dominant_hand', label: 'Main dominante', type: 'select', options: ['Droitier', 'Gaucher', 'Ambidextre'], required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'wingspan', label: 'Envergure (cm)', type: 'number', required: true }
             ],
-            TN: [  // Tennisman
+            TN: [
                 { name: 'play_style', label: 'Type de jeu', type: 'select', options: ['Attaquant', 'Défenseur', 'Polyvalent'], required: true },
                 { name: 'hand', label: 'Main dominante', type: 'select', options: ['Droitier', 'Gaucher', 'Ambidextre'], required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'ranking', label: 'Classement (FFT/ITF)', type: 'text', required: true }
             ],
-            AT: [  // Athlète
+            AT: [
                 { name: 'discipline', label: 'Discipline principale', type: 'text', required: true },
                 { name: 'best_performance', label: 'Meilleure performance officielle', type: 'text', required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'weight', label: 'Poids (kg)', type: 'number', required: true }
             ],
-            HB: [  // Handballeur
+            HB: [
                 { name: 'position', label: 'Poste', type: 'select', options: ['Gardien', 'Arrière gauche', 'Arrière droit', 'Demi-centre', 'Ailier gauche', 'Ailier droit', 'Pivot'], required: true },
                 { name: 'dominant_hand', label: 'Main dominante', type: 'select', options: ['Droitier', 'Gaucher', 'Ambidextre'], required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'weight', label: 'Poids (kg)', type: 'number', required: true }
             ],
-            VB: [  // Volleyeur
+            VB: [
                 { name: 'position', label: 'Poste', type: 'select', options: ['Passeur', 'Réceptionneur-attaquant', 'Central', 'Pointu', 'Libéro'], required: true },
                 { name: 'dominant_hand', label: 'Main dominante', type: 'select', options: ['Droitier', 'Gaucher', 'Ambidextre'], required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'spike_reach', label: 'Détente attaque (cm)', type: 'number', required: true }
             ],
-            RG: [  // Rugbyman
+            RG: [
                 { name: 'position', label: 'Poste', type: 'select', options: ['Pilier', 'Talonneur', '2e ligne', '3e ligne aile', '3e ligne centre', 'Demi de mêlée', 'Demi d’ouverture', 'Centre', 'Ailier', 'Arrière'], required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'weight', label: 'Poids (kg)', type: 'number', required: true },
                 { name: 'speed_40m', label: 'Vitesse sur 40 m (secondes)', type: 'number', required: true }
             ],
-            NA: [  // Nageur
+            NA: [
                 { name: 'stroke', label: 'Nage de prédilection', type: 'select', options: ['Crawl', 'Dos', 'Brasse', 'Papillon', '4 nages'], required: true },
                 { name: 'best_time_50', label: 'Meilleur temps sur 50 m', type: 'text', required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'weight', label: 'Poids (kg)', type: 'number', required: true }
             ],
-            CY: [  // Cycliste
+            CY: [
                 { name: 'discipline', label: 'Discipline principale', type: 'select', options: ['Route', 'VTT cross-country', 'VTT descente', 'Piste', 'BMX', 'Cyclo-cross'], required: true },
                 { name: 'ftp', label: 'FTP (watts)', type: 'number', required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'weight', label: 'Poids (kg)', type: 'number', required: true }
             ],
-            AM: [  // Arts martiaux
+            AM: [
                 { name: 'discipline', label: 'Discipline', type: 'text', required: true },
                 { name: 'belt', label: 'Ceinture / Grade', type: 'text', required: true },
                 { name: 'height', label: 'Taille (cm)', type: 'number', required: true },
                 { name: 'weight_category', label: 'Catégorie de poids (kg)', type: 'number', required: true }
             ],
-            AR: [  // Arbitre
+            AR: [
                 { name: 'license_number', label: 'Numéro de licence', type: 'text', required: true },
                 { name: 'federation', label: 'Fédération', type: 'text', required: true },
                 { name: 'experience_years', label: "Années d'expérience", type: 'number', required: true },
                 { name: 'category', label: 'Catégorie', type: 'text', required: true }
             ],
-            CO: [  // Coach
+            CO: [
                 { name: 'diploma', label: 'Diplôme principal', type: 'text', required: true },
                 { name: 'experience_years', label: "Années d'expérience", type: 'number', required: true },
                 { name: 'specialty', label: 'Spécialité', type: 'text', required: true },
                 { name: 'license_number', label: 'Numéro de licence', type: 'text', required: true }
             ],
-            AG: [  // Agent FIFA
+            AG: [
                 { name: 'agency_name', label: "Nom de l'agence", type: 'text', required: true },
                 { name: 'license_number', label: 'Numéro de licence FIFA', type: 'text', required: true },
                 { name: 'experience_years', label: "Années d'expérience", type: 'number', required: true },
                 { name: 'jurisdiction', label: 'Zone géographique', type: 'text', required: true }
             ],
-            AC: [  // Académie
+            AC: [
                 { name: 'academy_name', label: "Nom officiel de l'académie", type: 'text', required: true },
                 { name: 'director_name', label: 'Nom du responsable', type: 'text', required: true },
                 { name: 'capacity', label: 'Capacité d’accueil', type: 'number', required: true },
                 { name: 'sports_offered', label: 'Sports proposés', type: 'text', required: true }
             ],
-            SP: [  // Parrain (sponsor)
+            SP: [
                 { name: 'company_name', label: 'Nom de l’entreprise', type: 'text', required: true },
                 { name: 'sector', label: 'Secteur d’activité', type: 'text', required: true },
                 { name: 'contact_person', label: 'Personne de contact', type: 'text', required: true },
                 { name: 'sponsorship_type', label: 'Type de parrainage', type: 'select', options: ['Financier', 'Matériel', 'Médiatique'], required: true }
             ],
-            SM: [  // Staff médical
+            SM: [
                 { name: 'specialty', label: 'Spécialité médicale', type: 'text', required: true },
                 { name: 'license_number', label: "Numéro d'ordre", type: 'text', required: true },
                 { name: 'experience_years', label: "Années d'expérience", type: 'number', required: true },
                 { name: 'institution', label: 'Institution de rattachement', type: 'text', required: true }
             ],
-            TM: [  // Gestionnaire de tournoi
+            TM: [
                 { name: 'organization', label: 'Organisation rattachée', type: 'text', required: true },
                 { name: 'experience_years', label: "Années d'expérience", type: 'number', required: true },
                 { name: 'tournament_types', label: 'Types de tournois gérés', type: 'text', required: true },
@@ -465,7 +270,6 @@
             ]
         };
 
-        // Gestion de l'affichage des champs spécifiques
         const roleSelect = document.getElementById('roleSelect');
         const roleSpecificDiv = document.getElementById('roleSpecificFields');
 
@@ -478,38 +282,29 @@
                 group.className = 'form-group';
                 let inputHtml = '';
                 if (field.type === 'select') {
-                    inputHtml = `<select id="role_${field.name}" ${field.required ? 'required' : ''}>`;
+                    inputHtml = `<select id="role_${field.name}" required>`;
                     inputHtml += `<option value="">-- Choisir --</option>`;
                     field.options.forEach(opt => {
                         inputHtml += `<option value="${opt}">${opt}</option>`;
                     });
                     inputHtml += `</select>`;
                 } else {
-                    inputHtml = `<input type="${field.type}" id="role_${field.name}" ${field.required ? 'required' : ''}>`;
+                    inputHtml = `<input type="${field.type}" id="role_${field.name}" required>`;
                 }
-                group.innerHTML = `
-                    <label>${field.label} *</label>
-                    <div class="input-wrapper">
-                        ${inputHtml}
-                    </div>
-                `;
+                group.innerHTML = `<label>${field.label} *</label>${inputHtml}`;
                 roleSpecificDiv.appendChild(group);
             });
         }
 
         roleSelect.addEventListener('change', () => {
-            if (roleSelect.value) {
-                buildRoleFields(roleSelect.value);
-            } else {
-                roleSpecificDiv.innerHTML = '';
-            }
+            if (roleSelect.value) buildRoleFields(roleSelect.value);
+            else roleSpecificDiv.innerHTML = '';
         });
 
-        // ========== INDICATEUR DE FORCE DU MOT DE PASSE ==========
+        // Force du mot de passe
         const passwordInput = document.getElementById('password');
         const strengthFill = document.getElementById('strengthFill');
         const strengthText = document.getElementById('strengthText');
-
         function checkPasswordStrength(pw) {
             let score = 0;
             if (pw.length >= 8) score++;
@@ -522,52 +317,27 @@
             if (score <= 2) { strengthFill.style.background = '#e53e3e'; strengthText.innerText = 'Faible'; }
             else if (score <= 3) { strengthFill.style.background = '#fbbf24'; strengthText.innerText = 'Moyen'; }
             else { strengthFill.style.background = '#10b981'; strengthText.innerText = 'Fort'; }
-            return score >= 4; // retourne vrai si assez fort
+            return score >= 4;
         }
-
         passwordInput.addEventListener('input', () => checkPasswordStrength(passwordInput.value));
 
-        // ========== AFFICHAGE/MASQUAGE MOT DE PASSE ==========
-        document.querySelectorAll('.toggle-password').forEach(icon => {
-            icon.addEventListener('click', function() {
-                const targetId = this.getAttribute('data-target');
-                const input = document.getElementById(targetId);
-                if (input) {
-                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                    input.setAttribute('type', type);
-                    this.classList.toggle('fa-eye-slash');
-                }
-            });
-        });
-
-        // ========== VALIDATION DE L'ID HUBISOCCER ==========
+        // Validation ID HubISoccer
         async function validateHubId(hubId, roleCode) {
             const { data, error } = await window.supabaseAuthPrive
                 .from('hubisoccer_ids')
                 .select('id, role, status')
                 .eq('id', hubId)
                 .single();
-
-            if (error || !data) {
-                return { valid: false, reason: "ID HubISoccer invalide." };
-            }
-            if (data.status !== 'pending') {
-                return { valid: false, reason: "Cet ID a déjà été utilisé." };
-            }
-            // Vérifier que le rôle correspond (on compare le code rôle stocké dans la table avec le rôle sélectionné)
-            // Ici on suppose que la table hubisoccer_ids a une colonne 'role' avec le nom complet ou le code.
-            // On peut stocker le code (ex: 'FT') pour faciliter la comparaison.
-            if (data.role !== roleCode) {
-                return { valid: false, reason: "Cet ID ne correspond pas au rôle sélectionné." };
-            }
-            return { valid: true, data: data };
+            if (error || !data) return { valid: false, reason: "ID invalide." };
+            if (data.status !== 'pending') return { valid: false, reason: "ID déjà utilisé." };
+            if (data.role !== roleCode) return { valid: false, reason: "ID ne correspond pas au rôle." };
+            return { valid: true, data };
         }
 
-        // ========== SOUMISSION DU FORMULAIRE ==========
+        // Soumission
         const form = document.getElementById('signupForm');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-
             const roleCode = roleSelect.value;
             const hubId = document.getElementById('hubisoccerId').value.trim();
             const email = document.getElementById('email').value.trim();
@@ -580,93 +350,56 @@
             const birthDate = document.getElementById('birthDate').value;
 
             if (!roleCode || !hubId || !email || !password || !confirm || !fullName || !country || !phone || !pseudo || !birthDate) {
-                window.showToast('Tous les champs obligatoires doivent être remplis', 'error');
+                showToast('Tous les champs sont obligatoires', 'error');
                 return;
             }
+            if (password !== confirm) { showToast('Mots de passe différents', 'error'); return; }
+            if (!checkPasswordStrength(password)) { showToast('Mot de passe trop faible', 'error'); return; }
 
-            if (password !== confirm) {
-                window.showToast('Les mots de passe ne correspondent pas', 'error');
-                return;
-            }
-
-            if (!checkPasswordStrength(password)) {
-                window.showToast('Le mot de passe doit comporter au moins 8 caractères, incluant majuscule, minuscule, chiffre et symbole', 'error');
-                return;
-            }
-
-            // Récupérer les valeurs des champs spécifiques
             const fields = roleSpecificFields[roleCode] || [];
             let roleData = {};
             for (let field of fields) {
                 const val = document.getElementById(`role_${field.name}`).value.trim();
-                if (field.required && !val) {
-                    window.showToast(`Le champ ${field.label} est obligatoire`, 'error');
-                    return;
-                }
+                if (field.required && !val) { showToast(`Le champ ${field.label} est obligatoire`, 'error'); return; }
                 roleData[field.name] = val;
             }
 
-            // Valider l'ID HubISoccer
             const validation = await validateHubId(hubId, roleCode);
-            if (!validation.valid) {
-                window.showToast(validation.reason, 'error');
-                return;
-            }
+            if (!validation.valid) { showToast(validation.reason, 'error'); return; }
 
+            showLoader();
             try {
-                // Création du compte Supabase
-                const { data: signUpData, error: signUpError } = await window.supabaseAuthPrive.auth.signUp({
-                    email,
-                    password,
-                });
-
+                const { data: signUpData, error: signUpError } = await window.supabaseAuthPrive.auth.signUp({ email, password });
                 if (signUpError) throw signUpError;
-
                 const userId = signUpData.user.id;
 
-                // Construction du profil
                 const profileData = {
-                    id: userId,
-                    email: email,
-                    full_name: fullName,
-                    phone: phone,
-                    country: country,
-                    role: roleCode,
-                    pseudo: pseudo,
-                    date_of_birth: birthDate,
-                    hubisoccer_id: hubId,
-                    // Les champs spécifiques seront stockés dans une colonne JSONB (role_data) ou dans des tables dédiées.
-                    // Pour simplifier, on stocke dans une colonne JSONB `role_data` si elle existe, sinon on peut les mettre dans des colonnes.
-                    // Ici on suppose que `profiles` a une colonne `role_data` de type JSONB.
-                    role_data: roleData
+                    id: userId, email, full_name: fullName, phone, country, role: roleCode,
+                    pseudo, date_of_birth: birthDate, hubisoccer_id: hubId, role_data: roleData
                 };
+                const { error: profileError } = await window.supabaseAuthPrive.from('profiles').insert([profileData]);
+                if (profileError) throw profileError;
 
-                const { error: profileError } = await window.supabaseAuthPrive
-                    .from('profiles')
-                    .insert([profileData]);
-
-                if (profileError) {
-                    // En cas d'erreur, on supprime l'utilisateur auth (nécessite des droits admin, mais on peut laisser l'utilisateur orphelin et afficher une erreur)
-                    console.error('Erreur insertion profil', profileError);
-                    window.showToast('Erreur lors de la création du profil. Veuillez réessayer.', 'error');
-                    // Optionnel : on peut tenter de supprimer l'utilisateur auth via une fonction RPC
-                    return;
-                }
-
-                // Marquer l'ID comme utilisé
-                await window.supabaseAuthPrive
-                    .from('hubisoccer_ids')
-                    .update({ status: 'used', assigned_to: userId })
-                    .eq('id', hubId);
-
-                window.showToast('Inscription réussie ! Vérifiez votre email pour confirmer votre compte', 'success');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 3000);
+                await window.supabaseAuthPrive.from('hubisoccer_ids').update({ status: 'used', assigned_to: userId }).eq('id', hubId);
+                showToast('Inscription réussie ! Vérifiez votre email', 'success');
+                setTimeout(() => { window.location.href = `login.html?role=${roleCode}`; }, 3000);
             } catch (err) {
-                console.error(err);
-                window.showToast(err.message || 'Erreur lors de l\'inscription', 'error');
+                showToast(err.message, 'error');
+            } finally {
+                hideLoader();
             }
+        });
+
+        document.querySelectorAll('.toggle-password').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (input) {
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+                    this.classList.toggle('fa-eye-slash');
+                }
+            });
         });
     </script>
 </body>

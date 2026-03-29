@@ -2,7 +2,7 @@
 async function checkAdminAccess() {
     const { data: { user }, error: userError } = await window.supabaseAuthPrive.auth.getUser();
     if (userError || !user) {
-        window.location.href = '../index.html';
+        window.location.href = '../../index.html';
         return;
     }
 
@@ -13,14 +13,12 @@ async function checkAdminAccess() {
         .single();
 
     if (profileError || !profile || profile.role !== 'admin') {
-        window.location.href = '../index.html';
+        window.location.href = '../../index.html';
         return;
     }
 
-    // Stocker les infos de l'admin pour une utilisation ultérieure (optionnel)
     window.adminUser = user;
     window.adminProfile = profile;
 }
 
-// Exécuter immédiatement
 checkAdminAccess();

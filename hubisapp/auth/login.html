@@ -1,1 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            color: #1a1a2e;
+            overflow-x: hidden;
+        }
+        .bg-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .bg-shapes .shape {
+            position: absolute;
+            background: rgba(107, 59, 164, 0.05);
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+        .shape-1 { width: 500px; height: 500px; top: -200px; left: -200px; }
+        .shape-2 { width: 600px; height: 600px; bottom: -200px; right: -200px; background: rgba(107, 59, 164, 0.08); }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 48px;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(107,59,164,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .logo img { height: 42px; }
+        .logo span { font-size: 1.4rem; font-weight: 700; color: #6b3ba4; }
+        .nav-buttons { display: flex; gap: 16px; }
+        .nav-btn-outline {
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid #6b3ba4;
+            color: #6b3ba4;
+            background: transparent;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        .nav-btn-outline:hover { background: #6b3ba4; color: white; transform: translateY(-2px); }
+        .container {
+            max-width: 500px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+        .auth-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 48px;
+            padding: 48px 56px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.05), 0 0 0 1px rgba(107,59,164,0.05);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(107,59,164,0.15);
+        }
+        .auth-card:hover { transform: translateY(-5px); box-shadow: 0 40px 70px rgba(107,59,164,0.1); }
+        .auth-card h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6b3ba4, #9b6bcd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 8px; color: #2d2d3a; }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 48px 12px 18px;
+            font-size: 1rem;
+            border: 1px solid #e2e2f0;
+            border-radius: 28px;
+            background: #fbfbff;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #6b3ba4;
+            box-shadow: 0 0 0 3px rgba(107,59,164,0.1);
+        }
+        .input-wrapper .toggle-password {
+            position: absolute;
+            right: 16px;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.2s;
+        }
+        .input-wrapper .toggle-password:hover { color: #6b3ba4; }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #6b3ba4;
+            border: none;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-submit:hover { background: #552e84; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(107,59,164,0.3); }
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #e2e2f0;
+        }
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+        .divider span {
+            background: white;
+            padding: 0 10px;
+            color: #5a5a72;
+        }
+        .social-buttons { display: flex; flex-direction: column; gap: 12px; }
+        .btn-google, .btn-phone {
+            padding: 12px;
+            border: 1px solid #e2e2f0;
+            border-radius: 40px;
+            background: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-google:hover, .btn-phone:hover { border-color: #6b3ba4; background: #f8f9fa; }
+        .footer-links {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.9rem;
+        }
+        .footer-links a {
+            color: #6b3ba4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .footer-links a:hover { text-decoration: underline; }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid;
+            animation: slideIn 0.3s forwards;
+        }
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+        .toast.info { border-left-color: #6b3ba4; }
+        .toast.warning { border-left-color: #ffc107; }
+        .toast-icon { font-size: 1.2rem; }
+        .toast-content { flex: 1; font-size: 0.9rem; color: #333; }
+        .toast-close {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(400px); }
+        }
+        .footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 0.8rem;
+            color: #aaa;
+            border-top: 1px solid #eee;
+            margin-top: 60px;
+        }
+        @media (max-width: 640px) {
+            .navbar { padding: 16px 24px; }
+            .auth-card { padding: 32px 24px; margin: 0 16px; }
+            .auth-card h2 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
 
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='../index.html'">
+            <img src="../public/img/logo-navbar.png" alt="HubISoccer">
+            <span>HubISoccer</span>
+        </div>
+        <div class="nav-buttons">
+            <a href="../index.html" class="nav-btn-outline">Accueil</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="auth-card">
+            <h2>Connexion</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" required>
+                        <i class="fas fa-eye toggle-password" data-target="password"></i>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Se connecter</button>
+            </form>
+
+            <div class="divider"><span>ou</span></div>
+
+            <div class="social-buttons">
+                <button id="googleLogin" class="btn-google"><i class="fab fa-google"></i> Continuer avec Google</button>
+                <button id="phoneLogin" class="btn-phone"><i class="fas fa-phone-alt"></i> Se connecter par téléphone</button>
+            </div>
+
+            <div class="footer-links">
+                <a href="reset-password.html">Mot de passe oublié ?</a><br>
+                <span>Pas encore de compte ? <a href="signup.html">Inscription</a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2026 HubISoccer - The Hub of Inspiration of Soccer</p>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="auth.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            if (!email || !password) {
+                showToast('Veuillez remplir tous les champs', 'warning');
+                return;
+            }
+            showLoader();
+            try {
+                const { data, error } = await window.supabaseAuthPrive.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                showToast('Connexion réussie !', 'success');
+                // Redirection vers la page de choix du rôle après connexion
+                window.location.href = 'role-select.html?action=login';
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        });
+
+        document.getElementById('googleLogin').addEventListener('click', async () => {
+            showLoader();
+            try {
+                const { data, error } = await window.supabaseAuthPrive.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.origin + '/hubis/auth/role-select.html?action=login' }
+                });
+                if (error) throw error;
+                // La redirection est gérée par Supabase
+            } catch (err) {
+                showToast(err.message, 'error');
+                hideLoader();
+            }
+        });
+
+        document.getElementById('phoneLogin').addEventListener('click', async () => {
+            const phone = prompt("Entrez votre numéro de téléphone (au format international, ex: +229 97 20 81 88)");
+            if (!phone) return;
+            showLoader();
+            try {
+                const { error } = await window.supabaseAuthPrive.auth.signInWithOtp({ phone });
+                if (error) throw error;
+                showToast('Code de vérification envoyé par SMS', 'info');
+                const code = prompt("Entrez le code reçu par SMS");
+                if (code) {
+                    const { error: verifyError } = await window.supabaseAuthPrive.auth.verifyOtp({ phone, token: code, type: 'sms' });
+                    if (verifyError) throw verifyError;
+                    showToast('Connexion réussie !', 'success');
+                    window.location.href = 'role-select.html?action=login';
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        });
+
+        document.querySelectorAll('.toggle-password').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (input) {
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+                    this.classList.toggle('fa-eye-slash');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

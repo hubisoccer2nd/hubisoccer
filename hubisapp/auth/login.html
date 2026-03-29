@@ -309,7 +309,7 @@
             try {
                 const { data, error } = await window.supabaseAuthPrive.auth.signInWithOAuth({
                     provider: 'google',
-                    options: { redirectTo: window.location.origin + '/hubis/auth/role-select.html?action=login' }
+                    options: { redirectTo: window.location.origin + '/hubisapp/auth/role-select.html?action=login' }
                 });
                 if (error) throw error;
                 // La redirection est gérée par Supabase

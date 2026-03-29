@@ -1,7 +1,17 @@
 // ===== CONFIGURATION SUPABASE =====
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
-window.supabaseAuthPrive = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Attendre que Supabase soit chargé (si le script CDN est en retard)
+function initSupabase() {
+    if (typeof supabase !== 'undefined') {
+        window.supabaseAuthPrive = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+        // Réessayer après 100 ms
+        setTimeout(initSupabase, 100);
+    }
+}
+initSupabase();
 
 // ===== UTILITAIRES =====
 function escapeHtml(str) {
@@ -13,6 +23,7 @@ function escapeHtml(str) {
         return m;
     });
 }
+
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toastContainer');
     if (!container) {

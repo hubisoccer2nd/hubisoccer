@@ -3,144 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmation d'email | HubISoccer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <title>Confirmation email | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #ffffff;
-            color: #1a1a2e;
-            overflow-x: hidden;
-        }
-        .bg-shapes {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-        .bg-shapes .shape {
-            position: absolute;
-            background: rgba(107, 59, 164, 0.05);
-            border-radius: 50%;
-            filter: blur(80px);
-        }
-        .shape-1 { width: 500px; height: 500px; top: -200px; left: -200px; }
-        .shape-2 { width: 600px; height: 600px; bottom: -200px; right: -200px; background: rgba(107, 59, 164, 0.08); }
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 48px;
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(107,59,164,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .logo img { height: 42px; }
-        .logo span { font-size: 1.4rem; font-weight: 700; color: #6b3ba4; }
-        .nav-buttons { display: flex; gap: 16px; }
-        .nav-btn-outline {
-            padding: 8px 24px;
-            border-radius: 40px;
-            font-weight: 500;
-            text-decoration: none;
-            border: 1px solid #6b3ba4;
-            color: #6b3ba4;
-            background: transparent;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-        .nav-btn-outline:hover { background: #6b3ba4; color: white; transform: translateY(-2px); }
-        .container {
-            max-width: 600px;
-            margin: 60px auto;
-            padding: 0 20px;
-            text-align: center;
-        }
-        .card {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 48px;
-            padding: 48px 56px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.05), 0 0 0 1px rgba(107,59,164,0.05);
-            border: 1px solid rgba(107,59,164,0.15);
-        }
-        .card i {
-            font-size: 4rem;
-            color: #6b3ba4;
-            margin-bottom: 20px;
-        }
-        .card h2 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: #1a1a2e;
-        }
-        .card p {
-            color: #5a5a72;
-            margin-bottom: 24px;
-        }
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: #6b3ba4;
-            color: white;
-            text-decoration: none;
-            border-radius: 40px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .btn:hover { background: #552e84; transform: translateY(-2px); }
-        .footer {
-            text-align: center;
-            padding: 24px;
-            font-size: 0.8rem;
-            color: #aaa;
-            border-top: 1px solid #eee;
-            margin-top: 60px;
-        }
-        @media (max-width: 640px) {
-            .navbar { padding: 16px 24px; }
-            .card { padding: 32px 24px; margin: 0 16px; }
-            .card h2 { font-size: 1.8rem; }
-        }
-    </style>
+    <link rel="stylesheet" href="designauth.css">
 </head>
 <body>
-    <div class="bg-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-    </div>
     <nav class="navbar">
         <div class="logo" onclick="window.location.href='../../index.html'">
-            <img src="logo-navbar.png" alt="hubisoccer">
+            <img src="logo-navbar.png" alt="HubISoccer">
             <span>HubISoccer</span>
         </div>
-        <a href="role-select.html" class="nav-btn-outline">SELECTIONNER VOTRE ESPACE</a>
+        <div class="nav-buttons">
+            <a href="login.html" class="nav-btn-outline">Connexion</a>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="card">
-            <i class="fas fa-envelope-open-text"></i>
-            <h2>Vérifiez votre adresse email</h2>
-            <p>Un lien de confirmation a été envoyé à votre adresse email.</p>
-            <p>Cliquez sur le lien dans l'email pour activer votre compte.</p>
-            <a href="login.html" class="btn">Retour à la connexion</a>
-        </div>
+    <div class="auth-card" style="text-align: center;">
+        <i class="fas fa-envelope-open-text" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px;"></i>
+        <h2>Vérifiez votre adresse email</h2>
+        <p>Un lien de confirmation a été envoyé à votre adresse email.</p>
+        <p>Cliquez sur le lien dans l'email pour activer votre compte.</p>
+        <a href="login.html" class="btn-submit" style="display: inline-block; width: auto; padding: 12px 30px; text-decoration: none;">Retour à la connexion</a>
     </div>
 
-    <div class="footer">
-        <p>© 2026 HubISoccer - The Hub of Inspiration of Soccer</p>
-    </div>
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge">© Ozawa-Hubisoccer</div>
+            <div class="badge">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer - The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
 </body>
 </html>

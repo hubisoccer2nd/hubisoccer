@@ -240,7 +240,6 @@
             <a href="../index.html" class="nav-btn-outline">Accueil</a>
         </div>
     </nav>
-
     <div class="container">
         <div class="auth-card">
             <h2>Connexion</h2>
@@ -319,7 +318,6 @@
                 hideLoader();
             }
         });
-
         document.getElementById('phoneLogin').addEventListener('click', async () => {
             const phone = prompt("Entrez votre numéro de téléphone (au format international, ex: +229 97 20 81 88)");
             if (!phone) return;
@@ -341,7 +339,6 @@
                 hideLoader();
             }
         });
-
         document.querySelectorAll('.toggle-password').forEach(icon => {
             icon.addEventListener('click', function() {
                 const targetId = this.getAttribute('data-target');

@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <script src="admin-auth.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -47,10 +49,6 @@
         .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .logo img { height: 42px; }
         .logo span { font-size: 1.4rem; font-weight: 700; color: #6b3ba4; }
-        .nav-buttons {
-            display: flex;
-            gap: 16px;
-        }
         .nav-btn-outline {
             padding: 8px 24px;
             border-radius: 40px;
@@ -194,11 +192,32 @@
             border-top: 1px solid #eee;
             margin-top: 60px;
         }
+        .footer .compliance-badges {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .footer .badge {
+            background: rgba(85,27,140,0.05);
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            color: #6b3ba4;
+        }
+        .footer .contact-box {
+            margin-bottom: 15px;
+        }
+        .footer .contact-item {
+            color: #6b3ba4;
+            text-decoration: none;
+            margin: 0 15px;
+        }
         @media (max-width: 768px) {
             .navbar { padding: 16px 24px; }
             .container { padding: 24px 16px; }
             .card { padding: 24px; }
-            th, td { padding: 8px 12px; }
             .filters { flex-direction: column; align-items: stretch; }
         }
     </style>
@@ -210,12 +229,12 @@
     </div>
 
     <nav class="navbar">
-        <div class="logo" onclick="window.location.href='../index.html'">
-            <img src="../public/img/logo-navbar.png" alt="HubISoccer">
+        <div class="logo" onclick="window.location.href='../../index.html'">
+            <img src="logo-navbar.png" alt="HubISoccer">
             <span>HubISoccer</span>
         </div>
         <div class="nav-buttons">
-            <a href="../index.html" class="nav-btn-outline">Accueil</a>
+            <a href="../../index.html" class="nav-btn-outline">Accueil</a>
         </div>
     </nav>
 
@@ -255,11 +274,9 @@
             </div>
             <div style="overflow-x: auto;">
                 <table id="logsTable">
-                    <thead>
-                        <tr><th>Email</th><th>Statut</th><th>Date & heure</th><th>Adresse IP</th><th>User Agent</th>+<
-                    </thead>
+                    <thead><tr><th>Email</th><th>Statut</th><th>Date & heure</th><th>Adresse IP</th><th>User Agent</th></tr></thead>
                     <tbody id="logsTableBody"></tbody>
-                 </table>
+                </table>
             </div>
             <div style="margin-top: 20px; text-align: center;">
                 <button class="btn btn-secondary" id="loadMoreBtn">Charger plus</button>
@@ -267,88 +284,50 @@
         </div>
     </div>
 
-    <div class="footer">
-        <p>© 2026 HubISoccer - Administration sécurisée</p>
-    </div>
+    <footer class="footer">
+        <div class="compliance-badges">
+            <div class="badge">Conformité APDP Bénin</div>
+            <div class="badge">Règlementation FIFA</div>
+            <div class="badge">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>© Ozawa-Hubisoccer</p>
+        </div>
+    </footer>
 
-    <script src="auth.js"></script>
-    <script src="admin-auth.js"></script>
+    <div id="toastContainer" class="toast-container"></div>
+
     <script>
         let currentPage = 0;
         const pageSize = 50;
-        let currentFilters = {
-            email: '',
-            success: null,
-            dateStart: null,
-            dateEnd: null
-        };
+        let currentFilters = { email: '', success: null, dateStart: null, dateEnd: null };
 
         async function loadLogs(reset = true) {
-            if (reset) {
-                currentPage = 0;
-                document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="5">Chargement...</td></tr>';
-            }
-            let query = window.supabaseAuthPrive
-                .from('login_attempts')
-                .select('*')
-                .order('attempted_at', { ascending: false })
-                .range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
-
-            if (currentFilters.email) {
-                query = query.ilike('email', `%${currentFilters.email}%`);
-            }
-            if (currentFilters.success !== null) {
-                query = query.eq('success', currentFilters.success);
-            }
-            if (currentFilters.dateStart) {
-                query = query.gte('attempted_at', currentFilters.dateStart + 'T00:00:00');
-            }
-            if (currentFilters.dateEnd) {
-                query = query.lte('attempted_at', currentFilters.dateEnd + 'T23:59:59');
-            }
-
+            if (reset) { currentPage = 0; document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="5">Chargement...</td></tr>'; }
+            let query = window.supabaseAuthPrive.from('login_attempts').select('*').order('attempted_at', { ascending: false }).range(currentPage * pageSize, (currentPage + 1) * pageSize - 1);
+            if (currentFilters.email) query = query.ilike('email', `%${currentFilters.email}%`);
+            if (currentFilters.success !== null) query = query.eq('success', currentFilters.success);
+            if (currentFilters.dateStart) query = query.gte('attempted_at', currentFilters.dateStart + 'T00:00:00');
+            if (currentFilters.dateEnd) query = query.lte('attempted_at', currentFilters.dateEnd + 'T23:59:59');
             const { data, error } = await query;
-            if (error) {
-                console.error(error);
-                document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="5">Erreur de chargement</td></tr>';
-                return;
-            }
-            if (reset) {
-                document.getElementById('logsTableBody').innerHTML = '';
-            }
-            if (!data || data.length === 0) {
-                if (reset) document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="5">Aucune tentative trouvée</td></tr>';
-                document.getElementById('loadMoreBtn').style.display = 'none';
-                return;
-            }
+            if (error) { document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="5">Erreur de chargement</td></tr>'; return; }
+            if (reset) document.getElementById('logsTableBody').innerHTML = '';
+            if (!data || data.length === 0) { if (reset) document.getElementById('logsTableBody').innerHTML = '<tr><td colspan="5">Aucune tentative trouvée</td></tr>'; document.getElementById('loadMoreBtn').style.display = 'none'; return; }
             data.forEach(log => {
                 const statusHtml = log.success ? '<span class="success-badge">Succès</span>' : '<span class="failure-badge">Échec</span>';
-                const row = `
-                    <tr>
-                        <td>${escapeHtml(log.email)}</td>
-                        <td>${statusHtml}</td>
-                        <td>${new Date(log.attempted_at).toLocaleString()}</td>
-                        <td>${log.ip_address || '-'}</td>
-                        <td>${log.user_agent ? escapeHtml(log.user_agent).substring(0, 80) : '-'}</td>
-                    </tr>
-                `;
+                const row = `<tr><td>${escapeHtml(log.email)}</td><td>${statusHtml}</td><td>${new Date(log.attempted_at).toLocaleString()}</td><td>${log.ip_address || '-'}</td><td>${log.user_agent ? escapeHtml(log.user_agent).substring(0, 80) : '-'}</td></tr>`;
                 document.getElementById('logsTableBody').insertAdjacentHTML('beforeend', row);
             });
-            if (data.length < pageSize) {
-                document.getElementById('loadMoreBtn').style.display = 'none';
-            } else {
-                document.getElementById('loadMoreBtn').style.display = 'inline-block';
-            }
+            document.getElementById('loadMoreBtn').style.display = data.length < pageSize ? 'none' : 'inline-block';
         }
 
         function escapeHtml(str) {
             if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
+            return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m);
         }
 
         function applyFilters() {
@@ -371,12 +350,7 @@
 
         document.getElementById('applyFilters').addEventListener('click', applyFilters);
         document.getElementById('resetFilters').addEventListener('click', resetFilters);
-        document.getElementById('loadMoreBtn').addEventListener('click', () => {
-            currentPage++;
-            loadLogs(false);
-        });
-
-        // Chargement initial
+        document.getElementById('loadMoreBtn').addEventListener('click', () => { currentPage++; loadLogs(false); });
         loadLogs(true);
     </script>
 </body>

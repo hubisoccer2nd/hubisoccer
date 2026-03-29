@@ -13,7 +13,6 @@ function escapeHtml(str) {
         return m;
     });
 }
-
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toastContainer');
     if (!container) {

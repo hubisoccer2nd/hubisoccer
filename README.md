@@ -22,7 +22,7 @@ Toutes les pages accessibles sans authentification :
 - Pages d’inscription et de connexion (`auth/`)
 - Administration publique (`admin/`) pour gérer les contenus publics
 
-### 📁 `hubis/`
+### 📁 `hubisapp/`
 Pages réservées aux utilisateurs connectés, organisées par rôle :
 - `auth/` – pages d’authentification des espaces privés
 - `footballer/`, `basketter/`, `parrainprive/`, `agent-fifa/`, `corps arbitral/`, `staff médical/`, `cricket/`, `tennis/`, `athletisme/`, `natation/`, `rugby/`, `volley-ball/`, `cyclisme/`, `/`
@@ -58,7 +58,7 @@ Chaque sous‑dossier de rôle contient :
 ## 📋 Pages principales
 
 - **Espace public** : `index.html`, `hub-community.html`, `scouting.html`, `tournoi.html`, etc.
-- **Espace privé** (exemple pour footballeur) : `hubis/footballer/dashbord/dashboard.html`, `hubis/footballer/feed/feed.html`, `hubis/footballer/messages/messages.html`
+- **Espace privé** (exemple pour footballeur) : `hubisapp/footballer/dashbord/dashboard.html`, `hubisapp/footballer/feed/feed.html`, `hubisapp/footballer/messages/messages.html`
 
 Toutes les pages partagent les mêmes éléments de footer :
 

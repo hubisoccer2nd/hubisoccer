@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E‑Market HubISoccer – Achat de produits sportifs, BTP, vêtements et accessoires</title>
+    <meta name="description" content="Découvrez le marché HubISoccer : articles de sport, équipements BTP, vêtements, accessoires et bien plus. Faites vos achats en ligne et soutenez les talents.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://hubisoccer2nd.github.io/hubisoccer/e-marketing-hubisoccer.html">
+    <meta property="og:title" content="E‑Market HubISoccer – Produits sportifs, BTP, vêtements & accessoires">
+    <meta property="og:description" content="Découvrez le marché HubISoccer : articles de sport, équipements BTP, vêtements, accessoires et bien plus.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://hubisoccer2nd.github.io/hubisoccer/img/hubimarket.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/e-marketing.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div>
+        <span data-i18n="loader.message">Chargement...</span>
+    </div>
+
+    <nav>
+        <a href="index.html" class="logo-link">
+            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" data-i18n="nav.home">Accueil</a>
+                <a href="scouting.html" data-i18n="nav.scouting">Scouting</a>
+                <a href="processus.html" data-i18n="nav.process">Processus</a>
+                <a href="affiliation.html" data-i18n="nav.affiliation">Affiliation</a>
+                <a href="acteurs.html" data-i18n="nav.actors">Devenir acteur</a>
+                <a href="tournoi.html" data-i18n="nav.tournoi">Tournois</a>
+                <a href="hub-community.html" data-i18n="nav.community">Community</a>
+                <a href="e-marketing-hubisoccer.html" class="active" data-i18n="nav.market">Market</a>
+                <a href="public/auth/login.html" class="btn-auth" data-i18n="nav.login">Connexion</a>
+                <a href="public/auth/signup.html" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="market-hero" style="background: linear-gradient(135deg, rgba(85,27,140,0.6), rgba(0,0,0,0.5)), url('img/hubimarket.jpg') center/cover no-repeat;">
+        <h1 class="market-title"><span data-i18n="emarket.hero.title">Le Marché</span> <span class="highlight" data-i18n="emarket.hero.highlight">HubISoccer</span></h1>
+        <p class="market-subtitle" data-i18n="emarket.hero.subtitle">Flânez entre les étals, découvrez des produits uniques pour champions, et laissez-vous tenter par les saveurs du football.</p>
+    </header>
+
+    <section class="market-section">
+        <h2 class="section-title" data-i18n="emarket.packs.title">🔥 Packs exclusifs du moment</h2>
+        <div id="featuredPacks" class="product-grid"></div>
+    </section>
+
+    <section class="market-section">
+        <h2 class="section-title" data-i18n="emarket.all.title">🛍️ Tous nos articles</h2>
+        <div id="allProducts" class="product-grid"></div>
+    </section>
+
+    <!-- Panier flottant -->
+    <div class="cart-float" id="cartFloat">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count" id="cartCount">0</span>
+    </div>
+
+    <!-- MODALE PANIER -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content cart-modal-content">
+            <span class="close-modal" onclick="emarketCloseCartModal()">&times;</span>
+            <h2 data-i18n="emarket.cart.title">Votre panier</h2>
+            <div id="cartItems"></div>
+            <div class="cart-total">
+                <strong data-i18n="emarket.cart.total_ht">Total HT :</strong> <span id="cartTotalHT">0</span> FCFA<br>
+                <strong data-i18n="emarket.cart.tva">TVA (18%) :</strong> <span id="cartTVA">0</span> FCFA<br>
+                <strong data-i18n="emarket.cart.total_ttc">Total TTC :</strong> <span id="cartTotalTTC">0</span> FCFA
+            </div>
+            <div class="cart-actions">
+                <button class="btn-continue" onclick="emarketCloseCartModal()" data-i18n="emarket.cart.continue">Continuer les achats</button>
+                <button class="btn-checkout" id="checkoutBtn" data-i18n="emarket.cart.checkout">Passer la commande</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE AUTH (connexion / inscription / oublié) -->
+    <div id="authModal" class="modal">
+        <div class="modal-content auth-modal-content">
+            <span class="close-modal" onclick="emarketCloseAuthModal()">&times;</span>
+            <h2 id="authModalTitle" data-i18n="emarket.auth.login_title">Connexion</h2>
+            <div id="authForms">
+                <form id="loginForm" style="display: block;">
+                    <div class="form-group">
+                        <label data-i18n="emarket.auth.email">Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group password-field">
+                        <label data-i18n="emarket.auth.password">Mot de passe</label>
+                        <input type="password" id="loginPassword" required>
+                        <i class="fas fa-eye toggle-password" onclick="emarketTogglePassword('loginPassword')"></i>
+                    </div>
+                    <button type="submit" class="btn-submit" data-i18n="emarket.auth.login_btn">Se connecter</button>
+                    <p><a href="#" onclick="emarketShowForgotPassword()" data-i18n="emarket.auth.forgot">Mot de passe oublié ?</a></p>
+                    <p><a href="#" onclick="emarketShowRegisterForm()" data-i18n="emarket.auth.register_link">Pas encore de compte ? Inscrivez-vous</a></p>
+                </form>
+                <form id="registerForm" style="display: none;">
+                    <h3 data-i18n="emarket.auth.register_title">Nouveau client</h3>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label data-i18n="emarket.auth.firstname">Prénom</label>
+                            <input type="text" id="regFirstName" required>
+                        </div>
+                        <div class="form-group half">
+                            <label data-i18n="emarket.auth.lastname">Nom</label>
+                            <input type="text" id="regLastName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="emarket.auth.email">Email</label>
+                        <input type="email" id="regEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="emarket.auth.phone">Téléphone</label>
+                        <input type="tel" id="regPhone" required>
+                    </div>
+                    <div class="form-group password-field">
+                        <label data-i18n="emarket.auth.password">Mot de passe</label>
+                        <input type="password" id="regPassword" required>
+                        <i class="fas fa-eye toggle-password" onclick="emarketTogglePassword('regPassword')"></i>
+                    </div>
+                    <div class="form-group password-field">
+                        <label data-i18n="emarket.auth.confirm_password">Confirmer le mot de passe</label>
+                        <input type="password" id="regPasswordConfirm" required>
+                        <i class="fas fa-eye toggle-password" onclick="emarketTogglePassword('regPasswordConfirm')"></i>
+                    </div>
+                    <button type="submit" class="btn-submit" data-i18n="emarket.auth.register_btn">S'inscrire</button>
+                    <p><a href="#" onclick="emarketShowLoginForm()" data-i18n="emarket.auth.login_link">Déjà inscrit ? Connectez-vous</a></p>
+                </form>
+                <form id="forgotForm" style="display: none;">
+                    <h3 data-i18n="emarket.auth.forgot_title">Réinitialisation du mot de passe</h3>
+                    <p data-i18n="emarket.auth.forgot_text">Entrez votre email, nous vous enverrons un lien pour réinitialiser votre mot de passe.</p>
+                    <div class="form-group">
+                        <label data-i18n="emarket.auth.email">Email</label>
+                        <input type="email" id="forgotEmail" required>
+                    </div>
+                    <button type="submit" class="btn-submit" data-i18n="emarket.auth.forgot_btn">Envoyer</button>
+                    <p><a href="#" onclick="emarketShowLoginForm()" data-i18n="emarket.auth.back_login">Retour à la connexion</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE CHECKOUT -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content checkout-modal-content">
+            <span class="close-modal" onclick="emarketCloseCheckoutModal()">&times;</span>
+            <h2 data-i18n="emarket.checkout.title">Finaliser la commande</h2>
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label data-i18n="emarket.checkout.fullname">Nom complet</label>
+                    <input type="text" id="checkoutFullName" readonly>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="emarket.checkout.email">Email</label>
+                    <input type="email" id="checkoutEmail" readonly>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="emarket.checkout.phone">Téléphone</label>
+                    <input type="tel" id="checkoutPhone" readonly>
+                </div>
+                <div id="checkoutSummary"></div>
+                <div class="total-checkout">
+                    <strong data-i18n="emarket.checkout.total_ht">Total HT :</strong> <span id="checkoutTotalHT">0</span> FCFA<br>
+                    <strong data-i18n="emarket.checkout.tva">TVA (18%) :</strong> <span id="checkoutTVA">0</span> FCFA<br>
+                    <strong data-i18n="emarket.checkout.total_ttc">Total TTC :</strong> <span id="checkoutTotalTTC">0</span> FCFA
+                </div>
+                <button type="submit" class="btn-pay" data-i18n="emarket.checkout.pay">Payer avec FedaPay</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE COMPTE CLIENT -->
+    <div id="accountModal" class="modal">
+        <div class="modal-content account-modal-content">
+            <span class="close-modal" onclick="emarketCloseAccountModal()">&times;</span>
+            <h2 data-i18n="emarket.account.title">Mon compte</h2>
+            <div class="account-tabs">
+                <button class="tab-btn active" data-tab="orders" data-i18n="emarket.account.orders">Mes commandes</button>
+                <button class="tab-btn" data-tab="messages" data-i18n="emarket.account.messages">Mes messages</button>
+                <button class="tab-btn" data-tab="profile" data-i18n="emarket.account.profile">Mon profil</button>
+            </div>
+            <div id="accountTabContent">
+                <div id="tabOrders" class="tab-content active">
+                    <h3 data-i18n="emarket.account.orders_title">Mes commandes</h3>
+                    <div id="ordersList"></div>
+                </div>
+                <div id="tabMessages" class="tab-content">
+                    <h3 data-i18n="emarket.account.messages_title">Mes messages</h3>
+                    <div id="messagesList"></div>
+                    <button class="btn-add" id="newMessageBtn" data-i18n="emarket.account.new_message">Nouveau message</button>
+                </div>
+                <div id="tabProfile" class="tab-content">
+                    <h3 data-i18n="emarket.account.profile_title">Mon profil</h3>
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label data-i18n="emarket.auth.firstname">Prénom</label>
+                            <input type="text" id="profileFirstName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="emarket.auth.lastname">Nom</label>
+                            <input type="text" id="profileLastName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="emarket.auth.email">Email</label>
+                            <input type="email" id="profileEmail" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="emarket.auth.phone">Téléphone</label>
+                            <input type="tel" id="profilePhone" readonly>
+                        </div>
+                        <button type="button" id="editProfileBtn" data-i18n="emarket.account.edit">Modifier</button>
+                        <button type="submit" id="saveProfileBtn" style="display:none;" data-i18n="emarket.account.save">Enregistrer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE ENVOI MESSAGE -->
+    <div id="sendMessageModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="emarketCloseSendMessageModal()">&times;</span>
+            <h2 data-i18n="emarket.message.title">Envoyer un message</h2>
+            <form id="sendMessageForm">
+                <input type="hidden" id="messageOrderId">
+                <div class="form-group">
+                    <label data-i18n="emarket.message.content">Votre message</label>
+                    <textarea id="newMessageText" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn-submit" data-i18n="emarket.message.send">Envoyer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE DÉTAIL COMMANDE -->
+    <div id="orderDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="emarketCloseOrderDetailModal()">&times;</span>
+            <h2 data-i18n="emarket.order.detail_title">Détail de la commande</h2>
+            <div id="orderDetailContent"></div>
+            <button class="btn-secondary" onclick="emarketCloseOrderDetailModal()" data-i18n="emarket.order.close">Fermer</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge-item" data-i18n="footer.badge1">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer.badge2">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer.badge3">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="footer.tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="footer.email">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+    <script src="js/e-marketing.js"></script>
+</body>
+</html>

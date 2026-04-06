@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gérer mon équipe – Espace tournoi | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/gerer-equipe.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div>
+        <span data-i18n="loader.message">Chargement...</span>
+    </div>
+
+    <nav>
+        <a href="index.html" class="logo-link">
+            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="user-badge">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </span>
+            <button id="logoutBtn" class="btn-logout" data-i18n="gerer.logout">Déconnexion</button>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="dashboard-tournoi.html" data-i18n="gerer.dashboard">Tableau de bord</a>
+                <a href="gerer-equipe.html" class="active" data-i18n="gerer.title">Mon équipe</a>
+                <a href="matchs.html" data-i18n="gerer.matchs">Matchs</a>
+                <a href="classement.html" data-i18n="gerer.classement">Classement</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="gerer-main">
+        <div class="container">
+            <h1 class="page-title">
+                <i class="fas fa-users"></i>
+                <span data-i18n="gerer.title">Gérer mon équipe</span>
+            </h1>
+            <div id="equipeInfo" class="equipe-info"></div>
+
+            <div class="actions">
+                <button id="ajouterSportifBtn" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    <span data-i18n="gerer.ajouter">Ajouter un sportif</span>
+                </button>
+            </div>
+
+            <div id="sportifsList" class="sportifs-list"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge-item" data-i18n="footer.badge1">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer.badge2">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer.badge3">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="footer.tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="footer.email">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modale ajout sportif -->
+    <div id="ajoutModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 data-i18n="gerer.modal.titre">Ajouter un sportif</h3>
+            <form id="ajoutForm">
+                <div class="form-group">
+                    <label data-i18n="gerer.modal.nom">Nom *</label>
+                    <input type="text" id="nom" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="gerer.modal.prenom">Prénom *</label>
+                    <input type="text" id="prenom" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="gerer.modal.numero">Numéro de maillot</label>
+                    <input type="number" id="numero">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="gerer.modal.poste">Poste / Rôle sportif</label>
+                    <input type="text" id="poste">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="gerer.modal.pied">Pied fort</label>
+                    <select id="pied">
+                        <option value="">--</option>
+                        <option value="Droit">Droit</option>
+                        <option value="Gauche">Gauche</option>
+                        <option value="Ambidextre">Ambidextre</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit" data-i18n="gerer.modal.ajouter">Ajouter</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/gerer-equipe.js"></script>
+</body>
+</html>

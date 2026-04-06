@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen de qualification | HubISoccer</title>
+    <meta name="description" content="Épreuve de qualification pour les sportifs HubISoccer. QCM et questions rédactionnelles selon votre sport.">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/test-ecrit.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div>
+        <span data-i18n="loader.message">Chargement...</span>
+    </div>
+
+    <nav>
+        <a href="index.html" class="logo-link">
+            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" data-i18n="nav.home">Accueil</a>
+                <a href="scouting.html" data-i18n="nav.scouting">Scouting</a>
+                <a href="processus.html" data-i18n="nav.process">Processus</a>
+                <a href="affiliation.html" data-i18n="nav.affiliation">Affiliation</a>
+                <a href="acteurs.html" data-i18n="nav.actors">Devenir acteur</a>
+                <a href="tournoi.html" data-i18n="nav.tournaments">Tournois</a>
+                <a href="hub-community.html" data-i18n="nav.community">Community</a>
+                <a href="e-marketing-hubisoccer.html" data-i18n="nav.market">Market</a>
+                <a href="public/auth/login.html" class="btn-auth" data-i18n="nav.login">Connexion</a>
+                <a href="public/auth/signup.html" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="examen-main">
+        <!-- ÉTAPE 1 : Formulaire d'identification -->
+        <div id="step1" class="step-card active">
+            <div class="form-card">
+                <h1><i class="fas fa-graduation-cap"></i> <span data-i18n="exam.title">Examen de qualification</span></h1>
+                <p class="subtitle" data-i18n="exam.subtitle">Pour accéder à l'épreuve, veuillez renseigner vos informations personnelles et votre identifiant.</p>
+                <form id="identityForm">
+                    <div class="form-group">
+                        <label data-i18n="exam.fullname">Nom complet *</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="exam.birthdate">Date de naissance *</label>
+                        <input type="date" id="birthDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="exam.sport">Sport *</label>
+                        <select id="sportSelect" required>
+                            <option value="">-- Choisissez votre sport --</option>
+                            <option value="football">Football</option>
+                            <option value="basketball">Basketball</option>
+                            <option value="tennis">Tennis</option>
+                            <option value="athletisme">Athlétisme</option>
+                            <option value="handball">Handball</option>
+                            <option value="volleyball">Volley‑ball</option>
+                            <option value="rugby">Rugby</option>
+                            <option value="natation">Natation</option>
+                            <option value="arts_martiaux">Arts martiaux</option>
+                            <option value="cyclisme">Cyclisme</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="exam.id_label">Votre ID de suivi (PP ID) *</label>
+                        <input type="text" id="ppId" placeholder="Ex: a5-VA-032714-HubIS-FT-123-00001" required>
+                        <small class="field-note" data-i18n="exam.id_note">Cet ID se trouve sur la page de suivi ou dans l'email de confirmation.</small>
+                    </div>
+                    <button type="submit" class="btn-submit" data-i18n="exam.continue">Continuer vers l'épreuve</button>
+                </form>
+                <div class="info-box">
+                    <p><i class="fas fa-info-circle"></i> <span data-i18n="exam.info">L'épreuve dure environ 15 minutes. Vous devez obtenir au moins 7/10 au QCM pour que votre copie soit corrigée.</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÉTAPE 2 : Épreuve (affichée après vérification) -->
+        <div id="step2" class="step-card" style="display: none;">
+            <div class="epreuve-card">
+                <h1><i class="fas fa-pen-alt"></i> <span data-i18n="exam.epreuve_title">Épreuve de qualification</span></h1>
+                <p class="subtitle" id="epreuveSportLabel"></p>
+                <form id="quizForm">
+                    <div id="questionsContainer"></div>
+                    <button type="submit" class="btn-submit" data-i18n="exam.submit">Soumettre mon épreuve</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ÉTAPE 3 : Message d'attente après soumission -->
+        <div id="step3" class="step-card" style="display: none;">
+            <div class="success-card">
+                <div class="success-icon">📝</div>
+                <h1 data-i18n="exam.wait_title">Épreuve soumise !</h1>
+                <p data-i18n="exam.wait_message">Votre copie a bien été enregistrée. Un correcteur l'analysera sous 1h à 24h. Vous recevrez votre note et un PDF corrigé dans votre espace de suivi.</p>
+                <p data-i18n="exam.wait_thanks">Merci de votre confiance.</p>
+                <a href="suivi.html" class="btn-primary" data-i18n="exam.go_suivi">Aller à mon suivi</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge-item" data-i18n="footer.badge1">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer.badge2">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer.badge3">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="footer.tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="footer.email">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/test-ecrit.js"></script>
+</body>
+</html>

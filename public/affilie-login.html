@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace affilié | HubISoccer</title>
+    <meta name="description" content="Connectez-vous à votre espace affilié HubISoccer pour suivre vos gains et gérer vos liens.">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/affilie-login.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div>
+        <span data-i18n="loader.message">Chargement...</span>
+    </div>
+
+    <nav>
+        <a href="index.html" class="logo-link">
+            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" data-i18n="nav.home">Accueil</a>
+                <a href="scouting.html" data-i18n="nav.scouting">Scouting</a>
+                <a href="processus.html" data-i18n="nav.process">Processus</a>
+                <a href="affiliation.html" data-i18n="nav.affiliation">Affiliation</a>
+                <a href="acteurs.html" data-i18n="nav.actors">Devenir acteur</a>
+                <a href="tournoi.html" data-i18n="nav.tournoi">Tournois</a>
+                <a href="hub-community.html" data-i18n="nav.community">Community</a>
+                <a href="e-marketing-hubisoccer.html" data-i18n="nav.market">Market</a>
+                <a href="public/auth/login.html" class="btn-auth" data-i18n="nav.login">Connexion</a>
+                <a href="public/auth/signup.html" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="login-main">
+        <!-- Formulaire de connexion -->
+        <div id="loginContainer" class="login-container">
+            <div class="login-card">
+                <h1><i class="fas fa-handshake"></i> <span data-i18n="affilie.title">Espace affilié</span></h1>
+                <p data-i18n="affilie.subtitle">Connectez-vous avec votre numéro WhatsApp pour accéder à vos statistiques et gains.</p>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label data-i18n="affilie.whatsapp">Numéro WhatsApp *</label>
+                        <input type="tel" id="telephone" placeholder="+229 01 00 00 00 00" required>
+                    </div>
+                    <button type="submit" class="btn-login" data-i18n="affilie.login_btn">Se connecter</button>
+                </form>
+                <div class="register-link">
+                    <span data-i18n="affilie.not_registered">Pas encore affilié ?</span>
+                    <a href="affiliation.html" data-i18n="affilie.register_link">Devenez ambassadeur</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tableau de bord (dashboard) – masqué par défaut -->
+        <div id="dashboardContainer" class="dashboard-container" style="display: none;">
+            <div class="dashboard-header">
+                <h2><i class="fas fa-user"></i> <span id="welcomeName"></span></h2>
+                <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> <span data-i18n="affilie.dashboard.logout">Déconnexion</span></button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <h3 data-i18n="affilie.dashboard.total_sportifs">Sportifs validés</h3>
+                    <span id="totalSportifs">0</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h3 data-i18n="affilie.dashboard.total_ventes">Ventes</h3>
+                    <span id="totalVentes">0</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-coins"></i>
+                    <h3 data-i18n="affilie.dashboard.total_commission">Commission totale (FCFA)</h3>
+                    <span id="totalCommission">0</span>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-hourglass-half"></i>
+                    <h3 data-i18n="affilie.dashboard.pending">En attente de validation</h3>
+                    <span id="pendingSportifs">0</span>
+                </div>
+            </div>
+
+            <div class="dashboard-link">
+                <p data-i18n="affilie.dashboard.link">Votre lien d'affiliation :</p>
+                <div class="link-box">
+                    <span id="affiliateLink"></span>
+                    <button id="copyLinkBtn" class="btn-copy"><i class="fas fa-copy"></i> <span data-i18n="affilie.dashboard.link_copy">Copier</span></button>
+                </div>
+            </div>
+
+            <div class="transactions-section">
+                <h3><i class="fas fa-history"></i> <span data-i18n="affilie.dashboard.history">Historique des commissions</span></h3>
+                <div id="historyList" class="transactions-list"></div>
+            </div>
+
+            <div class="withdraw-section">
+                <h3><i class="fas fa-money-bill-wave"></i> <span data-i18n="affilie.dashboard.withdraw">Demander un retrait</span></h3>
+                <div class="withdraw-form">
+                    <div class="form-group">
+                        <label data-i18n="affilie.withdraw.amount">Montant (FCFA)</label>
+                        <input type="number" id="withdrawAmount" min="1000" step="500">
+                    </div>
+                    <button id="withdrawBtn" class="btn-withdraw" data-i18n="affilie.dashboard.withdraw">Demander un retrait</button>
+                </div>
+                <p class="withdraw-info" data-i18n="affilie.withdraw.info">Le retrait sera traité selon votre moyen de paiement enregistré (Mobile Money sous 72h, autre sous 15 jours).</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge-item" data-i18n="footer.badge1">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer.badge2">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer.badge3">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="footer.tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="footer.email">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/affilie-login.js"></script>
+</body>
+</html>

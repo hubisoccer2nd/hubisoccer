@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournois & Lives - HubISoccer</title>
+    <meta name="description" content="Participez aux tournois de détection HubISoccer. Suivez les lives, obtenez vos codes d'inscription et montrez votre talent.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hubisoccer2nd.github.io/hubisoccer/tournoi.html">
+    <meta property="og:title" content="Tournois HubISoccer – Joue et détecte-toi">
+    <meta property="og:description" content="Participez aux tournois de détection. Suivez les lives, obtenez vos codes d'inscription.">
+    <meta property="og:image" content="https://hubisoccer2nd.github.io/hubisoccer/img/stade-cotonou.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/tournoi.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div>
+        <span data-i18n="loader.message">Chargement...</span>
+    </div>
+
+    <nav>
+        <a href="index.html" class="logo-link">
+            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" data-i18n="nav.home">Accueil</a>
+                <a href="scouting.html" data-i18n="nav.scouting">Scouting</a>
+                <a href="processus.html" data-i18n="nav.process">Processus</a>
+                <a href="affiliation.html" data-i18n="nav.affiliation">Affiliation</a>
+                <a href="acteurs.html" data-i18n="nav.actors">Devenir acteur</a>
+                <a href="tournoi.html" class="active" data-i18n="nav.tournoi">Tournois</a>
+                <a href="hub-community.html" data-i18n="nav.community">Community</a>
+                <a href="e-marketing-hubisoccer.html" data-i18n="nav.market">Market</a>
+                <a href="public/auth/login.html" class="btn-auth" data-i18n="nav.login">Connexion</a>
+                <a href="public/auth/signup.html" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="tournoi-main">
+        <section class="live-section" id="liveSection">
+            <h2><i class="fas fa-broadcast-tower"></i> <span data-i18n="tournoi.live_title">Live en direct</span></h2>
+            <div id="liveContainer" class="live-container"></div>
+        </section>
+
+        <section class="tournois-section">
+            <h2><i class="fas fa-trophy"></i> <span data-i18n="tournoi.tournois_title">Tournois à venir</span></h2>
+            <div id="tournoiGrid" class="tournoi-grid"></div>
+        </section>
+
+        <div class="tournoi-info">
+            <h3 data-i18n="tournoi.info_title">Comment participer ?</h3>
+            <p data-i18n="tournoi.info_text">1. Choisissez un tournoi.<br>2. Copiez le code d'inscription.<br>3. Cliquez sur "S'inscrire" et remplissez le formulaire.<br>4. Après validation, vous recevrez vos identifiants pour accéder à l'espace privé.</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge-item" data-i18n="footer.badge1">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer.badge2">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer.badge3">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="footer.tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="footer.email">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div id="inscriptionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 data-i18n="tournoi.modal.title">Inscription au tournoi</h3>
+            <form id="inscriptionForm">
+                <input type="hidden" id="modalCodeId">
+                <input type="hidden" id="modalTournoiId">
+                <div class="form-group">
+                    <label data-i18n="tournoi.modal.nom">Nom complet *</label>
+                    <input type="text" id="inscriptionNom" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="tournoi.modal.email">Email *</label>
+                    <input type="email" id="inscriptionEmail" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="tournoi.modal.telephone">Téléphone *</label>
+                    <input type="tel" id="inscriptionTelephone" required>
+                </div>
+                <div class="form-group" id="clubGroup" style="display: none;">
+                    <label data-i18n="tournoi.modal.nom_club">Nom du club *</label>
+                    <input type="text" id="inscriptionClub">
+                </div>
+                <button type="submit" class="btn-submit" data-i18n="tournoi.modal.envoyer">Envoyer ma demande</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/tournoi.js"></script>
+</body>
+</html>

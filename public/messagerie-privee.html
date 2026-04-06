@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messagerie – Espace tournoi | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/messagerie-privee.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div>
+        <span data-i18n="loader.message">Chargement...</span>
+    </div>
+
+    <nav>
+        <a href="index.html" class="logo-link">
+            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="user-badge">
+                <i class="fas fa-user"></i>
+                <span id="userName"></span>
+            </span>
+            <button id="logoutBtn" class="btn-logout" data-i18n="messagerie.logout">Déconnexion</button>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="dashboard-tournoi.html" data-i18n="messagerie.dashboard">Tableau de bord</a>
+                <a href="gerer-equipe.html" data-i18n="messagerie.equipe">Mon équipe</a>
+                <a href="matchs.html" data-i18n="messagerie.matchs">Matchs</a>
+                <a href="classement.html" data-i18n="messagerie.classement">Classement</a>
+                <a href="messagerie-privee.html" class="active" data-i18n="messagerie.title">Messages</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="messagerie-main">
+        <div class="container">
+            <h1 class="page-title">
+                <i class="fas fa-comments"></i>
+                <span data-i18n="messagerie.title">Messagerie</span>
+            </h1>
+
+            <div class="messagerie-grid">
+                <!-- Colonne gauche : liste des conversations -->
+                <div class="conversations-list">
+                    <div class="list-header">
+                        <button id="nouveauMessageBtn" class="btn-primary" data-i18n="messagerie.nouveau">+ Nouveau message</button>
+                    </div>
+                    <div id="conversationsContainer" class="conversations-container">
+                        <!-- Chargé par JS -->
+                    </div>
+                </div>
+
+                <!-- Colonne droite : affichage des messages d'une conversation -->
+                <div class="messages-area" id="messagesArea" style="display: none;">
+                    <div class="conversation-header" id="conversationHeader"></div>
+                    <div class="messages-container" id="messagesContainer"></div>
+                    <div class="message-compose">
+                        <textarea id="newMessageContent" rows="3" placeholder="Votre message..."></textarea>
+                        <button id="sendMessageBtn" class="btn-send">Envoyer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge-item" data-i18n="footer.badge1">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer.badge2">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer.badge3">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="footer.tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="footer.email">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modale pour nouveau message -->
+    <div id="nouveauModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 data-i18n="messagerie.nouveau_titre">Nouveau message</h3>
+            <form id="nouveauMessageForm">
+                <div class="form-group">
+                    <label data-i18n="messagerie.destinataire">Destinataire (admin ou équipe)</label>
+                    <select id="destinataireType">
+                        <option value="admin">Administrateur</option>
+                        <option value="equipe">Autre équipe (capitaine)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="equipeSelectGroup" style="display: none;">
+                    <label data-i18n="messagerie.equipe_destinataire">Choisir l'équipe</label>
+                    <select id="equipeDestinataire"></select>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="messagerie.sujet">Sujet *</label>
+                    <input type="text" id="sujetMessage" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="messagerie.contenu">Message *</label>
+                    <textarea id="contenuMessage" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="btn-submit" data-i18n="messagerie.envoyer">Envoyer</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/messagerie-privee.js"></script>
+</body>
+</html>

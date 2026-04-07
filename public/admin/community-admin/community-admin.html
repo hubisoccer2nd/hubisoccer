@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Communauté | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="community-admin.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+
+    <nav>
+        <a href="../../../index.html" class="logo-link">
+            <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="admin-badge">Espace Administration - Communauté</span>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="../../../index.html">Accueil site</a>
+                <a href="#" id="logoutBtn">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <h1 class="page-title"><i class="fas fa-users"></i> Gestion de la communauté</h1>
+            <p class="page-subtitle">Gérez les posts et les commentaires de la page Hub Community.</p>
+
+            <!-- Section Posts -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-newspaper"></i> Posts</h2>
+                    <button id="addPostBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau post</button>
+                </div>
+                <div id="postsList" class="items-list"></div>
+            </div>
+
+            <!-- Section Commentaires -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-comments"></i> Commentaires</h2>
+                    <button id="addCommentBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau commentaire</button>
+                </div>
+                <div id="commentsList" class="items-list"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="legal">
+            <p>© 2026 HubISoccer - Administration Communauté. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modale pour ajouter/modifier un post ou commentaire -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="modalTitle">Nouveau post</h3>
+            <form id="itemForm">
+                <input type="hidden" id="itemType">
+                <input type="hidden" id="itemId">
+                <div id="dynamicFields"></div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="community-admin.js"></script>
+</body>
+</html>

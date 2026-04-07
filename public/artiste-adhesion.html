@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adhésion Artiste | HubISoccer</title>
+    <meta name="description" content="Rejoignez HubISoccer en tant qu'artiste. Remplissez votre dossier, téléchargez vos preuves et obtenez votre identifiant unique.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hubisoccer2nd.github.io/hubisoccer/artiste-adhesion.html">
+    <meta property="og:title" content="Adhésion Artiste | HubISoccer">
+    <meta property="og:description" content="Devenez artiste HubISoccer – déposez votre dossier.">
+    <meta property="og:image" content="https://hubisoccer2nd.github.io/hubisoccer/img/logo-navbar.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/artiste-adhesion.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+
+    <nav>
+        <a href="../index.html" class="logo-link">
+            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="../index.html" data-i18n="nav.home">Accueil</a>
+                <a href="scouting.html" data-i18n="nav.scouting">Scouting</a>
+                <a href="processus.html" data-i18n="nav.process">Processus</a>
+                <a href="affiliation.html" data-i18n="nav.affiliation">Affiliation</a>
+                <a href="suivi.html" data-i18n="nav.follow">SUIVI</a>
+                <a href="acteurs.html" data-i18n="nav.actors">DEVENIR UN ACTEUR</a>
+                <a href="tournoi.html" data-i18n="nav.tournaments">Tournois</a>
+                <a href="hub-community.html" data-i18n="nav.community">Community</a>
+                <a href="e-marketing-hubisoccer.html" data-i18n="nav.market">Market</a>
+                <a href="public/auth/login.html" class="btn-auth" data-i18n="nav.login">Connexion</a>
+                <a href="public/auth/signup.html" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="step-hero" id="heroCarousel">
+        <div class="carousel-slide active" style="background-image: url('img/artiste1.jpg');"></div>
+        <div class="carousel-slide" style="background-image: url('img/artiste2.jpg');"></div>
+        <div class="carousel-slide" style="background-image: url('img/artiste3.jpg');"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="glitch" data-text="Premier Pas Artistique" data-i18n="hero.title">Premier Pas Artistique</h1>
+            <p class="hero-subtitle" data-i18n="hero.subtitle">Adhésion officielle au programme HubISoccer pour les artistes. Nous valorisons votre talent après vérification de votre parcours.</p>
+        </div>
+        <div class="carousel-indicators">
+            <span class="indicator active" data-index="0"></span>
+            <span class="indicator" data-index="1"></span>
+            <span class="indicator" data-index="2"></span>
+        </div>
+    </header>
+
+    <section class="benefits-container">
+        <div class="benefit-card">
+            <div class="benefit-icon">🆔</div>
+            <h2 class="benefit-title" data-i18n="benefit1.title">Identité Numérique</h2>
+            <p data-i18n="benefit1.desc">Votre inscription crée votre passeport artistique HubISoccer, indispensable pour participer aux événements et détections.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">⚖️</div>
+            <h2 class="benefit-title" data-i18n="benefit2.title">Protection des œuvres</h2>
+            <p data-i18n="benefit2.desc">Nous protégeons vos créations et respectons les normes juridiques béninoises.</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">📈</div>
+            <h2 class="benefit-title" data-i18n="benefit3.title">Visibilité Mondiale</h2>
+            <p data-i18n="benefit3.desc">Une fois validé, votre profil devient accessible aux producteurs, labels et organisateurs internationaux.</p>
+        </div>
+    </section>
+
+    <section class="registration-section">
+        <div class="form-container">
+            <h2 data-i18n="form.title">Dossier d'Adhésion <span class="highlight">(Artistes)</span></h2>
+            <form id="artisteAdhesionForm">
+                <div class="section-title"><i class="fas fa-user-circle"></i><span data-i18n="form.who">Qui êtes-vous ?</span></div>
+                <div class="form-group">
+                    <label data-i18n="form.definition">Veuillez vous définir *</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="definition" value="moi-meme" required> <span data-i18n="form.myself">Moi-même</span></label>
+                        <label><input type="radio" name="definition" value="parent"> <span data-i18n="form.parent">Mon parent</span></label>
+                        <label><input type="radio" name="definition" value="tuteur"> <span data-i18n="form.guardian">Mon tuteur</span></label>
+                        <label><input type="radio" name="definition" value="proche"> <span data-i18n="form.relative">Mon proche</span></label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group"><label data-i18n="form.fullname">Nom complet *</label><input type="text" id="fullName" required></div>
+                    <div class="form-group"><label data-i18n="form.birthdate">Date de naissance *</label><input type="date" id="birthDate" required></div>
+                </div>
+                <div id="parentGroup" class="form-group" style="display: none;"><label data-i18n="form.parentname">Nom du parent / tuteur (si mineur)</label><input type="text" id="parentName"></div>
+
+                <div class="form-group"><label data-i18n="form.inscription_code">Code d'inscription (optionnel)</label><input type="text" id="inscriptionCode"></div>
+
+                <div class="section-title"><i class="fas fa-link"></i><span data-i18n="form.affiliation_section">Affiliation</span></div>
+                <div class="form-group">
+                    <label data-i18n="form.is_affiliated">Êtes-vous affilié(e) ?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="affiliation" value="oui" id="affOui"> <span data-i18n="form.yes">Oui</span></label>
+                        <label><input type="radio" name="affiliation" value="non" id="affNon" checked> <span data-i18n="form.no">Non</span></label>
+                    </div>
+                </div>
+                <div id="affiliateGroup" class="form-group" style="display: none;"><label data-i18n="form.affiliate_id">ID affilié</label><input type="text" id="affiliateId"></div>
+
+                <div class="section-title"><i class="fas fa-graduation-cap"></i><span data-i18n="form.academic">Parcours Académique & Justificatifs</span></div>
+                <div class="form-group"><label data-i18n="form.diploma_title">Diplôme / formation en cours *</label><input type="text" id="diplomaTitle" required></div>
+
+                <div class="form-group">
+                    <label data-i18n="form.diploma_file">Attestation de scolarité ou Diplôme *</label>
+                    <div class="file-upload-box" id="upload-diplome">
+                        <i class="fas fa-cloud-upload-alt"></i><span data-i18n="form.upload_click">Cliquez pour télécharger (PDF, JPG, PNG)</span>
+                        <input type="file" id="diplomaFile" accept=".jpg,.png,.pdf" required>
+                        <div class="progress-indicator" style="display: none;">
+                            <svg class="progress-circle" width="40" height="40">
+                                <circle class="progress-bg" cx="20" cy="20" r="18" stroke="#e9ecef" stroke-width="3" fill="none"/>
+                                <circle class="progress-bar" cx="20" cy="20" r="18" stroke="#551B8C" stroke-width="3" fill="none" stroke-dasharray="113.1" stroke-dashoffset="113.1" transform="rotate(-90 20 20)"/>
+                            </svg>
+                            <span class="progress-text">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="form.idcard_file">Pièce d'identité *</label>
+                    <div class="file-upload-box" id="upload-piece">
+                        <i class="fas fa-cloud-upload-alt"></i><span data-i18n="form.upload_click">Cliquez pour télécharger (PDF, JPG, PNG)</span>
+                        <input type="file" id="idCardFile" accept=".jpg,.png,.pdf" required>
+                        <div class="progress-indicator" style="display: none;">
+                            <svg class="progress-circle" width="40" height="40">
+                                <circle class="progress-bg" cx="20" cy="20" r="18" stroke="#e9ecef" stroke-width="3" fill="none"/>
+                                <circle class="progress-bar" cx="20" cy="20" r="18" stroke="#551B8C" stroke-width="3" fill="none" stroke-dasharray="113.1" stroke-dashoffset="113.1" transform="rotate(-90 20 20)"/>
+                            </svg>
+                            <span class="progress-text">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group"><label data-i18n="form.phone">Téléphone *</label><input type="tel" id="phone" required></div>
+
+                <div class="section-title"><i class="fas fa-palette"></i><span data-i18n="form.art_section">Discipline artistique</span></div>
+                <div class="form-group">
+                    <select id="disciplineSelect" required>
+                        <option value="" data-i18n="form.choose_discipline">-- Choisissez votre discipline --</option>
+                        <option value="chanteur">Chanteur</option>
+                        <option value="danseur">Danseur</option>
+                        <option value="compositeur">Compositeur</option>
+                        <option value="acteur_cinema">Acteur de cinéma</option>
+                        <option value="acteur_theatre">Acteur de théâtre</option>
+                        <option value="humoriste">Humoriste / comédien</option>
+                        <option value="slameur">Slameur / poète</option>
+                        <option value="dj">DJ / producteur musical</option>
+                        <option value="cirque">Artiste de cirque</option>
+                        <option value="artiste_visuel">Artiste visuel</option>
+                    </select>
+                </div>
+
+                <div id="disciplineSpecificFields" class="discipline-fields"></div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="certifie" required>
+                    <label for="certifie" data-i18n="form.certify">Je certifie l'exactitude des documents fournis. Toute fraude entraînera une exclusion définitive.</label>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn"><i class="fas fa-paper-plane"></i> <span data-i18n="form.submit">Valider mon adhésion</span></button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge-item" data-i18n="footer.badge1">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer.badge2">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer.badge3">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="successModal" class="modal success-modal">
+        <div class="modal-content success-content">
+            <div class="modal-header">
+                <span class="close-modal" onclick="closeSuccessModal()">×</span>
+                <i class="fas fa-check-circle success-icon"></i>
+                <h2 data-i18n="modal.title">Inscription envoyée !</h2>
+            </div>
+            <div class="modal-body">
+                <p data-i18n="modal.message">Votre dossier est en attente de vérification par l'équipe HubISoccer.</p>
+                <p data-i18n="modal.id_label">Votre identifiant unique :</p>
+                <div class="tracking-link-box">
+                    <span id="trackingId"></span>
+                    <button id="copyTrackingBtn" class="btn-copy-link"><i class="fas fa-copy"></i> <span data-i18n="modal.copy">Copier</span></button>
+                </div>
+                <p class="info-note" data-i18n="modal.thanks">Merci de votre confiance !</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-close-modal" onclick="closeSuccessModal()" data-i18n="modal.close">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/artiste-adhesion.js"></script>
+</body>
+</html>

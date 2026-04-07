@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion des examens | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.snow.css">
+    <link rel="stylesheet" href="test-ecrit-admin.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+
+    <nav>
+        <a href="../../../index.html" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="admin-badge">Espace Administration - Examens</span>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="../../../index.html">Accueil site</a>
+                <a href="#" id="logoutBtn">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <h1 class="page-title"><i class="fas fa-graduation-cap"></i> Gestion des examens de qualification</h1>
+            <p class="page-subtitle">Gérez les épreuves et corrigez les copies des sportifs.</p>
+
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="epreuves">Épreuves</button>
+                <button class="tab-btn" data-tab="corrections">Corrections</button>
+            </div>
+
+            <!-- Onglet Épreuves -->
+            <div id="epreuves" class="tab-content active">
+                <div class="epreuves-header">
+                    <button id="newEpreuveBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouvelle épreuve</button>
+                </div>
+                <div id="epreuvesList" class="epreuves-list">
+                    <p class="loading-placeholder">Chargement des épreuves...</p>
+                </div>
+            </div>
+
+            <!-- Onglet Corrections -->
+            <div id="corrections" class="tab-content">
+                <div class="corrections-header">
+                    <div class="filters">
+                        <select id="copySportFilter">
+                            <option value="all">Tous les sports</option>
+                            <option value="football">Football</option>
+                            <option value="basketball">Basketball</option>
+                            <option value="tennis">Tennis</option>
+                            <option value="athletisme">Athlétisme</option>
+                            <option value="handball">Handball</option>
+                            <option value="volleyball">Volley-ball</option>
+                            <option value="rugby">Rugby</option>
+                            <option value="natation">Natation</option>
+                            <option value="arts_martiaux">Arts martiaux</option>
+                            <option value="cyclisme">Cyclisme</option>
+                        </select>
+                        <select id="copyStatusFilter">
+                            <option value="all">Tous les statuts</option>
+                            <option value="en_attente">En attente</option>
+                            <option value="corrige">Corrigé</option>
+                        </select>
+                        <button id="refreshCopiesBtn" class="btn-secondary"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                    </div>
+                </div>
+                <div id="copiesList" class="copies-list">
+                    <p class="loading-placeholder">Chargement des copies...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="legal">
+            <p>© 2026 HubISoccer - Administration Examens. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modale pour créer/modifier une épreuve -->
+    <div id="epreuveModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3 id="modalTitle">Nouvelle épreuve</h3>
+            <form id="epreuveForm">
+                <input type="hidden" id="epreuveId">
+                <div class="form-group">
+                    <label>Sport *</label>
+                    <select id="modalSport" required>
+                        <option value="football">Football</option>
+                        <option value="basketball">Basketball</option>
+                        <option value="tennis">Tennis</option>
+                        <option value="athletisme">Athlétisme</option>
+                        <option value="handball">Handball</option>
+                        <option value="volleyball">Volley-ball</option>
+                        <option value="rugby">Rugby</option>
+                        <option value="natation">Natation</option>
+                        <option value="arts_martiaux">Arts martiaux</option>
+                        <option value="cyclisme">Cyclisme</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Titre *</label>
+                    <input type="text" id="modalTitre" required>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="modalActive"> Épreuve active</label>
+                </div>
+
+                <fieldset>
+                    <legend>Questions QCM (10 questions)</legend>
+                    <div id="qcmContainer"></div>
+                    <button type="button" id="addQcmBtn" class="btn-secondary"><i class="fas fa-plus"></i> Ajouter une question QCM</button>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Question rédactionnelle 1 (11)</legend>
+                    <div id="redac1Container"></div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Question rédactionnelle 2 (12)</legend>
+                    <div id="redac2Container"></div>
+                </fieldset>
+
+                <button type="submit" class="btn-submit">Enregistrer l'épreuve</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale de correction -->
+    <div id="correctionModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3>Correction de la copie</h3>
+            <div id="correctionCandidate" class="info-box"></div>
+            <div class="correction-qcm">
+                <h4>QCM - Note automatique : <span id="correctionQcmNote">0</span>/10</h4>
+                <div id="correctionReponses"></div>
+            </div>
+            <div class="correction-redac">
+                <h4>Réponse question 11</h4>
+                <div id="correctionRedac1"></div>
+                <h4>Réponse question 12</h4>
+                <div id="correctionRedac2"></div>
+            </div>
+            <div class="form-group">
+                <label>Note de rédaction (sur 10)</label>
+                <input type="number" id="correctionNoteRedac" min="0" max="10" step="0.5">
+            </div>
+            <div class="form-group">
+                <label>Commentaire (optionnel)</label>
+                <textarea id="correctionCommentaire" rows="3"></textarea>
+            </div>
+            <button id="saveCorrectionBtn" class="btn-submit">Enregistrer la correction</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="test-ecrit-admin.js"></script>
+</body>
+</html>

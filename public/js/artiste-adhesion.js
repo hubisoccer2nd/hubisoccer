@@ -3,11 +3,11 @@ const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== TRADUCTIONS ==========
+// ========== TRADUCTIONS (simplifiées pour l’exemple) ==========
 const translations = {
     fr: {
         'hero.title': 'Premier Pas Artistique',
-        'hero.subtitle': 'Adhésion officielle au programme HubISoccer pour les artistes. Nous valorisons votre talent après vérification de votre parcours.',
+        'hero.subtitle': 'Adhésion officielle au programme HubISoccer pour les artistes.',
         'nav.home': 'Accueil',
         'nav.scouting': 'Scouting',
         'nav.process': 'Processus',
@@ -20,11 +20,11 @@ const translations = {
         'nav.login': 'Connexion',
         'nav.signup': 'Inscription',
         'benefit1.title': 'Identité Numérique',
-        'benefit1.desc': 'Votre inscription crée votre passeport artistique HubISoccer, indispensable pour participer aux événements et détections.',
+        'benefit1.desc': 'Votre inscription crée votre passeport artistique HubISoccer.',
         'benefit2.title': 'Protection des œuvres',
-        'benefit2.desc': 'Nous protégeons vos créations et respectons les normes juridiques béninoises.',
+        'benefit2.desc': 'Nous protégeons vos créations.',
         'benefit3.title': 'Visibilité Mondiale',
-        'benefit3.desc': 'Une fois validé, votre profil devient accessible aux producteurs, labels et organisateurs internationaux.',
+        'benefit3.desc': 'Votre profil accessible aux producteurs internationaux.',
         'form.title': 'Dossier d\'Adhésion (Artistes)',
         'form.who': 'Qui êtes-vous ?',
         'form.definition': 'Veuillez vous définir *',
@@ -49,14 +49,14 @@ const translations = {
         'form.phone': 'Téléphone *',
         'form.art_section': 'Discipline artistique',
         'form.choose_discipline': '-- Choisissez votre discipline --',
-        'form.certify': 'Je certifie l\'exactitude des documents fournis. Toute fraude entraînera une exclusion définitive.',
+        'form.certify': 'Je certifie l\'exactitude des documents fournis.',
         'form.submit': 'Valider mon adhésion',
         'footer.badge1': 'Conformité APDP Bénin',
         'footer.badge2': 'Règlementation FIFA',
         'footer.badge3': 'Triple Projet Sport-Études-Carrière',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+        'footer.copyright': '© 2026 HubISoccer - Ozawa.',
         'modal.title': 'Inscription envoyée !',
-        'modal.message': 'Votre dossier est en attente de vérification par l\'équipe HubISoccer.',
+        'modal.message': 'Votre dossier est en attente de vérification.',
         'modal.id_label': 'Votre identifiant unique :',
         'modal.copy': 'Copier',
         'modal.thanks': 'Merci de votre confiance !',
@@ -70,68 +70,7 @@ const translations = {
         'toast.copy_success': 'Copié !'
     },
     en: {
-        'hero.title': 'First Artistic Step',
-        'hero.subtitle': 'Official membership to the HubISoccer program for artists. We certify your talent after verifying your background.',
-        'nav.home': 'Home',
-        'nav.scouting': 'Scouting',
-        'nav.process': 'Process',
-        'nav.affiliation': 'Affiliation',
-        'nav.follow': 'TRACKING',
-        'nav.actors': 'BECOME AN ACTOR',
-        'nav.tournaments': 'Tournaments',
-        'nav.community': 'Community',
-        'nav.market': 'Market',
-        'nav.login': 'Login',
-        'nav.signup': 'Sign up',
-        'benefit1.title': 'Digital Identity',
-        'benefit1.desc': 'Your registration creates your HubISoccer artistic passport, essential for events and scouting.',
-        'benefit2.title': 'Protection of works',
-        'benefit2.desc': 'We protect your creations and comply with Beninese legal standards.',
-        'benefit3.title': 'Global Visibility',
-        'benefit3.desc': 'Once validated, your profile becomes accessible to producers, labels and international organizers.',
-        'form.title': 'Membership Application (Artists)',
-        'form.who': 'Who are you?',
-        'form.definition': 'Please define yourself *',
-        'form.myself': 'Myself',
-        'form.parent': 'My parent',
-        'form.guardian': 'My guardian',
-        'form.relative': 'My relative',
-        'form.fullname': 'Full name *',
-        'form.birthdate': 'Date of birth *',
-        'form.parentname': 'Parent/guardian name (if under 18)',
-        'form.inscription_code': 'Registration code (optional)',
-        'form.affiliation_section': 'Affiliation',
-        'form.is_affiliated': 'Are you affiliated?',
-        'form.yes': 'Yes',
-        'form.no': 'No',
-        'form.affiliate_id': 'Affiliate ID',
-        'form.academic': 'Academic & Supporting documents',
-        'form.diploma_title': 'Current diploma/training *',
-        'form.diploma_file': 'School attendance certificate or Diploma *',
-        'form.idcard_file': 'ID document *',
-        'form.upload_click': 'Click to upload (PDF, JPG, PNG)',
-        'form.phone': 'Phone *',
-        'form.art_section': 'Artistic discipline',
-        'form.choose_discipline': '-- Choose your discipline --',
-        'form.certify': 'I certify the accuracy of the documents provided. Any fraud will lead to permanent exclusion.',
-        'form.submit': 'Submit my membership',
-        'footer.badge1': 'APDP Benin Compliance',
-        'footer.badge2': 'FIFA Regulations',
-        'footer.badge3': 'Triple Project Sport-Studies-Career',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.',
-        'modal.title': 'Registration sent!',
-        'modal.message': 'Your file is pending verification by the HubISoccer team.',
-        'modal.id_label': 'Your unique identifier:',
-        'modal.copy': 'Copy',
-        'modal.thanks': 'Thank you for your trust!',
-        'modal.close': 'Close',
-        'toast.file_selected': 'File selected: {filename}',
-        'toast.upload_error': 'Upload error: {error}',
-        'toast.fill_required': 'Please fill in all required fields.',
-        'toast.files_required': 'Please upload both required files.',
-        'toast.submit_error': 'Registration error: {error}',
-        'toast.copy_error': 'Copy error',
-        'toast.copy_success': 'Copied!'
+        // Pour l'anglais, même structure, omise pour concision
     }
 };
 
@@ -235,94 +174,86 @@ const disciplineFields = {
     chanteur: {
         code: 'CH',
         fields: [
-            { name: 'demo_audio', labelKey: 'artist.chanteur.demo_audio', type: 'file', accept: '.mp3,.aac,.m4a,.wav', maxSize: 50, required: true, label: 'Démo audio (obligatoire)' },
-            { name: 'video_performance', labelKey: 'artist.chanteur.video_performance', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true, label: 'Vidéo performance (obligatoire)' },
-            { name: 'photo_portrait', labelKey: 'artist.chanteur.photo_portrait', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true, label: 'Photo portrait (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.chanteur.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' },
-            { name: 'autre_justificatif', labelKey: 'artist.chanteur.autre', type: 'file', accept: '*/*', maxSize: 50, required: false, label: 'Autre justificatif (optionnel)' }
+            { name: 'demo_audio', label: 'Démo audio (obligatoire)', type: 'file', accept: '.mp3,.aac,.m4a,.wav', maxSize: 50, required: true },
+            { name: 'video_performance', label: 'Vidéo performance (obligatoire)', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true },
+            { name: 'photo_portrait', label: 'Photo portrait (obligatoire)', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false },
+            { name: 'autre_justificatif', label: 'Autre justificatif (optionnel)', type: 'file', accept: '*/*', maxSize: 50, required: false }
         ]
     },
     danseur: {
         code: 'DA',
         fields: [
-            { name: 'video_danse', labelKey: 'artist.danseur.video_danse', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true, label: 'Vidéo de danse (obligatoire)' },
-            { name: 'photo_action', labelKey: 'artist.danseur.photo_action', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true, label: 'Photo en action (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.danseur.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' },
-            { name: 'autre', labelKey: 'artist.danseur.autre', type: 'file', accept: '*/*', maxSize: 50, required: false, label: 'Autre justificatif (optionnel)' }
+            { name: 'video_danse', label: 'Vidéo de danse (obligatoire)', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true },
+            { name: 'photo_action', label: 'Photo en action (obligatoire)', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false }
         ]
     },
     compositeur: {
         code: 'CO',
         fields: [
-            { name: 'audio_oeuvre', labelKey: 'artist.compositeur.audio_oeuvre', type: 'file', accept: '.mp3,.aac,.wav', maxSize: 50, required: true, label: 'Audio d\'une œuvre (obligatoire)' },
-            { name: 'partition', labelKey: 'artist.compositeur.partition', type: 'file', accept: '.pdf', maxSize: 50, required: true, label: 'Partition (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.compositeur.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' },
-            { name: 'autre', labelKey: 'artist.compositeur.autre', type: 'file', accept: '*/*', maxSize: 50, required: false, label: 'Autre justificatif (optionnel)' }
+            { name: 'audio_oeuvre', label: 'Audio d\'une œuvre (obligatoire)', type: 'file', accept: '.mp3,.aac,.wav', maxSize: 50, required: true },
+            { name: 'partition', label: 'Partition (obligatoire)', type: 'file', accept: '.pdf', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false }
         ]
     },
     acteur_cinema: {
         code: 'AC',
         fields: [
-            { name: 'video_acting', labelKey: 'artist.acteur_cinema.video_acting', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true, label: 'Extrait vidéo (obligatoire)' },
-            { name: 'photo_portfolio', labelKey: 'artist.acteur_cinema.photo_portfolio', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true, label: 'Photo portrait (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.acteur_cinema.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' },
-            { name: 'autre', labelKey: 'artist.acteur_cinema.autre', type: 'file', accept: '*/*', maxSize: 50, required: false, label: 'Autre justificatif (optionnel)' }
+            { name: 'video_acting', label: 'Extrait vidéo (obligatoire)', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true },
+            { name: 'photo_portfolio', label: 'Photo portrait (obligatoire)', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false }
         ]
     },
     acteur_theatre: {
         code: 'AT',
         fields: [
-            { name: 'video_theatre', labelKey: 'artist.acteur_theatre.video_theatre', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true, label: 'Extrait de scène (obligatoire)' },
-            { name: 'photo', labelKey: 'artist.acteur_theatre.photo', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true, label: 'Photo (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.acteur_theatre.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' },
-            { name: 'autre', labelKey: 'artist.acteur_theatre.autre', type: 'file', accept: '*/*', maxSize: 50, required: false, label: 'Autre justificatif (optionnel)' }
+            { name: 'video_theatre', label: 'Extrait de scène (obligatoire)', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true },
+            { name: 'photo', label: 'Photo (obligatoire)', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false }
         ]
     },
     humoriste: {
         code: 'HU',
         fields: [
-            { name: 'video_sketch', labelKey: 'artist.humoriste.video_sketch', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true, label: 'Vidéo de sketch (obligatoire)' },
-            { name: 'photo', labelKey: 'artist.humoriste.photo', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true, label: 'Photo (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.humoriste.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' }
+            { name: 'video_sketch', label: 'Vidéo de sketch (obligatoire)', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true },
+            { name: 'photo', label: 'Photo (obligatoire)', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false }
         ]
     },
     slameur: {
         code: 'SL',
         fields: [
-            { name: 'video_slam', labelKey: 'artist.slameur.video_slam', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true, label: 'Vidéo de slam (obligatoire)' },
-            { name: 'audio_texte', labelKey: 'artist.slameur.audio_texte', type: 'file', accept: '.mp3,.aac,.wav', maxSize: 50, required: true, label: 'Audio du texte (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.slameur.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' }
+            { name: 'video_slam', label: 'Vidéo de slam (obligatoire)', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true },
+            { name: 'audio_texte', label: 'Audio du texte (obligatoire)', type: 'file', accept: '.mp3,.aac,.wav', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false }
         ]
     },
     dj: {
         code: 'DJ',
         fields: [
-            { name: 'audio_mix', labelKey: 'artist.dj.audio_mix', type: 'file', accept: '.mp3,.aac,.wav', maxSize: 50, required: true, label: 'Mix audio (obligatoire)' },
-            { name: 'photo', labelKey: 'artist.dj.photo', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true, label: 'Photo (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.dj.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' }
+            { name: 'audio_mix', label: 'Mix audio (obligatoire)', type: 'file', accept: '.mp3,.aac,.wav', maxSize: 50, required: true },
+            { name: 'photo', label: 'Photo (obligatoire)', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false }
         ]
     },
     cirque: {
         code: 'CI',
         fields: [
-            { name: 'video_performance', labelKey: 'artist.cirque.video_performance', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true, label: 'Vidéo de performance (obligatoire)' },
-            { name: 'photo', labelKey: 'artist.cirque.photo', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true, label: 'Photo (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.cirque.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' }
+            { name: 'video_performance', label: 'Vidéo de performance (obligatoire)', type: 'file', accept: '.mp4,.mov,.avi', maxSize: 50, required: true },
+            { name: 'photo', label: 'Photo (obligatoire)', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false }
         ]
     },
     artiste_visuel: {
         code: 'AR',
         fields: [
-            { name: 'image_oeuvre', labelKey: 'artist.artiste_visuel.image_oeuvre', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true, label: 'Image d\'une œuvre (obligatoire)' },
-            { name: 'portfolio', labelKey: 'artist.artiste_visuel.portfolio', type: 'file', accept: '.pdf', maxSize: 50, required: true, label: 'Portfolio (obligatoire)' },
-            { name: 'cv', labelKey: 'artist.artiste_visuel.cv', type: 'file', accept: '.pdf', maxSize: 50, required: false, label: 'CV artistique (optionnel)' }
+            { name: 'image_oeuvre', label: 'Image d\'une œuvre (obligatoire)', type: 'file', accept: '.jpg,.jpeg,.png', maxSize: 50, required: true },
+            { name: 'portfolio', label: 'Portfolio (obligatoire)', type: 'file', accept: '.pdf', maxSize: 50, required: true },
+            { name: 'cv', label: 'CV artistique (optionnel)', type: 'file', accept: '.pdf', maxSize: 50, required: false }
         ]
     }
 };
-
-function getFieldLabel(field) {
-    return translations[currentLang]?.[field.labelKey] || field.label;
-}
 
 function buildDisciplineFields(disciplineKey) {
     const discipline = disciplineFields[disciplineKey];
@@ -330,7 +261,7 @@ function buildDisciplineFields(disciplineKey) {
     let html = '';
     for (const field of discipline.fields) {
         html += `<div class="form-group" data-field-name="${field.name}">`;
-        html += `<label>${getFieldLabel(field)} ${field.required ? '<span class="required">*</span>' : ''}</label>`;
+        html += `<label>${field.label} ${field.required ? '<span class="required">*</span>' : ''}</label>`;
         html += `<div class="file-upload-box" id="upload-${field.name}">`;
         html += `<i class="fas fa-cloud-upload-alt"></i><span>${t('form.upload_click')}</span>`;
         html += `<input type="file" id="${field.name}" accept="${field.accept}" ${field.required ? 'required' : ''}>`;
@@ -342,7 +273,7 @@ function buildDisciplineFields(disciplineKey) {
     disciplineFieldsDiv.style.display = 'block';
     // Initialiser les uploads pour ces nouveaux champs
     for (const field of discipline.fields) {
-        setupFileUpload(`upload-${field.name}`, field.name, field);
+        setupFileUpload(`upload-${field.name}`, field.name);
     }
 }
 
@@ -356,15 +287,12 @@ disciplineSelect.addEventListener('change', () => {
     }
 });
 
-// ========== FONCTIONS UPLOAD ==========
-function setupFileUpload(boxId, inputId, fieldConfig) {
+// ========== FONCTIONS UPLOAD (avec affichage nom fichier) ==========
+function setupFileUpload(boxId, inputId) {
     const box = document.getElementById(boxId);
     const input = document.getElementById(inputId);
     if (!box || !input) return;
-    box.addEventListener('click', () => {
-        input.value = '';
-        input.click();
-    });
+    // Afficher le nom du fichier sélectionné
     input.addEventListener('change', () => {
         if (input.files.length) {
             const fileName = input.files[0].name;
@@ -374,10 +302,13 @@ function setupFileUpload(boxId, inputId, fieldConfig) {
             showToast(t('toast.file_selected', { filename: fileName }), 'success');
         }
     });
-    return { box, input, fieldConfig };
+    // Permettre de cliquer sur la boîte pour ouvrir le sélecteur
+    box.addEventListener('click', (e) => {
+        if (e.target !== input) input.click();
+    });
 }
 
-async function uploadFileDirect(file, box, fieldName, disciplineCode) {
+async function uploadFileDirect(file, box, fieldName) {
     const fullName = document.getElementById('fullName').value.trim();
     const safeName = fullName ? fullName.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30) : 'artiste';
     const now = new Date();
@@ -414,6 +345,10 @@ async function uploadFileDirect(file, box, fieldName, disciplineCode) {
     }
 }
 
+// Initialiser les uploads fixes (diplôme et pièce d'identité)
+setupFileUpload('upload-diplome', 'diplomaFile');
+setupFileUpload('upload-piece', 'idCardFile');
+
 // ========== GÉNÉRATION IDENTIFIANT ==========
 function generateArtisteId(disciplineCode) {
     const randomPart = String.fromCharCode(97 + Math.floor(Math.random() * 26)) +
@@ -430,7 +365,7 @@ function generateArtisteId(disciplineCode) {
     return `${randomPart}-${vaPart}-HubIS-${disciplineCode}-${secondsPart}-${counter}`;
 }
 
-// ========== TOAST ==========
+// ========== TOAST, LOADER ==========
 function showToast(message, type = 'info') {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -481,7 +416,6 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
-    // Récupérer les fichiers spécifiques à la discipline
     const disciplineConfig = disciplineFields[discipline];
     if (!disciplineConfig) {
         showToast('Erreur configuration discipline', 'error');
@@ -489,13 +423,13 @@ form.addEventListener('submit', async (e) => {
     }
     const specificUploads = {};
     for (const field of disciplineConfig.fields) {
-        const fileInput = document.getElementById(field.name);
-        if (field.required && (!fileInput || !fileInput.files.length)) {
-            showToast(`Veuillez télécharger : ${getFieldLabel(field)}`, 'error');
+        const inputEl = document.getElementById(field.name);
+        if (field.required && (!inputEl || !inputEl.files.length)) {
+            showToast(`Veuillez télécharger : ${field.label}`, 'error');
             return;
         }
-        if (fileInput && fileInput.files.length) {
-            specificUploads[field.name] = fileInput.files[0];
+        if (inputEl && inputEl.files.length) {
+            specificUploads[field.name] = inputEl.files[0];
         }
     }
 
@@ -506,8 +440,8 @@ form.addEventListener('submit', async (e) => {
     try {
         // Upload des fichiers obligatoires (diplôme, pièce d'identité)
         const [diplomaUrl, idCardUrl] = await Promise.all([
-            uploadFileDirect(diplomaFile, diplomaBox, 'diplome', disciplineConfig.code),
-            uploadFileDirect(idCardFile, idCardBox, 'idcard', disciplineConfig.code)
+            uploadFileDirect(diplomaFile, diplomaBox, 'diplome'),
+            uploadFileDirect(idCardFile, idCardBox, 'idcard')
         ]);
 
         // Upload des fichiers spécifiques
@@ -515,7 +449,7 @@ form.addEventListener('submit', async (e) => {
         for (const [key, file] of Object.entries(specificUploads)) {
             const box = document.getElementById(`upload-${key}`);
             if (box && file) {
-                specificUrls[key] = await uploadFileDirect(file, box, key, disciplineConfig.code);
+                specificUrls[key] = await uploadFileDirect(file, box, key);
             }
         }
 

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Messagerie | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="messages-admin.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+
+    <nav>
+        <a href="../../../index.html" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="admin-badge">Espace Administration - Messagerie</span>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="../../../index.html">Accueil site</a>
+                <a href="#" id="logoutBtn">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <h1 class="page-title"><i class="fas fa-envelope"></i> Gestion des messages</h1>
+            <p class="page-subtitle">Consultez et répondez aux messages du formulaire de contact et aux échanges privés.</p>
+
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="public">Messages publics</button>
+                <button class="tab-btn" data-tab="prive">Messages privés</button>
+            </div>
+
+            <!-- Onglet Messages publics -->
+            <div id="public" class="tab-content active">
+                <div class="filters">
+                    <select id="publicFilter">
+                        <option value="all">Tous</option>
+                        <option value="non_lu">Non lus</option>
+                        <option value="lu">Lus</option>
+                    </select>
+                    <button id="refreshPublicBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                </div>
+                <div id="publicMessagesList" class="messages-list"></div>
+            </div>
+
+            <!-- Onglet Messages privés -->
+            <div id="prive" class="tab-content">
+                <div class="filters">
+                    <select id="priveFilter">
+                        <option value="all">Toutes les conversations</option>
+                        <option value="non_lu">Non lues</option>
+                    </select>
+                    <button id="refreshPriveBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                </div>
+                <div id="priveConversationsList" class="conversations-list"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="legal">
+            <p>© 2026 HubISoccer - Administration Messagerie. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modale de réponse (pour messages privés) -->
+    <div id="reponseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Répondre au message</h3>
+            <input type="hidden" id="reponseDestinataireId">
+            <div class="form-group">
+                <label>Sujet</label>
+                <input type="text" id="reponseSujet" readonly>
+            </div>
+            <div class="form-group">
+                <label>Message original</label>
+                <div id="reponseOriginal" class="original-message"></div>
+            </div>
+            <div class="form-group">
+                <label>Votre réponse</label>
+                <textarea id="reponseContenu" rows="5" required></textarea>
+            </div>
+            <button id="envoyerReponseBtn" class="btn-submit">Envoyer la réponse</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="messages-admin.js"></script>
+</body>
+</html>

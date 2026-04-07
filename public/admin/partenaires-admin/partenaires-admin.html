@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Admin Partenaires | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="partenaires-admin.css">
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <div class="nav-left">
+            <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../administration.html'">
+            <span class="dashboard-title">Admin / Partenaires</span>
+        </div>
+        <div class="nav-right">
+            <button id="logoutBtn" class="logout-btn">Déconnexion</button>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-handshake"></i> Gestion des partenaires</h1>
+            <p>Ajoutez, modifiez ou supprimez des articles partenaires (logo + média principal).</p>
+        </div>
+
+        <div class="form-section">
+            <h3 id="formTitle">Ajouter un partenaire</h3>
+            <form id="partenaireForm">
+                <input type="hidden" id="partenaireId">
+                <div class="form-group"><label>Nom *</label><input type="text" id="nom" required></div>
+                <div class="form-group"><label>Contenu *</label><textarea id="contenu" rows="6" required></textarea></div>
+                <div class="form-group"><label>Logo (image)</label><input type="file" id="logo" accept="image/*"></div>
+                <div class="form-group"><label>Média principal (image, vidéo, audio)</label><input type="file" id="media" accept="image/*,video/*,audio/*"></div>
+                <div class="form-group"><label>Ordre d'affichage</label><input type="number" id="ordre" value="0"></div>
+                <div class="form-group"><label>Date de publication</label><input type="datetime-local" id="date_publication"></div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+                <button type="button" id="cancelBtn" class="btn-cancel" style="display: none;">Annuler</button>
+            </form>
+        </div>
+
+        <div class="list-section">
+            <h2>Articles existants</h2>
+            <button id="refreshList" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+            <div id="partenairesList" class="admin-list"></div>
+        </div>
+    </div>
+
+    <footer class="dashboard-footer">
+        <div class="legal"><p>© 2026 HubISoccer - Tous droits réservés.</p></div>
+    </footer>
+
+    <script src="partenaires-admin.js"></script>
+</body>
+</html>

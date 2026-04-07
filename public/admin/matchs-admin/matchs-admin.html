@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion des matchs | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="matchs-admin.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+
+    <nav>
+        <a href="../../../index.html" class="logo-link">
+            <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="admin-badge">Espace Administration - Matchs</span>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="../../../index.html">Accueil site</a>
+                <a href="#" id="logoutBtn">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <h1 class="page-title"><i class="fas fa-futbol"></i> Gestion des matchs</h1>
+            <p class="page-subtitle">Créez, modifiez, saisissez les scores, actions et statistiques avancées.</p>
+
+            <div class="filters">
+                <select id="tournoiFilter">
+                    <option value="all">-- Tous les tournois --</option>
+                </select>
+                <select id="typeTournoiFilter">
+                    <option value="all">Tous les types</option>
+                    <option value="collectif">Collectif</option>
+                    <option value="individuel">Individuel</option>
+                </select>
+                <button id="refreshMatchsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                <button id="newMatchBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau match</button>
+            </div>
+
+            <div id="matchsList" class="matchs-list"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="legal">
+            <p>© 2026 HubISoccer - Administration Matchs. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modale pour créer/modifier un match -->
+    <div id="matchModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="matchModalTitle">Nouveau match</h3>
+            <form id="matchForm">
+                <input type="hidden" id="matchId">
+                <div class="form-group">
+                    <label>Tournoi *</label>
+                    <select id="matchTournoiId" required></select>
+                </div>
+                <input type="hidden" id="matchTypeTournoi">
+                <div id="equipeDomicileGroup" class="form-group">
+                    <label>Équipe domicile *</label>
+                    <select id="matchEquipeDomicile" required></select>
+                </div>
+                <div id="equipeExterieurGroup" class="form-group">
+                    <label>Équipe extérieur *</label>
+                    <select id="matchEquipeExterieur" required></select>
+                </div>
+                <div id="participantDomicileGroup" class="form-group" style="display: none;">
+                    <label>Participant domicile *</label>
+                    <select id="matchParticipantDomicile"></select>
+                </div>
+                <div id="participantExterieurGroup" class="form-group" style="display: none;">
+                    <label>Participant extérieur *</label>
+                    <select id="matchParticipantExterieur"></select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date *</label>
+                        <input type="date" id="matchDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Heure</label>
+                        <input type="time" id="matchHeure">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Statut</label>
+                    <select id="matchStatut">
+                        <option value="a_venir">À venir</option>
+                        <option value="en_cours">En cours</option>
+                        <option value="termine">Terminé</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Score domicile</label>
+                        <input type="number" id="matchScoreDomicile" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Score extérieur</label>
+                        <input type="number" id="matchScoreExterieur" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>URL du live (Owncast/iframe)</label>
+                    <input type="text" id="matchLiveUrl" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale pour les actions du match (buts, cartons, etc.) -->
+    <div id="actionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Actions du match</h3>
+            <div id="actionsMatchInfo"></div>
+            <div id="actionsList" class="actions-list"></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="actionType">
+                        <option value="but">But</option>
+                        <option value="carton_jaune">Carton jaune</option>
+                        <option value="carton_rouge">Carton rouge</option>
+                        <option value="tir">Tir</option>
+                        <option value="tir_cadre">Tir cadre</option>
+                        <option value="possession">Possession (%)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Minute</label>
+                    <input type="number" id="actionMinute" min="1" max="120">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Équipe</label>
+                    <select id="actionEquipe"></select>
+                </div>
+                <div class="form-group">
+                    <label>Joueur (optionnel)</label>
+                    <select id="actionJoueur"></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Valeur (optionnel)</label>
+                    <input type="number" id="actionValeur" placeholder="Ex: 5 (tirs), 60 (possession%)">
+                </div>
+                <div class="form-group">
+                    <label>Période</label>
+                    <select id="actionPeriode">
+                        <option value="">--</option>
+                        <option value="MT1">1ère mi-temps</option>
+                        <option value="MT2">2ème mi-temps</option>
+                        <option value="MT3">Prolongation 1</option>
+                        <option value="MT4">Prolongation 2</option>
+                        <option value="FT">Fin du match</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Texte libre (commentaire)</label>
+                <input type="text" id="actionTexteLibre" placeholder="Détail...">
+            </div>
+            <button id="addActionBtn" class="btn-secondary">Ajouter</button>
+            <hr>
+            <button id="editStatsBtn" class="btn-secondary">📊 Statistiques avancées du match</button>
+            <button id="closeActionsBtn" class="btn-submit">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Modale pour les statistiques avancées du match -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Statistiques avancées du match</h3>
+            <div id="statsMatchInfo"></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Possession domicile (%)</label>
+                    <input type="number" id="statsPossessionDom" min="0" max="100">
+                </div>
+                <div class="form-group">
+                    <label>Possession extérieur (%)</label>
+                    <input type="number" id="statsPossessionExt" min="0" max="100">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tirs domicile</label>
+                    <input type="number" id="statsTirsDom" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Tirs extérieur</label>
+                    <input type="number" id="statsTirsExt" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tirs cadres domicile</label>
+                    <input type="number" id="statsTirsCadresDom" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Tirs cadres extérieur</label>
+                    <input type="number" id="statsTirsCadresExt" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fautes domicile</label>
+                    <input type="number" id="statsFautesDom" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Fautes extérieur</label>
+                    <input type="number" id="statsFautesExt" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Corners domicile</label>
+                    <input type="number" id="statsCornersDom" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Corners extérieur</label>
+                    <input type="number" id="statsCornersExt" min="0">
+                </div>
+            </div>
+            <button id="saveStatsBtn" class="btn-submit">Enregistrer les statistiques</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="matchs-admin.js"></script>
+</body>
+</html>

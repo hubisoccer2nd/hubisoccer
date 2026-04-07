@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion du scouting | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="scouting-admin.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+
+    <nav>
+        <a href="../../../index.html" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="admin-badge">Espace Administration - Scouting</span>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="../../../index.html">Accueil site</a>
+                <a href="#" id="logoutBtn">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <h1 class="page-title"><i class="fas fa-users"></i> Gestion du scouting</h1>
+            <p class="page-subtitle">Ajoutez, modifiez ou supprimez les sportifs présentés sur la page publique.</p>
+
+            <div class="list-header">
+                <button id="newSportifBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau sportif</button>
+                <button id="refreshBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+            </div>
+
+            <div id="sportifsList" class="sportifs-list"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="legal">
+            <p>© 2026 HubISoccer - Administration Scouting. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modale d'ajout / modification -->
+    <div id="sportifModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="modalTitle">Nouveau sportif</h3>
+            <form id="sportifForm">
+                <input type="hidden" id="sportifId">
+                <div class="form-group">
+                    <label>Nom *</label>
+                    <input type="text" id="nom" required>
+                </div>
+                <div class="form-group">
+                    <label>Poste</label>
+                    <input type="text" id="poste">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Âge</label>
+                        <input type="number" id="age" min="10" max="60">
+                    </div>
+                    <div class="form-group">
+                        <label>Pays</label>
+                        <input type="text" id="pays">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Continent</label>
+                        <select id="continent">
+                            <option value="Afrique">Afrique</option>
+                            <option value="Europe">Europe</option>
+                            <option value="Amérique">Amérique</option>
+                            <option value="Asie">Asie</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Catégorie</label>
+                        <select id="cat">
+                            <option value="mineur">U17 (Mineur)</option>
+                            <option value="adulte">18+ (Adulte)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Club</label>
+                    <input type="text" id="club">
+                </div>
+                <div class="form-group">
+                    <label>Certification / Diplôme</label>
+                    <input type="text" id="cert">
+                </div>
+                <div class="form-group">
+                    <label>Image (upload)</label>
+                    <div class="file-upload-box" id="imageUploadBox">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Cliquez pour télécharger une image (JPG, PNG)</span>
+                        <input type="file" id="imageFile" accept="image/jpeg,image/png">
+                        <div class="progress-indicator" style="display: none;">
+                            <div class="progress-bar"></div>
+                            <span class="progress-text">0%</span>
+                        </div>
+                    </div>
+                    <div id="imagePreview" style="margin-top: 10px;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Vidéo (URL YouTube, Vimeo, ou fichier)</label>
+                    <input type="text" id="videoUrl" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale vidéo -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Vidéo du sportif</h3>
+            <video id="videoPlayer" controls style="width:100%; max-height:400px;"></video>
+            <button class="btn-close" style="margin-top:15px;">Fermer</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="scouting-admin.js"></script>
+</body>
+</html>

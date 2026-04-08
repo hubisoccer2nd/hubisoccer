@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Logs système | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            padding: 20px;
+        }
+        :root {
+            --primary: #551B8C;
+            --primary-light: #7e3db0;
+            --gold: #FFCC00;
+            --gold-dark: #e6b800;
+            --bg-light: #F0F8FF;
+            --white: #fff;
+            --dark: #1a1a1a;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
+            --transition: all 0.3s ease;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: var(--primary); font-size: 2rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .subtitle { color: var(--gray); margin-bottom: 30px; border-left: 4px solid var(--gold); padding-left: 15px; }
+        .glass-card {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(8px);
+            border-radius: 30px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        .filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .filters input, .filters select {
+            padding: 10px 15px;
+            border-radius: 30px;
+            border: 1px solid var(--light-gray);
+            background: white;
+        }
+        .btn-refresh {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        .logs-list {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--light-gray); }
+        th { background: var(--bg-light); color: var(--primary); }
+        .badge-action {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #e9ecef;
+        }
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast { background: white; border-radius: 12px; padding: 12px 20px; margin-top: 10px; border-left: 4px solid; animation: slideIn 0.3s; }
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-history"></i> Logs système</h1>
+    <div class="subtitle">Historique des actions importantes (connexions, modifications, etc.)</div>
+
+    <div class="glass-card">
+        <div class="filters">
+            <input type="text" id="searchUser" placeholder="Rechercher par email ou ID utilisateur...">
+            <select id="filterAction">
+                <option value="">Toutes les actions</option>
+                <option value="login">Connexion</option>
+                <option value="logout">Déconnexion</option>
+                <option value="update_role">Modification rôle</option>
+                <option value="toggle_user">Activation/Désactivation</option>
+                <option value="generate_id">Génération ID</option>
+                <option value="save_id">Enregistrement ID</option>
+            </select>
+            <button id="refreshBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+        </div>
+        <div id="logsList" class="logs-list">Chargement...</div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://nvorqhmpnwtfjlbzzuqp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52b3JxaG1wbnd0ZmpsYnp6dXFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDQwMzQsImV4cCI6MjA5MTE4MDAzNH0.Z5IPXZY2MFfdtEazLL405A5fTthdbKkDLV3GXhQDJMo';
+    const supabaseAuthUser = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allLogs = [];
+
+    function showToast(message, type) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<div>${message}</div>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    async function loadLogs() {
+        const container = document.getElementById('logsList');
+        container.innerHTML = 'Chargement...';
+        try {
+            // Récupérer les logs (table private_auth.admin_logs)
+            const { data, error } = await supabaseAuthUser
+                .from('private_auth.admin_logs')
+                .select('*, profiles:user_id(display_name, email)')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            allLogs = data || [];
+            renderLogs();
+        } catch (err) {
+            container.innerHTML = '<p>Erreur chargement des logs. Vérifiez que la table private_auth.admin_logs existe.</p>';
+            showToast(err.message, 'error');
+        }
+    }
+
+    function renderLogs() {
+        const search = document.getElementById('searchUser').value.toLowerCase();
+        const actionFilter = document.getElementById('filterAction').value;
+        let filtered = allLogs.filter(log => {
+            const userMatch = log.profiles?.display_name?.toLowerCase().includes(search) ||
+                              log.profiles?.email?.toLowerCase().includes(search) ||
+                              log.user_id?.toLowerCase().includes(search);
+            const actionMatch = !actionFilter || log.action === actionFilter;
+            return userMatch && actionMatch;
+        });
+        const container = document.getElementById('logsList');
+        if (filtered.length === 0) {
+            container.innerHTML = '<p>Aucun log trouvé.</p>';
+            return;
+        }
+        let html = '<table><thead><tr><th>Date/Heure</th><th>Utilisateur</th><th>Action</th><th>Détails</th><th>IP</th></tr></thead><tbody>';
+        for (const log of filtered) {
+            const userName = log.profiles?.display_name || log.user_id?.substring(0, 8) || 'Système';
+            html += `<tr>
+                <td>${new Date(log.created_at).toLocaleString()}</td>
+                <td>${escapeHtml(userName)}</td>
+                <td><span class="badge-action">${escapeHtml(log.action)}</span></td>
+                <td>${escapeHtml(log.details || '')}</td>
+                <td>${escapeHtml(log.ip || '')}</td>
+            </tr>`;
+        }
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', loadLogs);
+    document.getElementById('searchUser').addEventListener('input', renderLogs);
+    document.getElementById('filterAction').addEventListener('change', renderLogs);
+
+    function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) || ''; }
+
+    loadLogs();
+</script>
+</body>
+</html>

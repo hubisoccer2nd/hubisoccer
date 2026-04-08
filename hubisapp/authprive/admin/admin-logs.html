@@ -129,7 +129,6 @@
             .footer-links { flex-wrap: wrap; justify-content: center; }
         }
 
-        /* Cache le contenu tant que l'admin n'est pas validé */
         #mainContent { display: none; }
     </style>
 </head>
@@ -141,7 +140,7 @@
     const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
     const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.__SUPABASE_CLIENT = supabaseAuth; // Exposition globale immédiate
+    window.__SUPABASE_CLIENT = supabaseAuth;
     // Fin initialisation Supabase
 </script>
 
@@ -188,7 +187,7 @@
     <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
 </nav>
 
-<!-- ===== CONTENU PRINCIPAL (masqué jusqu'à validation) ===== -->
+<!-- ===== CONTENU PRINCIPAL ===== -->
 <div id="mainContent">
     <div class="admin-container">
         <h1><i class="fas fa-history"></i> Logs système</h1>
@@ -235,6 +234,7 @@
     const currentUser = window.__CURRENT_USER;
 
     let allLogs = [];
+    let userCache = new Map();
 
     // Début fonction showToast
     function showToast(message, type = 'info') {
@@ -254,24 +254,34 @@
     }
     // Fin fonction escapeHtml
 
+    // Début fonction getUserInfo
+    async function getUserInfo(userId) {
+        if (!userId) return { email: null, display_name: null };
+        if (userCache.has(userId)) return userCache.get(userId);
+        try {
+            const { data, error } = await supabaseClient
+                .from('supabaseAuthPrive_profiles')
+                .select('display_name, email')
+                .eq('auth_uuid', userId)
+                .maybeSingle();
+            const info = { email: data?.email || null, display_name: data?.display_name || null };
+            userCache.set(userId, info);
+            return info;
+        } catch (err) {
+            console.warn('Erreur récupération utilisateur:', err);
+            return { email: null, display_name: null };
+        }
+    }
+    // Fin fonction getUserInfo
+
     // Début fonction loadLogs
     async function loadLogs() {
         const container = document.getElementById('logsList');
         container.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Chargement des logs...</p>';
         try {
-            // Jointure correcte : user_id -> auth.users (email), et via auth.users -> supabaseAuthPrive_profiles (display_name)
             const { data, error } = await supabaseClient
                 .from('supabaseAuthPrive_admin_logs')
-                .select(`
-                    id,
-                    user_id,
-                    action,
-                    details,
-                    ip,
-                    created_at,
-                    users:user_id(email),
-                    profiles:supabaseAuthPrive_profiles!auth_uuid(display_name)
-                `)
+                .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -284,7 +294,13 @@
                 throw error;
             }
 
-            allLogs = data || [];
+            // Récupérer les informations utilisateur pour chaque log
+            const logsWithUsers = await Promise.all(data.map(async (log) => {
+                const userInfo = await getUserInfo(log.user_id);
+                return { ...log, user_email: userInfo.email, user_display: userInfo.display_name };
+            }));
+
+            allLogs = logsWithUsers || [];
             renderLogs();
         } catch (err) {
             console.error(err);
@@ -300,11 +316,12 @@
         const actionFilter = document.getElementById('filterAction').value;
 
         let filtered = allLogs.filter(log => {
-            const userEmail = log.users?.email || '';
-            const userDisplay = log.profiles?.display_name || '';
-            const userMatch = userEmail.toLowerCase().includes(search) ||
-                              userDisplay.toLowerCase().includes(search) ||
-                              (log.user_id || '').toLowerCase().includes(search);
+            const email = log.user_email || '';
+            const display = log.user_display || '';
+            const userId = log.user_id || '';
+            const userMatch = email.toLowerCase().includes(search) ||
+                              display.toLowerCase().includes(search) ||
+                              userId.toLowerCase().includes(search);
             const actionMatch = !actionFilter || log.action === actionFilter;
             return userMatch && actionMatch;
         });
@@ -318,8 +335,8 @@
 
         let html = '<table><thead><tr><th>Date/Heure</th><th>Utilisateur</th><th>Action</th><th>Détails</th><th>IP</th></tr></thead><tbody>';
         for (const log of filtered) {
-            const email = log.users?.email || '';
-            const displayName = log.profiles?.display_name || '';
+            const displayName = log.user_display || '';
+            const email = log.user_email || '';
             const userName = displayName || email || log.user_id?.substring(0, 8) || 'Système';
             html += `<tr>
                 <td>${new Date(log.created_at).toLocaleString()}</td>
@@ -334,7 +351,7 @@
     }
     // Fin fonction renderLogs
 
-    // Début fonction logAdminAction (utilitaire global)
+    // Début fonction logAdminAction
     async function logAdminAction(action, details = null) {
         if (!currentUser) return;
         try {
@@ -355,7 +372,6 @@
     }
     // Fin fonction logAdminAction
 
-    // Exposition globale
     window.logAdminAction = logAdminAction;
 
     // Début événements

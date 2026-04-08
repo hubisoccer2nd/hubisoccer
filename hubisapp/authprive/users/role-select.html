@@ -1,1 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choisir votre rôle | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        :root {
+            --primary: #551B8C;
+            --primary-light: #7e3db0;
+            --primary-dark: #3d1266;
+            --gold: #FFCC00;
+            --gold-dark: #e6b800;
+            --bg-light: #F0F8FF;
+            --white: #ffffff;
+            --dark: #1a1a1a;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
+            --transition: all 0.3s ease;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--gray);
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 20px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+        }
+
+        .role-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .role-card.selected {
+            border: 2px solid var(--primary);
+            background: rgba(85,27,140,0.05);
+        }
+
+        .role-card i {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .role-card span {
+            display: block;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.8rem;
+        }
+
+        .btn-next {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 50px;
+            width: 100%;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-next:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+        .toast.warning { border-left-color: #ffc107; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            .glass-card { padding: 20px; }
+            .roles-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+            .role-card i { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="glass-card">
+    <h1><i class="fas fa-user-tag"></i> Choisissez votre rôle</h1>
+    <p class="subtitle">Sélectionnez la catégorie qui vous correspond</p>
+    <div class="roles-grid" id="rolesGrid"></div>
+    <button id="nextBtn" class="btn-next">Continuer <i class="fas fa-arrow-right"></i></button>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+
+<script>
+    // Liste des 28 rôles (code, nom, icône)
+    const roles = [
+        { code: "FOOT", name: "Footballeur", icon: "fas fa-futbol" },
+        { code: "BASK", name: "Basketteur", icon: "fas fa-basketball-ball" },
+        { code: "TENN", name: "Tennisman", icon: "fas fa-table-tennis" },
+        { code: "ATHL", name: "Athlète", icon: "fas fa-running" },
+        { code: "HANDB", name: "Handballeur", icon: "fas fa-hand-peace" },
+        { code: "VOLL", name: "Volleyeur", icon: "fas fa-volleyball-ball" },
+        { code: "RUGBY", name: "Rugbyman", icon: "fas fa-football-ball" },
+        { code: "NATA", name: "Nageur", icon: "fas fa-swimmer" },
+        { code: "ARTSM", name: "Arts martiaux", icon: "fas fa-fist-raised" },
+        { code: "CYCL", name: "Cycliste", icon: "fas fa-bicycle" },
+        { code: "CHAN", name: "Chanteur", icon: "fas fa-microphone-alt" },
+        { code: "DANS", name: "Danseur", icon: "fas fa-music" },
+        { code: "COMP", name: "Compositeur", icon: "fas fa-headphones" },
+        { code: "ACIN", name: "Acteur cinéma", icon: "fas fa-film" },
+        { code: "ATHE", name: "Acteur théâtre", icon: "fas fa-theater-masks" },
+        { code: "HUMO", name: "Humoriste", icon: "fas fa-laugh" },
+        { code: "SLAM", name: "Slameur", icon: "fas fa-microphone" },
+        { code: "DJ", name: "DJ / Producteur", icon: "fas fa-dj" },
+        { code: "CIRQ", name: "Artiste de cirque", icon: "fas fa-magic" },
+        { code: "VISU", name: "Artiste visuel", icon: "fas fa-paint-brush" },
+        { code: "PARRAIN", name: "Parrain", icon: "fas fa-handshake" },
+        { code: "AGENT", name: "Agent FIFA", icon: "fas fa-briefcase" },
+        { code: "COACH", name: "Coach", icon: "fas fa-chalkboard-teacher" },
+        { code: "MEDIC", name: "Staff médical", icon: "fas fa-medkit" },
+        { code: "ARBIT", name: "Corps arbitral", icon: "fas fa-whistle" },
+        { code: "ACAD", name: "Académie sportive", icon: "fas fa-school" },
+        { code: "FORM", name: "Formateur", icon: "fas fa-user-graduate" },
+        { code: "TOURN", name: "Gestionnaire tournoi", icon: "fas fa-trophy" }
+    ];
+
+    let selectedRole = null;
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<div>${message}</div>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function renderRoles() {
+        const grid = document.getElementById('rolesGrid');
+        grid.innerHTML = '';
+        roles.forEach(role => {
+            const card = document.createElement('div');
+            card.className = 'role-card';
+            card.setAttribute('data-code', role.code);
+            card.innerHTML = `<i class="${role.icon}"></i><span>${role.name}</span>`;
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedRole = role.code;
+            });
+            grid.appendChild(card);
+        });
+    }
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        if (!selectedRole) {
+            showToast('Veuillez sélectionner un rôle', 'warning');
+            return;
+        }
+        sessionStorage.setItem('selectedRole', selectedRole);
+        window.location.href = `signup.html?role=${selectedRole}`;
+    });
+
+    renderRoles();
+</script>
+</body>
+</html>

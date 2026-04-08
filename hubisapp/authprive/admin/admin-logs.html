@@ -259,6 +259,7 @@
         const container = document.getElementById('logsList');
         container.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Chargement des logs...</p>';
         try {
+            // Jointure correcte : user_id -> auth.users (email), et via auth.users -> supabaseAuthPrive_profiles (display_name)
             const { data, error } = await supabaseClient
                 .from('supabaseAuthPrive_admin_logs')
                 .select(`
@@ -268,14 +269,15 @@
                     details,
                     ip,
                     created_at,
-                    profiles:supabaseAuthPrive_profiles!user_id(display_name, email)
+                    users:user_id(email),
+                    profiles:supabaseAuthPrive_profiles!auth_uuid(display_name)
                 `)
                 .order('created_at', { ascending: false });
 
             if (error) {
                 if (error.code === '42P01') {
-                    container.innerHTML = '<p>La table des logs n\'existe pas encore. Elle sera créée lors de l\'initialisation de la base de données.</p>';
-                    showToast('Table des logs non trouvée. Exécutez le script SQL approprié.', 'warning');
+                    container.innerHTML = '<p>La table des logs n\'existe pas encore.</p>';
+                    showToast('Table des logs non trouvée.', 'warning');
                     allLogs = [];
                     return;
                 }
@@ -298,9 +300,10 @@
         const actionFilter = document.getElementById('filterAction').value;
 
         let filtered = allLogs.filter(log => {
-            const profile = log.profiles || {};
-            const userMatch = (profile.display_name || '').toLowerCase().includes(search) ||
-                              (profile.email || '').toLowerCase().includes(search) ||
+            const userEmail = log.users?.email || '';
+            const userDisplay = log.profiles?.display_name || '';
+            const userMatch = userEmail.toLowerCase().includes(search) ||
+                              userDisplay.toLowerCase().includes(search) ||
                               (log.user_id || '').toLowerCase().includes(search);
             const actionMatch = !actionFilter || log.action === actionFilter;
             return userMatch && actionMatch;
@@ -315,8 +318,9 @@
 
         let html = '<table><thead><tr><th>Date/Heure</th><th>Utilisateur</th><th>Action</th><th>Détails</th><th>IP</th></tr></thead><tbody>';
         for (const log of filtered) {
-            const profile = log.profiles || {};
-            const userName = profile.display_name || profile.email || log.user_id?.substring(0, 8) || 'Système';
+            const email = log.users?.email || '';
+            const displayName = log.profiles?.display_name || '';
+            const userName = displayName || email || log.user_id?.substring(0, 8) || 'Système';
             html += `<tr>
                 <td>${new Date(log.created_at).toLocaleString()}</td>
                 <td>${escapeHtml(userName)}</td>

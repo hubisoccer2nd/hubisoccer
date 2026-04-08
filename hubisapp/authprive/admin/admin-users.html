@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Gestion des utilisateurs | HubISoccer</title>
+    <!-- Polices et icônes -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SDK Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* ----- RESET & VARIABLES ----- */
@@ -48,275 +50,102 @@
             top: 0;
             z-index: 100;
         }
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .logo-nav {
-            height: 40px;
-        }
-        .admin-title {
-            font-weight: 700;
-            color: var(--primary);
-            font-size: 1.2rem;
-        }
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-nav { height: 40px; }
+        .admin-title { font-weight: 700; color: var(--primary); font-size: 1.2rem; }
+        .nav-links { display: flex; gap: 2rem; align-items: center; }
         .nav-links a {
-            color: var(--dark);
-            text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
-            font-size: 0.95rem;
+            color: var(--dark); text-decoration: none; font-weight: 500;
+            transition: var(--transition); font-size: 0.95rem;
         }
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-        .nav-links a.active {
-            color: var(--primary);
-            font-weight: 600;
-            border-bottom: 2px solid var(--gold);
-        }
+        .nav-links a:hover { color: var(--primary); }
+        .nav-links a.active { color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--gold); }
         .logout-btn {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 30px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
+            background: var(--danger); color: white; border: none; padding: 8px 18px;
+            border-radius: 30px; font-weight: 500; cursor: pointer; transition: var(--transition);
             font-size: 0.9rem;
         }
-        .logout-btn:hover {
-            background: #c82333;
-            transform: translateY(-2px);
-        }
+        .logout-btn:hover { background: #c82333; transform: translateY(-2px); }
 
         /* ----- MAIN CONTENT ----- */
-        .admin-container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 30px 5%;
-            flex: 1;
-        }
-        h1 {
-            color: var(--primary);
-            font-size: 2rem;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .subtitle {
-            color: var(--gray);
-            margin-bottom: 30px;
-            border-left: 4px solid var(--gold);
-            padding-left: 15px;
-        }
+        .admin-container { max-width: 1300px; margin: 0 auto; padding: 30px 5%; flex: 1; }
+        h1 { color: var(--primary); font-size: 2rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .subtitle { color: var(--gray); margin-bottom: 30px; border-left: 4px solid var(--gold); padding-left: 15px; }
         .glass-card {
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(8px);
-            border-radius: 30px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow);
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border-radius: 30px;
+            padding: 25px; margin-bottom: 30px; box-shadow: var(--shadow);
         }
         .search-bar {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;
         }
         .search-bar input {
-            flex: 1;
-            padding: 12px 15px;
-            border-radius: 30px;
-            border: 1px solid var(--light-gray);
+            flex: 1; padding: 12px 15px; border-radius: 30px; border: 1px solid var(--light-gray);
             font-family: 'Poppins', sans-serif;
         }
         .btn-refresh {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
+            background: var(--primary); color: white; border: none; padding: 12px 20px;
+            border-radius: 30px; cursor: pointer; font-weight: 500;
+            display: inline-flex; align-items: center; gap: 8px; transition: var(--transition);
         }
-        .btn-refresh:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-        }
-        .users-list {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--light-gray);
-        }
-        th {
-            background: var(--bg-light);
-            color: var(--primary);
-        }
+        .btn-refresh:hover { background: var(--primary-light); transform: translateY(-2px); }
+        .users-list { background: white; border-radius: 20px; padding: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--light-gray); }
+        th { background: var(--bg-light); color: var(--primary); }
         .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600;
         }
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status-disabled {
-            background: #f8d7da;
-            color: #721c24;
-        }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-disabled { background: #f8d7da; color: #721c24; }
         .btn-edit, .btn-toggle {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            margin: 0 4px;
-            transition: var(--transition);
+            padding: 6px 12px; border-radius: 20px; border: none; cursor: pointer;
+            font-weight: 500; margin: 0 4px; transition: var(--transition);
         }
-        .btn-edit {
-            background: var(--primary);
-            color: white;
-        }
-        .btn-edit:hover {
-            background: var(--primary-light);
-        }
-        .btn-toggle {
-            background: var(--gold);
-            color: black;
-        }
-        .btn-toggle:hover {
-            background: var(--gold-dark);
-        }
+        .btn-edit { background: var(--primary); color: white; }
+        .btn-edit:hover { background: var(--primary-light); }
+        .btn-toggle { background: var(--gold); color: black; }
+        .btn-toggle:hover { background: var(--gold-dark); }
 
         /* ----- MODALE ----- */
         .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 2000;
         }
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
         .modal-content {
-            background: white;
-            border-radius: 30px;
-            padding: 30px;
-            max-width: 450px;
-            width: 90%;
+            background: white; border-radius: 30px; padding: 30px; max-width: 450px; width: 90%;
         }
-        .modal-content h3 {
-            color: var(--primary);
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
+        .modal-content h3 { color: var(--primary); margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; }
         select, input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 30px;
-            border: 1px solid var(--light-gray);
+            width: 100%; padding: 10px; border-radius: 30px; border: 1px solid var(--light-gray);
             font-family: 'Poppins', sans-serif;
         }
         .btn-save {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: var(--transition);
+            background: var(--primary); color: white; border: none; padding: 10px 20px;
+            border-radius: 30px; cursor: pointer; font-weight: 500; transition: var(--transition);
         }
-        .btn-save:hover {
-            background: var(--primary-light);
-        }
-        .close-modal {
-            float: right;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--gray);
-        }
-        .close-modal:hover {
-            color: var(--danger);
-        }
+        .btn-save:hover { background: var(--primary-light); }
+        .close-modal { float: right; font-size: 1.5rem; cursor: pointer; color: var(--gray); }
+        .close-modal:hover { color: var(--danger); }
 
         /* ----- FOOTER ADMINISTRATION ----- */
         .admin-footer {
-            background: var(--white);
-            padding: 1.2rem 5%;
-            border-top: 1px solid var(--light-gray);
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: var(--gray);
+            background: var(--white); padding: 1.2rem 5%; border-top: 1px solid var(--light-gray);
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+            font-size: 0.85rem; color: var(--gray);
         }
-        .footer-links {
-            display: flex;
-            gap: 1.5rem;
-        }
-        .footer-links a {
-            color: var(--gray);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-        .footer-links a:hover {
-            color: var(--primary);
-        }
+        .footer-links { display: flex; gap: 1.5rem; }
+        .footer-links a { color: var(--gray); text-decoration: none; transition: var(--transition); }
+        .footer-links a:hover { color: var(--primary); }
 
         /* ----- TOAST ----- */
-        .toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
         .toast {
-            background: white;
-            border-radius: 12px;
-            padding: 12px 20px;
-            margin-top: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            border-left: 4px solid;
-            animation: slideIn 0.3s ease;
+            background: white; border-radius: 12px; padding: 12px 20px; margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-left: 4px solid; animation: slideIn 0.3s ease;
         }
         .toast.success { border-left-color: #28a745; }
         .toast.error { border-left-color: #dc3545; }
@@ -329,32 +158,30 @@
         /* ----- RESPONSIVE ----- */
         @media (max-width: 700px) {
             .nav-links { display: none; }
-            .admin-footer {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-            .footer-links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
+            .admin-footer { flex-direction: column; gap: 10px; text-align: center; }
+            .footer-links { flex-wrap: wrap; justify-content: center; }
         }
 
         /* Cache le contenu tant que l'admin n'est pas validé */
-        #mainContent {
-            display: none;
-        }
+        #mainContent { display: none; }
     </style>
 </head>
 <body>
 
-<!-- ===== SCRIPT CRITIQUE : VÉRIFICATION SESSION ADMIN ===== -->
+<!-- ===== INITIALISATION SUPABASE (exécution synchrone) ===== -->
 <script>
-    (async function() {
-        const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
-        const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Début initialisation Supabase
+    const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
+    const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.__SUPABASE_CLIENT = supabaseAuth; // Exposition globale immédiate
+    // Fin initialisation Supabase
+</script>
 
+<!-- ===== VÉRIFICATION ADMIN ASYNCHRONE ===== -->
+<script>
+    // Début vérification session admin
+    (async function() {
         try {
             const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
             if (userError || !user) throw new Error('Non authentifié');
@@ -369,7 +196,6 @@
             if (profile.role_code !== 'ADMIN') throw new Error('Accès non autorisé');
 
             document.getElementById('mainContent').style.display = 'block';
-            window.__SUPABASE_CLIENT = supabaseAuth;
             window.__CURRENT_USER = user;
         } catch (err) {
             console.error(err);
@@ -377,6 +203,7 @@
             window.location.href = '../users/login.html';
         }
     })();
+    // Fin vérification session admin
 </script>
 
 <!-- ===== NAVBAR ADMIN ===== -->
@@ -394,7 +221,7 @@
     <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
 </nav>
 
-<!-- ===== CONTENU PRINCIPAL (masqué jusqu'à validation admin) ===== -->
+<!-- ===== CONTENU PRINCIPAL (masqué jusqu'à validation) ===== -->
 <div id="mainContent">
     <div class="admin-container">
         <h1><i class="fas fa-users-cog"></i> Gestion des utilisateurs</h1>
@@ -414,9 +241,7 @@
 
 <!-- ===== FOOTER ADMIN ===== -->
 <footer class="admin-footer">
-    <div class="copyright">
-        &copy; 2026 HubISoccer. Tous droits réservés.
-    </div>
+    <div class="copyright">&copy; 2026 HubISoccer. Tous droits réservés.</div>
     <div class="footer-links">
         <a href="../../../public/mentions-legales.html">Mentions légales</a>
         <a href="../../../public/cgu.html">CGU</a>
@@ -455,13 +280,13 @@
 <div id="toastContainer" class="toast-container"></div>
 
 <script>
-    // Récupération du client Supabase et de l'utilisateur courant
-    const supabaseAuth = window.__SUPABASE_CLIENT;
+    // Début script principal gestion des utilisateurs
+    const supabaseClient = window.__SUPABASE_CLIENT;
     const currentUser = window.__CURRENT_USER;
 
     let allUsers = [];
 
-    // ----- FONCTIONS UTILITAIRES -----
+    // Début fonction showToast
     function showToast(message, type = 'info') {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
@@ -470,18 +295,21 @@
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 4000);
     }
+    // Fin fonction showToast
 
+    // Début fonction escapeHtml
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
     }
+    // Fin fonction escapeHtml
 
-    // ----- CHARGER LA LISTE DES UTILISATEURS -----
+    // Début fonction loadUsers
     async function loadUsers() {
         const container = document.getElementById('usersList');
         container.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Chargement...</p>';
         try {
-            const { data, error } = await supabaseAuth
+            const { data, error } = await supabaseClient
                 .from('supabaseAuthPrive_profiles')
                 .select('*')
                 .order('created_at', { ascending: false });
@@ -496,8 +324,9 @@
             showToast(err.message, 'error');
         }
     }
+    // Fin fonction loadUsers
 
-    // ----- AFFICHAGE AVEC RECHERCHE -----
+    // Début fonction renderUsers
     function renderUsers() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         let filtered = allUsers.filter(u => 
@@ -514,7 +343,7 @@
 
         let html = '<table><thead><tr><th>Nom</th><th>Email</th><th>ID HubISoccer</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
         for (const user of filtered) {
-            const isActive = user.is_active !== false; // par défaut actif si non défini
+            const isActive = user.is_active !== false;
             const statusClass = isActive ? 'status-active' : 'status-disabled';
             const statusText = isActive ? 'Actif' : 'Désactivé';
 
@@ -536,7 +365,6 @@
         html += '</tbody></table>';
         container.innerHTML = html;
 
-        // Attacher les événements
         document.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', () => openRoleModal(btn.dataset.id, btn.dataset.role));
         });
@@ -544,38 +372,40 @@
             btn.addEventListener('click', () => toggleUserStatus(btn.dataset.id, btn.dataset.active === 'true'));
         });
     }
+    // Fin fonction renderUsers
 
-    // ----- MODALE RÔLE -----
+    // Début fonction openRoleModal
     function openRoleModal(userId, currentRole) {
         document.getElementById('editUserId').value = userId;
         document.getElementById('editRoleCode').value = currentRole;
         document.getElementById('roleModal').classList.add('active');
     }
+    // Fin fonction openRoleModal
 
-    // ----- MISE À JOUR DU RÔLE -----
+    // Début fonction updateUserRole
     async function updateUserRole(userId, newRole) {
-        const { error } = await supabaseAuth
+        const { error } = await supabaseClient
             .from('supabaseAuthPrive_profiles')
             .update({ role_code: newRole })
             .eq('hubisoccer_id', userId);
-
         if (error) throw error;
         return true;
     }
+    // Fin fonction updateUserRole
 
-    // ----- ACTIVATION / DÉSACTIVATION -----
+    // Début fonction toggleUserStatus
     async function toggleUserStatus(userId, currentlyActive) {
         const newStatus = !currentlyActive;
-        const { error } = await supabaseAuth
+        const { error } = await supabaseClient
             .from('supabaseAuthPrive_profiles')
             .update({ is_active: newStatus })
             .eq('hubisoccer_id', userId);
-
         if (error) throw error;
         return true;
     }
+    // Fin fonction toggleUserStatus
 
-    // ----- ÉVÉNEMENTS -----
+    // Début événement sauvegarde rôle
     document.getElementById('saveRoleBtn').addEventListener('click', async () => {
         const userId = document.getElementById('editUserId').value;
         const newRole = document.getElementById('editRoleCode').value;
@@ -588,7 +418,6 @@
             showToast('Rôle mis à jour avec succès', 'success');
             document.getElementById('roleModal').classList.remove('active');
             loadUsers();
-            // Logger l'action
             if (window.logAdminAction) {
                 window.logAdminAction('UPDATE_ROLE', `ID: ${userId} -> ${newRole}`);
             }
@@ -596,7 +425,9 @@
             showToast(err.message, 'error');
         }
     });
+    // Fin événement sauvegarde rôle
 
+    // Début événements divers
     document.getElementById('refreshBtn').addEventListener('click', loadUsers);
     document.getElementById('searchInput').addEventListener('input', renderUsers);
     document.getElementById('closeRoleModal').addEventListener('click', () => {
@@ -607,8 +438,9 @@
             document.getElementById('roleModal').classList.remove('active');
         }
     });
+    // Fin événements divers
 
-    // Gestion du toggle via délégation d'événement (car les boutons sont recréés)
+    // Début délégation pour toggle
     document.getElementById('usersList').addEventListener('click', async (e) => {
         const btn = e.target.closest('.btn-toggle');
         if (!btn) return;
@@ -625,17 +457,21 @@
             showToast(err.message, 'error');
         }
     });
+    // Fin délégation pour toggle
 
+    // Début événement déconnexion
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         if (window.logAdminAction) {
             await window.logAdminAction('LOGOUT', 'Déconnexion manuelle');
         }
-        await supabaseAuth.auth.signOut();
+        await supabaseClient.auth.signOut();
         window.location.href = '../users/login.html';
     });
+    // Fin événement déconnexion
 
     // Chargement initial
     loadUsers();
+    // Fin script principal gestion des utilisateurs
 </script>
 </body>
 </html>

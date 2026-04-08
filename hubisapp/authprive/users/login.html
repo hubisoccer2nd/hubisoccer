@@ -7,12 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
@@ -22,25 +17,20 @@
             justify-content: center;
             padding: 20px;
         }
-
         :root {
             --primary: #551B8C;
             --primary-light: #7e3db0;
-            --primary-dark: #3d1266;
             --gold: #FFCC00;
-            --gold-dark: #e6b800;
             --bg-light: #F0F8FF;
             --white: #ffffff;
             --dark: #1a1a1a;
             --gray: #6c757d;
             --light-gray: #e9ecef;
             --shadow: 0 10px 30px rgba(0,0,0,0.05);
-            --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
             --transition: all 0.3s ease;
         }
-
         .glass-card {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255,255,255,0.85);
             backdrop-filter: blur(12px);
             border-radius: 40px;
             padding: 30px;
@@ -49,98 +39,21 @@
             box-shadow: 0 25px 45px rgba(0,0,0,0.1);
             border: 1px solid rgba(255,255,255,0.3);
         }
-
-        h1 {
-            font-size: 1.8rem;
-            color: var(--primary);
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--dark);
-        }
-
-        input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--light-gray);
-            border-radius: 30px;
-            font-family: 'Poppins', sans-serif;
-            transition: var(--transition);
-        }
-
-        input:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(85,27,140,0.1);
-        }
-
-        .btn-submit {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 50px;
-            width: 100%;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn-submit:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .info-text {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.85rem;
-        }
-
-        .info-text a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .info-text a:hover {
-            text-decoration: underline;
-        }
-
-        .toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-
-        .toast {
-            background: white;
-            border-radius: 12px;
-            padding: 12px 20px;
-            margin-top: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            border-left: 4px solid;
-            animation: slideIn 0.3s ease;
-        }
-
+        h1 { font-size: 1.8rem; color: var(--primary); text-align: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--dark); }
+        input { width: 100%; padding: 12px 15px; border: 2px solid var(--light-gray); border-radius: 30px; font-family: 'Poppins', sans-serif; transition: var(--transition); }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(85,27,140,0.1); }
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 50px; width: 100%; font-size: 1rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
+        .btn-submit:hover { background: var(--primary-light); transform: translateY(-2px); }
+        .info-text { text-align: center; margin-top: 20px; font-size: 0.85rem; }
+        .info-text a { color: var(--primary); text-decoration: none; }
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast { background: white; border-radius: 12px; padding: 12px 20px; margin-top: 10px; border-left: 4px solid; animation: slideIn 0.3s; }
         .toast.success { border-left-color: #28a745; }
         .toast.error { border-left-color: #dc3545; }
         .toast.warning { border-left-color: #ffc107; }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -169,7 +82,7 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52b3JxaG1wbnd0ZmpsYnp6dXFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDQwMzQsImV4cCI6MjA5MTE4MDAzNH0.Z5IPXZY2MFfdtEazLL405A5fTthdbKkDLV3GXhQDJMo';
     const supabaseAuthUser = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    function showToast(message, type = 'info') {
+    function showToast(message, type) {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
@@ -177,6 +90,39 @@
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
+
+    // Mapping des codes de rôle vers les dossiers et fichiers de tableau de bord
+    const roleDashboardMap = {
+        'ADMIN': { folder: 'authprive/admin', file: 'admin-dashboard.html' },
+        'FOOT': { folder: 'footballeur/dashboard', file: 'foot-dash.html' },
+        'BASK': { folder: 'basketteur/dashboard', file: 'basketteur-dash.html' },
+        'TENN': { folder: 'tennisman/dashboard', file: 'tennisman-dash.html' },
+        'ATHL': { folder: 'athlete/dashboard', file: 'athlete-dash.html' },
+        'HANDB': { folder: 'handballeur/dashboard', file: 'handballeur-dash.html' },
+        'VOLL': { folder: 'volleyeur/dashboard', file: 'volleyeur-dash.html' },
+        'RUGBY': { folder: 'rugbyman/dashboard', file: 'rugbyman-dash.html' },
+        'NATA': { folder: 'nageur/dashboard', file: 'nageur-dash.html' },
+        'ARTSM': { folder: 'arts_martiaux/dashboard', file: 'arts_martiaux-dash.html' },
+        'CYCL': { folder: 'cycliste/dashboard', file: 'cycliste-dash.html' },
+        'CHAN': { folder: 'chanteur/dashboard', file: 'chanteur-dash.html' },
+        'DANS': { folder: 'danseur/dashboard', file: 'danseur-dash.html' },
+        'COMP': { folder: 'compositeur/dashboard', file: 'compositeur-dash.html' },
+        'ACIN': { folder: 'acteur_cinema/dashboard', file: 'acteur_cinema-dash.html' },
+        'ATHE': { folder: 'acteur_theatre/dashboard', file: 'acteur_theatre-dash.html' },
+        'HUMO': { folder: 'humoriste/dashboard', file: 'humoriste-dash.html' },
+        'SLAM': { folder: 'slameur/dashboard', file: 'slameur-dash.html' },
+        'DJ': { folder: 'dj/dashboard', file: 'dj-dash.html' },
+        'CIRQ': { folder: 'cirque/dashboard', file: 'cirque-dash.html' },
+        'VISU': { folder: 'artiste_visuel/dashboard', file: 'artiste_visuel-dash.html' },
+        'PARRAIN': { folder: 'parrain/dashboard', file: 'parrain-dash.html' },
+        'AGENT': { folder: 'agent_fifa/dashboard', file: 'agent_fifa-dash.html' },
+        'COACH': { folder: 'coach/dashboard', file: 'coach-dash.html' },
+        'MEDIC': { folder: 'staff_medical/dashboard', file: 'staff_medical-dash.html' },
+        'ARBIT': { folder: 'corps_arbitral/dashboard', file: 'corps_arbitral-dash.html' },
+        'ACAD': { folder: 'academie_sportive/dashboard', file: 'academie_sportive-dash.html' },
+        'FORM': { folder: 'formateur/dashboard', file: 'formateur-dash.html' },
+        'TOURN': { folder: 'gestionnaire_tournoi/dashboard', file: 'gestionnaire_tournoi-dash.html' }
+    };
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -189,8 +135,29 @@
             showToast(error.message, 'error');
             return;
         }
+        // Récupérer le profil (rôle)
+        const { data: profile, error: profileError } = await supabaseAuthUser
+            .from('private_auth.profiles')
+            .select('role_code, is_admin')
+            .eq('id', data.user.id)
+            .single();
+        if (profileError) {
+            showToast('Erreur récupération profil', 'error');
+            return;
+        }
+        const roleCode = profile.role_code;
+        const isAdmin = profile.is_admin;
+
+        let redirectPath;
+        if (isAdmin) {
+            redirectPath = '../admin/admin-dashboard.html';
+        } else if (roleDashboardMap[roleCode]) {
+            redirectPath = `../${roleDashboardMap[roleCode].folder}/${roleDashboardMap[roleCode].file}`;
+        } else {
+            redirectPath = '../shared/construction.html'; // page générique à créer plus tard
+        }
         showToast('Connexion réussie ! Redirection...', 'success');
-        setTimeout(() => { window.location.href = '../dashboard.html'; }, 1500);
+        setTimeout(() => { window.location.href = redirectPath; }, 1500);
     });
 </script>
 </body>

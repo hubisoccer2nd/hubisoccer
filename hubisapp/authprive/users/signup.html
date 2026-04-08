@@ -327,9 +327,39 @@
                 justify-content: center;
             }
         }
+
+        /* Cache le contenu principal tant que le rôle n'est pas validé */
+        #mainContent {
+            display: none;
+        }
     </style>
 </head>
 <body>
+
+<!-- ===== SCRIPT CRITIQUE : VÉRIFICATION DU RÔLE (exécuté immédiatement) ===== -->
+<script>
+    (function() {
+        // Récupération du rôle dans l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role');
+
+        // Si aucun rôle n'est présent, redirection immédiate vers role-select.html
+        if (!role) {
+            // Redirection sans attendre le chargement complet de la page
+            window.location.replace('role-select.html');
+            // Arrêt de l'exécution du reste de la page
+            throw new Error('Redirection vers sélection du rôle');
+        }
+
+        // Si le rôle est présent, on stocke dans une variable globale et on autorise l'affichage
+        window.__HUBI_ROLE = role;
+
+        // Affichage du contenu principal une fois que tout est chargé
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('mainContent').style.display = 'block';
+        });
+    })();
+</script>
 
 <!-- ===== NAVBAR ===== -->
 <nav class="navbar">
@@ -345,8 +375,8 @@
     </div>
 </nav>
 
-<!-- ===== MAIN CONTENT ===== -->
-<div class="main-content">
+<!-- ===== MAIN CONTENT (caché par défaut, affiché si rôle valide) ===== -->
+<div id="mainContent" class="main-content">
     <div class="glass-card">
         <h1><i class="fas fa-user-plus"></i> Inscription</h1>
         <p style="text-align: center; margin-bottom: 20px; color: var(--gray);">
@@ -381,7 +411,7 @@
                 </div>
             </div>
 
-            <!-- Pays de résidence (tous les pays) -->
+            <!-- Pays de résidence -->
             <div class="form-group">
                 <label class="required"><i class="fas fa-globe"></i> Pays de résidence</label>
                 <select id="country" required>
@@ -389,7 +419,7 @@
                 </select>
             </div>
 
-            <!-- Numéro de téléphone -->
+            <!-- Téléphone -->
             <div class="form-group">
                 <label class="required"><i class="fas fa-phone-alt"></i> Numéro de téléphone</label>
                 <input type="tel" id="phone" placeholder="Ex: +229 97 12 34 56" required>
@@ -419,7 +449,7 @@
                 </div>
             </div>
 
-            <!-- Acceptation des conditions -->
+            <!-- Acceptation CGU -->
             <div class="checkbox-group">
                 <input type="checkbox" id="acceptTerms" required>
                 <label for="acceptTerms">
@@ -463,21 +493,15 @@
     
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ----- CONSTANTES -----
-    const urlParams = new URLSearchParams(window.location.search);
-    const role = urlParams.get('role');
-    
-    // Redirection si pas de rôle
-    if (!role) {
-        window.location.href = 'role-select.html';
-    }
+    // Rôle récupéré depuis la variable globale définie dans le script critique
+    const role = window.__HUBI_ROLE;
 
     // Définir la date max pour avoir au moins 16 ans
     const today = new Date();
     const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
     document.getElementById('birthDate').setAttribute('max', maxDate.toISOString().split('T')[0]);
 
-    // ----- LISTE DES PAYS (ISO 3166-1 alpha-2) -----
+    // ----- LISTE DES PAYS (complète) -----
     const countries = [
         { code: 'AF', name: 'Afghanistan' }, { code: 'ZA', name: 'Afrique du Sud' }, { code: 'AL', name: 'Albanie' },
         { code: 'DZ', name: 'Algérie' }, { code: 'DE', name: 'Allemagne' }, { code: 'AD', name: 'Andorre' },
@@ -576,9 +600,8 @@
         return /^\+?[0-9\s\-]{8,20}$/.test(phone);
     }
 
-    // ----- VÉRIFICATION DE L'ID DANS SUPABASE (table à créer) -----
+    // ----- VÉRIFICATION DE L'ID DANS SUPABASE -----
     async function verifyHubisoccerId(id, expectedRole) {
-        // TODO: Adapter le nom de la table après validation
         const { data, error } = await supabase
             .from('supabaseAuthPrive_ids_pregenerees')
             .select('id, role_code, used')
@@ -674,7 +697,7 @@
                 throw new Error('Erreur lors de la création du compte utilisateur.');
             }
 
-            // Étape 3 : Insérer le profil dans la table profiles (à créer)
+            // Étape 3 : Insérer le profil
             showToast('Enregistrement du profil...', 'info');
             const { error: profileError } = await supabase
                 .from('supabaseAuthPrive_profiles')
@@ -693,9 +716,7 @@
                 });
 
             if (profileError) {
-                // Tentative de rollback : supprimer l'utilisateur Auth (attention, cela peut nécessiter des droits admin)
-                console.error('Erreur profil, tentative de suppression du compte auth:', profileError);
-                // Idéalement, on appellerait une fonction RPC pour nettoyer, mais on va juste logger
+                console.error('Erreur profil:', profileError);
                 throw new Error('Erreur lors de la création du profil. Veuillez contacter le support.');
             }
 
@@ -707,7 +728,6 @@
 
             if (updateError) {
                 console.warn('Avertissement: l\'ID n\'a pas pu être marqué comme utilisé.', updateError);
-                // Non bloquant, on continue
             }
 
             // Succès !

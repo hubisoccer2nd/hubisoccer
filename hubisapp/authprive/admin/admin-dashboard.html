@@ -1,1 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord administrateur | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        :root {
+            --primary: #551B8C;
+            --primary-light: #7e3db0;
+            --primary-dark: #3d1266;
+            --gold: #FFCC00;
+            --gold-dark: #e6b800;
+            --bg-light: #F0F8FF;
+            --white: #ffffff;
+            --dark: #1a1a1a;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
+            --transition: all 0.3s ease;
+        }
+        .admin-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 30px 5%;
+        }
+        /* Navbar admin */
+        .admin-nav {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo-nav { height: 40px; }
+        .admin-title { font-weight: 700; color: var(--primary); font-size: 1.2rem; }
+        .nav-links a {
+            color: var(--primary);
+            text-decoration: none;
+            margin-left: 25px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        .nav-links a:hover { color: var(--gold); }
+        .logout-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        /* Dashboard */
+        h1 { color: var(--primary); font-size: 2rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .subtitle { color: var(--gray); margin-bottom: 30px; border-left: 4px solid var(--gold); padding-left: 15px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 25px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
+        .stat-card i { font-size: 2.5rem; color: var(--gold); margin-bottom: 15px; }
+        .stat-card h3 { font-size: 2rem; color: var(--primary); }
+        .stat-card p { color: var(--gray); font-weight: 500; }
+        .quick-actions {
+            background: white;
+            border-radius: 25px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        .quick-actions h2 { color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .action-btn {
+            background: var(--bg-light);
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .action-btn:hover { background: var(--primary); color: white; }
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+        }
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+        .toast.warning { border-left-color: #ffc107; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 700px) {
+            .nav-links { display: none; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<nav class="admin-nav">
+    <div class="logo-area">
+        <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        <span class="admin-title">HubISoccer Admin</span>
+    </div>
+    <div class="nav-links">
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="admin-ids.html">Gestion IDs</a>
+        <a href="admin-users.html">Utilisateurs</a>
+    </div>
+    <button id="logoutBtn" class="logout-btn">Déconnexion</button>
+</nav>
 
+<div class="admin-container">
+    <h1><i class="fas fa-chart-line"></i> Tableau de bord</h1>
+    <div class="subtitle">Bienvenue, Administrateur. Voici les statistiques de l'espace privé.</div>
+
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><i class="fas fa-users"></i><h3 id="totalUsers">-</h3><p>Utilisateurs inscrits</p></div>
+        <div class="stat-card"><i class="fas fa-id-card"></i><h3 id="totalIds">-</h3><p>IDs HubISoccer générés</p></div>
+        <div class="stat-card"><i class="fas fa-check-circle"></i><h3 id="availableIds">-</h3><p>IDs disponibles</p></div>
+        <div class="stat-card"><i class="fas fa-clock"></i><h3 id="usedIds">-</h3><p>IDs utilisés</p></div>
+    </div>
+
+    <div class="quick-actions">
+        <h2><i class="fas fa-bolt"></i> Actions rapides</h2>
+        <div class="action-buttons">
+            <a href="admin-ids.html" class="action-btn"><i class="fas fa-plus-circle"></i> Générer un ID</a>
+            <a href="admin-users.html" class="action-btn"><i class="fas fa-user-cog"></i> Gérer les utilisateurs</a>
+            <a href="admin-logs.html" class="action-btn"><i class="fas fa-history"></i> Voir les logs</a>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://nvorqhmpnwtfjlbzzuqp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52b3JxaG1wbnd0ZmpsYnp6dXFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDQwMzQsImV4cCI6MjA5MTE4MDAzNH0.Z5IPXZY2MFfdtEazLL405A5fTthdbKkDLV3GXhQDJMo';
+    const supabaseAuthUser = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function showToast(message, type) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<div>${message}</div>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    async function loadStats() {
+        try {
+            // Compter les profils (utilisateurs inscrits)
+            const { count: userCount, error: userError } = await supabaseAuthUser
+                .from('private_auth.profiles')
+                .select('*', { count: 'exact', head: true });
+            if (userError) throw userError;
+            // Compter les IDs totaux
+            const { count: totalIds, error: totalError } = await supabaseAuthUser
+                .from('private_auth.hubisoccer_ids')
+                .select('*', { count: 'exact', head: true });
+            if (totalError) throw totalError;
+            // Compter les IDs disponibles
+            const { count: availableIds, error: availError } = await supabaseAuthUser
+                .from('private_auth.hubisoccer_ids')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'disponible');
+            if (availError) throw availError;
+            // Compter les IDs utilisés
+            const { count: usedIds, error: usedError } = await supabaseAuthUser
+                .from('private_auth.hubisoccer_ids')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'utilise');
+            if (usedError) throw usedError;
+
+            document.getElementById('totalUsers').textContent = userCount || 0;
+            document.getElementById('totalIds').textContent = totalIds || 0;
+            document.getElementById('availableIds').textContent = availableIds || 0;
+            document.getElementById('usedIds').textContent = usedIds || 0;
+        } catch (err) {
+            console.error(err);
+            showToast('Erreur chargement statistiques', 'error');
+        }
+    }
+
+    // Déconnexion
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await supabaseAuthUser.auth.signOut();
+        window.location.href = '../users/login.html';
+    });
+
+    loadStats();
+</script>
+</body>
+</html>

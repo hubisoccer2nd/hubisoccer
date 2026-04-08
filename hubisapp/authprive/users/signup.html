@@ -339,22 +339,16 @@
 <!-- ===== SCRIPT CRITIQUE : VÉRIFICATION DU RÔLE (exécuté immédiatement) ===== -->
 <script>
     (function() {
-        // Récupération du rôle dans l'URL
         const urlParams = new URLSearchParams(window.location.search);
         const role = urlParams.get('role');
 
-        // Si aucun rôle n'est présent, redirection immédiate vers role-select.html
         if (!role) {
-            // Redirection sans attendre le chargement complet de la page
             window.location.replace('role-select.html');
-            // Arrêt de l'exécution du reste de la page
             throw new Error('Redirection vers sélection du rôle');
         }
 
-        // Si le rôle est présent, on stocke dans une variable globale et on autorise l'affichage
         window.__HUBI_ROLE = role;
 
-        // Affichage du contenu principal une fois que tout est chargé
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('mainContent').style.display = 'block';
         });
@@ -384,7 +378,6 @@
         </p>
 
         <form id="signupForm">
-            <!-- Nom et Prénom -->
             <div class="input-group">
                 <div class="form-group">
                     <label class="required"><i class="fas fa-user"></i> Nom</label>
@@ -396,13 +389,11 @@
                 </div>
             </div>
 
-            <!-- Date de naissance -->
             <div class="form-group">
                 <label class="required"><i class="fas fa-calendar-alt"></i> Date de naissance</label>
                 <input type="date" id="birthDate" required max="">
             </div>
 
-            <!-- ID HubISoccer -->
             <div class="form-group">
                 <label class="required"><i class="fas fa-id-card"></i> ID HubISoccer</label>
                 <input type="text" id="hubisoccerId" placeholder="Ex: A7HU82K91BI2026SBJFOOTOM92J8..." maxlength="40" required>
@@ -411,7 +402,6 @@
                 </div>
             </div>
 
-            <!-- Pays de résidence -->
             <div class="form-group">
                 <label class="required"><i class="fas fa-globe"></i> Pays de résidence</label>
                 <select id="country" required>
@@ -419,7 +409,6 @@
                 </select>
             </div>
 
-            <!-- Téléphone -->
             <div class="form-group">
                 <label class="required"><i class="fas fa-phone-alt"></i> Numéro de téléphone</label>
                 <input type="tel" id="phone" placeholder="Ex: +229 97 12 34 56" required>
@@ -428,13 +417,11 @@
                 </div>
             </div>
 
-            <!-- Email -->
             <div class="form-group">
                 <label class="required"><i class="fas fa-envelope"></i> Email</label>
                 <input type="email" id="email" placeholder="vous@exemple.com" required>
             </div>
 
-            <!-- Mot de passe + confirmation -->
             <div class="input-group">
                 <div class="form-group">
                     <label class="required"><i class="fas fa-lock"></i> Mot de passe</label>
@@ -449,7 +436,6 @@
                 </div>
             </div>
 
-            <!-- Acceptation CGU -->
             <div class="checkbox-group">
                 <input type="checkbox" id="acceptTerms" required>
                 <label for="acceptTerms">
@@ -491,12 +477,12 @@
     const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Utilisation d'un nom explicite pour le client d'authentification
+    const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Rôle récupéré depuis la variable globale définie dans le script critique
     const role = window.__HUBI_ROLE;
 
-    // Définir la date max pour avoir au moins 16 ans
+    // Date max pour 16 ans
     const today = new Date();
     const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
     document.getElementById('birthDate').setAttribute('max', maxDate.toISOString().split('T')[0]);
@@ -570,13 +556,19 @@
         { code: 'ZW', name: 'Zimbabwe' }
     ];
 
-    const countrySelect = document.getElementById('country');
-    countries.sort((a,b) => a.name.localeCompare(b.name));
-    countries.forEach(c => {
-        const option = document.createElement('option');
-        option.value = c.code;
-        option.textContent = c.name;
-        countrySelect.appendChild(option);
+    // Peuplement du selecteur pays (exécuté après que le DOM est prêt)
+    document.addEventListener('DOMContentLoaded', function() {
+        const countrySelect = document.getElementById('country');
+        if (countrySelect) {
+            // Trier les pays par nom
+            const sortedCountries = [...countries].sort((a, b) => a.name.localeCompare(b.name));
+            sortedCountries.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.code;
+                option.textContent = c.name;
+                countrySelect.appendChild(option);
+            });
+        }
     });
 
     // ----- FONCTIONS UTILITAIRES -----
@@ -590,37 +582,26 @@
     }
 
     function validatePassword(pwd) {
-        const minLength = pwd.length >= 8;
-        const hasUpper = /[A-Z]/.test(pwd);
-        const hasNumber = /[0-9]/.test(pwd);
-        return minLength && hasUpper && hasNumber;
+        return pwd.length >= 8 && /[A-Z]/.test(pwd) && /[0-9]/.test(pwd);
     }
 
     function validatePhone(phone) {
         return /^\+?[0-9\s\-]{8,20}$/.test(phone);
     }
 
-    // ----- VÉRIFICATION DE L'ID DANS SUPABASE -----
     async function verifyHubisoccerId(id, expectedRole) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAuth
             .from('supabaseAuthPrive_ids_pregenerees')
             .select('id, role_code, used')
             .eq('id', id)
             .single();
         
-        if (error || !data) {
-            throw new Error('ID HubISoccer invalide ou inexistant.');
-        }
-        if (data.used) {
-            throw new Error('Cet ID a déjà été utilisé.');
-        }
-        if (data.role_code !== expectedRole) {
-            throw new Error(`Cet ID est destiné au rôle "${data.role_code}", pas à "${expectedRole}".`);
-        }
+        if (error || !data) throw new Error('ID HubISoccer invalide ou inexistant.');
+        if (data.used) throw new Error('Cet ID a déjà été utilisé.');
+        if (data.role_code !== expectedRole) throw new Error(`Cet ID est destiné au rôle "${data.role_code}", pas à "${expectedRole}".`);
         return true;
     }
 
-    // ----- INSCRIPTION PRINCIPALE -----
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -628,14 +609,13 @@
         const firstName = document.getElementById('firstName').value.trim();
         const birthDate = document.getElementById('birthDate').value;
         const hubisoccerId = document.getElementById('hubisoccerId').value.trim().toUpperCase();
-        const country = countrySelect.value;
+        const country = document.getElementById('country').value;
         const phone = document.getElementById('phone').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const confirm = document.getElementById('confirmPassword').value;
         const acceptTerms = document.getElementById('acceptTerms').checked;
 
-        // Validations frontend
         if (!lastName || !firstName || !birthDate || !hubisoccerId || !country || !phone || !email || !password || !confirm) {
             showToast('Tous les champs obligatoires doivent être remplis.', 'warning');
             return;
@@ -645,7 +625,7 @@
             return;
         }
         if (!validatePhone(phone)) {
-            showToast('Numéro de téléphone invalide (format international attendu).', 'error');
+            showToast('Numéro de téléphone invalide.', 'error');
             return;
         }
         if (!validatePassword(password)) {
@@ -657,49 +637,29 @@
             return;
         }
         if (!acceptTerms) {
-            showToast('Vous devez accepter les conditions d\'utilisation.', 'warning');
+            showToast('Vous devez accepter les conditions.', 'warning');
             return;
         }
 
-        // Désactiver le bouton pendant le traitement
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification...';
 
         try {
-            // Étape 1 : Vérifier l'ID HubISoccer
-            showToast('Vérification de l\'ID HubISoccer...', 'info');
+            showToast('Vérification de l\'ID...', 'info');
             await verifyHubisoccerId(hubisoccerId, role);
 
-            // Étape 2 : Inscription Supabase Auth
             showToast('Création du compte...', 'info');
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: {
-                        first_name: firstName,
-                        last_name: lastName,
-                        hubisoccer_id: hubisoccerId,
-                        role_code: role
-                    }
-                }
+            const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
+                email, password,
+                options: { data: { first_name: firstName, last_name: lastName, hubisoccer_id: hubisoccerId, role_code: role } }
             });
 
-            if (authError) {
-                if (authError.message.includes('already registered')) {
-                    throw new Error('Cet email est déjà utilisé.');
-                }
-                throw authError;
-            }
+            if (authError) throw authError;
+            if (!authData.user) throw new Error('Erreur lors de la création du compte.');
 
-            if (!authData.user) {
-                throw new Error('Erreur lors de la création du compte utilisateur.');
-            }
-
-            // Étape 3 : Insérer le profil
             showToast('Enregistrement du profil...', 'info');
-            const { error: profileError } = await supabase
+            const { error: profileError } = await supabaseAuth
                 .from('supabaseAuthPrive_profiles')
                 .insert({
                     hubisoccer_id: hubisoccerId,
@@ -709,36 +669,24 @@
                     first_name: firstName,
                     birth_date: birthDate,
                     country_code: country,
-                    phone: phone,
-                    email: email,
+                    phone, email,
                     display_name: `${firstName} ${lastName}`,
                     created_at: new Date().toISOString()
                 });
 
-            if (profileError) {
-                console.error('Erreur profil:', profileError);
-                throw new Error('Erreur lors de la création du profil. Veuillez contacter le support.');
-            }
+            if (profileError) throw new Error('Erreur lors de la création du profil.');
 
-            // Étape 4 : Marquer l'ID comme utilisé
-            const { error: updateError } = await supabase
+            await supabaseAuth
                 .from('supabaseAuthPrive_ids_pregenerees')
                 .update({ used: true, used_by: authData.user.id, used_at: new Date().toISOString() })
                 .eq('id', hubisoccerId);
 
-            if (updateError) {
-                console.warn('Avertissement: l\'ID n\'a pas pu être marqué comme utilisé.', updateError);
-            }
-
-            // Succès !
-            showToast('Inscription réussie ! Redirection vers la connexion...', 'success');
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2500);
+            showToast('Inscription réussie ! Redirection...', 'success');
+            setTimeout(() => window.location.href = 'login.html', 2500);
 
         } catch (err) {
             console.error(err);
-            showToast(err.message || 'Une erreur est survenue.', 'error');
+            showToast(err.message, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-user-check"></i> Créer mon compte';
         }

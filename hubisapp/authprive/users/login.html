@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion | HubISoccer</title>
+    <!-- Polices et icônes -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SDK Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ----- RESET & VARIABLES ----- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Poppins', sans-serif;
@@ -89,7 +92,9 @@
     </style>
 </head>
 <body>
+<!-- ===== VÉRIFICATION DU RÔLE (script critique) ===== -->
 <script>
+    // Début vérification rôle
     (function() {
         const urlParams = new URLSearchParams(window.location.search);
         const role = urlParams.get('role');
@@ -97,7 +102,10 @@
         window.__HUBI_ROLE = role;
         document.addEventListener('DOMContentLoaded', function() { document.getElementById('mainContent').style.display = 'block'; });
     })();
+    // Fin vérification rôle
 </script>
+
+<!-- ===== NAVBAR ===== -->
 <nav class="navbar">
     <a href="../../../index.html" class="navbar-brand"><i class="fas fa-futbol"></i> <span>HubISoccer</span></a>
     <div class="navbar-links">
@@ -107,6 +115,8 @@
         <a href="#" class="btn-outline"><i class="fas fa-question-circle"></i> Aide</a>
     </div>
 </nav>
+
+<!-- ===== CONTENU PRINCIPAL (affiché si rôle présent) ===== -->
 <div id="mainContent" class="main-content">
     <div class="glass-card">
         <h1><i class="fas fa-sign-in-alt"></i> Connexion</h1>
@@ -119,6 +129,8 @@
         <div class="info-text"><a href="reset-password.html">Mot de passe oublié ?</a> &nbsp;|&nbsp; <a href="signup.html">Créer un compte</a></div>
     </div>
 </div>
+
+<!-- ===== FOOTER ===== -->
 <footer class="footer">
     <div class="copyright">&copy; 2026 HubISoccer. Tous droits réservés.</div>
     <div class="footer-links">
@@ -128,29 +140,54 @@
         <a href="../../../public/contact.html">Support</a>
     </div>
 </footer>
+
+<!-- ===== TOAST ===== -->
 <div id="toastContainer" class="toast-container"></div>
+
 <script>
+    // Début initialisation Supabase
     const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
     const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.__SUPABASE_CLIENT = supabaseAuth;
     const expectedRole = window.__HUBI_ROLE;
+    // Fin initialisation Supabase
+
+    // Début mapping des rôles vers dashboards (chemins corrigés)
     const roleDashboardMap = {
-        'ADMIN': 'authprive/admin/admin-dashboard.html',
-        'FOOT': 'footballeur/dashboard/foot-dash.html', 'BASK': 'basketteur/dashboard/basketteur-dash.html',
-        'TENN': 'tennisman/dashboard/tennisman-dash.html', 'ATHL': 'athlete/dashboard/athlete-dash.html',
-        'HANDB': 'handballeur/dashboard/handballeur-dash.html', 'VOLL': 'volleyeur/dashboard/volleyeur-dash.html',
-        'RUGBY': 'rugbyman/dashboard/rugbyman-dash.html', 'NATA': 'nageur/dashboard/nageur-dash.html',
-        'ARTSM': 'arts_martiaux/dashboard/arts_martiaux-dash.html', 'CYCL': 'cycliste/dashboard/cycliste-dash.html',
-        'CHAN': 'chanteur/dashboard/chanteur-dash.html', 'DANS': 'danseur/dashboard/danseur-dash.html',
-        'COMP': 'compositeur/dashboard/compositeur-dash.html', 'ACIN': 'acteur_cinema/dashboard/acteur_cinema-dash.html',
-        'ATHE': 'acteur_theatre/dashboard/acteur_theatre-dash.html', 'HUMO': 'humoriste/dashboard/humoriste-dash.html',
-        'SLAM': 'slameur/dashboard/slameur-dash.html', 'DJ': 'dj/dashboard/dj-dash.html',
-        'CIRQ': 'cirque/dashboard/cirque-dash.html', 'VISU': 'artiste_visuel/dashboard/artiste_visuel-dash.html',
-        'PARRAIN': 'parrain/dashboard/parrain-dash.html', 'AGENT': 'agent_fifa/dashboard/agent_fifa-dash.html',
-        'COACH': 'coach/dashboard/coach-dash.html', 'MEDIC': 'staff_medical/dashboard/staff_medical-dash.html',
-        'ARBIT': 'corps_arbitral/dashboard/corps_arbitral-dash.html', 'ACAD': 'academie_sportive/dashboard/academie_sportive-dash.html',
-        'FORM': 'formateur/dashboard/formateur-dash.html', 'TOURN': 'gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html'
+        'ADMIN': '../../authprive/admin/admin-dashboard.html',
+        'FOOT': '../../footballeur/dashboard/foot-dash.html',
+        'BASK': '../../basketteur/dashboard/basketteur-dash.html',
+        'TENN': '../../tennisman/dashboard/tennisman-dash.html',
+        'ATHL': '../../athlete/dashboard/athlete-dash.html',
+        'HANDB': '../../handballeur/dashboard/handballeur-dash.html',
+        'VOLL': '../../volleyeur/dashboard/volleyeur-dash.html',
+        'RUGBY': '../../rugbyman/dashboard/rugbyman-dash.html',
+        'NATA': '../../nageur/dashboard/nageur-dash.html',
+        'ARTSM': '../../arts_martiaux/dashboard/arts_martiaux-dash.html',
+        'CYCL': '../../cycliste/dashboard/cycliste-dash.html',
+        'CHAN': '../../chanteur/dashboard/chanteur-dash.html',
+        'DANS': '../../danseur/dashboard/danseur-dash.html',
+        'COMP': '../../compositeur/dashboard/compositeur-dash.html',
+        'ACIN': '../../acteur_cinema/dashboard/acteur_cinema-dash.html',
+        'ATHE': '../../acteur_theatre/dashboard/acteur_theatre-dash.html',
+        'HUMO': '../../humoriste/dashboard/humoriste-dash.html',
+        'SLAM': '../../slameur/dashboard/slameur-dash.html',
+        'DJ': '../../dj/dashboard/dj-dash.html',
+        'CIRQ': '../../cirque/dashboard/cirque-dash.html',
+        'VISU': '../../artiste_visuel/dashboard/artiste_visuel-dash.html',
+        'PARRAIN': '../../parrain/dashboard/parrain-dash.html',
+        'AGENT': '../../agent_fifa/dashboard/agent_fifa-dash.html',
+        'COACH': '../../coach/dashboard/coach-dash.html',
+        'MEDIC': '../../staff_medical/dashboard/staff_medical-dash.html',
+        'ARBIT': '../../corps_arbitral/dashboard/corps_arbitral-dash.html',
+        'ACAD': '../../academie_sportive/dashboard/academie_sportive-dash.html',
+        'FORM': '../../formateur/dashboard/formateur-dash.html',
+        'TOURN': '../../gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html'
     };
+    // Fin mapping
+
+    // Début fonction showToast
     function showToast(message, type = 'info') {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
@@ -159,6 +196,9 @@
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 4000);
     }
+    // Fin fonction showToast
+
+    // Début gestionnaire de connexion
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value.trim();
@@ -184,8 +224,7 @@
                 await supabaseAuth.auth.signOut();
                 throw new Error(`Rôle incorrect. Attendu : ${expectedRole}, trouvé : ${profile.role_code}`);
             }
-            let redirectPath = roleDashboardMap[profile.role_code] ? `../${roleDashboardMap[profile.role_code]}` : '../shared/construction.html';
-            if (profile.role_code === 'ADMIN') redirectPath = '../admin/admin-dashboard.html';
+            const redirectPath = roleDashboardMap[profile.role_code] || '../../shared/construction.html';
             showToast('Connexion réussie !', 'success');
             sessionStorage.setItem('currentRole', profile.role_code);
             sessionStorage.setItem('userId', authData.user.id);
@@ -196,6 +235,7 @@
             submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Se connecter';
         }
     });
+    // Fin gestionnaire de connexion
 </script>
 </body>
 </html>

@@ -1,1 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Créer ma communauté | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="feed-setup.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
 
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="c-loader" style="display:none;">
+    <div class="c-spinner"></div>
+    <div class="c-loader-bar-wrap"><div class="c-loader-bar" id="loaderBar" style="width:0%"></div></div>
+    <span class="c-loader-text" id="loaderText">Vérification de votre session...</span>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="c-nav">
+    <div class="c-nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="c-nav-logo" id="navLogo">
+        <span class="c-nav-title">Créer ma communauté</span>
+    </div>
+    <div class="c-nav-right">
+        <div class="c-user-menu" id="userMenu">
+            <img src="../../img/user-default.jpg" class="c-user-avatar" id="userAvatar" alt="">
+            <span class="c-user-name" id="userName">...</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="c-user-dropdown" id="userDropdown">
+                <a href="#" id="dropDashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <hr>
+                <button id="dropLogout" class="c-logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+            </div>
+        </div>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT CONTENU SETUP ===== -->
+<main class="setup-main">
+
+    <!-- Étapes indicateur -->
+    <div class="setup-steps" id="setupSteps">
+        <div class="step active" data-step="1"><span class="step-num">1</span><span class="step-label">Identité</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-step="2"><span class="step-num">2</span><span class="step-label">Visuel</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">Sport</span></div>
+        <div class="step-line"></div>
+        <div class="step" data-step="4"><span class="step-num">4</span><span class="step-label">Finaliser</span></div>
+    </div>
+
+    <!-- Intro hero -->
+    <div class="setup-hero">
+        <div class="hero-badge"><i class="fas fa-star"></i> Bienvenue sur HubISoccer</div>
+        <h1>Crée ta <span class="highlight">HubiS Community</span></h1>
+        <p>Ton espace unique pour partager, grandir et briller dans le monde du sport. Remplis tous les champs pour activer ton identifiant communautaire.</p>
+    </div>
+
+    <!-- FORMULAIRE MULTI-ÉTAPES -->
+    <div class="setup-card" id="setupCard">
+
+        <!-- ÉTAPE 1 : Identité -->
+        <div class="setup-step-content" id="step1">
+            <div class="step-header">
+                <div class="step-icon"><i class="fas fa-id-card"></i></div>
+                <h2>Ton identité communautaire</h2>
+                <p>Ces informations définissent qui tu es sur HubISoccer.</p>
+            </div>
+
+            <div class="c-field">
+                <label>Nom de ta communauté <span class="req">*</span></label>
+                <input type="text" class="c-input" id="communityName" maxlength="60"
+                    placeholder="Ex: Kofi Mensah FC, Coach Elite, Académie Dakar...">
+                <span class="field-hint">Le nom public de ta communauté (max. 60 caractères)</span>
+            </div>
+
+            <div class="c-field">
+                <label>Identifiant unique HubiS Community <span class="req">*</span> <span class="hint">(différent de l'ID HubISoccer)</span></label>
+                <div class="id-input-wrap">
+                    <span class="id-prefix">@</span>
+                    <input type="text" class="c-input id-input" id="communityHandle" maxlength="30"
+                        placeholder="mon_identifiant" autocomplete="off">
+                    <div class="id-check" id="handleCheck"></div>
+                </div>
+                <span class="field-hint">Lettres, chiffres et _ uniquement. Cet ID sera permanent et utilisé pour les messages, tournois et revenus.</span>
+            </div>
+
+            <div class="c-field">
+                <label>Bio de ta communauté <span class="req">*</span></label>
+                <textarea class="c-textarea" id="communityBio" maxlength="300" rows="3"
+                    placeholder="Décris ta communauté, ta vision, tes objectifs..."></textarea>
+                <div class="char-count"><span id="bioCount">0</span>/300</div>
+            </div>
+
+            <div class="c-field">
+                <label>Pays <span class="req">*</span></label>
+                <select class="c-select" id="communityCountry">
+                    <option value="">-- Sélectionner un pays --</option>
+                </select>
+            </div>
+
+            <div class="c-field">
+                <label>Langue principale <span class="req">*</span></label>
+                <select class="c-select" id="communityLang">
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="en">🇺🇸 English</option>
+                    <option value="yo">🇳🇬 Yoruba</option>
+                    <option value="fon">🇧🇯 Fon</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="pt">🇵🇹 Português</option>
+                    <option value="ar">🇸🇦 العربية</option>
+                    <option value="sw">🇰🇪 Kiswahili</option>
+                </select>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-primary step-next" id="step1Next">
+                    Continuer <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ÉTAPE 2 : Visuel -->
+        <div class="setup-step-content hidden" id="step2">
+            <div class="step-header">
+                <div class="step-icon"><i class="fas fa-palette"></i></div>
+                <h2>L'identité visuelle</h2>
+                <p>Une photo et une bannière pour que ta communauté soit reconnaissable.</p>
+            </div>
+
+            <!-- Photo de profil -->
+            <div class="c-field">
+                <label>Photo de profil <span class="req">*</span></label>
+                <div class="avatar-picker" id="avatarPicker">
+                    <div class="avatar-preview" id="avatarPreview">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="avatar-picker-info">
+                        <p>Clique pour choisir ta photo</p>
+                        <small>JPG, PNG, WebP · Max 800 Ko · Carré recommandé</small>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*" style="display:none">
+                </div>
+            </div>
+
+            <!-- Photo de couverture -->
+            <div class="c-field">
+                <label>Photo de couverture <span class="req">*</span></label>
+                <div class="cover-picker" id="coverPicker">
+                    <div class="cover-preview" id="coverPreview">
+                        <i class="fas fa-image"></i>
+                        <span>Choisir une couverture</span>
+                    </div>
+                    <input type="file" id="coverInput" accept="image/*" style="display:none">
+                </div>
+                <span class="field-hint">Format paysage recommandé (1200×400px) · Max 2 Mo</span>
+            </div>
+
+            <!-- Aperçu mini profil -->
+            <div class="profile-preview-card" id="profilePreviewCard">
+                <div class="preview-cover" id="previewCoverBg"></div>
+                <div class="preview-avatar-wrap">
+                    <div class="preview-avatar" id="previewAvatarEl"><i class="fas fa-user"></i></div>
+                </div>
+                <div class="preview-info">
+                    <h4 id="previewName">Nom de ta communauté</h4>
+                    <p id="previewHandle">@identifiant</p>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-ghost" id="step2Back"><i class="fas fa-arrow-left"></i> Retour</button>
+                <button class="btn-primary" id="step2Next">Continuer <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- ÉTAPE 3 : Sport & Confidentialité -->
+        <div class="setup-step-content hidden" id="step3">
+            <div class="step-header">
+                <div class="step-icon"><i class="fas fa-futbol"></i></div>
+                <h2>Ton sport & tes réglages</h2>
+                <p>Dis-nous pour quel sport tu es passionné et comment gérer ta visibilité.</p>
+            </div>
+
+            <div class="c-field">
+                <label>Sport principal <span class="req">*</span></label>
+                <div class="sport-grid" id="sportGrid">
+                    <!-- Généré par JS -->
+                </div>
+                <input type="hidden" id="selectedSport" value="">
+            </div>
+
+            <div class="c-field">
+                <label>Spécialité / Poste <span class="hint">(optionnel)</span></label>
+                <input type="text" class="c-input" id="communitySpecialty"
+                    placeholder="Ex: Gardien de but, Sprinter 100m, Coach défensif...">
+            </div>
+
+            <div class="c-field">
+                <label>Lien site web ou réseaux sociaux <span class="hint">(optionnel)</span></label>
+                <input type="url" class="c-input" id="communityWebsite"
+                    placeholder="https://...">
+            </div>
+
+            <div class="c-field">
+                <label>Confidentialité de la communauté <span class="req">*</span></label>
+                <div class="privacy-options">
+                    <label class="privacy-option active" data-value="public">
+                        <input type="radio" name="privacy" value="public" checked>
+                        <div class="privacy-opt-body">
+                            <i class="fas fa-globe"></i>
+                            <div>
+                                <strong>Publique</strong>
+                                <p>Tout le monde peut voir tes publications</p>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="privacy-option" data-value="followers">
+                        <input type="radio" name="privacy" value="followers">
+                        <div class="privacy-opt-body">
+                            <i class="fas fa-user-friends"></i>
+                            <div>
+                                <strong>Abonnés uniquement</strong>
+                                <p>Seuls tes abonnés voient ton contenu</p>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="privacy-option" data-value="private">
+                        <input type="radio" name="privacy" value="private">
+                        <div class="privacy-opt-body">
+                            <i class="fas fa-lock"></i>
+                            <div>
+                                <strong>Privée</strong>
+                                <p>Visible uniquement sur invitation</p>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-ghost" id="step3Back"><i class="fas fa-arrow-left"></i> Retour</button>
+                <button class="btn-primary" id="step3Next">Continuer <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- ÉTAPE 4 : Récapitulatif & Confirmation -->
+        <div class="setup-step-content hidden" id="step4">
+            <div class="step-header">
+                <div class="step-icon gold"><i class="fas fa-check-circle"></i></div>
+                <h2>Tout est prêt !</h2>
+                <p>Vérifie tes informations avant de créer ta communauté.</p>
+            </div>
+
+            <div class="recap-card" id="recapCard">
+                <!-- Généré par JS -->
+            </div>
+
+            <div class="terms-box">
+                <label class="terms-label">
+                    <input type="checkbox" id="termsAccept">
+                    <span>J'accepte les <a href="#" target="_blank">Conditions d'utilisation</a> et la <a href="#" target="_blank">Politique de confidentialité</a> de HubISoccer. Je m'engage à respecter les valeurs de la communauté sportive.</span>
+                </label>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-ghost" id="step4Back"><i class="fas fa-arrow-left"></i> Modifier</button>
+                <button class="btn-gold" id="createCommunityBtn" disabled>
+                    <i class="fas fa-rocket"></i> Lancer ma communauté
+                </button>
+            </div>
+        </div>
+
+    </div><!-- /setup-card -->
+
+    <!-- SUCCÈS -->
+    <div class="setup-success hidden" id="setupSuccess">
+        <div class="success-animation">
+            <div class="success-circle">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+        <h2>Ta communauté est créée ! 🎉</h2>
+        <p>Bienvenue dans l'univers HubISoccer. Ton identifiant unique est :</p>
+        <div class="success-id" id="successId">@identifiant</div>
+        <p class="success-note">Garde précieusement cet identifiant. Il te sera demandé pour les messages, tournois et transactions.</p>
+        <button class="btn-gold" id="goToCommunityBtn">
+            <i class="fas fa-users"></i> Aller dans ma communauté
+        </button>
+    </div>
+
+</main>
+<!-- ===== FIN CONTENU SETUP ===== -->
+
+<!-- ===== DEBUT TOAST CONTAINER ===== -->
+<div class="c-toast-container" id="toastContainer"></div>
+<!-- ===== FIN TOAST CONTAINER ===== -->
+
+<!-- ===== DEBUT SCRIPT ===== -->
+<script src="feed-setup.js"></script>
+<!-- ===== FIN SCRIPT ===== -->
+</body>
+</html>

@@ -1194,7 +1194,6 @@ img {
     overflow: hidden;
 }
 
-/* Barre latérale colorée */
 .toast::before {
     content: '';
     position: absolute;
@@ -1433,8 +1432,14 @@ img {
         display: none;
     }
 
+    /* Sélecteur de langue visible mais compact */
     .lang-picker {
-        display: none;
+        display: inline-block !important;
+        padding: 4px 8px;
+        font-size: 0.7rem;
+        max-width: 80px;
+        background: transparent;
+        border: 1px solid var(--gray-light);
     }
 
     .global-stats-grid {
@@ -1484,6 +1489,14 @@ img {
 
     .dashboard-footer {
         padding: 20px 16px;
+    }
+}
+
+/* Très petit écran : encore plus compact pour la langue */
+@media (max-width: 400px) {
+    .lang-picker {
+        max-width: 50px;
+        text-overflow: ellipsis;
     }
 }
 /* ===== FIN RESPONSIVE MOBILE ===== */

@@ -84,9 +84,24 @@
         </select>
 
         <!-- Notifications -->
-        <div class="notif-icon" id="notifIcon" title="Notifications">
-            <i class="fas fa-bell"></i>
-            <span class="notif-badge" id="notifBadge">0</span>
+        <div class="notif-wrapper">
+            <div class="notif-icon" id="notifIcon" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="notif-badge" id="notifBadge">0</span>
+            </div>
+            <!-- Panneau de notifications -->
+            <div class="notif-dropdown" id="notifDropdown">
+                <div class="notif-header">
+                    <h4>Notifications</h4>
+                    <button class="mark-all-read" id="markAllReadBtn">Tout marquer comme lu</button>
+                </div>
+                <div class="notif-list" id="notifList">
+                    <p class="notif-placeholder">Chargement…</p>
+                </div>
+                <div class="notif-footer">
+                    <a href="#" id="viewAllNotifLink">Voir toutes les notifications</a>
+                </div>
+            </div>
         </div>
 
         <!-- Menu utilisateur -->
@@ -208,6 +223,21 @@
 
 <!-- Overlay sidebar -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ======================================================
+     MODALE DÉTAIL NOTIFICATION
+====================================================== -->
+<div id="notificationModal" class="modal notif-modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal" id="closeNotifModal">&times;</span>
+        <h3 id="notifModalTitle">Titre</h3>
+        <p id="notifModalMessage">Message</p>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="closeNotifModalBtn">Fermer</button>
+            <button class="btn-primary" id="notifActionBtn">Voir</button>
+        </div>
+    </div>
+</div>
 
 <!-- ======================================================
      CONTENU PRINCIPAL

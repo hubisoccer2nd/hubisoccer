@@ -256,7 +256,7 @@ const COUNTRIES = [
 // Fin liste des pays
 
 // Début fonctions utilitaires
-function toast(msg, type='info', dur=4000) {
+function toast(msg, type='info', dur=10000) {
     const c = document.getElementById('toastContainer');
     const icons = {success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
     const el = document.createElement('div');

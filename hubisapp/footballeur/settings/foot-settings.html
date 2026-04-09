@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Paramètres · Footballeur | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="foot-settings.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-cog"></i> Paramètres Footballeur</span>
+    </div>
+    <div class="nav-right">
+        <a href="../dashboard/foot-dash.html" class="btn-back"><i class="fas fa-arrow-left"></i> Retour</a>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="settings-main">
+    <div class="settings-container">
+        <h1><i class="fas fa-sliders-h"></i> Paramètres du compte</h1>
+        <p class="subtitle">Gérez vos préférences, votre sécurité et vos données personnelles.</p>
+
+        <form id="settingsForm" class="settings-form">
+            <!-- ===== SECTION 1 : PRÉFÉRENCES DU COMPTE ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-user-circle"></i> Préférences du compte</legend>
+                <div class="form-group">
+                    <label>Changer l'email</label>
+                    <input type="email" id="new_email" placeholder="Nouvel email">
+                    <input type="password" id="email_password" placeholder="Mot de passe actuel pour confirmer">
+                    <button type="button" class="btn-secondary" id="updateEmailBtn">Mettre à jour l'email</button>
+                </div>
+                <div class="form-group">
+                    <label>Changer le mot de passe</label>
+                    <input type="password" id="current_password" placeholder="Mot de passe actuel">
+                    <input type="password" id="new_password" placeholder="Nouveau mot de passe">
+                    <input type="password" id="confirm_password" placeholder="Confirmer le nouveau mot de passe">
+                    <button type="button" class="btn-secondary" id="updatePasswordBtn">Mettre à jour le mot de passe</button>
+                </div>
+                <div class="form-group">
+                    <label>Téléphone secondaire</label>
+                    <input type="tel" id="secondary_phone" placeholder="+229 01 23 45 67">
+                    <button type="button" class="btn-secondary" id="updatePhoneBtn">Enregistrer</button>
+                </div>
+                <!-- 2FA (placeholder) -->
+                <div class="form-group">
+                    <label><i class="fas fa-shield-virus"></i> Authentification à deux facteurs (2FA)</label>
+                    <p class="info-note">Disponible prochainement.</p>
+                </div>
+            </fieldset>
+
+            <!-- ===== SECTION 2 : NOTIFICATIONS ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-bell"></i> Notifications</legend>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="notif_email_scouting"> <label for="notif_email_scouting">Scouting (vues, favoris)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="notif_email_messages"> <label for="notif_email_messages">Messages</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="notif_email_tournois"> <label for="notif_email_tournois">Tournois</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="notif_push"> <label for="notif_push">Notifications push navigateur</label>
+                </div>
+                <div class="form-group">
+                    <label>Fréquence des résumés</label>
+                    <select id="summary_frequency">
+                        <option value="instant">Instantané</option>
+                        <option value="daily">Quotidien</option>
+                        <option value="weekly">Hebdomadaire</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <!-- ===== SECTION 3 : CONFIDENTIALITÉ ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-lock"></i> Confidentialité</legend>
+                <div class="form-group">
+                    <label>Visibilité du profil</label>
+                    <select id="profile_visibility">
+                        <option value="public">Public</option>
+                        <option value="recruiters">Recruteurs uniquement</option>
+                        <option value="private">Privé</option>
+                    </select>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show_age"> <label for="show_age">Afficher mon âge</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show_location"> <label for="show_location">Afficher ma localisation</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show_club"> <label for="show_club">Afficher mon club</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="allow_cv_download"> <label for="allow_cv_download">Autoriser le téléchargement de mon CV</label>
+                </div>
+                <div class="form-group">
+                    <label>Bloquer des utilisateurs (ID ou email)</label>
+                    <textarea id="blocked_users" rows="2" placeholder="Un par ligne"></textarea>
+                </div>
+            </fieldset>
+
+            <!-- ===== SECTION 4 : LANGUE ET ACCESSIBILITÉ ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-language"></i> Langue et accessibilité</legend>
+                <div class="form-group">
+                    <label>Langue de l'interface</label>
+                    <select id="interface_language">
+                        <option value="fr">Français</option>
+                        <option value="en">English</option>
+                        <option value="yo">Yoruba</option>
+                        <option value="fon">Fon</option>
+                        <!-- ... ajouter toutes les langues si nécessaire -->
+                    </select>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="high_contrast"> <label for="high_contrast">Mode contraste élevé</label>
+                </div>
+                <div class="form-group">
+                    <label>Taille de police</label>
+                    <select id="font_size">
+                        <option value="normal">Normale</option>
+                        <option value="large">Grande</option>
+                        <option value="xlarge">Très grande</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <!-- ===== SECTION 5 : APPAREILS ET SESSIONS ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-laptop"></i> Appareils et sessions</legend>
+                <div id="sessionsList" class="sessions-list">
+                    <p>Chargement des sessions actives…</p>
+                </div>
+                <button type="button" class="btn-danger" id="logoutAllDevicesBtn">Se déconnecter de tous les autres appareils</button>
+            </fieldset>
+
+            <!-- ===== SECTION 6 : PAIEMENTS ET ABONNEMENTS ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-credit-card"></i> Paiements et abonnements</legend>
+                <p class="info-note">Gérez vos moyens de paiement et consultez l'historique.</p>
+                <a href="#" class="btn-secondary">Gérer les paiements</a>
+            </fieldset>
+
+            <!-- ===== SECTION 7 : DONNÉES PERSONNELLES ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-database"></i> Données personnelles</legend>
+                <button type="button" class="btn-secondary" id="exportDataBtn">Exporter mes données (JSON)</button>
+                <button type="button" class="btn-warning" id="requestDataDeletionBtn">Demander la suppression de mes données</button>
+            </fieldset>
+
+            <!-- ===== SECTION 8 : SÉCURITÉ AVANCÉE ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-shield-alt"></i> Sécurité avancée</legend>
+                <div id="loginLogs" class="logs-preview">
+                    <p>Dernières connexions :</p>
+                    <!-- rempli dynamiquement -->
+                </div>
+                <button type="button" class="btn-secondary" id="viewAllLogsBtn">Voir tout l'historique</button>
+            </fieldset>
+
+            <!-- ===== SECTION 9 : SUPPRESSION DU COMPTE ===== -->
+            <fieldset class="form-section danger-zone">
+                <legend><i class="fas fa-exclamation-triangle"></i> Suppression du compte</legend>
+                <p>Une fois la demande effectuée, vous disposez de 48h pour l'annuler.</p>
+                <button type="button" class="btn-danger" id="deleteAccountBtn">Supprimer mon compte</button>
+                <button type="button" class="btn-warning" id="revokeDeletionBtn" style="display:none;">Révoquer la suppression</button>
+                <p id="deletionStatus" class="deletion-status"></p>
+            </fieldset>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Enregistrer tous les paramètres</button>
+            </div>
+        </form>
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== MODALE CONFIRMATION ===== -->
+<div id="confirmModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal" id="closeConfirmModal">&times;</span>
+        <h3 id="confirmModalTitle">Confirmation</h3>
+        <p id="confirmModalMessage"></p>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="cancelConfirmBtn">Annuler</button>
+            <button class="btn-danger" id="confirmActionBtn">Confirmer</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== SCRIPT ===== -->
+<script src="foot-settings.js"></script>
+</body>
+</html>

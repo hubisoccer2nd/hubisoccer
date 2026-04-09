@@ -14,11 +14,12 @@ window.__SUPABASE_CLIENT = supabaseClient;
 // Fin configuration Supabase
 
 // Début état global
-let currentUser       = null;
+let currentUser        = null;
 let footballeurProfile = null;
-let scoutingData      = null;
+let scoutingData       = null;
 
-const AVATAR_BUCKET = 'avatars';
+const AVATAR_BUCKET    = 'avatars-footballeur';   // Bucket spécifique au rôle footballeur
+const MAX_AVATAR_SIZE  = 800 * 1024;              // 800 Ko
 // Fin état global
 
 // Début fonction showLoader
@@ -90,14 +91,65 @@ function setText(id, value) {
 // Fin fonction setText
 
 // Début fonction formatMoney
-function formatMoney(value) {
-    if (!value || isNaN(value)) return '— €';
+function formatMoney(value, countryCode = 'FR') {
+    if (!value || isNaN(value)) return '—';
     const num = Number(value);
-    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + ' M€';
-    if (num >= 1_000)     return (num / 1_000).toFixed(0) + ' K€';
-    return num.toLocaleString('fr-FR') + ' €';
+    const currency = getCurrencyFromCountry(countryCode);
+    const formatted = new Intl.NumberFormat(currency.locale, {
+        style: 'currency',
+        currency: currency.code,
+        maximumFractionDigits: 0
+    }).format(num);
+    return formatted;
 }
 // Fin fonction formatMoney
+
+// Début fonction getCurrencyFromCountry
+function getCurrencyFromCountry(countryCode) {
+    const currencyMap = {
+        'BJ': { code: 'XOF', locale: 'fr-BJ' }, // Franc CFA (BCEAO)
+        'BF': { code: 'XOF', locale: 'fr-BF' },
+        'CI': { code: 'XOF', locale: 'fr-CI' },
+        'GW': { code: 'XOF', locale: 'pt-GW' },
+        'ML': { code: 'XOF', locale: 'fr-ML' },
+        'NE': { code: 'XOF', locale: 'fr-NE' },
+        'SN': { code: 'XOF', locale: 'fr-SN' },
+        'TG': { code: 'XOF', locale: 'fr-TG' },
+        'CM': { code: 'XAF', locale: 'fr-CM' }, // Franc CFA (BEAC)
+        'CF': { code: 'XAF', locale: 'fr-CF' },
+        'TD': { code: 'XAF', locale: 'fr-TD' },
+        'CG': { code: 'XAF', locale: 'fr-CG' },
+        'GQ': { code: 'XAF', locale: 'es-GQ' },
+        'GA': { code: 'XAF', locale: 'fr-GA' },
+        'FR': { code: 'EUR', locale: 'fr-FR' }, // Euro
+        'DE': { code: 'EUR', locale: 'de-DE' },
+        'IT': { code: 'EUR', locale: 'it-IT' },
+        'ES': { code: 'EUR', locale: 'es-ES' },
+        'PT': { code: 'EUR', locale: 'pt-PT' },
+        'NL': { code: 'EUR', locale: 'nl-NL' },
+        'BE': { code: 'EUR', locale: 'fr-BE' },
+        'LU': { code: 'EUR', locale: 'fr-LU' },
+        'US': { code: 'USD', locale: 'en-US' }, // Dollar US
+        'GB': { code: 'GBP', locale: 'en-GB' }, // Livre Sterling
+        'NG': { code: 'NGN', locale: 'en-NG' }, // Naira
+        'GH': { code: 'GHS', locale: 'en-GH' }, // Cedi
+        'ZA': { code: 'ZAR', locale: 'en-ZA' }, // Rand
+        'KE': { code: 'KES', locale: 'sw-KE' }, // Shilling kényan
+        'MA': { code: 'MAD', locale: 'ar-MA' }, // Dirham marocain
+        'DZ': { code: 'DZD', locale: 'ar-DZ' }, // Dinar algérien
+        'TN': { code: 'TND', locale: 'ar-TN' }, // Dinar tunisien
+        'EG': { code: 'EGP', locale: 'ar-EG' }, // Livre égyptienne
+        'RU': { code: 'RUB', locale: 'ru-RU' }, // Rouble
+        'CN': { code: 'CNY', locale: 'zh-CN' }, // Yuan
+        'JP': { code: 'JPY', locale: 'ja-JP' }, // Yen
+        'IN': { code: 'INR', locale: 'hi-IN' }, // Roupie indienne
+        'BR': { code: 'BRL', locale: 'pt-BR' }, // Real
+        'CA': { code: 'CAD', locale: 'en-CA' }, // Dollar canadien
+        'AU': { code: 'AUD', locale: 'en-AU' }, // Dollar australien
+    };
+    return currencyMap[countryCode] || { code: 'EUR', locale: 'fr-FR' };
+}
+// Fin fonction getCurrencyFromCountry
 
 // Début fonction calculateAge
 function calculateAge(dateString) {
@@ -140,7 +192,7 @@ const flagMap = {
     'EC': '🇪🇨', 'ER': '🇪🇷', 'ES': '🇪🇸', 'EE': '🇪🇪', 'SZ': '🇸🇿',
     'US': '🇺🇸', 'ET': '🇪🇹', 'FJ': '🇫🇯', 'FI': '🇫🇮', 'FR': '🇫🇷',
     'GA': '🇬🇦', 'GM': '🇬🇲', 'GE': '🇬🇪', 'GH': '🇬🇭', 'GR': '🇬🇷',
-    'GD': '🇬🇩', 'GT': '🇬🇹', 'GN': '🇬🇳', 'GW': '🇬🇼', 'GQ': '🇬🇶',
+    'GD': '🇬🇩', 'GT': '🇬🇹', 'GN': '🇬🇳', 'GW': '🇬🇼', 'GQ': '🇬�600',
     'GY': '🇬🇾', 'HT': '🇭🇹', 'HN': '🇭🇳', 'HU': '🇭🇺', 'IN': '🇮🇳',
     'ID': '🇮🇩', 'IQ': '🇮🇶', 'IR': '🇮🇷', 'IE': '🇮🇪', 'IS': '🇮🇸',
     'IL': '🇮🇱', 'IT': '🇮🇹', 'JM': '🇯🇲', 'JP': '🇯🇵', 'JO': '🇯🇴',
@@ -204,7 +256,6 @@ async function loadFootballeurProfile() {
 
     footballeurProfile = data;
 
-    // Vérification du rôle
     if (footballeurProfile.role_code !== 'FOOT') {
         showToast('Accès réservé aux footballeurs', 'error');
         setTimeout(() => {
@@ -351,7 +402,7 @@ function updateUIWithProfile() {
     setText('footballeurHeight', footballeurProfile.height || '0');
     setText('footballeurWeight', footballeurProfile.weight || '0');
 
-    const countryCode = footballeurProfile.country || '';
+    const countryCode = footballeurProfile.country || 'FR';
     const flag        = flagMap[countryCode] || '🌍';
     setText('footballeurCountryFlag', flag);
     setText('footballeurCountryName', countryCode || '—');
@@ -372,14 +423,15 @@ function updateScoutingUI() {
     if (!scoutingData) return;
 
     const s = scoutingData;
+    const countryCode = footballeurProfile?.country || 'FR';
 
     setText('currentLevel', s.niveau_actuel   || 0);
     setText('potential',    s.potentiel       || 0);
     setText('personality',  s.personnalite    || 0);
-    setText('marketValue',  formatMoney(s.valeur_marche || 0));
+    setText('marketValue',  formatMoney(s.valeur_marche || 0, countryCode));
 
     setText('loanFrom',       s.pret_info  || '—');
-    setText('salary',         s.salaire    ? formatMoney(s.salaire) : '—');
+    setText('salary',         s.salaire    ? formatMoney(s.salaire, countryCode) : '—');
     setText('contractExpiry', s.expire_le
         ? new Date(s.expire_le).toLocaleDateString('fr-FR')
         : '—'
@@ -501,8 +553,8 @@ function updateMainSkills() {
 async function uploadAvatar(file) {
     if (!currentUser || !footballeurProfile) return;
 
-    if (file.size > 3 * 1024 * 1024) {
-        showToast('L\'image ne doit pas dépasser 3 Mo', 'warning');
+    if (file.size > MAX_AVATAR_SIZE) {
+        showToast(`L'image ne doit pas dépasser ${MAX_AVATAR_SIZE / 1024} Ko`, 'warning');
         return;
     }
 
@@ -515,7 +567,7 @@ async function uploadAvatar(file) {
     showLoader();
 
     const fileExt  = file.name.split('.').pop().toLowerCase();
-    const fileName = `footballeur_${currentUser.id}_${Date.now()}.${fileExt}`;
+    const fileName = `${footballeurProfile.hubisoccer_id}_${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabaseClient
         .storage

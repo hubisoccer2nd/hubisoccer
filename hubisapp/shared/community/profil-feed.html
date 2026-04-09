@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Profil | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="profil-feed.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="c-loader" style="display:none;">
+    <div class="c-spinner"></div>
+    <div class="c-loader-bar-wrap"><div class="c-loader-bar" id="loaderBar" style="width:0%"></div></div>
+    <span class="c-loader-text" id="loaderText">Chargement du profil...</span>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="c-nav">
+    <div class="c-nav-left">
+        <button class="c-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="c-nav-logo" id="navLogo">
+        <span class="c-nav-title" id="navSpaceTitle">Profil</span>
+    </div>
+    <div class="c-nav-right">
+        <select class="c-lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 FR</option>
+            <option value="en">🇺🇸 EN</option>
+        </select>
+        <button class="c-notif-btn" id="notifBtn">
+            <i class="fas fa-bell"></i>
+            <span class="c-notif-badge" id="notifBadge" style="display:none">0</span>
+        </button>
+        <div class="c-user-menu" id="userMenu">
+            <img src="../../img/user-default.jpg" class="c-user-avatar" id="userAvatar" alt="">
+            <span class="c-user-name" id="userName">...</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="c-user-dropdown" id="userDropdown">
+                <a href="#" id="dropProfile"><i class="fas fa-user"></i> Mon profil</a>
+                <a href="#" id="dropDashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="#" id="dropMessages"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="#" id="dropSettings"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr>
+                <button id="dropLogout" class="c-logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+            </div>
+        </div>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT OVERLAY ===== -->
+<div class="c-overlay" id="overlay"></div>
+<!-- ===== FIN OVERLAY ===== -->
+
+<!-- ===== DEBUT SIDEBAR GAUCHE ===== -->
+<aside class="c-sidebar-left" id="leftSidebar">
+    <div class="c-sidebar-head">
+        <h3 id="sidebarRoleTitle">Menu</h3>
+        <button class="c-sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="c-sidebar-nav" id="sidebarNav"></nav>
+</aside>
+<!-- ===== FIN SIDEBAR GAUCHE ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="profile-main">
+    <!-- En-tête du profil -->
+    <div class="profile-header">
+        <div class="profile-cover" id="profileCover"></div>
+        <div class="profile-avatar-wrap">
+            <img id="profileAvatar" src="../../img/user-default.jpg" alt="" class="profile-avatar">
+            <div class="profile-certified" id="profileCertified" style="display:none">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="profile-header-content">
+            <div class="profile-info">
+                <h1 id="profileName">...</h1>
+                <p id="profileHandle">@...</p>
+                <p id="profileBio" class="profile-bio"></p>
+                <div class="profile-meta">
+                    <span><i class="fas fa-map-marker-alt"></i> <span id="profileLocation">...</span></span>
+                    <span><i class="fas fa-calendar-alt"></i> Inscrit le <span id="profileJoined">...</span></span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat"><strong id="profileFollowers">0</strong> abonnés</div>
+                    <div class="stat"><strong id="profileFollowing">0</strong> abonnements</div>
+                    <div class="stat"><strong id="profilePosts">0</strong> publications</div>
+                </div>
+            </div>
+            <div class="profile-actions" id="profileActions">
+                <!-- Boutons dynamiques : S'abonner, Message, Modifier, etc. -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglets -->
+    <div class="profile-tabs">
+        <button class="profile-tab active" data-tab="posts">Publications</button>
+        <button class="profile-tab" data-tab="about">À propos</button>
+        <button class="profile-tab" data-tab="media">Photos</button>
+        <button class="profile-tab" data-tab="videos">Vidéos</button>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="profile-tab-content">
+        <!-- Onglet Publications -->
+        <div id="tab-posts" class="tab-pane active">
+            <div class="posts-grid" id="profilePostsGrid">
+                <!-- Grille des posts -->
+            </div>
+            <div id="loadMorePostsWrap" style="text-align:center;padding:20px;display:none">
+                <button class="btn-ghost" id="loadMorePostsBtn">Charger plus</button>
+            </div>
+        </div>
+
+        <!-- Onglet À propos -->
+        <div id="tab-about" class="tab-pane">
+            <div class="about-sections">
+                <!-- Section Identité -->
+                <section class="about-section">
+                    <h2><i class="fas fa-id-card"></i> Identité</h2>
+                    <div class="about-grid" id="aboutIdentity"></div>
+                </section>
+                <!-- Section Sport -->
+                <section class="about-section">
+                    <h2><i class="fas fa-futbol"></i> Volet Sportif</h2>
+                    <div class="about-grid" id="aboutSport"></div>
+                </section>
+                <!-- Section Études -->
+                <section class="about-section">
+                    <h2><i class="fas fa-graduation-cap"></i> Études & Formations</h2>
+                    <div class="about-grid" id="aboutStudies"></div>
+                </section>
+                <!-- Section Carrière -->
+                <section class="about-section">
+                    <h2><i class="fas fa-briefcase"></i> Carrière & Métier</h2>
+                    <div class="about-grid" id="aboutCareer"></div>
+                </section>
+                <!-- Section Entraide -->
+                <section class="about-section">
+                    <h2><i class="fas fa-handshake"></i> Entraide & Réseau</h2>
+                    <div class="about-grid" id="aboutHelp"></div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Onglet Photos -->
+        <div id="tab-media" class="tab-pane">
+            <div class="media-grid" id="photosGrid"></div>
+        </div>
+
+        <!-- Onglet Vidéos -->
+        <div id="tab-videos" class="tab-pane">
+            <div class="media-grid" id="videosGrid"></div>
+        </div>
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== MODALES ===== -->
+<!-- Profil rapide, zoom média, partage, signalement, confirmation -->
+<div id="modalUserProfile" class="c-modal">...</div>
+<div id="modalMedia" class="c-modal">...</div>
+<div id="modalShare" class="c-modal">...</div>
+<div id="modalReport" class="c-modal">...</div>
+<div id="modalConfirm" class="c-modal">...</div>
+
+<!-- ===== TOASTS ===== -->
+<div id="toastContainer" class="c-toast-container"></div>
+
+<script src="profil-feed.js"></script>
+</body>
+</html>

@@ -20,6 +20,11 @@ let scoutingData       = null;
 
 const AVATAR_BUCKET    = 'avatars-footballeur';   // Bucket spécifique au rôle footballeur
 const MAX_AVATAR_SIZE  = 800 * 1024;              // 800 Ko
+
+// Notifications
+let notificationsUnreadCount = 0;
+let notificationSubscription = null;
+let currentNotificationData = null; // pour la modale
 // Fin état global
 
 // Début fonction showLoader
@@ -107,7 +112,7 @@ function formatMoney(value, countryCode = 'FR') {
 // Début fonction getCurrencyFromCountry
 function getCurrencyFromCountry(countryCode) {
     const currencyMap = {
-        'BJ': { code: 'XOF', locale: 'fr-BJ' }, // Franc CFA (BCEAO)
+        'BJ': { code: 'XOF', locale: 'fr-BJ' },
         'BF': { code: 'XOF', locale: 'fr-BF' },
         'CI': { code: 'XOF', locale: 'fr-CI' },
         'GW': { code: 'XOF', locale: 'pt-GW' },
@@ -115,13 +120,13 @@ function getCurrencyFromCountry(countryCode) {
         'NE': { code: 'XOF', locale: 'fr-NE' },
         'SN': { code: 'XOF', locale: 'fr-SN' },
         'TG': { code: 'XOF', locale: 'fr-TG' },
-        'CM': { code: 'XAF', locale: 'fr-CM' }, // Franc CFA (BEAC)
+        'CM': { code: 'XAF', locale: 'fr-CM' },
         'CF': { code: 'XAF', locale: 'fr-CF' },
         'TD': { code: 'XAF', locale: 'fr-TD' },
         'CG': { code: 'XAF', locale: 'fr-CG' },
         'GQ': { code: 'XAF', locale: 'es-GQ' },
         'GA': { code: 'XAF', locale: 'fr-GA' },
-        'FR': { code: 'EUR', locale: 'fr-FR' }, // Euro
+        'FR': { code: 'EUR', locale: 'fr-FR' },
         'DE': { code: 'EUR', locale: 'de-DE' },
         'IT': { code: 'EUR', locale: 'it-IT' },
         'ES': { code: 'EUR', locale: 'es-ES' },
@@ -129,23 +134,23 @@ function getCurrencyFromCountry(countryCode) {
         'NL': { code: 'EUR', locale: 'nl-NL' },
         'BE': { code: 'EUR', locale: 'fr-BE' },
         'LU': { code: 'EUR', locale: 'fr-LU' },
-        'US': { code: 'USD', locale: 'en-US' }, // Dollar US
-        'GB': { code: 'GBP', locale: 'en-GB' }, // Livre Sterling
-        'NG': { code: 'NGN', locale: 'en-NG' }, // Naira
-        'GH': { code: 'GHS', locale: 'en-GH' }, // Cedi
-        'ZA': { code: 'ZAR', locale: 'en-ZA' }, // Rand
-        'KE': { code: 'KES', locale: 'sw-KE' }, // Shilling kényan
-        'MA': { code: 'MAD', locale: 'ar-MA' }, // Dirham marocain
-        'DZ': { code: 'DZD', locale: 'ar-DZ' }, // Dinar algérien
-        'TN': { code: 'TND', locale: 'ar-TN' }, // Dinar tunisien
-        'EG': { code: 'EGP', locale: 'ar-EG' }, // Livre égyptienne
-        'RU': { code: 'RUB', locale: 'ru-RU' }, // Rouble
-        'CN': { code: 'CNY', locale: 'zh-CN' }, // Yuan
-        'JP': { code: 'JPY', locale: 'ja-JP' }, // Yen
-        'IN': { code: 'INR', locale: 'hi-IN' }, // Roupie indienne
-        'BR': { code: 'BRL', locale: 'pt-BR' }, // Real
-        'CA': { code: 'CAD', locale: 'en-CA' }, // Dollar canadien
-        'AU': { code: 'AUD', locale: 'en-AU' }, // Dollar australien
+        'US': { code: 'USD', locale: 'en-US' },
+        'GB': { code: 'GBP', locale: 'en-GB' },
+        'NG': { code: 'NGN', locale: 'en-NG' },
+        'GH': { code: 'GHS', locale: 'en-GH' },
+        'ZA': { code: 'ZAR', locale: 'en-ZA' },
+        'KE': { code: 'KES', locale: 'sw-KE' },
+        'MA': { code: 'MAD', locale: 'ar-MA' },
+        'DZ': { code: 'DZD', locale: 'ar-DZ' },
+        'TN': { code: 'TND', locale: 'ar-TN' },
+        'EG': { code: 'EGP', locale: 'ar-EG' },
+        'RU': { code: 'RUB', locale: 'ru-RU' },
+        'CN': { code: 'CNY', locale: 'zh-CN' },
+        'JP': { code: 'JPY', locale: 'ja-JP' },
+        'IN': { code: 'INR', locale: 'hi-IN' },
+        'BR': { code: 'BRL', locale: 'pt-BR' },
+        'CA': { code: 'CAD', locale: 'en-CA' },
+        'AU': { code: 'AUD', locale: 'en-AU' },
     };
     return currencyMap[countryCode] || { code: 'EUR', locale: 'fr-FR' };
 }
@@ -751,6 +756,251 @@ function triggerUpload() {
 }
 // Fin fonction triggerUpload
 
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+// Début fonction fetchNotifications
+async function fetchNotifications(limit = 20) {
+    if (!footballeurProfile) return [];
+    const { data, error } = await supabaseClient
+        .from('supabaseAuthPrive_notifications')
+        .select('*')
+        .eq('recipient_hubisoccer_id', footballeurProfile.hubisoccer_id)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+    if (error) {
+        console.error('Erreur chargement notifications:', error);
+        return [];
+    }
+    return data;
+}
+// Fin fonction fetchNotifications
+
+// Début fonction updateNotificationBadge
+async function updateNotificationBadge() {
+    if (!footballeurProfile) return;
+    const { count, error } = await supabaseClient
+        .from('supabaseAuthPrive_notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_hubisoccer_id', footballeurProfile.hubisoccer_id)
+        .eq('read', false);
+    if (error) return;
+    notificationsUnreadCount = count || 0;
+    const badge = document.getElementById('notifBadge');
+    if (badge) {
+        badge.textContent = notificationsUnreadCount;
+        badge.style.display = notificationsUnreadCount > 0 ? 'inline-block' : 'none';
+    }
+}
+// Fin fonction updateNotificationBadge
+
+// Début fonction renderNotificationList
+async function renderNotificationList() {
+    const notifList = document.getElementById('notifList');
+    if (!notifList) return;
+    const notifications = await fetchNotifications(20);
+    if (notifications.length === 0) {
+        notifList.innerHTML = '<p class="notif-placeholder">Aucune notification</p>';
+        return;
+    }
+    let html = '';
+    notifications.forEach(n => {
+        const date = new Date(n.created_at).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+        const unreadClass = n.read ? '' : 'unread';
+        html += `
+            <div class="notif-item ${unreadClass}" data-id="${n.id}" data-title="${escapeHtml(n.title)}" data-message="${escapeHtml(n.message || '')}" data-link="${n.data?.link || ''}">
+                <div class="notif-icon-small"><i class="fas fa-${getIconForType(n.type)}"></i></div>
+                <div class="notif-content">
+                    <div class="notif-title">${escapeHtml(n.title)}</div>
+                    <div class="notif-message">${escapeHtml(n.message || '')}</div>
+                    <div class="notif-time">${date}</div>
+                </div>
+                ${!n.read ? '<span class="unread-dot"></span>' : ''}
+            </div>
+        `;
+    });
+    notifList.innerHTML = html;
+    // Attacher événements de clic
+    document.querySelectorAll('.notif-item').forEach(item => {
+        item.addEventListener('click', async (e) => {
+            const id = item.dataset.id;
+            const title = item.dataset.title;
+            const message = item.dataset.message;
+            const link = item.dataset.link;
+            // Marquer comme lue
+            await markNotificationAsRead(id);
+            // Afficher modale
+            showNotificationModal(title, message, link);
+            // Fermer dropdown
+            document.getElementById('notifDropdown').classList.remove('show');
+        });
+    });
+}
+// Fin fonction renderNotificationList
+
+// Début fonction escapeHtml (pour notifications)
+function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+}
+// Fin fonction escapeHtml
+
+// Début fonction getIconForType
+function getIconForType(type) {
+    const icons = {
+        'info': 'info-circle',
+        'success': 'check-circle',
+        'warning': 'exclamation-triangle',
+        'error': 'exclamation-circle',
+        'message': 'envelope',
+        'scout': 'binoculars',
+        'tournament': 'trophy'
+    };
+    return icons[type] || 'bell';
+}
+// Fin fonction getIconForType
+
+// Début fonction markNotificationAsRead
+async function markNotificationAsRead(notificationId) {
+    const { error } = await supabaseClient
+        .from('supabaseAuthPrive_notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
+    if (!error) {
+        await updateNotificationBadge();
+    }
+}
+// Fin fonction markNotificationAsRead
+
+// Début fonction markAllNotificationsAsRead
+async function markAllNotificationsAsRead() {
+    if (!footballeurProfile) return;
+    const { error } = await supabaseClient
+        .from('supabaseAuthPrive_notifications')
+        .update({ read: true })
+        .eq('recipient_hubisoccer_id', footballeurProfile.hubisoccer_id)
+        .eq('read', false);
+    if (!error) {
+        await updateNotificationBadge();
+        await renderNotificationList();
+        showToast('Toutes les notifications ont été marquées comme lues', 'success');
+    }
+}
+// Fin fonction markAllNotificationsAsRead
+
+// Début fonction showNotificationModal
+function showNotificationModal(title, message, link) {
+    const modal = document.getElementById('notificationModal');
+    document.getElementById('notifModalTitle').textContent = title;
+    document.getElementById('notifModalMessage').textContent = message;
+    currentNotificationData = { link };
+    modal.style.display = 'flex';
+    const actionBtn = document.getElementById('notifActionBtn');
+    if (link) {
+        actionBtn.style.display = 'inline-flex';
+        actionBtn.onclick = () => { window.location.href = link; };
+    } else {
+        actionBtn.style.display = 'none';
+    }
+}
+// Fin fonction showNotificationModal
+
+// Début fonction subscribeToRealtimeNotifications
+function subscribeToRealtimeNotifications() {
+    if (!footballeurProfile) return;
+    if (notificationSubscription) {
+        supabaseClient.removeChannel(notificationSubscription);
+    }
+    notificationSubscription = supabaseClient
+        .channel('notifications')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'supabaseAuthPrive_notifications',
+            filter: `recipient_hubisoccer_id=eq.${footballeurProfile.hubisoccer_id}`
+        }, (payload) => {
+            const newNotif = payload.new;
+            updateNotificationBadge();
+            showToast(newNotif.title, 'info', 6000);
+            if (document.getElementById('notifDropdown').classList.contains('show')) {
+                renderNotificationList();
+            }
+        })
+        .subscribe();
+}
+// Fin fonction subscribeToRealtimeNotifications
+
+// Début fonction initNotificationUI
+function initNotificationUI() {
+    const notifIcon = document.getElementById('notifIcon');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const markAllBtn = document.getElementById('markAllReadBtn');
+
+    if (notifIcon) {
+        notifIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifDropdown.classList.toggle('show');
+            if (notifDropdown.classList.contains('show')) {
+                renderNotificationList();
+            }
+        });
+    }
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.notif-wrapper')) {
+            notifDropdown.classList.remove('show');
+        }
+    });
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', markAllNotificationsAsRead);
+    }
+
+    // Modal close
+    const modal = document.getElementById('notificationModal');
+    document.getElementById('closeNotifModal')?.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+    document.getElementById('closeNotifModalBtn')?.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+}
+// Fin fonction initNotificationUI
+
+// Début fonction requestPushPermission
+async function requestPushPermission() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array('BEl62lXpXfLzFz8sXxFpM5Lb6m1y6p1h2l4k5j6h7g8f9d0s1a2z3e4r5t6y7u8i9o0p') // Clé publique VAPID fictive, à remplacer par la vôtre
+    });
+    await supabaseClient.from('supabaseAuthPrive_push_subscriptions').upsert({
+        user_hubisoccer_id: footballeurProfile.hubisoccer_id,
+        endpoint: subscription.endpoint,
+        p256dh_key: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')))),
+        auth_key: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')))),
+        user_agent: navigator.userAgent
+    }, { onConflict: 'user_hubisoccer_id,endpoint' });
+}
+// Fin fonction requestPushPermission
+
+// Utilitaire pour VAPID
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 // Début initialisation DOMContentLoaded
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -765,6 +1015,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     initUserMenu();
     initSidebar();
     initAttrTabs();
+    initNotificationUI();
+
+    await updateNotificationBadge();
+    await renderNotificationList();
+    subscribeToRealtimeNotifications();
+    requestPushPermission(); // demande discrète de permission
 
     document.getElementById('fileInput')?.addEventListener('change', e => {
         const file = e.target.files?.[0];

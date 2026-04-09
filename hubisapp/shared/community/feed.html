@@ -18,7 +18,7 @@
 <div id="globalLoader" class="c-loader" style="display:none;">
     <div class="c-spinner"></div>
     <div class="c-loader-bar-wrap"><div class="c-loader-bar" id="loaderBar" style="width:0%"></div></div>
-    <span class="c-loader-text" id="loaderText">Chargement de ta communauté...</span>
+    <span class="c-loader-text" id="loaderText">Chargement du feed...</span>
 </div>
 <!-- ===== FIN LOADER GLOBAL ===== -->
 
@@ -30,13 +30,34 @@
         <span class="c-nav-title" id="navSpaceTitle">Ma Communauté</span>
     </div>
     <div class="c-nav-right">
+        <!-- Sélecteur 24 langues -->
         <select class="c-lang-picker" id="langSelect">
-            <option value="fr">🇫🇷 FR</option>
-            <option value="en">🇺🇸 EN</option>
-            <option value="es">🇪🇸 ES</option>
-            <option value="pt">🇵🇹 PT</option>
-            <option value="ar">🇸🇦 AR</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
         </select>
+        <!-- Notifications -->
         <button class="c-notif-btn" id="notifBtn">
             <i class="fas fa-bell"></i>
             <span class="c-notif-badge" id="notifBadge" style="display:none">0</span>
@@ -44,15 +65,18 @@
         <button class="c-notif-btn" id="rightSidebarToggle" title="Communauté">
             <i class="fas fa-users"></i>
         </button>
+        <!-- Menu utilisateur (avec initiales) -->
         <div class="c-user-menu" id="userMenu">
-            <img src="../../img/user-default.jpg" class="c-user-avatar" id="userAvatar" alt="">
+            <div class="user-avatar-container">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
             <span class="c-user-name" id="userName">...</span>
             <i class="fas fa-chevron-down fa-xs"></i>
             <div class="c-user-dropdown" id="userDropdown">
-                <a href="#" id="dropProfile"><i class="fas fa-user"></i> Mon profil</a>
+                <a href="profil-feed.html" id="dropProfile"><i class="fas fa-user"></i> Mon profil</a>
                 <a href="#" id="dropDashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
-                <a href="#" id="dropMessages"><i class="fas fa-envelope"></i> Messages</a>
-                <a href="#" id="dropSettings"><i class="fas fa-cog"></i> Paramètres</a>
+                <a href="../messagerie/conversation.html" id="dropMessages"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="../settings/foot-settings.html" id="dropSettings"><i class="fas fa-cog"></i> Paramètres</a>
                 <hr>
                 <button id="dropLogout" class="c-logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
             </div>
@@ -71,55 +95,363 @@
         <h3 id="sidebarRoleTitle">Menu</h3>
         <button class="c-sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
     </div>
-    <nav class="c-sidebar-nav" id="sidebarNav">
-        <!-- Généré dynamiquement -->
-    </nav>
+    <nav class="c-sidebar-nav" id="sidebarNav"></nav>
 </aside>
 <!-- ===== FIN SIDEBAR GAUCHE ===== -->
 
-<!-- ===== DEBUT SIDEBAR DROITE (communauté) ===== -->
+<!-- ===== DEBUT SIDEBAR DROITE (infos communauté) ===== -->
 <aside class="right-sidebar" id="rightSidebar">
     <div class="right-sidebar-inner">
+        <!-- Ma Communauté -->
+        <div class="my-community-card" id="myCommunityCard">
+            <div class="my-comm-cover" id="myCommCover"></div>
+            <div class="my-comm-avatar-wrap">
+                <div id="myCommAvatarInitials" class="my-comm-avatar avatar-initials"></div>
+                <div class="online-dot"></div>
+            </div>
+            <div class="my-comm-info">
+                <h4 id="myCommName">...</h4>
+                <p id="myCommHandle">@...</p>
+            </div>
+            <div class="my-comm-stats">
+                <div class="stat-item"><strong id="myCommFollowers">0</strong><span>Abonnés</span></div>
+                <div class="stat-item"><strong id="myCommFollowing">0</strong><span>Abonnements</span></div>
+                <div class="stat-item"><strong id="myCommPosts">0</strong><span>Posts</span></div>
+            </div>
+        </div>
+        <!-- Suggestions -->
         <div class="sidebar-section">
             <div class="section-head">
-                <h4><i class="fas fa-users"></i> Ma Communauté</h4>
+                <h4><i class="fas fa-user-plus"></i> Suggestions</h4>
+                <button class="section-refresh" id="refreshSuggestions"><i class="fas fa-sync-alt"></i></button>
             </div>
-            <p style="text-align:center;color:var(--gray);font-size:0.8rem;padding:10px">Chargement...</p>
+            <div id="suggestionsList" class="suggestions-list"></div>
+        </div>
+        <!-- Abonnés récents -->
+        <div class="sidebar-section">
+            <div class="section-head">
+                <h4><i class="fas fa-users"></i> Abonnés</h4>
+                <a href="#" id="viewAllFollowers" class="section-link">Voir tous</a>
+            </div>
+            <div id="followersList" class="followers-list"></div>
+        </div>
+        <!-- Lives en direct -->
+        <div class="sidebar-section">
+            <div class="section-head"><h4><i class="fas fa-broadcast-tower"></i> Lives en direct</h4></div>
+            <div id="livesList" class="lives-sidebar-list"></div>
+            <a href="live.html" class="section-link-block"><i class="fas fa-video"></i> Démarrer un live</a>
+        </div>
+        <!-- Tendances -->
+        <div class="sidebar-section">
+            <div class="section-head"><h4><i class="fas fa-fire"></i> Tendances</h4></div>
+            <div id="trendsList" class="trends-list"></div>
+        </div>
+        <!-- Filtres par rôle (28 rôles exacts) -->
+        <div class="sidebar-section">
+            <div class="section-head"><h4><i class="fas fa-filter"></i> Filtrer par rôle</h4></div>
+            <div class="role-filter-wrap" id="roleFilters">
+                <button class="role-chip active" data-role="all">Tous</button>
+                <button class="role-chip" data-role="FOOT">Footballeur</button>
+                <button class="role-chip" data-role="BASK">Basketteur</button>
+                <button class="role-chip" data-role="TENN">Tennisman</button>
+                <button class="role-chip" data-role="ATHL">Athlète</button>
+                <button class="role-chip" data-role="HANDB">Handballeur</button>
+                <button class="role-chip" data-role="VOLL">Volleyeur</button>
+                <button class="role-chip" data-role="RUGBY">Rugbyman</button>
+                <button class="role-chip" data-role="NATA">Nageur</button>
+                <button class="role-chip" data-role="ARTSM">Arts martiaux</button>
+                <button class="role-chip" data-role="CYCL">Cycliste</button>
+                <button class="role-chip" data-role="CHAN">Chanteur</button>
+                <button class="role-chip" data-role="DANS">Danseur</button>
+                <button class="role-chip" data-role="COMP">Compositeur</button>
+                <button class="role-chip" data-role="ACIN">Acteur cinéma</button>
+                <button class="role-chip" data-role="ATHE">Acteur théâtre</button>
+                <button class="role-chip" data-role="HUMO">Humoriste</button>
+                <button class="role-chip" data-role="SLAM">Slameur</button>
+                <button class="role-chip" data-role="DJ">DJ / Producteur</button>
+                <button class="role-chip" data-role="CIRQ">Artiste de cirque</button>
+                <button class="role-chip" data-role="VISU">Artiste visuel</button>
+                <button class="role-chip" data-role="PARRAIN">Parrain</button>
+                <button class="role-chip" data-role="AGENT">Agent FIFA</button>
+                <button class="role-chip" data-role="COACH">Coach</button>
+                <button class="role-chip" data-role="MEDIC">Staff médical</button>
+                <button class="role-chip" data-role="ARBIT">Corps arbitral</button>
+                <button class="role-chip" data-role="ACAD">Académie sportive</button>
+                <button class="role-chip" data-role="FORM">Formateur</button>
+                <button class="role-chip" data-role="TOURN">Gestionnaire tournoi</button>
+            </div>
+        </div>
+        <!-- Insights -->
+        <div class="sidebar-section">
+            <div class="section-head"><h4><i class="fas fa-chart-line"></i> Insights</h4></div>
+            <div class="insights-list">
+                <div class="insight-row"><span>Portée (7j)</span><strong id="insightReach">—</strong></div>
+                <div class="insight-row"><span>Nouveaux abonnés</span><strong id="insightNewFollowers">—</strong></div>
+                <div class="insight-row"><span>Taux d'engagement</span><strong id="insightEngagement">—</strong></div>
+            </div>
         </div>
     </div>
 </aside>
 <!-- ===== FIN SIDEBAR DROITE ===== -->
 
-<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<!-- ===== DEBUT CONTENU PRINCIPAL (FEED) ===== -->
 <main class="feed-main">
     <div class="feed-center">
-        <div class="c-empty" id="feedEmptyState">
-            <div class="c-empty-icon"><i class="fas fa-users"></i></div>
-            <h3>Communauté en construction</h3>
-            <p>Le feed sera bientôt disponible. Merci de patienter.</p>
+        <!-- Barre nouveaux posts -->
+        <div class="new-posts-bar" id="newPostsBar" style="display:none">
+            <button id="newPostsBarBtn"><i class="fas fa-arrow-up"></i> <span id="newPostsCount">0</span> nouveaux posts</button>
+        </div>
+
+        <!-- Stories -->
+        <section class="stories-section" id="storiesSection">
+            <div class="stories-scroll">
+                <div class="story-add-btn" id="addStoryBtn">
+                    <div class="story-ring add-ring">
+                        <div id="storyAddAvatarInitials" class="story-avatar-initials"></div>
+                        <div class="story-plus"><i class="fas fa-plus"></i></div>
+                    </div>
+                    <span>Ma story</span>
+                </div>
+                <div id="storiesContainer" class="stories-strip"></div>
+            </div>
+        </section>
+
+        <!-- Boîte de publication -->
+        <div class="publish-box" id="publishBox">
+            <div class="publish-top">
+                <div id="publishAvatarInitials" class="publish-avatar avatar-initials"></div>
+                <div class="publish-input-wrap">
+                    <textarea id="postContent" rows="1" placeholder="Quoi de neuf dans ta communauté ?"></textarea>
+                </div>
+            </div>
+            <div class="publish-media-preview" id="mediaPreview" style="display:none"></div>
+            <div class="publish-actions">
+                <div class="publish-left-actions">
+                    <button class="pub-action-btn" id="attachMediaBtn"><i class="fas fa-image"></i><span>Photo/Vidéo</span></button>
+                    <button class="pub-action-btn" id="pollBtn"><i class="fas fa-chart-pie"></i><span>Sondage</span></button>
+                    <button class="pub-action-btn" id="eventBtn"><i class="fas fa-calendar-alt"></i><span>Événement</span></button>
+                    <button class="pub-action-btn" id="scheduleBtn"><i class="fas fa-clock"></i><span>Prog.</span></button>
+                    <button class="pub-action-btn live-btn" id="startLiveBtn"><i class="fas fa-video"></i><span>Live</span></button>
+                </div>
+                <div class="publish-right-actions">
+                    <button class="pin-btn" id="pinPostBtn" title="Épingler (VIP)"><i class="fas fa-thumbtack"></i></button>
+                    <button class="pub-preview-btn" id="previewPostBtn"><i class="fas fa-eye"></i></button>
+                    <button class="pub-publish-btn" id="publishBtn"><i class="fas fa-paper-plane"></i> Publier</button>
+                </div>
+            </div>
+            <input type="file" id="mediaInput" accept="image/*,video/*" style="display:none">
+        </div>
+
+        <!-- Filtres du feed -->
+        <div class="feed-filters" id="feedFilters">
+            <button class="feed-filter-btn active" data-filter="all">Tout</button>
+            <button class="feed-filter-btn" data-filter="following">Abonnements</button>
+            <button class="feed-filter-btn" data-filter="pinned">Épinglés</button>
+            <button class="feed-filter-btn" data-filter="media">Médias</button>
+            <button class="feed-filter-btn" data-filter="polls">Sondages</button>
+        </div>
+
+        <!-- Barre de recherche -->
+        <div class="feed-search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="feedSearch" placeholder="Rechercher un post, un auteur, un #hashtag...">
+        </div>
+
+        <!-- Feed des posts -->
+        <div id="postsFeed" class="posts-feed"></div>
+
+        <!-- Bouton charger plus -->
+        <div id="loadMoreWrap" style="text-align:center; padding:16px; display:none">
+            <button class="btn-ghost" id="loadMoreBtn"><i class="fas fa-arrow-down"></i> Charger plus de posts</button>
         </div>
     </div>
 </main>
 <!-- ===== FIN CONTENU PRINCIPAL ===== -->
 
-<!-- ===== DEBUT FOOTER ===== -->
+<!-- ===== MODALES ===== -->
+<!-- Aperçu publication -->
+<div id="modalPreview" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-eye"></i> Aperçu</h2>
+            <button class="c-modal-close" onclick="closeModal('modalPreview')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body" id="previewBody"></div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalPreview')">Retour</button>
+            <button class="btn-primary" id="publishFromPreviewBtn"><i class="fas fa-paper-plane"></i> Publier</button>
+        </div>
+    </div>
+</div>
+
+<!-- Sondage -->
+<div id="modalPoll" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-chart-pie"></i> Créer un sondage</h2>
+            <button class="c-modal-close" onclick="closeModal('modalPoll')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="c-field"><label>Question <span class="req">*</span></label><input type="text" class="c-input" id="pollQuestion" placeholder="Posez votre question..."></div>
+            <div class="c-field"><label>Options <span class="req">*</span> <span class="hint">(une par ligne, min. 2)</span></label><textarea class="c-textarea" id="pollOptions" rows="4" placeholder="Option 1&#10;Option 2&#10;Option 3..."></textarea></div>
+            <div class="c-field"><label>Durée</label><select class="c-select" id="pollDuration"><option value="1">1 jour</option><option value="3" selected>3 jours</option><option value="7">7 jours</option></select></div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalPoll')">Annuler</button>
+            <button class="btn-primary" id="createPollBtn"><i class="fas fa-check"></i> Publier le sondage</button>
+        </div>
+    </div>
+</div>
+
+<!-- Événement -->
+<div id="modalEvent" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-calendar-alt"></i> Créer un événement</h2>
+            <button class="c-modal-close" onclick="closeModal('modalEvent')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="c-field"><label>Titre <span class="req">*</span></label><input type="text" class="c-input" id="eventTitle" placeholder="Nom de l'événement"></div>
+            <div class="c-field"><label>Date et heure <span class="req">*</span></label><input type="datetime-local" class="c-input" id="eventDate"></div>
+            <div class="c-field"><label>Lieu</label><input type="text" class="c-input" id="eventLocation" placeholder="Ville, stade, salle..."></div>
+            <div class="c-field"><label>Description</label><textarea class="c-textarea" id="eventDesc" rows="3" placeholder="Détails de l'événement..."></textarea></div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalEvent')">Annuler</button>
+            <button class="btn-primary" id="createEventBtn"><i class="fas fa-check"></i> Créer l'événement</button>
+        </div>
+    </div>
+</div>
+
+<!-- Programmer publication -->
+<div id="modalSchedule" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-clock"></i> Programmer</h2>
+            <button class="c-modal-close" onclick="closeModal('modalSchedule')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="c-field"><label>Date et heure de publication <span class="req">*</span></label><input type="datetime-local" class="c-input" id="scheduleDateTime"></div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalSchedule')">Annuler</button>
+            <button class="btn-primary" id="confirmScheduleBtn"><i class="fas fa-check"></i> Programmer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Profil utilisateur -->
+<div id="modalUserProfile" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-user"></i> Profil</h2>
+            <button class="c-modal-close" onclick="closeModal('modalUserProfile')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body" id="userProfileBody"></div>
+    </div>
+</div>
+
+<!-- Likes -->
+<div id="modalLikes" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-heart"></i> Personnes qui aiment</h2>
+            <button class="c-modal-close" onclick="closeModal('modalLikes')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body"><ul id="likesList" class="users-list"></ul></div>
+    </div>
+</div>
+
+<!-- Signalement -->
+<div id="modalReport" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-flag"></i> Signaler</h2>
+            <button class="c-modal-close" onclick="closeModal('modalReport')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="c-field"><label>Raison <span class="req">*</span></label><textarea class="c-textarea" id="reportReason" rows="3" placeholder="Pourquoi signalez-vous ce contenu ?"></textarea></div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalReport')">Annuler</button>
+            <button class="btn-danger" id="submitReportBtn"><i class="fas fa-flag"></i> Envoyer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Partage -->
+<div id="modalShare" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-share-alt"></i> Partager</h2>
+            <button class="c-modal-close" onclick="closeModal('modalShare')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="share-grid">
+                <button class="share-btn" data-network="facebook"><i class="fab fa-facebook-f"></i><span>Facebook</span></button>
+                <button class="share-btn" data-network="twitter"><i class="fab fa-twitter"></i><span>Twitter/X</span></button>
+                <button class="share-btn" data-network="whatsapp"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></button>
+                <button class="share-btn" data-network="copy"><i class="fas fa-link"></i><span>Copier le lien</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation -->
+<div id="modalConfirm" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2 id="confirmTitle">Confirmation</h2>
+            <button class="c-modal-close" onclick="closeModal('modalConfirm')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body"><p id="confirmDesc"></p></div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalConfirm')">Annuler</button>
+            <button class="btn-danger" id="confirmActionBtn">Confirmer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Visionneuse story -->
+<div id="storyModal" class="story-modal">
+    <div class="story-viewer" id="storyViewer">
+        <div class="story-top">
+            <div class="story-progress-bars" id="storyProgressBars"></div>
+            <div class="story-author" id="storyAuthor"></div>
+            <button class="story-close-btn" id="storyCloseBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="story-media" id="storyMedia"></div>
+        <button class="story-nav prev" id="storyPrev"><i class="fas fa-chevron-left"></i></button>
+        <button class="story-nav next" id="storyNext"><i class="fas fa-chevron-right"></i></button>
+        <div class="story-reply-bar">
+            <input type="text" id="storyReplyInput" placeholder="Répondre à la story...">
+            <button id="storyReplyBtn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- Zoom média -->
+<div id="modalMedia" class="c-modal" style="background:rgba(0,0,0,0.92)">
+    <div style="position:relative;max-width:90vw;max-height:90vh">
+        <button onclick="closeModal('modalMedia')" style="position:absolute;top:-40px;right:0;color:white;font-size:1.3rem;background:none;border:none;cursor:pointer"><i class="fas fa-times"></i></button>
+        <div id="mediaViewer"></div>
+    </div>
+</div>
+
+<!-- ===== TOASTS ===== -->
+<div id="toastContainer" class="c-toast-container"></div>
+
+<!-- ===== FOOTER ===== -->
 <footer class="c-footer">
     <div class="c-footer-badges">
         <span class="c-badge">Conformité APDP Bénin</span>
         <span class="c-badge">Règlementation FIFA</span>
-        <span class="c-badge">Double Projet Sport-Études</span>
+        <span class="c-badge">Triple Projet Sport-Étude-Carrière</span>
     </div>
     <p>HubISoccer — RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
-    <p>© 2026 HubISoccer - The Hub of Inspiration of Soccer. Tous droits réservés.</p>
+    <p>© 2026 HubISoccer. Tous droits réservés.</p>
 </footer>
-<!-- ===== FIN FOOTER ===== -->
 
-<!-- ===== DEBUT TOAST CONTAINER ===== -->
-<div class="c-toast-container" id="toastContainer"></div>
-<!-- ===== FIN TOAST CONTAINER ===== -->
-
-<!-- ===== DEBUT SCRIPT ===== -->
 <script src="feed.js"></script>
-<!-- ===== FIN SCRIPT ===== -->
 </body>
 </html>

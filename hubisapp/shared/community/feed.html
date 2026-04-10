@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Ma Communauté | HubISoccer</title>
     <!-- Polices et icônes -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    >
     <!-- CSS local -->
     <link rel="stylesheet" href="feed.css">
     <!-- SDK Supabase -->
@@ -17,21 +23,30 @@
 <!-- ===== DEBUT LOADER GLOBAL ===== -->
 <div id="globalLoader" class="c-loader" style="display:none;">
     <div class="c-spinner"></div>
-    <div class="c-loader-bar-wrap"><div class="c-loader-bar" id="loaderBar" style="width:0%"></div></div>
-    <span class="c-loader-text" id="loaderText">Chargement du feed...</span>
+    <div class="c-loader-bar-wrap">
+        <div class="c-loader-bar" id="loaderBar" style="width:0%"></div>
+    </div>
+    <span class="c-loader-text" id="loaderText">Chargement de ta communauté...</span>
 </div>
 <!-- ===== FIN LOADER GLOBAL ===== -->
 
 <!-- ===== DEBUT NAVBAR ===== -->
 <nav class="c-nav">
     <div class="c-nav-left">
-        <button class="c-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="c-nav-logo" id="navLogo">
+        <button class="c-menu-toggle" id="menuToggle" aria-label="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <img
+            src="../../img/logo-navbar.png"
+            alt="HubISoccer"
+            class="c-nav-logo"
+            id="navLogo"
+        >
         <span class="c-nav-title" id="navSpaceTitle">Ma Communauté</span>
     </div>
     <div class="c-nav-right">
-        <!-- Sélecteur 24 langues -->
-        <select class="c-lang-picker" id="langSelect">
+        <!-- Sélecteur de langue (24 langues) -->
+        <select class="c-lang-picker" id="langSelect" aria-label="Langue">
             <option value="fr">🇫🇷 Français</option>
             <option value="en">🇺🇸 English</option>
             <option value="yo">🇳🇬 Yoruba</option>
@@ -58,27 +73,45 @@
             <option value="vi">🇻🇳 Tiếng Việt</option>
         </select>
         <!-- Notifications -->
-        <button class="c-notif-btn" id="notifBtn">
+        <button class="c-notif-btn" id="notifBtn" title="Notifications">
             <i class="fas fa-bell"></i>
             <span class="c-notif-badge" id="notifBadge" style="display:none">0</span>
         </button>
+        <!-- Toggle sidebar droite (mobile) -->
         <button class="c-notif-btn" id="rightSidebarToggle" title="Communauté">
             <i class="fas fa-users"></i>
         </button>
-        <!-- Menu utilisateur (avec initiales) -->
+        <!-- Menu utilisateur -->
         <div class="c-user-menu" id="userMenu">
-            <div class="user-avatar-container">
-                <div class="avatar-initials" id="userAvatarInitials"></div>
+            <div class="c-user-avatar-wrap" id="userAvatarWrap">
+                <div class="c-user-avatar-initials" id="userAvatarInitials"></div>
+                <img
+                    src="../../img/user-default.jpg"
+                    class="c-user-avatar"
+                    id="userAvatar"
+                    alt=""
+                    style="display:none;"
+                >
             </div>
             <span class="c-user-name" id="userName">...</span>
             <i class="fas fa-chevron-down fa-xs"></i>
             <div class="c-user-dropdown" id="userDropdown">
-                <a href="profil-feed.html" id="dropProfile"><i class="fas fa-user"></i> Mon profil</a>
-                <a href="#" id="dropDashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
-                <a href="../messagerie/conversation.html" id="dropMessages"><i class="fas fa-envelope"></i> Messages</a>
-                <a href="../settings/foot-settings.html" id="dropSettings"><i class="fas fa-cog"></i> Paramètres</a>
+                <a href="#" id="dropProfile">
+                    <i class="fas fa-user"></i> Mon profil
+                </a>
+                <a href="#" id="dropDashboard">
+                    <i class="fas fa-tachometer-alt"></i> Tableau de bord
+                </a>
+                <a href="#" id="dropMessages">
+                    <i class="fas fa-envelope"></i> Messages
+                </a>
+                <a href="#" id="dropSettings">
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
                 <hr>
-                <button id="dropLogout" class="c-logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+                <button id="dropLogout" class="c-logout">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
             </div>
         </div>
     </div>
@@ -93,40 +126,67 @@
 <aside class="c-sidebar-left" id="leftSidebar">
     <div class="c-sidebar-head">
         <h3 id="sidebarRoleTitle">Menu</h3>
-        <button class="c-sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+        <button class="c-sidebar-close" id="sidebarClose" aria-label="Fermer">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
     <nav class="c-sidebar-nav" id="sidebarNav"></nav>
 </aside>
 <!-- ===== FIN SIDEBAR GAUCHE ===== -->
 
-<!-- ===== DEBUT SIDEBAR DROITE (infos communauté) ===== -->
+<!-- ===== DEBUT SIDEBAR DROITE (communauté) ===== -->
 <aside class="right-sidebar" id="rightSidebar">
     <div class="right-sidebar-inner">
-        <!-- Ma Communauté -->
+
+        <!-- Ma communauté card -->
         <div class="my-community-card" id="myCommunityCard">
             <div class="my-comm-cover" id="myCommCover"></div>
             <div class="my-comm-avatar-wrap">
-                <div id="myCommAvatarInitials" class="my-comm-avatar avatar-initials"></div>
+                <div class="my-comm-avatar-initials" id="myCommAvatarInitials"></div>
+                <img
+                    id="myCommAvatar"
+                    src="../../img/user-default.jpg"
+                    alt=""
+                    class="my-comm-avatar"
+                    style="display:none;"
+                >
                 <div class="online-dot"></div>
             </div>
             <div class="my-comm-info">
-                <h4 id="myCommName">...</h4>
-                <p id="myCommHandle">@...</p>
+                <h4 id="myCommName">Ma Communauté</h4>
+                <p id="myCommHandle">@identifiant</p>
             </div>
             <div class="my-comm-stats">
-                <div class="stat-item"><strong id="myCommFollowers">0</strong><span>Abonnés</span></div>
-                <div class="stat-item"><strong id="myCommFollowing">0</strong><span>Abonnements</span></div>
-                <div class="stat-item"><strong id="myCommPosts">0</strong><span>Posts</span></div>
+                <div class="stat-item">
+                    <strong id="myCommFollowers">0</strong>
+                    <span>Abonnés</span>
+                </div>
+                <div class="stat-item">
+                    <strong id="myCommFollowing">0</strong>
+                    <span>Abonnements</span>
+                </div>
+                <div class="stat-item">
+                    <strong id="myCommPosts">0</strong>
+                    <span>Posts</span>
+                </div>
             </div>
         </div>
+
         <!-- Suggestions -->
         <div class="sidebar-section">
             <div class="section-head">
                 <h4><i class="fas fa-user-plus"></i> Suggestions</h4>
-                <button class="section-refresh" id="refreshSuggestions"><i class="fas fa-sync-alt"></i></button>
+                <button
+                    class="section-refresh"
+                    id="refreshSuggestions"
+                    title="Rafraîchir"
+                >
+                    <i class="fas fa-sync-alt"></i>
+                </button>
             </div>
             <div id="suggestionsList" class="suggestions-list"></div>
         </div>
+
         <!-- Abonnés récents -->
         <div class="sidebar-section">
             <div class="section-head">
@@ -135,83 +195,129 @@
             </div>
             <div id="followersList" class="followers-list"></div>
         </div>
+
         <!-- Lives en direct -->
         <div class="sidebar-section">
-            <div class="section-head"><h4><i class="fas fa-broadcast-tower"></i> Lives en direct</h4></div>
+            <div class="section-head">
+                <h4><i class="fas fa-broadcast-tower"></i> Lives en direct</h4>
+            </div>
             <div id="livesList" class="lives-sidebar-list"></div>
-            <a href="live.html" class="section-link-block"><i class="fas fa-video"></i> Démarrer un live</a>
+            <a href="live.html" class="section-link-block">
+                <i class="fas fa-video"></i> Démarrer un live
+            </a>
         </div>
+
         <!-- Tendances -->
         <div class="sidebar-section">
-            <div class="section-head"><h4><i class="fas fa-fire"></i> Tendances</h4></div>
+            <div class="section-head">
+                <h4><i class="fas fa-fire"></i> Tendances</h4>
+            </div>
             <div id="trendsList" class="trends-list"></div>
         </div>
-        <!-- Filtres par rôle (28 rôles exacts) -->
+
+        <!-- Filtres par rôle (28 rôles + Tous) -->
         <div class="sidebar-section">
-            <div class="section-head"><h4><i class="fas fa-filter"></i> Filtrer par rôle</h4></div>
+            <div class="section-head">
+                <h4><i class="fas fa-filter"></i> Filtrer par rôle</h4>
+            </div>
             <div class="role-filter-wrap" id="roleFilters">
                 <button class="role-chip active" data-role="all">Tous</button>
-                <button class="role-chip" data-role="FOOT">Footballeur</button>
-                <button class="role-chip" data-role="BASK">Basketteur</button>
-                <button class="role-chip" data-role="TENN">Tennisman</button>
-                <button class="role-chip" data-role="ATHL">Athlète</button>
-                <button class="role-chip" data-role="HANDB">Handballeur</button>
-                <button class="role-chip" data-role="VOLL">Volleyeur</button>
-                <button class="role-chip" data-role="RUGBY">Rugbyman</button>
-                <button class="role-chip" data-role="NATA">Nageur</button>
-                <button class="role-chip" data-role="ARTSM">Arts martiaux</button>
-                <button class="role-chip" data-role="CYCL">Cycliste</button>
-                <button class="role-chip" data-role="CHAN">Chanteur</button>
-                <button class="role-chip" data-role="DANS">Danseur</button>
-                <button class="role-chip" data-role="COMP">Compositeur</button>
-                <button class="role-chip" data-role="ACIN">Acteur cinéma</button>
-                <button class="role-chip" data-role="ATHE">Acteur théâtre</button>
-                <button class="role-chip" data-role="HUMO">Humoriste</button>
-                <button class="role-chip" data-role="SLAM">Slameur</button>
-                <button class="role-chip" data-role="DJ">DJ / Producteur</button>
-                <button class="role-chip" data-role="CIRQ">Artiste de cirque</button>
-                <button class="role-chip" data-role="VISU">Artiste visuel</button>
-                <button class="role-chip" data-role="PARRAIN">Parrain</button>
-                <button class="role-chip" data-role="AGENT">Agent FIFA</button>
-                <button class="role-chip" data-role="COACH">Coach</button>
-                <button class="role-chip" data-role="MEDIC">Staff médical</button>
-                <button class="role-chip" data-role="ARBIT">Corps arbitral</button>
-                <button class="role-chip" data-role="ACAD">Académie sportive</button>
-                <button class="role-chip" data-role="FORM">Formateur</button>
-                <button class="role-chip" data-role="TOURN">Gestionnaire tournoi</button>
+                <button class="role-chip" data-role="FOOT">⚽ Footballeur</button>
+                <button class="role-chip" data-role="BASK">🏀 Basketteur</button>
+                <button class="role-chip" data-role="TENN">🎾 Tennisman</button>
+                <button class="role-chip" data-role="ATHL">🏃 Athlète</button>
+                <button class="role-chip" data-role="HANDB">🤾 Handballeur</button>
+                <button class="role-chip" data-role="VOLL">🏐 Volleyeur</button>
+                <button class="role-chip" data-role="RUGBY">🏉 Rugbyman</button>
+                <button class="role-chip" data-role="NATA">🏊 Nageur</button>
+                <button class="role-chip" data-role="ARTSM">🥋 Arts martiaux</button>
+                <button class="role-chip" data-role="CYCL">🚴 Cycliste</button>
+                <button class="role-chip" data-role="CHAN">🎤 Chanteur</button>
+                <button class="role-chip" data-role="DANS">💃 Danseur</button>
+                <button class="role-chip" data-role="COMP">🎼 Compositeur</button>
+                <button class="role-chip" data-role="ACIN">🎬 Acteur cinéma</button>
+                <button class="role-chip" data-role="ATHE">🎭 Acteur théâtre</button>
+                <button class="role-chip" data-role="HUMO">🎙️ Humoriste</button>
+                <button class="role-chip" data-role="SLAM">🗣️ Slameur</button>
+                <button class="role-chip" data-role="DJ">🎧 DJ / Producteur</button>
+                <button class="role-chip" data-role="CIRQ">🤹 Artiste de cirque</button>
+                <button class="role-chip" data-role="VISU">🎨 Artiste visuel</button>
+                <button class="role-chip" data-role="PARRAIN">🤝 Parrain</button>
+                <button class="role-chip" data-role="AGENT">💼 Agent FIFA</button>
+                <button class="role-chip" data-role="COACH">📋 Coach</button>
+                <button class="role-chip" data-role="MEDIC">⚕️ Staff médical</button>
+                <button class="role-chip" data-role="ARBIT">🏁 Corps arbitral</button>
+                <button class="role-chip" data-role="ACAD">🏫 Académie sportive</button>
+                <button class="role-chip" data-role="FORM">🎓 Formateur</button>
+                <button class="role-chip" data-role="TOURN">🏆 Gestionnaire tournoi</button>
             </div>
         </div>
+
         <!-- Insights -->
         <div class="sidebar-section">
-            <div class="section-head"><h4><i class="fas fa-chart-line"></i> Insights</h4></div>
+            <div class="section-head">
+                <h4><i class="fas fa-chart-line"></i> Insights</h4>
+            </div>
             <div class="insights-list">
-                <div class="insight-row"><span>Portée (7j)</span><strong id="insightReach">—</strong></div>
-                <div class="insight-row"><span>Nouveaux abonnés</span><strong id="insightNewFollowers">—</strong></div>
-                <div class="insight-row"><span>Taux d'engagement</span><strong id="insightEngagement">—</strong></div>
+                <div class="insight-row">
+                    <span>Portée (7j)</span>
+                    <strong id="insightReach">—</strong>
+                </div>
+                <div class="insight-row">
+                    <span>Nouveaux abonnés</span>
+                    <strong id="insightNewFollowers">—</strong>
+                </div>
+                <div class="insight-row">
+                    <span>Taux d'engagement</span>
+                    <strong id="insightEngagement">—</strong>
+                </div>
             </div>
         </div>
+
+        <!-- HubiMarket (placeholder) -->
+        <div class="sidebar-section">
+            <div class="section-head">
+                <h4><i class="fas fa-store"></i> HubiMarket</h4>
+            </div>
+            <p style="font-size:0.8rem;color:var(--gray);text-align:center;padding:10px;">
+                Bientôt disponible
+            </p>
+        </div>
+
     </div>
 </aside>
 <!-- ===== FIN SIDEBAR DROITE ===== -->
 
-<!-- ===== DEBUT CONTENU PRINCIPAL (FEED) ===== -->
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
 <main class="feed-main">
     <div class="feed-center">
-        <!-- Barre nouveaux posts -->
+
+        <!-- Indicateur nouveaux posts -->
         <div class="new-posts-bar" id="newPostsBar" style="display:none">
-            <button id="newPostsBarBtn"><i class="fas fa-arrow-up"></i> <span id="newPostsCount">0</span> nouveaux posts</button>
+            <button id="newPostsBarBtn">
+                <i class="fas fa-arrow-up"></i>
+                <span id="newPostsCount">0</span> nouveau(x) post(s)
+            </button>
         </div>
 
         <!-- Stories -->
         <section class="stories-section" id="storiesSection">
             <div class="stories-scroll">
+                <!-- Ajouter une story -->
                 <div class="story-add-btn" id="addStoryBtn">
                     <div class="story-ring add-ring">
-                        <div id="storyAddAvatarInitials" class="story-avatar-initials"></div>
+                        <div class="story-add-avatar-initials" id="storyAddAvatarInitials"></div>
+                        <img
+                            src="../../img/user-default.jpg"
+                            id="storyAddAvatar"
+                            alt=""
+                            style="display:none;"
+                        >
                         <div class="story-plus"><i class="fas fa-plus"></i></div>
                     </div>
                     <span>Ma story</span>
                 </div>
+                <!-- Stories des autres -->
                 <div id="storiesContainer" class="stories-strip"></div>
             </div>
         </section>
@@ -219,34 +325,104 @@
         <!-- Boîte de publication -->
         <div class="publish-box" id="publishBox">
             <div class="publish-top">
-                <div id="publishAvatarInitials" class="publish-avatar avatar-initials"></div>
-                <div class="publish-input-wrap">
-                    <textarea id="postContent" rows="1" placeholder="Quoi de neuf dans ta communauté ?"></textarea>
+                <div class="publish-avatar-wrap">
+                    <div class="publish-avatar-initials" id="publishAvatarInitials"></div>
+                    <img
+                        src="../../img/user-default.jpg"
+                        id="publishAvatar"
+                        alt=""
+                        class="publish-avatar"
+                        style="display:none;"
+                    >
+                </div>
+                <div class="publish-input-wrap" id="publishInputWrap">
+                    <textarea
+                        id="postContent"
+                        rows="1"
+                        placeholder="Quoi de neuf dans ta communauté ?"
+                    ></textarea>
                 </div>
             </div>
-            <div class="publish-media-preview" id="mediaPreview" style="display:none"></div>
+
+            <!-- Prévisualisation média -->
+            <div
+                class="publish-media-preview"
+                id="mediaPreview"
+                style="display:none"
+            ></div>
+
+            <!-- Barre d'actions -->
             <div class="publish-actions">
                 <div class="publish-left-actions">
-                    <button class="pub-action-btn" id="attachMediaBtn"><i class="fas fa-image"></i><span>Photo/Vidéo</span></button>
-                    <button class="pub-action-btn" id="pollBtn"><i class="fas fa-chart-pie"></i><span>Sondage</span></button>
-                    <button class="pub-action-btn" id="eventBtn"><i class="fas fa-calendar-alt"></i><span>Événement</span></button>
-                    <button class="pub-action-btn" id="scheduleBtn"><i class="fas fa-clock"></i><span>Prog.</span></button>
-                    <button class="pub-action-btn live-btn" id="startLiveBtn"><i class="fas fa-video"></i><span>Live</span></button>
+                    <button
+                        class="pub-action-btn"
+                        id="attachMediaBtn"
+                        title="Photo/Vidéo"
+                    >
+                        <i class="fas fa-image"></i><span>Photo/Vidéo</span>
+                    </button>
+                    <button
+                        class="pub-action-btn"
+                        id="pollBtn"
+                        title="Sondage"
+                    >
+                        <i class="fas fa-chart-pie"></i><span>Sondage</span>
+                    </button>
+                    <button
+                        class="pub-action-btn"
+                        id="eventBtn"
+                        title="Événement"
+                    >
+                        <i class="fas fa-calendar-alt"></i><span>Événement</span>
+                    </button>
+                    <button
+                        class="pub-action-btn"
+                        id="scheduleBtn"
+                        title="Programmer"
+                    >
+                        <i class="fas fa-clock"></i><span>Prog.</span>
+                    </button>
+                    <button
+                        class="pub-action-btn live-btn"
+                        id="startLiveBtn"
+                        title="Live"
+                    >
+                        <i class="fas fa-video"></i><span>Live</span>
+                    </button>
                 </div>
                 <div class="publish-right-actions">
-                    <button class="pin-btn" id="pinPostBtn" title="Épingler (VIP)"><i class="fas fa-thumbtack"></i></button>
-                    <button class="pub-preview-btn" id="previewPostBtn"><i class="fas fa-eye"></i></button>
-                    <button class="pub-publish-btn" id="publishBtn"><i class="fas fa-paper-plane"></i> Publier</button>
+                    <button
+                        class="pin-btn"
+                        id="pinPostBtn"
+                        title="Épingler (VIP)"
+                    >
+                        <img src="../../img/logo-navbar.png" alt="Pin">
+                    </button>
+                    <button
+                        class="pub-preview-btn"
+                        id="previewPostBtn"
+                        title="Aperçu"
+                    >
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="pub-publish-btn" id="publishBtn">
+                        <i class="fas fa-paper-plane"></i> Publier
+                    </button>
                 </div>
             </div>
-            <input type="file" id="mediaInput" accept="image/*,video/*" style="display:none">
+            <input
+                type="file"
+                id="mediaInput"
+                accept="image/*,video/*"
+                style="display:none"
+            >
         </div>
 
         <!-- Filtres du feed -->
         <div class="feed-filters" id="feedFilters">
             <button class="feed-filter-btn active" data-filter="all">Tout</button>
             <button class="feed-filter-btn" data-filter="following">Abonnements</button>
-            <button class="feed-filter-btn" data-filter="pinned">Épinglés</button>
+            <button class="feed-filter-btn" data-filter="saved">Épinglés</button>
             <button class="feed-filter-btn" data-filter="media">Médias</button>
             <button class="feed-filter-btn" data-filter="polls">Sondages</button>
         </div>
@@ -254,32 +430,59 @@
         <!-- Barre de recherche -->
         <div class="feed-search-bar">
             <i class="fas fa-search"></i>
-            <input type="text" id="feedSearch" placeholder="Rechercher un post, un auteur, un #hashtag...">
+            <input
+                type="text"
+                id="feedSearch"
+                placeholder="Rechercher un post, un auteur, un #hashtag..."
+            >
         </div>
 
         <!-- Feed des posts -->
-        <div id="postsFeed" class="posts-feed"></div>
+        <div id="postsFeed" class="posts-feed">
+            <!-- Skeleton -->
+            <div id="feedSkeleton">
+                <div class="post-skeleton"></div>
+                <div class="post-skeleton"></div>
+                <div class="post-skeleton"></div>
+            </div>
+        </div>
 
         <!-- Bouton charger plus -->
-        <div id="loadMoreWrap" style="text-align:center; padding:16px; display:none">
-            <button class="btn-ghost" id="loadMoreBtn"><i class="fas fa-arrow-down"></i> Charger plus de posts</button>
+        <div
+            id="loadMoreWrap"
+            style="text-align:center; padding:16px; display:none"
+        >
+            <button class="btn-ghost" id="loadMoreBtn">
+                <i class="fas fa-arrow-down"></i> Charger plus de posts
+            </button>
         </div>
+
     </div>
 </main>
 <!-- ===== FIN CONTENU PRINCIPAL ===== -->
 
-<!-- ===== MODALES ===== -->
+<!-- ========== DEBUT MODALES ========== -->
+
 <!-- Aperçu publication -->
 <div id="modalPreview" class="c-modal">
     <div class="c-modal-box">
         <div class="c-modal-head">
             <h2><i class="fas fa-eye"></i> Aperçu</h2>
-            <button class="c-modal-close" onclick="closeModal('modalPreview')"><i class="fas fa-times"></i></button>
+            <button
+                class="c-modal-close"
+                onclick="closeModal('modalPreview')"
+            >
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="c-modal-body" id="previewBody"></div>
         <div class="c-modal-foot">
-            <button class="btn-ghost" onclick="closeModal('modalPreview')">Retour</button>
-            <button class="btn-primary" id="publishFromPreviewBtn"><i class="fas fa-paper-plane"></i> Publier</button>
+            <button class="btn-ghost" onclick="closeModal('modalPreview')">
+                Retour
+            </button>
+            <button class="btn-primary" id="publishFromPreviewBtn">
+                <i class="fas fa-paper-plane"></i> Publier
+            </button>
         </div>
     </div>
 </div>
@@ -289,16 +492,48 @@
     <div class="c-modal-box">
         <div class="c-modal-head">
             <h2><i class="fas fa-chart-pie"></i> Créer un sondage</h2>
-            <button class="c-modal-close" onclick="closeModal('modalPoll')"><i class="fas fa-times"></i></button>
+            <button class="c-modal-close" onclick="closeModal('modalPoll')">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="c-modal-body">
-            <div class="c-field"><label>Question <span class="req">*</span></label><input type="text" class="c-input" id="pollQuestion" placeholder="Posez votre question..."></div>
-            <div class="c-field"><label>Options <span class="req">*</span> <span class="hint">(une par ligne, min. 2)</span></label><textarea class="c-textarea" id="pollOptions" rows="4" placeholder="Option 1&#10;Option 2&#10;Option 3..."></textarea></div>
-            <div class="c-field"><label>Durée</label><select class="c-select" id="pollDuration"><option value="1">1 jour</option><option value="3" selected>3 jours</option><option value="7">7 jours</option></select></div>
+            <div class="c-field">
+                <label>Question <span class="req">*</span></label>
+                <input
+                    type="text"
+                    class="c-input"
+                    id="pollQuestion"
+                    placeholder="Posez votre question..."
+                >
+            </div>
+            <div class="c-field">
+                <label>
+                    Options <span class="req">*</span>
+                    <span class="hint">(une par ligne, min. 2)</span>
+                </label>
+                <textarea
+                    class="c-textarea"
+                    id="pollOptions"
+                    rows="4"
+                    placeholder="Option 1&#10;Option 2&#10;Option 3..."
+                ></textarea>
+            </div>
+            <div class="c-field">
+                <label>Durée</label>
+                <select class="c-select" id="pollDuration">
+                    <option value="1">1 jour</option>
+                    <option value="3" selected>3 jours</option>
+                    <option value="7">7 jours</option>
+                </select>
+            </div>
         </div>
         <div class="c-modal-foot">
-            <button class="btn-ghost" onclick="closeModal('modalPoll')">Annuler</button>
-            <button class="btn-primary" id="createPollBtn"><i class="fas fa-check"></i> Publier le sondage</button>
+            <button class="btn-ghost" onclick="closeModal('modalPoll')">
+                Annuler
+            </button>
+            <button class="btn-primary" id="createPollBtn">
+                <i class="fas fa-check"></i> Publier le sondage
+            </button>
         </div>
     </div>
 </div>
@@ -308,17 +543,54 @@
     <div class="c-modal-box">
         <div class="c-modal-head">
             <h2><i class="fas fa-calendar-alt"></i> Créer un événement</h2>
-            <button class="c-modal-close" onclick="closeModal('modalEvent')"><i class="fas fa-times"></i></button>
+            <button class="c-modal-close" onclick="closeModal('modalEvent')">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="c-modal-body">
-            <div class="c-field"><label>Titre <span class="req">*</span></label><input type="text" class="c-input" id="eventTitle" placeholder="Nom de l'événement"></div>
-            <div class="c-field"><label>Date et heure <span class="req">*</span></label><input type="datetime-local" class="c-input" id="eventDate"></div>
-            <div class="c-field"><label>Lieu</label><input type="text" class="c-input" id="eventLocation" placeholder="Ville, stade, salle..."></div>
-            <div class="c-field"><label>Description</label><textarea class="c-textarea" id="eventDesc" rows="3" placeholder="Détails de l'événement..."></textarea></div>
+            <div class="c-field">
+                <label>Titre <span class="req">*</span></label>
+                <input
+                    type="text"
+                    class="c-input"
+                    id="eventTitle"
+                    placeholder="Nom de l'événement"
+                >
+            </div>
+            <div class="c-field">
+                <label>Date et heure <span class="req">*</span></label>
+                <input
+                    type="datetime-local"
+                    class="c-input"
+                    id="eventDate"
+                >
+            </div>
+            <div class="c-field">
+                <label>Lieu</label>
+                <input
+                    type="text"
+                    class="c-input"
+                    id="eventLocation"
+                    placeholder="Ville, stade, salle..."
+                >
+            </div>
+            <div class="c-field">
+                <label>Description</label>
+                <textarea
+                    class="c-textarea"
+                    id="eventDesc"
+                    rows="3"
+                    placeholder="Détails de l'événement..."
+                ></textarea>
+            </div>
         </div>
         <div class="c-modal-foot">
-            <button class="btn-ghost" onclick="closeModal('modalEvent')">Annuler</button>
-            <button class="btn-primary" id="createEventBtn"><i class="fas fa-check"></i> Créer l'événement</button>
+            <button class="btn-ghost" onclick="closeModal('modalEvent')">
+                Annuler
+            </button>
+            <button class="btn-primary" id="createEventBtn">
+                <i class="fas fa-check"></i> Créer l'événement
+            </button>
         </div>
     </div>
 </div>
@@ -328,14 +600,27 @@
     <div class="c-modal-box c-modal-box-sm">
         <div class="c-modal-head">
             <h2><i class="fas fa-clock"></i> Programmer</h2>
-            <button class="c-modal-close" onclick="closeModal('modalSchedule')"><i class="fas fa-times"></i></button>
+            <button class="c-modal-close" onclick="closeModal('modalSchedule')">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="c-modal-body">
-            <div class="c-field"><label>Date et heure de publication <span class="req">*</span></label><input type="datetime-local" class="c-input" id="scheduleDateTime"></div>
+            <div class="c-field">
+                <label>Date et heure de publication <span class="req">*</span></label>
+                <input
+                    type="datetime-local"
+                    class="c-input"
+                    id="scheduleDateTime"
+                >
+            </div>
         </div>
         <div class="c-modal-foot">
-            <button class="btn-ghost" onclick="closeModal('modalSchedule')">Annuler</button>
-            <button class="btn-primary" id="confirmScheduleBtn"><i class="fas fa-check"></i> Programmer</button>
+            <button class="btn-ghost" onclick="closeModal('modalSchedule')">
+                Annuler
+            </button>
+            <button class="btn-primary" id="confirmScheduleBtn">
+                <i class="fas fa-check"></i> Programmer
+            </button>
         </div>
     </div>
 </div>
@@ -345,7 +630,12 @@
     <div class="c-modal-box">
         <div class="c-modal-head">
             <h2><i class="fas fa-user"></i> Profil</h2>
-            <button class="c-modal-close" onclick="closeModal('modalUserProfile')"><i class="fas fa-times"></i></button>
+            <button
+                class="c-modal-close"
+                onclick="closeModal('modalUserProfile')"
+            >
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="c-modal-body" id="userProfileBody"></div>
     </div>
@@ -356,9 +646,28 @@
     <div class="c-modal-box c-modal-box-sm">
         <div class="c-modal-head">
             <h2><i class="fas fa-heart"></i> Personnes qui aiment</h2>
-            <button class="c-modal-close" onclick="closeModal('modalLikes')"><i class="fas fa-times"></i></button>
+            <button class="c-modal-close" onclick="closeModal('modalLikes')">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        <div class="c-modal-body"><ul id="likesList" class="users-list"></ul></div>
+        <div class="c-modal-body">
+            <ul id="likesList" class="users-list"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- Dislikes -->
+<div id="modalDislikes" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-heart-broken"></i> Personnes qui n'aiment pas</h2>
+            <button class="c-modal-close" onclick="closeModal('modalDislikes')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="c-modal-body">
+            <ul id="dislikesList" class="users-list"></ul>
+        </div>
     </div>
 </div>
 
@@ -367,14 +676,28 @@
     <div class="c-modal-box c-modal-box-sm">
         <div class="c-modal-head">
             <h2><i class="fas fa-flag"></i> Signaler</h2>
-            <button class="c-modal-close" onclick="closeModal('modalReport')"><i class="fas fa-times"></i></button>
+            <button class="c-modal-close" onclick="closeModal('modalReport')">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="c-modal-body">
-            <div class="c-field"><label>Raison <span class="req">*</span></label><textarea class="c-textarea" id="reportReason" rows="3" placeholder="Pourquoi signalez-vous ce contenu ?"></textarea></div>
+            <div class="c-field">
+                <label>Raison <span class="req">*</span></label>
+                <textarea
+                    class="c-textarea"
+                    id="reportReason"
+                    rows="3"
+                    placeholder="Pourquoi signalez-vous ce contenu ?"
+                ></textarea>
+            </div>
         </div>
         <div class="c-modal-foot">
-            <button class="btn-ghost" onclick="closeModal('modalReport')">Annuler</button>
-            <button class="btn-danger" id="submitReportBtn"><i class="fas fa-flag"></i> Envoyer</button>
+            <button class="btn-ghost" onclick="closeModal('modalReport')">
+                Annuler
+            </button>
+            <button class="btn-danger" id="submitReportBtn">
+                <i class="fas fa-flag"></i> Envoyer
+            </button>
         </div>
     </div>
 </div>
@@ -384,31 +707,84 @@
     <div class="c-modal-box c-modal-box-sm">
         <div class="c-modal-head">
             <h2><i class="fas fa-share-alt"></i> Partager</h2>
-            <button class="c-modal-close" onclick="closeModal('modalShare')"><i class="fas fa-times"></i></button>
+            <button class="c-modal-close" onclick="closeModal('modalShare')">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="c-modal-body">
             <div class="share-grid">
-                <button class="share-btn" data-network="facebook"><i class="fab fa-facebook-f"></i><span>Facebook</span></button>
-                <button class="share-btn" data-network="twitter"><i class="fab fa-twitter"></i><span>Twitter/X</span></button>
-                <button class="share-btn" data-network="whatsapp"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></button>
-                <button class="share-btn" data-network="copy"><i class="fas fa-link"></i><span>Copier le lien</span></button>
+                <button class="share-btn" data-network="facebook">
+                    <i class="fab fa-facebook-f"></i><span>Facebook</span>
+                </button>
+                <button class="share-btn" data-network="twitter">
+                    <i class="fab fa-twitter"></i><span>Twitter/X</span>
+                </button>
+                <button class="share-btn" data-network="whatsapp">
+                    <i class="fab fa-whatsapp"></i><span>WhatsApp</span>
+                </button>
+                <button class="share-btn" data-network="copy">
+                    <i class="fas fa-link"></i><span>Copier le lien</span>
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Confirmation -->
-<div id="modalConfirm" class="c-modal">
+<!-- Bloquer utilisateur -->
+<div id="modalBlock" class="c-modal">
     <div class="c-modal-box c-modal-box-sm">
         <div class="c-modal-head">
-            <h2 id="confirmTitle">Confirmation</h2>
-            <button class="c-modal-close" onclick="closeModal('modalConfirm')"><i class="fas fa-times"></i></button>
+            <h2><i class="fas fa-ban"></i> Bloquer</h2>
+            <button class="c-modal-close" onclick="closeModal('modalBlock')">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        <div class="c-modal-body"><p id="confirmDesc"></p></div>
+        <div class="c-modal-body">
+            <p style="color:var(--gray)">
+                Cet utilisateur ne pourra plus voir votre profil ni interagir avec vous.
+            </p>
+        </div>
         <div class="c-modal-foot">
-            <button class="btn-ghost" onclick="closeModal('modalConfirm')">Annuler</button>
-            <button class="btn-danger" id="confirmActionBtn">Confirmer</button>
+            <button class="btn-ghost" onclick="closeModal('modalBlock')">
+                Annuler
+            </button>
+            <button class="btn-danger" id="confirmBlockBtn">
+                <i class="fas fa-ban"></i> Bloquer
+            </button>
         </div>
+    </div>
+</div>
+
+<!-- Notifications -->
+<div id="modalNotifs" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-bell"></i> Notifications</h2>
+            <button class="c-modal-close" onclick="closeModal('modalNotifs')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="c-modal-body">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+                <button class="btn-ghost" id="markAllReadBtn">
+                    Tout marquer comme lu
+                </button>
+            </div>
+            <ul id="notifsList" class="notifs-list"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- Zoom média -->
+<div id="modalMedia" class="c-modal" style="background:rgba(0,0,0,0.92)">
+    <div style="position:relative;max-width:90vw;max-height:90vh">
+        <button
+            onclick="closeModal('modalMedia')"
+            style="position:absolute;top:-40px;right:0;color:white;font-size:1.3rem;background:none;border:none;cursor:pointer"
+        >
+            <i class="fas fa-times"></i>
+        </button>
+        <div id="mediaViewer"></div>
     </div>
 </div>
 
@@ -418,30 +794,190 @@
         <div class="story-top">
             <div class="story-progress-bars" id="storyProgressBars"></div>
             <div class="story-author" id="storyAuthor"></div>
-            <button class="story-close-btn" id="storyCloseBtn"><i class="fas fa-times"></i></button>
+            <button class="story-close-btn" id="storyCloseBtn">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="story-media" id="storyMedia"></div>
-        <button class="story-nav prev" id="storyPrev"><i class="fas fa-chevron-left"></i></button>
-        <button class="story-nav next" id="storyNext"><i class="fas fa-chevron-right"></i></button>
+        <button class="story-nav prev" id="storyPrev">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="story-nav next" id="storyNext">
+            <i class="fas fa-chevron-right"></i>
+        </button>
         <div class="story-reply-bar">
-            <input type="text" id="storyReplyInput" placeholder="Répondre à la story...">
-            <button id="storyReplyBtn"><i class="fas fa-paper-plane"></i></button>
+            <input
+                type="text"
+                id="storyReplyInput"
+                placeholder="Répondre à la story..."
+            >
+            <button id="storyReplyBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Zoom média -->
-<div id="modalMedia" class="c-modal" style="background:rgba(0,0,0,0.92)">
-    <div style="position:relative;max-width:90vw;max-height:90vh">
-        <button onclick="closeModal('modalMedia')" style="position:absolute;top:-40px;right:0;color:white;font-size:1.3rem;background:none;border:none;cursor:pointer"><i class="fas fa-times"></i></button>
-        <div id="mediaViewer"></div>
+<!-- Upload story -->
+<div id="modalStoryUpload" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-smile"></i> Ajouter une story</h2>
+            <button
+                class="c-modal-close"
+                onclick="closeModal('modalStoryUpload')"
+            >
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="c-modal-body">
+            <div class="c-field">
+                <label>Photo ou Vidéo <span class="req">*</span></label>
+                <input
+                    type="file"
+                    class="c-input"
+                    id="storyFileInput"
+                    accept="image/*,video/*"
+                >
+            </div>
+            <div class="c-field">
+                <label>Texte sur la story <span class="hint">(optionnel)</span></label>
+                <input
+                    type="text"
+                    class="c-input"
+                    id="storyCaption"
+                    placeholder="Dis quelque chose..."
+                    maxlength="120"
+                >
+            </div>
+            <div class="c-field">
+                <label>Durée d'affichage</label>
+                <select class="c-select" id="storyDuration">
+                    <option value="5">5 secondes</option>
+                    <option value="10" selected>10 secondes</option>
+                    <option value="15">15 secondes</option>
+                </select>
+            </div>
+        </div>
+        <div class="c-modal-foot">
+            <button
+                class="btn-ghost"
+                onclick="closeModal('modalStoryUpload')"
+            >
+                Annuler
+            </button>
+            <button class="btn-primary" id="uploadStoryBtn">
+                <i class="fas fa-upload"></i> Publier la story
+            </button>
+        </div>
     </div>
 </div>
 
-<!-- ===== TOASTS ===== -->
-<div id="toastContainer" class="c-toast-container"></div>
+<!-- Réponse à commentaire -->
+<div id="modalReply" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-reply"></i> Répondre</h2>
+            <button class="c-modal-close" onclick="closeModal('modalReply')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="c-modal-body">
+            <div class="original-comment-quote" id="originalCommentQuote"></div>
+            <textarea
+                class="c-textarea"
+                id="replyContent"
+                rows="3"
+                placeholder="Votre réponse..."
+            ></textarea>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalReply')">
+                Annuler
+            </button>
+            <button class="btn-primary" id="sendReplyBtn">
+                <i class="fas fa-paper-plane"></i> Envoyer
+            </button>
+        </div>
+    </div>
+</div>
 
-<!-- ===== FOOTER ===== -->
+<!-- Edit profil communauté -->
+<div id="modalEditProfile" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-pen"></i> Modifier ma communauté</h2>
+            <button
+                class="c-modal-close"
+                onclick="closeModal('modalEditProfile')"
+            >
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="c-modal-body">
+            <div class="c-field">
+                <label>Nom</label>
+                <input type="text" class="c-input" id="editCommName">
+            </div>
+            <div class="c-field">
+                <label>Bio</label>
+                <textarea
+                    class="c-textarea"
+                    id="editCommBio"
+                    rows="3"
+                ></textarea>
+            </div>
+            <div class="c-field">
+                <label>Spécialité</label>
+                <input type="text" class="c-input" id="editCommSpecialty">
+            </div>
+            <div class="c-field">
+                <label>Site web</label>
+                <input type="url" class="c-input" id="editCommWebsite">
+            </div>
+        </div>
+        <div class="c-modal-foot">
+            <button
+                class="btn-ghost"
+                onclick="closeModal('modalEditProfile')"
+            >
+                Annuler
+            </button>
+            <button class="btn-primary" id="saveProfileBtn">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation -->
+<div id="modalConfirm" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2 id="confirmTitle">Confirmation</h2>
+            <button class="c-modal-close" onclick="closeModal('modalConfirm')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="c-modal-body">
+            <p id="confirmDesc" style="color:var(--gray)"></p>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalConfirm')">
+                Annuler
+            </button>
+            <button class="btn-danger" id="confirmActionBtn">Confirmer</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== FIN MODALES ========== -->
+
+<!-- ===== DEBUT TOAST CONTAINER ===== -->
+<div id="toastContainer" class="c-toast-container"></div>
+<!-- ===== FIN TOAST CONTAINER ===== -->
+
+<!-- ===== DEBUT FOOTER ===== -->
 <footer class="c-footer">
     <div class="c-footer-badges">
         <span class="c-badge">Conformité APDP Bénin</span>
@@ -449,9 +985,12 @@
         <span class="c-badge">Triple Projet Sport-Étude-Carrière</span>
     </div>
     <p>HubISoccer — RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
-    <p>© 2026 HubISoccer. Tous droits réservés.</p>
+    <p>© 2026 HubISoccer - The Hub of Inspiration of Soccer. Tous droits réservés.</p>
 </footer>
+<!-- ===== FIN FOOTER ===== -->
 
+<!-- ===== DEBUT SCRIPT ===== -->
 <script src="feed.js"></script>
+<!-- ===== FIN SCRIPT ===== -->
 </body>
 </html>

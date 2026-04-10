@@ -115,7 +115,6 @@ function updateAvatarDisplay(avatarUrl, fullName) {
 
     const initials = getInitials(fullName);
 
-    // Méthode unique : initiales par défaut, image seulement si avatarUrl valide
     const applyAvatar = (imgEl, initialsEl, url) => {
         if (url && url !== '') {
             imgEl.src = url;
@@ -199,7 +198,6 @@ async function loadMyCommunity() {
     }
     myCommunity = data;
 
-    // Remplir la sidebar droite
     const cover = document.getElementById('myCommCover');
     if (data.cover_url) cover.style.background = `url(${data.cover_url}) center/cover`;
 
@@ -312,7 +310,6 @@ function makePostCard(post) {
     const authorRole = author.role_code || '';
     const certified = author.certified ? '<i class="fas fa-check-circle" style="color:var(--primary);margin-left:4px;"></i>' : '';
 
-    // Gestion avatar auteur : initiales par défaut
     const authorInitials = getInitials(authorName);
     const authorAvatarHtml = author.avatar_url
         ? `<img class="post-avatar" src="${author.avatar_url}" alt="" onclick="openUserProfile('${post.author_hubisoccer_id}')" style="display:block;">`

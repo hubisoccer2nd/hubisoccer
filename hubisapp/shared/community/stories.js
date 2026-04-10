@@ -1,0 +1,1081 @@
+// ============================================================
+//  HUBISOCCER — STORIES.JS
+//  Visionneuse complète de stories — Adapté hubisapp
+// ============================================================
+
+'use strict';
+
+// Début configuration Supabase
+const SUPABASE_URL  = 'https://niewavngipvowwxxguqu.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+window.__SUPABASE_CLIENT = sb;
+// Fin configuration Supabase
+
+// Début état global
+let currentUser       = null;
+let currentProfile    = null;
+let myStory           = null;
+let storyGroups       = [];
+let viewedGroups      = new Set();
+let activeGroupIdx    = 0;
+let activeStoryIdx    = 0;
+let isPaused          = false;
+let isMuted           = false;
+let storyTimer        = null;
+let storyStartTime    = null;
+let groupStartTime    = null;
+const MAX_GROUP_DURATION = 10 * 60 * 1000;
+let currentStoryDuration = 10000;
+let mediaRecorder     = null;
+let audioChunks       = [];
+let recInterval       = null;
+let recSeconds        = 0;
+let pendingAudioBlob  = null;
+let pendingMediaReplyFile = null;
+let pendingMediaReplyType = null;
+let selectedCoinsAmount   = 0;
+let storyUploadFile   = null;
+let storyTextBg       = 'linear-gradient(135deg,#551B8C,#3d1266)';
+let touchStartX       = 0;
+let touchStartY       = 0;
+let touchStartTime    = 0;
+let longPressTimer    = null;
+// Fin état global
+
+// Début fonctions utilitaires
+function toast(msg, type='info', dur=20000) {
+    const c = document.getElementById('toastContainer');
+    const icons = {success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
+    const el = document.createElement('div');
+    el.className = `c-toast ${type}`;
+    el.innerHTML = `<i class="fas ${icons[type]||icons.info}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+    c.appendChild(el);
+    setTimeout(() => { el.style.animation = 'slideInRight 0.3s reverse'; setTimeout(() => el.remove(), 300); }, dur);
+}
+
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name[0].toUpperCase();
+}
+
+function timeSince(d) {
+    const s = Math.floor((new Date() - new Date(d)) / 1000);
+    if (s < 60) return 'À l\'instant';
+    if (s < 3600) return `${Math.floor(s/60)} min`;
+    if (s < 86400) return `${Math.floor(s/3600)}h`;
+    return `${Math.floor(s/86400)}j`;
+}
+
+function escapeHtml(s) {
+    if (!s) return '';
+    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function setLoader(show) {
+    document.getElementById('globalLoader').style.display = show ? 'flex' : 'none';
+}
+
+function openModal(id) {
+    const e = document.getElementById(id);
+    if (e) { e.style.display = 'flex'; setTimeout(() => e.classList.add('show'), 10); }
+}
+
+function closeModal(id) {
+    const e = document.getElementById(id);
+    if (e) { e.classList.remove('show'); e.style.display = 'none'; }
+}
+window.closeModal = closeModal;
+
+function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
+    const img = document.getElementById(imgId);
+    const initials = document.getElementById(initialsId);
+    if (!img || !initials) return;
+    const text = getInitials(fullName);
+    if (avatarUrl && avatarUrl !== '') {
+        img.src = avatarUrl;
+        img.style.display = 'block';
+        initials.style.display = 'none';
+    } else {
+        img.style.display = 'none';
+        initials.style.display = 'flex';
+        initials.textContent = text;
+    }
+}
+// Fin fonctions utilitaires
+
+// Début session et profil
+async function checkSession() {
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (error || !session) { window.location.href = '../../authprive/users/login.html'; return null; }
+    currentUser = session.user;
+    return currentUser;
+}
+
+async function loadProfile() {
+    const { data, error } = await sb
+        .from('supabaseAuthPrive_profiles')
+        .select('*')
+        .eq('auth_uuid', currentUser.id)
+        .single();
+    if (error) { toast('Erreur chargement profil', 'error'); return null; }
+    currentProfile = data;
+
+    document.getElementById('navUserName').textContent = data.full_name || data.display_name || 'Utilisateur';
+    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'navUserAvatar', 'navUserAvatarInitials');
+    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'myStoryAvatar', 'myStoryAvatarInitials');
+    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'svReplyAvatar', 'svReplyAvatarInitials');
+
+    return data;
+}
+// Fin session et profil
+
+// Début chargement des stories
+async function loadAllStories() {
+    const { data: mine } = await sb
+        .from('supabaseAuthPrive_stories')
+        .select('*')
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    myStory = mine;
+
+    const { data: follows } = await sb
+        .from('supabaseAuthPrive_follows')
+        .select('following_hubisoccer_id')
+        .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
+    const followIds = (follows || []).map(f => f.following_hubisoccer_id).filter(id => id !== currentProfile.hubisoccer_id);
+
+    let allStories = [];
+    if (followIds.length > 0) {
+        const { data } = await sb
+            .from('supabaseAuthPrive_stories')
+            .select('*, author:user_hubisoccer_id(hubisoccer_id, full_name, display_name, avatar_url, feed_id, role_code)')
+            .in('user_hubisoccer_id', followIds)
+            .gt('expires_at', new Date().toISOString())
+            .order('created_at', { ascending: false });
+        allStories = data || [];
+    }
+
+    const groups = {};
+    allStories.forEach(s => {
+        if (!groups[s.user_hubisoccer_id]) {
+            groups[s.user_hubisoccer_id] = { profile: s.author, stories: [], userId: s.user_hubisoccer_id };
+        }
+        groups[s.user_hubisoccer_id].stories.push(s);
+    });
+    storyGroups = Object.values(groups);
+
+    const { data: viewed } = await sb
+        .from('supabaseAuthPrive_story_views')
+        .select('story_id')
+        .eq('viewer_hubisoccer_id', currentProfile.hubisoccer_id);
+    const viewedIds = new Set((viewed || []).map(v => v.story_id));
+
+    storyGroups.forEach(g => {
+        const allSeen = g.stories.every(s => viewedIds.has(s.id));
+        if (allSeen) viewedGroups.add(g.userId);
+    });
+
+    renderStoriesList();
+    setupMyStoryUI();
+}
+
+function renderStoriesList() {
+    const unviewed = storyGroups.filter(g => !viewedGroups.has(g.userId));
+    const viewed   = storyGroups.filter(g => viewedGroups.has(g.userId));
+
+    const followList = document.getElementById('followingStoriesList');
+    followList.innerHTML = unviewed.length === 0
+        ? '<p style="color:rgba(255,255,255,0.4);font-size:0.82rem;padding:10px 0">Aucune nouvelle story.</p>'
+        : unviewed.map((g, i) => makeStoryListItem(g, i, false)).join('');
+
+    const viewedList = document.getElementById('viewedStoriesList');
+    if (viewed.length > 0) {
+        viewedList.innerHTML = viewed.map((g, i) => makeStoryListItem(g, unviewed.length + i, true)).join('');
+        document.getElementById('viewedStoriesSection').style.display = 'block';
+    }
+
+    document.querySelectorAll('.story-list-item').forEach(el => {
+        el.addEventListener('click', () => openStoryGroup(parseInt(el.dataset.groupIdx)));
+    });
+}
+
+function makeStoryListItem(g, idx, seen) {
+    const p = g.profile || {};
+    const name = p.full_name || p.display_name || 'Utilisateur';
+    return `
+        <div class="story-list-item" data-group-idx="${idx}">
+            <div class="story-list-avatar-wrap ${seen ? 'seen' : ''}">
+                ${p.avatar_url ? `<img src="${p.avatar_url}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
+                <div class="story-list-avatar-initials" style="display:${p.avatar_url ? 'none' : 'flex'};">${getInitials(name)}</div>
+            </div>
+            <div class="story-list-info">
+                <div class="story-list-name">${escapeHtml(name)}</div>
+                <div class="story-list-meta">
+                    ${g.stories.length} story${g.stories.length > 1 ? 's' : ''} ·
+                    ${timeSince(g.stories[0].created_at)}
+                </div>
+            </div>
+            <div class="story-list-count ${seen ? 'seen' : ''}">${g.stories.length}</div>
+        </div>
+    `;
+}
+
+function setupMyStoryUI() {
+    const addEl = document.getElementById('myStoryAdd');
+    const existingEl = document.getElementById('myStoryExisting');
+
+    if (myStory) {
+        addEl.style.display = 'none';
+        existingEl.style.display = 'flex';
+        document.getElementById('myStoryThumbImg').src = myStory.media_url || currentProfile.avatar_url || '../../img/user-default.jpg';
+        document.getElementById('myStoryTime').textContent = timeSince(myStory.created_at);
+    } else {
+        addEl.style.display = 'flex';
+        existingEl.style.display = 'none';
+    }
+
+    addEl.addEventListener('click', () => openModal('modalUploadStory'));
+}
+// Fin chargement des stories
+
+// Début ouverture groupe
+function openStoryGroup(groupIdx) {
+    activeGroupIdx = groupIdx;
+    activeStoryIdx = 0;
+    groupStartTime = Date.now();
+
+    document.getElementById('storiesListPage').style.display = 'none';
+    document.getElementById('storyViewerPage').style.display = 'flex';
+
+    renderCurrentStory();
+    setupSwipeGestures();
+}
+
+function viewMyStory() {
+    if (!myStory) return;
+    storyGroups.unshift({ profile: currentProfile, stories: [myStory], userId: currentProfile.hubisoccer_id, isOwn: true });
+    openStoryGroup(0);
+}
+window.viewMyStory = viewMyStory;
+
+function renderCurrentStory() {
+    const group = storyGroups[activeGroupIdx];
+    if (!group) { closeViewer(); return; }
+
+    if (groupStartTime && Date.now() - groupStartTime >= MAX_GROUP_DURATION) {
+        toast('Limite de 10 min atteinte', 'info');
+        goToNextGroup();
+        return;
+    }
+
+    const story = group.stories[activeStoryIdx];
+    if (!story) { goToNextGroup(); return; }
+
+    clearStoryTimer();
+    buildProgressBars(group.stories.length);
+
+    const p = group.profile || {};
+    const name = p.full_name || p.display_name || 'Utilisateur';
+    updateAvatarDisplay(p.avatar_url, name, 'svAuthorAvatar', 'svAuthorAvatarInitials');
+    document.getElementById('svAuthorName').textContent = name;
+    document.getElementById('svAuthorTime').textContent = timeSince(story.created_at);
+    document.getElementById('svAuthorHandle').textContent = p.feed_id ? '@' + p.feed_id : '';
+
+    const isOwn = story.user_hubisoccer_id === currentProfile.hubisoccer_id;
+    document.getElementById('svOptionsBtn').style.display = isOwn ? 'flex' : 'none';
+    document.getElementById('svOtherOptionsBtn').style.display = !isOwn ? 'flex' : 'none';
+
+    const captionEl = document.getElementById('svCaption');
+    if (story.caption) {
+        captionEl.textContent = story.caption;
+        captionEl.style.display = 'block';
+    } else {
+        captionEl.style.display = 'none';
+    }
+
+    const mediaArea = document.getElementById('svMediaArea');
+    const mediaLoader = document.getElementById('svMediaLoader');
+    mediaLoader.style.display = 'flex';
+    while (mediaArea.children.length > 1) mediaArea.removeChild(mediaArea.lastChild);
+
+    currentStoryDuration = (story.duration || 10) * 1000;
+
+    if (story.media_type === 'video') {
+        const vid = document.createElement('video');
+        vid.className = 'sv-story-video';
+        vid.src = story.media_url;
+        vid.autoplay = true;
+        vid.playsInline = true;
+        vid.muted = isMuted;
+        vid.loop = false;
+        vid.onloadeddata = () => { mediaLoader.style.display = 'none'; startStoryTimer(Math.min(vid.duration * 1000, currentStoryDuration)); };
+        vid.onerror = () => { mediaLoader.style.display = 'none'; startStoryTimer(currentStoryDuration); };
+        mediaArea.appendChild(vid);
+        document.getElementById('svMuteBtn').style.display = 'flex';
+    } else if (story.media_type === 'text') {
+        const div = document.createElement('div');
+        div.className = 'sv-story-text-card';
+        div.style.background = story.text_bg || 'linear-gradient(135deg,#551B8C,#3d1266)';
+        div.textContent = story.text_content || '';
+        mediaArea.appendChild(div);
+        mediaLoader.style.display = 'none';
+        document.getElementById('svMuteBtn').style.display = 'none';
+        startStoryTimer(currentStoryDuration);
+    } else {
+        const img = document.createElement('img');
+        img.className = 'sv-story-img';
+        img.src = story.media_url;
+        img.alt = '';
+        img.onload = () => { mediaLoader.style.display = 'none'; startStoryTimer(currentStoryDuration); };
+        img.onerror = () => { mediaLoader.style.display = 'none'; startStoryTimer(currentStoryDuration); };
+        mediaArea.appendChild(img);
+        document.getElementById('svMuteBtn').style.display = 'none';
+    }
+
+    markStoryViewed(story.id, group.userId);
+}
+
+function buildProgressBars(count) {
+    const container = document.getElementById('svProgressBars');
+    container.innerHTML = Array.from({ length: count }, (_, i) => `
+        <div class="sv-prog-bar" data-bar-idx="${i}" onclick="jumpToStory(${i})">
+            <div class="sv-prog-fill" id="progFill_${i}" style="width:${i < activeStoryIdx ? '100%' : '0%'}"></div>
+        </div>
+    `).join('');
+}
+
+function startStoryTimer(duration) {
+    clearStoryTimer();
+    isPaused = false;
+    storyStartTime = Date.now();
+
+    const fill = document.getElementById(`progFill_${activeStoryIdx}`);
+    if (fill) {
+        fill.style.transition = `width ${duration}ms linear`;
+        setTimeout(() => { if (fill) fill.style.width = '100%'; }, 30);
+    }
+
+    storyTimer = setTimeout(() => { goToNextStory(); }, duration);
+}
+
+function clearStoryTimer() {
+    clearTimeout(storyTimer);
+    storyTimer = null;
+}
+
+function pauseStory() {
+    if (isPaused) return;
+    isPaused = true;
+    clearStoryTimer();
+    const vid = document.querySelector('.sv-story-video');
+    if (vid) vid.pause();
+    const fill = document.getElementById(`progFill_${activeStoryIdx}`);
+    if (fill) {
+        const elapsed = Date.now() - storyStartTime;
+        const pct = Math.min(100, (elapsed / currentStoryDuration) * 100);
+        fill.style.transition = 'none';
+        fill.style.width = pct + '%';
+    }
+}
+
+function resumeStory() {
+    if (!isPaused) return;
+    isPaused = false;
+    const elapsed = storyStartTime ? Date.now() - storyStartTime : 0;
+    const remaining = Math.max(500, currentStoryDuration - elapsed);
+    const vid = document.querySelector('.sv-story-video');
+    if (vid) vid.play();
+    const fill = document.getElementById(`progFill_${activeStoryIdx}`);
+    if (fill) {
+        fill.style.transition = `width ${remaining}ms linear`;
+        setTimeout(() => { if (fill) fill.style.width = '100%'; }, 30);
+    }
+    storyTimer = setTimeout(() => { goToNextStory(); }, remaining);
+}
+
+function goToNextStory() {
+    const group = storyGroups[activeGroupIdx];
+    if (!group) { closeViewer(); return; }
+    if (activeStoryIdx < group.stories.length - 1) {
+        activeStoryIdx++;
+        renderCurrentStory();
+    } else {
+        goToNextGroup();
+    }
+}
+
+function goToPrevStory() {
+    if (activeStoryIdx > 0) {
+        activeStoryIdx--;
+        renderCurrentStory();
+    } else if (activeGroupIdx > 0) {
+        activeGroupIdx--;
+        activeStoryIdx = Math.max(0, (storyGroups[activeGroupIdx]?.stories.length || 1) - 1);
+        groupStartTime = Date.now();
+        renderCurrentStory();
+    }
+}
+
+function goToNextGroup() {
+    if (activeGroupIdx < storyGroups.length - 1) {
+        activeGroupIdx++;
+        activeStoryIdx = 0;
+        groupStartTime = Date.now();
+        renderCurrentStory();
+    } else {
+        closeViewer();
+    }
+}
+
+function jumpToStory(idx) {
+    activeStoryIdx = idx;
+    renderCurrentStory();
+}
+window.jumpToStory = jumpToStory;
+
+function closeViewer() {
+    clearStoryTimer();
+    stopAudioRecorder();
+    document.querySelectorAll('.sv-story-video').forEach(v => { v.pause(); v.src = ''; });
+    document.getElementById('storyViewerPage').style.display = 'none';
+    document.getElementById('storiesListPage').style.display = 'block';
+    if (storyGroups[0]?.isOwn) storyGroups.shift();
+}
+
+function setupSwipeGestures() {
+    const viewer = document.getElementById('storyViewerPage');
+    viewer.addEventListener('touchstart', onTouchStart, { passive: false });
+    viewer.addEventListener('touchmove', onTouchMove, { passive: false });
+    viewer.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.getElementById('svTapPrev').addEventListener('click', goToPrevStory);
+    document.getElementById('svTapNext').addEventListener('click', goToNextStory);
+}
+
+function onTouchStart(e) {
+    const t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    touchStartTime = Date.now();
+    longPressTimer = setTimeout(() => { pauseStory(); showPauseOverlay(true); }, 200);
+}
+
+function onTouchMove(e) {
+    clearTimeout(longPressTimer);
+    const dy = e.touches[0].clientY - touchStartY;
+    if (dy > 80 && Math.abs(e.touches[0].clientX - touchStartX) < 60) {
+        document.getElementById('storyViewerPage').style.transform = `translateY(${dy}px)`;
+        document.getElementById('storyViewerPage').style.opacity = `${1 - dy/300}`;
+    }
+}
+
+function onTouchEnd(e) {
+    clearTimeout(longPressTimer);
+    showPauseOverlay(false);
+    document.getElementById('storyViewerPage').style.transform = '';
+    document.getElementById('storyViewerPage').style.opacity = '';
+
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const dt = Date.now() - touchStartTime;
+
+    if (Math.abs(dx) > 80 && Math.abs(dy) < 60 && dt < 400) {
+        if (dx < 0) goToNextGroup();
+        else goToPrevStory();
+        return;
+    }
+    if (dy > 100 && Math.abs(dx) < 80) { closeViewer(); return; }
+    if (dt > 200 && isPaused) { resumeStory(); }
+}
+
+function showPauseOverlay(show) {
+    let el = document.querySelector('.sv-pause-overlay');
+    if (!el) {
+        el = document.createElement('div');
+        el.className = 'sv-pause-overlay';
+        el.innerHTML = '<div class="sv-pause-icon"><i class="fas fa-pause"></i></div>';
+        document.getElementById('storyViewerPage').appendChild(el);
+    }
+    el.classList.toggle('visible', show);
+}
+
+document.addEventListener('keydown', (e) => {
+    if (document.getElementById('storyViewerPage').style.display !== 'flex') return;
+    if (e.key === 'ArrowRight') goToNextStory();
+    if (e.key === 'ArrowLeft')  goToPrevStory();
+    if (e.key === 'Escape')     closeViewer();
+    if (e.key === ' ')          { e.preventDefault(); isPaused ? resumeStory() : pauseStory(); }
+});
+
+function toggleMute() {
+    isMuted = !isMuted;
+    const vid = document.querySelector('.sv-story-video');
+    if (vid) vid.muted = isMuted;
+    document.getElementById('svMuteIcon').className = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+}
+// Fin visionneuse
+
+// Début marquage vues
+async function markStoryViewed(storyId, authorId) {
+    if (authorId === currentProfile.hubisoccer_id) return;
+    await sb.from('supabaseAuthPrive_story_views').upsert({
+        story_id: storyId,
+        viewer_hubisoccer_id: currentProfile.hubisoccer_id,
+        viewed_at: new Date().toISOString()
+    }, { onConflict: 'story_id, viewer_hubisoccer_id' });
+}
+// Fin marquage vues
+
+// Début réponses
+async function sendTextReply() {
+    const input = document.getElementById('svReplyInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const group = storyGroups[activeGroupIdx];
+    const story = group?.stories[activeStoryIdx];
+    if (!story) return;
+    pauseStory();
+    input.value = '';
+    await sendStoryReplyMessage(story.user_hubisoccer_id, text, null, null);
+    toast('Réponse envoyée ✅', 'success');
+    resumeStory();
+}
+
+async function startAudioRecorder() {
+    try {
+        pauseStory();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        recSeconds = 0;
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+            pendingAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            stream.getTracks().forEach(t => t.stop());
+            await uploadAndSendAudioReply();
+        };
+        mediaRecorder.start();
+        document.getElementById('svAudioRecorder').style.display = 'flex';
+        document.getElementById('svReplyRow').style.display = 'none';
+        recInterval = setInterval(() => {
+            recSeconds++;
+            const m = Math.floor(recSeconds / 60);
+            const s = recSeconds % 60;
+            document.getElementById('svRecTime').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+            if (recSeconds >= 300) stopAudioRecorder();
+        }, 1000);
+    } catch (err) {
+        toast('Impossible d\'accéder au micro', 'warning');
+        resumeStory();
+    }
+}
+
+function stopAudioRecorder() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    clearInterval(recInterval);
+    document.getElementById('svAudioRecorder').style.display = 'none';
+    document.getElementById('svReplyRow').style.display = 'flex';
+}
+
+function cancelAudioRecorder() {
+    pendingAudioBlob = null;
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.ondataavailable = null;
+        mediaRecorder.onstop = null;
+        mediaRecorder.stop();
+    }
+    clearInterval(recInterval);
+    document.getElementById('svAudioRecorder').style.display = 'none';
+    document.getElementById('svReplyRow').style.display = 'flex';
+    resumeStory();
+    toast('Enregistrement annulé', 'info');
+}
+
+async function uploadAndSendAudioReply() {
+    if (!pendingAudioBlob) return;
+    const group = storyGroups[activeGroupIdx];
+    const story = group?.stories[activeStoryIdx];
+    if (!story) return;
+    try {
+        const fileName = `story_reply_audio/${currentProfile.hubisoccer_id}_${Date.now()}.webm`;
+        const { error: upErr } = await sb.storage.from('post_media').upload(fileName, pendingAudioBlob);
+        if (upErr) throw upErr;
+        const { data: urlData } = sb.storage.from('post_media').getPublicUrl(fileName);
+        await sendStoryReplyMessage(story.user_hubisoccer_id, '🎤 Message vocal', urlData.publicUrl, 'audio');
+        toast('Message vocal envoyé ✅', 'success');
+    } catch (err) {
+        toast('Erreur envoi audio : ' + err.message, 'error');
+    }
+    pendingAudioBlob = null;
+    resumeStory();
+}
+
+function openMediaReply(type) {
+    pendingMediaReplyType = type;
+    pauseStory();
+    document.getElementById('mediaReplyTitle').textContent = type === 'photo' ? 'Répondre par photo' : 'Répondre par vidéo';
+    document.getElementById('mediaReplyIcon').className = type === 'photo' ? 'fas fa-camera' : 'fas fa-video';
+    document.getElementById('mediaReplyHint').textContent = `Clique pour choisir une ${type === 'photo' ? 'photo' : 'vidéo'}`;
+    document.getElementById('mediaReplyInput').accept = type === 'photo' ? 'image/*' : 'video/*';
+    document.getElementById('mediaReplyPreview').innerHTML = `
+        <div class="media-reply-drop" id="mediaReplyDrop">
+            <i class="fas ${type === 'photo' ? 'fa-camera' : 'fa-video'}" style="font-size:2rem;color:var(--gray)"></i>
+            <p>Clique pour choisir une ${type === 'photo' ? 'photo' : 'vidéo'}</p>
+            <input type="file" id="mediaReplyInput" accept="${type === 'photo' ? 'image/*' : 'video/*'}" style="display:none">
+        </div>
+    `;
+    document.getElementById('mediaReplyDrop').addEventListener('click', () => document.getElementById('mediaReplyInput').click());
+    document.getElementById('mediaReplyInput').addEventListener('change', (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        pendingMediaReplyFile = file;
+        const url = URL.createObjectURL(file);
+        const isVid = file.type.startsWith('video/');
+        document.getElementById('mediaReplyPreview').innerHTML = isVid
+            ? `<video src="${url}" controls style="width:100%;max-height:200px;border-radius:8px"></video>`
+            : `<img src="${url}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px">`;
+    });
+    openModal('modalMediaReply');
+}
+
+async function sendMediaReply() {
+    if (!pendingMediaReplyFile) { toast('Sélectionne un fichier', 'warning'); return; }
+    const group = storyGroups[activeGroupIdx];
+    const story = group?.stories[activeStoryIdx];
+    if (!story) return;
+    const btn = document.getElementById('sendMediaReplyBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    try {
+        const ext = pendingMediaReplyFile.name.split('.').pop();
+        const path = `story_replies/${currentProfile.hubisoccer_id}_${Date.now()}.${ext}`;
+        const { error: upErr } = await sb.storage.from('post_media').upload(path, pendingMediaReplyFile);
+        if (upErr) throw upErr;
+        const { data: urlData } = sb.storage.from('post_media').getPublicUrl(path);
+        const caption = document.getElementById('mediaReplyCaption').value.trim();
+        const mediaType = pendingMediaReplyFile.type.startsWith('video/') ? 'video' : 'image';
+        await sendStoryReplyMessage(story.user_hubisoccer_id, caption || `📷 ${mediaType === 'video' ? 'Vidéo' : 'Photo'}`, urlData.publicUrl, mediaType);
+        closeModal('modalMediaReply');
+        toast('Réponse envoyée ✅', 'success');
+        pendingMediaReplyFile = null;
+    } catch (err) {
+        toast('Erreur envoi : ' + err.message, 'error');
+    } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer';
+        resumeStory();
+    }
+}
+// Fin réponses
+
+// Début messagerie
+async function sendStoryReplyMessage(recipientId, content, mediaUrl, mediaType) {
+    const { data: myParts } = await sb.from('supabaseAuthPrive_conversation_participants')
+        .select('conversation_id').eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
+    const myIds = (myParts || []).map(p => p.conversation_id);
+    let convId = null;
+    for (const cid of myIds) {
+        const { data: parts } = await sb.from('supabaseAuthPrive_conversation_participants')
+            .select('user_hubisoccer_id').eq('conversation_id', cid);
+        if (parts?.length === 2 && parts.some(p => p.user_hubisoccer_id === recipientId)) {
+            convId = cid; break;
+        }
+    }
+    if (!convId) {
+        const { data: newConv } = await sb.from('supabaseAuthPrive_conversations').insert({ is_group: false }).select().single();
+        if (newConv) {
+            convId = newConv.id;
+            await sb.from('supabaseAuthPrive_conversation_participants').insert([
+                { conversation_id: convId, user_hubisoccer_id: currentProfile.hubisoccer_id },
+                { conversation_id: convId, user_hubisoccer_id: recipientId }
+            ]);
+        }
+    }
+    if (!convId) return;
+    await sb.from('supabaseAuthPrive_messages').insert({
+        conversation_id: convId,
+        user_hubisoccer_id: currentProfile.hubisoccer_id,
+        content: content || null,
+        media_url: mediaUrl || null,
+        media_type: mediaType || null,
+        deleted_for: [], reactions: {}, edited: false, pinned: false
+    });
+    await sb.from('supabaseAuthPrive_conversations').update({ updated_at: new Date().toISOString() }).eq('id', convId);
+}
+// Fin messagerie
+
+// Début réactions
+async function sendStoryReaction(emoji) {
+    const group = storyGroups[activeGroupIdx];
+    const story = group?.stories[activeStoryIdx];
+    if (!story) return;
+    closeModal('modalStoryReact');
+    const { data: existing } = await sb.from('supabaseAuthPrive_story_reactions')
+        .select('id, emoji').eq('story_id', story.id).eq('user_hubisoccer_id', currentProfile.hubisoccer_id).maybeSingle();
+    if (existing) {
+        if (existing.emoji === emoji) {
+            await sb.from('supabaseAuthPrive_story_reactions').delete().eq('id', existing.id);
+        } else {
+            await sb.from('supabaseAuthPrive_story_reactions').update({ emoji }).eq('id', existing.id);
+        }
+    } else {
+        await sb.from('supabaseAuthPrive_story_reactions').insert({ story_id: story.id, user_hubisoccer_id: currentProfile.hubisoccer_id, emoji });
+    }
+    if (story.user_hubisoccer_id !== currentProfile.hubisoccer_id) {
+        await sendStoryReplyMessage(story.user_hubisoccer_id, emoji + ' a réagi à ta story', null, null);
+    }
+    toast(`${emoji} Réaction envoyée !`, 'success');
+    const likeBtn = document.getElementById('svLikeStoryBtn');
+    const likeIcon = document.getElementById('svLikeIcon');
+    likeBtn.classList.toggle('liked');
+    likeIcon.className = likeBtn.classList.contains('liked') ? 'fas fa-heart' : 'far fa-heart';
+}
+// Fin réactions
+
+// Début HubiCoins
+async function loadCoinsBalance() {
+    const { data } = await sb.from('supabaseAuthPrive_hubis_wallets')
+        .select('balance').eq('user_hubisoccer_id', currentProfile.hubisoccer_id).maybeSingle();
+    document.getElementById('coinsBalance').textContent = (data?.balance || 0) + ' 🪙';
+}
+
+async function sendHubiCoins() {
+    const amount = selectedCoinsAmount || parseInt(document.getElementById('coinsCustomAmount').value || '0');
+    const message = document.getElementById('coinsMessage').value.trim();
+    if (!amount || amount <= 0) { toast('Indique un montant', 'warning'); return; }
+    const group = storyGroups[activeGroupIdx];
+    const story = group?.stories[activeStoryIdx];
+    if (!story || story.user_hubisoccer_id === currentProfile.hubisoccer_id) return;
+    const btn = document.getElementById('confirmSendCoinsBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    try {
+        const { data: wallet } = await sb.from('supabaseAuthPrive_hubis_wallets')
+            .select('balance').eq('user_hubisoccer_id', currentProfile.hubisoccer_id).maybeSingle();
+        const balance = wallet?.balance || 0;
+        if (balance < amount) { toast('Solde insuffisant', 'error'); return; }
+        await sb.from('supabaseAuthPrive_hubis_wallets').upsert(
+            { user_hubisoccer_id: currentProfile.hubisoccer_id, balance: balance - amount },
+            { onConflict: 'user_hubisoccer_id' }
+        );
+        const { data: recWallet } = await sb.from('supabaseAuthPrive_hubis_wallets')
+            .select('balance').eq('user_hubisoccer_id', story.user_hubisoccer_id).maybeSingle();
+        await sb.from('supabaseAuthPrive_hubis_wallets').upsert(
+            { user_hubisoccer_id: story.user_hubisoccer_id, balance: (recWallet?.balance || 0) + amount },
+            { onConflict: 'user_hubisoccer_id' }
+        );
+        await sb.from('supabaseAuthPrive_hubis_transactions').insert({
+            sender_hubisoccer_id: currentProfile.hubisoccer_id,
+            receiver_hubisoccer_id: story.user_hubisoccer_id,
+            amount, type: 'story_gift', reference_id: story.id, message: message || null
+        });
+        await sb.from('supabaseAuthPrive_notifications').insert({
+            recipient_hubisoccer_id: story.user_hubisoccer_id, type: 'coins_received',
+            title: 'HubiCoins reçus',
+            message: `${currentProfile.full_name || currentProfile.display_name} t'a envoyé ${amount} HubiCoins 🪙${message ? ' : "' + message + '"' : ''}`,
+            data: { link: 'feed.html' }
+        });
+        await sendStoryReplyMessage(story.user_hubisoccer_id, `🪙 ${amount} HubiCoins envoyés !${message ? ' "' + message + '"' : ''}`, null, null);
+        closeModal('modalSendCoins');
+        toast(`${amount} 🪙 HubiCoins envoyés ! ✅`, 'success');
+        document.getElementById('coinsCustomAmount').value = '';
+        document.getElementById('coinsMessage').value = '';
+        selectedCoinsAmount = 0;
+        document.querySelectorAll('.coins-preset').forEach(b => b.classList.remove('selected'));
+    } catch (err) {
+        toast('Erreur envoi HubiCoins : ' + err.message, 'error');
+    } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer';
+    }
+}
+// Fin HubiCoins
+
+// Début options story
+function openMyStoryOptions() { openModal('modalMyStoryOptions'); }
+window.openMyStoryOptions = openMyStoryOptions;
+
+function openSvOptions() {
+    const isOwn = storyGroups[activeGroupIdx]?.stories[activeStoryIdx]?.user_hubisoccer_id === currentProfile.hubisoccer_id;
+    if (isOwn) { pauseStory(); openModal('modalMyStoryOptions'); }
+    else { pauseStory(); openModal('modalOtherStoryOptions'); }
+}
+window.openSvOptions = openSvOptions;
+
+function confirmDeleteStory() {
+    closeModal('modalMyStoryOptions');
+    openModal('modalConfirmDelete');
+}
+window.confirmDeleteStory = confirmDeleteStory;
+
+async function deleteStory() {
+    const group = storyGroups[activeGroupIdx];
+    const story = group?.stories[activeStoryIdx];
+    if (!story || story.user_hubisoccer_id !== currentProfile.hubisoccer_id) return;
+    await sb.from('supabaseAuthPrive_stories').delete().eq('id', story.id);
+    toast('Story supprimée', 'success');
+    closeModal('modalConfirmDelete');
+    myStory = null;
+    group.stories.splice(activeStoryIdx, 1);
+    if (group.stories.length === 0) {
+        storyGroups.splice(activeGroupIdx, 1);
+        closeViewer();
+    } else {
+        activeStoryIdx = Math.min(activeStoryIdx, group.stories.length - 1);
+        renderCurrentStory();
+    }
+    setupMyStoryUI();
+}
+
+async function downloadMyStory() {
+    closeModal('modalMyStoryOptions');
+    const story = storyGroups[activeGroupIdx]?.stories[activeStoryIdx];
+    if (!story?.media_url) { toast('Téléchargement non disponible', 'info'); return; }
+    const a = document.createElement('a');
+    a.href = story.media_url;
+    a.download = `hubisoccer_story_${Date.now()}.${story.media_type === 'video' ? 'mp4' : 'jpg'}`;
+    a.target = '_blank'; a.click();
+    toast('Téléchargement démarré', 'success');
+    resumeStory();
+}
+window.downloadMyStory = downloadMyStory;
+
+async function showStoryViewers() {
+    closeModal('modalMyStoryOptions');
+    const story = storyGroups[activeGroupIdx]?.stories[activeStoryIdx];
+    if (!story) return;
+    const { data } = await sb.from('supabaseAuthPrive_story_views')
+        .select('*, viewer:viewer_hubisoccer_id(full_name, display_name, avatar_url)')
+        .eq('story_id', story.id).order('viewed_at', { ascending: false });
+    document.getElementById('svViewersCount').textContent = data?.length || 0;
+    const list = document.getElementById('svViewersList');
+    list.innerHTML = (data || []).map(v => {
+        const viewer = v.viewer || {};
+        const name = viewer.full_name || viewer.display_name || 'Utilisateur';
+        return `<div class="sv-viewer-item">
+            <div class="sv-viewer-avatar-initials">${getInitials(name)}</div>
+            <img src="${viewer.avatar_url || '../../img/user-default.jpg'}" alt="" style="display:${viewer.avatar_url ? 'block' : 'none'};">
+            <span class="sv-viewer-name">${escapeHtml(name)}</span>
+            <span class="sv-viewer-time">${timeSince(v.viewed_at)}</span>
+        </div>`;
+    }).join('') || '<p style="color:rgba(255,255,255,0.4);text-align:center;padding:20px">Aucune vue</p>';
+    document.getElementById('svViewersPanel').style.display = 'flex';
+}
+window.showStoryViewers = showStoryViewers;
+
+function closeViewersPanel() {
+    document.getElementById('svViewersPanel').style.display = 'none';
+    resumeStory();
+}
+window.closeViewersPanel = closeViewersPanel;
+
+async function muteStoryAuthor() {
+    closeModal('modalOtherStoryOptions');
+    const group = storyGroups[activeGroupIdx];
+    if (!group) return;
+    for (const s of group.stories) {
+        const { data: story } = await sb.from('supabaseAuthPrive_stories').select('hidden_for').eq('id', s.id).single();
+        const hiddenFor = [...(story?.hidden_for || []), currentUser.id];
+        await sb.from('supabaseAuthPrive_stories').update({ hidden_for: hiddenFor }).eq('id', s.id);
+    }
+    toast('Stories masquées', 'success');
+    storyGroups.splice(activeGroupIdx, 1);
+    if (storyGroups.length === 0) closeViewer();
+    else { activeGroupIdx = Math.min(activeGroupIdx, storyGroups.length - 1); activeStoryIdx = 0; renderCurrentStory(); }
+}
+window.muteStoryAuthor = muteStoryAuthor;
+
+async function reportCurrentStory() {
+    closeModal('modalOtherStoryOptions');
+    const story = storyGroups[activeGroupIdx]?.stories[activeStoryIdx];
+    if (!story) return;
+    await sb.from('supabaseAuthPrive_reports').insert({
+        post_id: null, comment_id: null, story_id: story.id,
+        reporter_hubisoccer_id: currentProfile.hubisoccer_id,
+        reason: 'Signalé depuis la visionneuse'
+    });
+    toast('Story signalée. Merci !', 'success');
+    resumeStory();
+}
+window.reportCurrentStory = reportCurrentStory;
+
+function openHideStoryOptions() {
+    closeModal('modalMyStoryOptions');
+    toast('Fonctionnalité à venir', 'info');
+    resumeStory();
+}
+window.openHideStoryOptions = openHideStoryOptions;
+// Fin options story
+
+// Début upload story
+function handleStoryFileSelect(file) {
+    const maxSize = file.type.startsWith('video/') ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) { toast(`Fichier trop volumineux (max ${file.type.startsWith('video/') ? '100' : '10'} Mo)`, 'warning'); return; }
+    storyUploadFile = file;
+    const url = URL.createObjectURL(file);
+    const preview = document.getElementById('storyFilePreview');
+    const isVideo = file.type.startsWith('video/');
+    preview.innerHTML = `
+        <div style="position:relative">
+            ${isVideo ? `<video src="${url}" controls style="width:100%;max-height:240px;border-radius:8px"></video>` : `<img src="${url}" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px">`}
+            <button class="story-preview-remove" onclick="clearStoryFile()"><i class="fas fa-times"></i></button>
+        </div>
+        <p style="font-size:0.72rem;color:var(--gray);margin-top:6px;text-align:center">${file.name} — ${(file.size/1024/1024).toFixed(1)} Mo</p>
+    `;
+    preview.style.display = 'block';
+    document.getElementById('storyDropArea').style.display = 'none';
+}
+window.clearStoryFile = function() {
+    storyUploadFile = null;
+    document.getElementById('storyFilePreview').style.display = 'none';
+    document.getElementById('storyFilePreview').innerHTML = '';
+    document.getElementById('storyDropArea').style.display = 'flex';
+    document.getElementById('storyFileInput').value = '';
+};
+
+async function publishStory() {
+    const caption = document.getElementById('storyCaptionInput').value.trim();
+    const duration = parseInt(document.getElementById('storyDurationSelect').value) || 10;
+    const visibility = document.getElementById('storyVisibilitySelect').value;
+    const activeType = document.querySelector('.story-type-tab.active')?.dataset.type || 'photo';
+    const btn = document.getElementById('publishStoryBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publication...';
+    try {
+        const expires = new Date(); expires.setHours(expires.getHours() + 24);
+        let storyData = {
+            user_hubisoccer_id: currentProfile.hubisoccer_id,
+            caption: caption || null,
+            duration, visibility,
+            expires_at: expires.toISOString(),
+            hidden_for: []
+        };
+        if (activeType === 'text') {
+            const textContent = document.getElementById('storyTextContent').value.trim();
+            if (!textContent) { toast('Écris quelque chose', 'warning'); return; }
+            storyData.media_type = 'text';
+            storyData.text_content = textContent;
+            storyData.text_bg = storyTextBg;
+        } else {
+            if (!storyUploadFile) { toast('Sélectionne un fichier', 'warning'); return; }
+            const ext = storyUploadFile.name.split('.').pop();
+            const path = `stories/${currentProfile.hubisoccer_id}/${Date.now()}.${ext}`;
+            const { error: upErr } = await sb.storage.from('post_media').upload(path, storyUploadFile);
+            if (upErr) throw upErr;
+            const { data: urlData } = sb.storage.from('post_media').getPublicUrl(path);
+            storyData.media_url = urlData.publicUrl;
+            storyData.media_type = storyUploadFile.type.startsWith('video/') ? 'video' : 'image';
+        }
+        const { error } = await sb.from('supabaseAuthPrive_stories').insert(storyData);
+        if (error) throw error;
+        closeModal('modalUploadStory');
+        toast('Story publiée ! 🎉', 'success');
+        storyUploadFile = null;
+        await loadAllStories();
+    } catch (err) {
+        toast('Erreur publication : ' + err.message, 'error');
+    } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publier la story';
+    }
+}
+// Fin upload story
+
+// Début initialisation
+async function init() {
+    const user = await checkSession();
+    if (!user) return;
+    setLoader(true);
+    await loadProfile();
+    await loadAllStories();
+    await loadCoinsBalance();
+    setLoader(false);
+    document.getElementById('storiesListPage').style.display = 'block';
+
+    const params = new URLSearchParams(window.location.search);
+    const groupUserId = params.get('group');
+    if (groupUserId) {
+        const idx = storyGroups.findIndex(g => g.userId === groupUserId);
+        if (idx >= 0) openStoryGroup(idx);
+    }
+
+    document.getElementById('svCloseBtn').addEventListener('click', closeViewer);
+    document.getElementById('svOptionsBtn').addEventListener('click', openSvOptions);
+    document.getElementById('svOtherOptionsBtn').addEventListener('click', openSvOptions);
+    document.getElementById('svMuteBtn').addEventListener('click', toggleMute);
+
+    const replyInput = document.getElementById('svReplyInput');
+    replyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendTextReply(); });
+    replyInput.addEventListener('focus', pauseStory);
+    replyInput.addEventListener('blur', resumeStory);
+    document.getElementById('svReplySendBtn').addEventListener('click', sendTextReply);
+
+    document.getElementById('svSendAudioBtn').addEventListener('click', startAudioRecorder);
+    document.getElementById('svRecStop').addEventListener('click', stopAudioRecorder);
+    document.getElementById('svRecCancel').addEventListener('click', cancelAudioRecorder);
+
+    document.getElementById('svSendPhotoBtn').addEventListener('click', () => openMediaReply('photo'));
+    document.getElementById('svSendVideoBtn').addEventListener('click', () => openMediaReply('video'));
+    document.getElementById('sendMediaReplyBtn').addEventListener('click', sendMediaReply);
+
+    document.getElementById('svLikeStoryBtn').addEventListener('click', () => { pauseStory(); openModal('modalStoryReact'); });
+    document.querySelectorAll('.story-react-grid span').forEach(el => {
+        el.addEventListener('click', () => sendStoryReaction(el.dataset.emoji));
+    });
+
+    document.getElementById('svSendCoinsBtn').addEventListener('click', () => { pauseStory(); loadCoinsBalance(); openModal('modalSendCoins'); });
+    document.querySelectorAll('.coins-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.coins-preset').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedCoinsAmount = parseInt(btn.dataset.amount);
+            document.getElementById('coinsCustomAmount').value = '';
+        });
+    });
+    document.getElementById('coinsCustomAmount').addEventListener('input', () => {
+        document.querySelectorAll('.coins-preset').forEach(b => b.classList.remove('selected'));
+        selectedCoinsAmount = 0;
+    });
+    document.getElementById('confirmSendCoinsBtn').addEventListener('click', sendHubiCoins);
+
+    const storyDropArea = document.getElementById('storyDropArea');
+    storyDropArea.addEventListener('click', () => document.getElementById('storyFileInput').click());
+    storyDropArea.addEventListener('dragover', (e) => { e.preventDefault(); storyDropArea.classList.add('dragging'); });
+    storyDropArea.addEventListener('dragleave', () => storyDropArea.classList.remove('dragging'));
+    storyDropArea.addEventListener('drop', (e) => {
+        e.preventDefault(); storyDropArea.classList.remove('dragging');
+        const file = e.dataTransfer.files[0]; if (file) handleStoryFileSelect(file);
+    });
+    document.getElementById('storyFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0]; if (file) handleStoryFileSelect(file);
+    });
+
+    document.querySelectorAll('.story-type-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.story-type-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const type = tab.dataset.type;
+            document.getElementById('storyUploadZone').style.display = type === 'text' ? 'none' : 'block';
+            document.getElementById('storyTextZone').style.display = type === 'text' ? 'block' : 'none';
+        });
+    });
+
+    document.querySelectorAll('.txt-style-btn').forEach(btn => {
+        btn.style.background = btn.dataset.bg;
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.txt-style-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            storyTextBg = btn.dataset.bg;
+            document.getElementById('storyTextCanvas').style.background = btn.dataset.bg;
+        });
+    });
+
+    document.getElementById('publishStoryBtn').addEventListener('click', publishStory);
+    document.getElementById('myStoryAdd').addEventListener('click', () => openModal('modalUploadStory'));
+    document.getElementById('deleteStoryConfirmBtn').addEventListener('click', deleteStory);
+
+    document.querySelectorAll('.c-modal').forEach(m => {
+        m.addEventListener('click', (e) => { if (e.target === m) { closeModal(m.id); resumeStory(); } });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+// Fin initialisation

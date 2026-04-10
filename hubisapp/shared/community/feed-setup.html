@@ -30,7 +30,8 @@
     </div>
     <div class="c-nav-right">
         <div class="c-user-menu" id="userMenu">
-            <img src="../../img/user-default.jpg" class="c-user-avatar" id="userAvatar" alt="">
+            <!-- Avatar dynamique (initiales ou image) -->
+            <div id="navUserAvatarContainer" class="c-user-avatar-container"></div>
             <span class="c-user-name" id="userName">...</span>
             <i class="fas fa-chevron-down fa-xs"></i>
             <div class="c-user-dropdown" id="userDropdown">
@@ -141,7 +142,7 @@
                 <label>Photo de profil <span class="req">*</span></label>
                 <div class="avatar-picker" id="avatarPicker">
                     <div class="avatar-preview" id="avatarPreview">
-                        <i class="fas fa-user"></i>
+                        <!-- sera rempli par JS -->
                     </div>
                     <div class="avatar-picker-info">
                         <p>Clique pour choisir ta photo</p>
@@ -168,7 +169,7 @@
             <div class="profile-preview-card" id="profilePreviewCard">
                 <div class="preview-cover" id="previewCoverBg"></div>
                 <div class="preview-avatar-wrap">
-                    <div class="preview-avatar" id="previewAvatarEl"><i class="fas fa-user"></i></div>
+                    <div class="preview-avatar" id="previewAvatarEl"></div>
                 </div>
                 <div class="preview-info">
                     <h4 id="previewName">Nom de ta communauté</h4>

@@ -1,6 +1,7 @@
 // ============================================================
 //  HUBISOCCER — FEED.JS
 //  Feed principal de la communauté
+//  Utilise utils.js et session.js
 // ============================================================
 
 'use strict';
@@ -79,134 +80,29 @@ const ROLE_DASHBOARD_MAP = {
 };
 // Fin configuration des 28 rôles
 
-// Début fonctions utilitaires
-function toast(msg, type='info', dur=20000) {
-    const c = document.getElementById('toastContainer');
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
-    const el = document.createElement('div');
-    el.className = `c-toast ${type}`;
-    el.innerHTML = `
-        <i class="fas ${icons[type] || icons.info}"></i>
-        <span>${msg}</span>
-        <button onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    c.appendChild(el);
-    setTimeout(() => {
-        el.style.animation = 'slideInRight 0.3s reverse';
-        setTimeout(() => el.remove(), 300);
-    }, dur);
-}
+// Début session et profil (utilise session.js)
+async function initSessionAndProfile() {
+    const user = await checkSession();
+    if (!user) return false;
+    currentUser = user;
 
-function timeSince(d) {
-    const s = Math.floor((new Date() - new Date(d)) / 1000);
-    if (s < 60) return 'À l\'instant';
-    const m = Math.floor(s / 60);
-    if (m < 60) return `${m} min`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h`;
-    const j = Math.floor(h / 24);
-    if (j < 7) return `${j}j`;
-    return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
-}
-
-function escapeHtml(s) {
-    if (!s) return '';
-    return s.replace(/[&<>"']/g, m => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-    }[m]));
-}
-
-function formatText(t) {
-    if (!t) return '';
-    return escapeHtml(t)
-        .replace(/@(\w+)/g, '<span class="mention" onclick="openUserByHandle(\'$1\')">@$1</span>')
-        .replace(/#(\w+)/g, '<span class="hashtag" onclick="searchByHashtag(\'$1\')">#$1</span>')
-        .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
-        .replace(/\n/g, '<br>');
-}
-
-function getInitials(name) {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name[0].toUpperCase();
-}
-
-function setLoader(show, text='', pct=0) {
-    const l = document.getElementById('globalLoader');
-    if (!l) return;
-    l.style.display = show ? 'flex' : 'none';
-    if (text) document.getElementById('loaderText').textContent = text;
-    document.getElementById('loaderBar').style.width = pct + '%';
-}
-
-function openModal(id) {
-    const e = document.getElementById(id);
-    if (e) {
-        e.style.display = 'flex';
-        setTimeout(() => e.classList.add('show'), 10);
-    }
-}
-
-function closeModal(id) {
-    const e = document.getElementById(id);
-    if (e) {
-        e.classList.remove('show');
-        e.style.display = 'none';
-    }
-}
-window.closeModal = closeModal;
-// Fin fonctions utilitaires
-
-// Début session et profil
-async function checkSession() {
-    const { data: { session }, error } = await sb.auth.getSession();
-    if (error || !session) {
-        window.location.href = '../../authprive/users/login.html';
-        return null;
-    }
-    currentUser = session.user;
-    return currentUser;
-}
-
-async function loadProfile() {
-    const { data, error } = await sb
-        .from('supabaseAuthPrive_profiles')
-        .select('*')
-        .eq('auth_uuid', currentUser.id)
-        .single();
-    if (error) {
-        toast('Erreur chargement profil', 'error');
-        return null;
-    }
-    currentProfile = data;
+    const profile = await loadProfile(user.id);
+    if (!profile) return false;
+    currentProfile = profile;
 
     // UI utilisateur
-    document.getElementById('userName').textContent = data.full_name || data.display_name || 'Utilisateur';
-    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name);
+    document.getElementById('userName').textContent = profile.full_name || profile.display_name || 'Utilisateur';
+    updateAvatarDisplay(profile.avatar_url, profile.full_name || profile.display_name);
 
     // Dashboard selon rôle
-    const dash = ROLE_DASHBOARD_MAP[data.role_code] || '../../index.html';
+    const dash = ROLE_DASHBOARD_MAP[profile.role_code] || '../../index.html';
     document.getElementById('dropDashboard').href = dash;
     document.getElementById('navLogo').onclick = () => window.location.href = dash;
 
     // Menu sidebar
-    buildSidebarMenu(data.role_code);
+    buildSidebarMenu(profile.role_code);
 
-    return data;
+    return true;
 }
 
 function updateAvatarDisplay(avatarUrl, fullName) {
@@ -219,27 +115,22 @@ function updateAvatarDisplay(avatarUrl, fullName) {
 
     const initials = getInitials(fullName);
 
-    if (avatarUrl && avatarUrl !== '') {
-        userAvatar.src = avatarUrl;
-        userAvatar.style.display = 'block';
-        userInitials.style.display = 'none';
-        publishAvatar.src = avatarUrl;
-        publishAvatar.style.display = 'block';
-        publishInitials.style.display = 'none';
-        storyAddAvatar.src = avatarUrl;
-        storyAddAvatar.style.display = 'block';
-        storyAddInitials.style.display = 'none';
-    } else {
-        userAvatar.style.display = 'none';
-        userInitials.style.display = 'flex';
-        userInitials.textContent = initials;
-        publishAvatar.style.display = 'none';
-        publishInitials.style.display = 'flex';
-        publishInitials.textContent = initials;
-        storyAddAvatar.style.display = 'none';
-        storyAddInitials.style.display = 'flex';
-        storyAddInitials.textContent = initials;
-    }
+    // Méthode unique : initiales par défaut, image seulement si avatarUrl valide
+    const applyAvatar = (imgEl, initialsEl, url) => {
+        if (url && url !== '') {
+            imgEl.src = url;
+            imgEl.style.display = 'block';
+            initialsEl.style.display = 'none';
+        } else {
+            imgEl.style.display = 'none';
+            initialsEl.style.display = 'flex';
+            initialsEl.textContent = initials;
+        }
+    };
+
+    applyAvatar(userAvatar, userInitials, avatarUrl);
+    applyAvatar(publishAvatar, publishInitials, avatarUrl);
+    applyAvatar(storyAddAvatar, storyAddInitials, avatarUrl);
 }
 
 function buildSidebarMenu(roleCode) {
@@ -421,6 +312,12 @@ function makePostCard(post) {
     const authorRole = author.role_code || '';
     const certified = author.certified ? '<i class="fas fa-check-circle" style="color:var(--primary);margin-left:4px;"></i>' : '';
 
+    // Gestion avatar auteur : initiales par défaut
+    const authorInitials = getInitials(authorName);
+    const authorAvatarHtml = author.avatar_url
+        ? `<img class="post-avatar" src="${author.avatar_url}" alt="" onclick="openUserProfile('${post.author_hubisoccer_id}')" style="display:block;">`
+        : `<div class="post-avatar-initials" onclick="openUserProfile('${post.author_hubisoccer_id}')">${authorInitials}</div>`;
+
     let mediaHtml = '';
     if (post.media_url) {
         if (post.media_type === 'video') {
@@ -485,13 +382,7 @@ function makePostCard(post) {
     return `
     <div class="post-card" data-post-id="${post.id}">
         <div class="post-header">
-            <div class="post-avatar-initials" onclick="openUserProfile('${post.author_hubisoccer_id}')">
-                ${getInitials(authorName)}
-            </div>
-            <img class="post-avatar" src="${author.avatar_url || '../../img/user-default.jpg'}"
-                alt="" onclick="openUserProfile('${post.author_hubisoccer_id}')"
-                onerror="this.style.display='none';this.previousElementSibling.style.display='flex';"
-                style="display:${author.avatar_url ? 'block' : 'none'};">
+            ${authorAvatarHtml}
             <div class="post-meta">
                 <div class="post-author" onclick="openUserProfile('${post.author_hubisoccer_id}')">
                     ${escapeHtml(authorName)}${certified}
@@ -706,9 +597,8 @@ async function loadComments(postId) {
         </div>
         <div class="comment-input-row">
             <div class="comment-input-avatar-initials">${getInitials(currentProfile.full_name || currentProfile.display_name)}</div>
-            <img class="comment-input-avatar" src="${currentProfile.avatar_url || '../../img/user-default.jpg'}" alt=""
-                style="display:${currentProfile.avatar_url ? 'block' : 'none'};"
-                onerror="this.style.display='none';this.previousElementSibling.style.display='flex';">
+            <img class="comment-input-avatar" src="${currentProfile.avatar_url || ''}" alt=""
+                style="display:${currentProfile.avatar_url ? 'block' : 'none'};">
             <div class="comment-input-wrap">
                 <textarea class="comment-input" id="commentInput_${postId}" rows="1"
                     placeholder="Écrire un commentaire..." style="resize:none;max-height:80px"></textarea>
@@ -740,16 +630,13 @@ function makeCommentHtml(c, postId) {
     const initials = getInitials(authorName);
     const isOwn = c.author_hubisoccer_id === currentProfile.hubisoccer_id;
 
+    const avatarBlock = avatarUrl
+        ? `<img class="comment-avatar" src="${avatarUrl}" alt="" onclick="openUserProfile('${c.author_hubisoccer_id}')" style="display:block;">`
+        : `<div class="comment-avatar-initials" onclick="openUserProfile('${c.author_hubisoccer_id}')">${initials}</div>`;
+
     return `
         <div class="comment-item" id="comment_${c.id}">
-            <div class="comment-avatar-initials" onclick="openUserProfile('${c.author_hubisoccer_id}')"
-                style="display:${avatarUrl ? 'none' : 'flex'};">
-                ${initials}
-            </div>
-            <img class="comment-avatar" src="${avatarUrl || '../../img/user-default.jpg'}"
-                alt="" onclick="openUserProfile('${c.author_hubisoccer_id}')"
-                onerror="this.style.display='none';this.previousElementSibling.style.display='flex';"
-                style="display:${avatarUrl ? 'block' : 'none'};">
+            ${avatarBlock}
             <div>
                 <div class="comment-bubble">
                     <div class="comment-author">
@@ -788,7 +675,7 @@ function makeCommentHtml(c, postId) {
                 <div id="replyCompose_${c.id}" style="display:none; margin-top:8px;">
                     <div class="cm-reply-compose">
                         <div class="comment-avatar-initials">${getInitials(currentProfile.full_name || currentProfile.display_name)}</div>
-                        <img src="${currentProfile.avatar_url || '../../img/user-default.jpg'}" alt=""
+                        <img src="${currentProfile.avatar_url || ''}" alt=""
                             style="display:${currentProfile.avatar_url ? 'block' : 'none'}; width:26px;height:26px;border-radius:50%;">
                         <textarea rows="1" id="replyInput_${c.id}" placeholder="Répondre à ${escapeHtml(authorName)}..."></textarea>
                         <button onclick="sendReply('${c.id}', '${postId}')"><i class="fas fa-paper-plane"></i></button>
@@ -949,9 +836,8 @@ function makeReplyCard(r) {
                 style="display:${avatarUrl ? 'none' : 'flex'}; width:28px;height:28px;font-size:0.7rem;">
                 ${initials}
             </div>
-            <img class="cm-reply-avatar" src="${avatarUrl || '../../img/user-default.jpg'}"
+            <img class="cm-reply-avatar" src="${avatarUrl || ''}"
                 alt="" onclick="openUserProfile('${r.author_hubisoccer_id}')"
-                onerror="this.style.display='none';this.previousElementSibling.style.display='flex';"
                 style="display:${avatarUrl ? 'block' : 'none'};">
             <div class="cm-reply-bubble">
                 <div class="cm-reply-author">${escapeHtml(authorName)}</div>
@@ -1168,7 +1054,7 @@ async function hidePost(postId) {
     toast('Publication masquée', 'info');
 }
 
-async function openUserProfile(userId) {
+function openUserProfile(userId) {
     window.location.href = `profil-feed.html?id=${userId}`;
 }
 
@@ -1190,7 +1076,7 @@ function openMediaModal(url, type) {
     openModal('modalMedia');
 }
 
-// Fonctions stories
+// Fonctions stories (simplifiées, le gros est dans stories.js)
 async function loadStories() {
     document.getElementById('storiesContainer').innerHTML = '';
 }
@@ -1254,19 +1140,24 @@ async function markAllNotifsRead() {
     toast('Toutes les notifications lues', 'success');
 }
 
-// Déconnexion
-async function logout() {
-    await sb.auth.signOut();
-    window.location.href = '../../authprive/users/login.html';
+function subscribeToNewPosts() {
+    feedSubscription = sb.channel('new_posts')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'supabaseAuthPrive_posts' }, async (payload) => {
+            const msg = payload.new;
+            if (msg.author_hubisoccer_id === currentProfile.hubisoccer_id) return;
+            newPostsCount++;
+            const bar = document.getElementById('newPostsBar');
+            bar.style.display = 'block';
+            document.getElementById('newPostsCount').textContent = newPostsCount;
+        })
+        .subscribe();
 }
 
 // Initialisation
 async function init() {
-    const user = await checkSession();
-    if (!user) return;
-
     setLoader(true, 'Chargement du profil...', 20);
-    await loadProfile();
+    const sessionOk = await initSessionAndProfile();
+    if (!sessionOk) return;
 
     setLoader(true, 'Vérification de ta communauté...', 40);
     const comm = await loadMyCommunity();
@@ -1467,21 +1358,10 @@ async function saveProfile() {
     toast('Profil mis à jour ✅', 'success');
 }
 
-function subscribeToNewPosts() {
-    feedSubscription = sb.channel('new_posts')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'supabaseAuthPrive_posts' }, async (payload) => {
-            const msg = payload.new;
-            if (msg.author_hubisoccer_id === currentProfile.hubisoccer_id) return;
-            newPostsCount++;
-            const bar = document.getElementById('newPostsBar');
-            bar.style.display = 'block';
-            document.getElementById('newPostsCount').textContent = newPostsCount;
-        })
-        .subscribe();
-}
-
 // Exposer fonctions globales
 window.openUserProfile = openUserProfile;
+window.openUserByHandle = openUserByHandle;
+window.searchByHashtag = searchByHashtag;
 window.toggleLike = toggleLike;
 window.toggleDislike = toggleDislike;
 window.toggleSave = toggleSave;
@@ -1498,8 +1378,10 @@ window.expandPost = expandPost;
 window.openReplyModal = openReplyModal;
 window.likeComment = likeComment;
 window.deleteComment = deleteComment;
-window.searchByHashtag = searchByHashtag;
 window.openMediaModal = openMediaModal;
 window.cancelMedia = cancelMedia;
+window.sendComment = sendComment;
+window.sendReply = sendReply;
+window.loadMoreComments = loadMoreComments;
 
 document.addEventListener('DOMContentLoaded', init);

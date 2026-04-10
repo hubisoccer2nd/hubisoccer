@@ -1,6 +1,7 @@
 // ============================================================
 //  HUBISOCCER — PROFIL-FEED.JS
 //  Profil public d'une communauté
+//  Utilise utils.js et session.js
 // ============================================================
 
 'use strict';
@@ -26,86 +27,53 @@ let hasMorePosts    = false;
 let activeTab       = 'posts';
 // Fin état global
 
-// Début fonctions utilitaires
-function toast(msg, type='info', dur=20000) { // 20 secondes
-    const c = document.getElementById('toastContainer');
-    const icons = {success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
-    const el = document.createElement('div');
-    el.className = `c-toast ${type}`;
-    el.innerHTML = `<i class="fas ${icons[type]}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
-    c.appendChild(el);
-    setTimeout(() => { el.style.animation = 'slideInRight 0.3s reverse'; setTimeout(() => el.remove(), 300); }, dur);
-}
+// Début mapping rôles
+const ROLE_DASHBOARD_MAP = {
+    'FOOT': '../../footballeur/dashboard/foot-dash.html',
+    'BASK': '../../basketteur/dashboard/basketteur-dash.html',
+    'ADMIN': '../../authprive/admin/admin-dashboard.html'
+};
+// Fin mapping rôles
 
-function setLoader(show, text='Chargement...', pct=0) {
-    const l = document.getElementById('globalLoader');
-    if (!l) return;
-    l.style.display = show ? 'flex' : 'none';
-    document.getElementById('loaderText').textContent = text;
-    document.getElementById('loaderBar').style.width = pct+'%';
-}
+// Début session et profil connecté
+async function initSessionAndProfile() {
+    const user = await checkSession();
+    if (!user) return false;
+    currentUser = user;
 
-function escapeHtml(s) {
-    if (!s) return '';
-    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-function formatDate(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('fr-FR', {year:'numeric', month:'long', day:'numeric'});
-}
-
-function timeSince(dateStr) {
-    const s = Math.floor((new Date() - new Date(dateStr)) / 1000);
-    if (s < 60) return 'À l\'instant';
-    const m = Math.floor(s/60); if (m < 60) return `${m} min`;
-    const h = Math.floor(m/60); if (h < 24) return `${h}h`;
-    const d = Math.floor(h/24); if (d < 7) return `${d}j`;
-    return new Date(dateStr).toLocaleDateString('fr-FR', {day:'2-digit', month:'short'});
-}
-// Fin fonctions utilitaires
-
-// Début session
-async function checkSession() {
-    setLoader(true, 'Vérification session...', 20);
-    const { data: { session }, error } = await sb.auth.getSession();
-    if (error || !session) { window.location.href = '../../authprive/users/login.html'; return null; }
-    currentUser = session.user;
-    return currentUser;
-}
-// Fin session
-
-// Début chargement profil connecté
-async function loadCurrentProfile() {
-    setLoader(true, 'Chargement de votre profil...', 40);
-    const { data, error } = await sb
-        .from('supabaseAuthPrive_profiles')
-        .select('*')
-        .eq('auth_uuid', currentUser.id)
-        .single();
-    if (error) { toast('Erreur chargement profil','error'); return null; }
-    currentProfile = data;
+    const profile = await loadProfile(user.id);
+    if (!profile) return false;
+    currentProfile = profile;
 
     // UI Navbar
-    document.getElementById('userName').textContent = data.full_name || data.display_name || 'Utilisateur';
-    document.getElementById('userAvatar').src = data.avatar_url || '../../img/user-default.jpg';
+    document.getElementById('userName').textContent = profile.full_name || profile.display_name || 'Utilisateur';
+    updateAvatarDisplay(profile.avatar_url, profile.full_name || profile.display_name, 'userAvatar', 'userAvatarInitials');
 
     // Dashboard selon rôle
-    const roleDashboardMap = {
-        'FOOT': '../../footballeur/dashboard/foot-dash.html',
-        'BASK': '../../basketteur/dashboard/basketteur-dash.html',
-        'ADMIN': '../../authprive/admin/admin-dashboard.html'
-    };
-    const dash = roleDashboardMap[data.role_code] || '../../index.html';
+    const dash = ROLE_DASHBOARD_MAP[profile.role_code] || '../../index.html';
     document.getElementById('dropDashboard').href = dash;
     document.getElementById('navLogo').onclick = () => window.location.href = dash;
 
-    buildSidebarMenu(data.role_code);
-    return data;
+    buildSidebarMenu(profile.role_code);
+    return true;
 }
-// Fin chargement profil connecté
 
-// Début construction sidebar
+function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
+    const img = document.getElementById(imgId);
+    const initials = document.getElementById(initialsId);
+    if (!img || !initials) return;
+    const text = getInitials(fullName);
+    if (avatarUrl && avatarUrl !== '') {
+        img.src = avatarUrl;
+        img.style.display = 'block';
+        initials.style.display = 'none';
+    } else {
+        img.style.display = 'none';
+        initials.style.display = 'flex';
+        initials.textContent = text;
+    }
+}
+
 function buildSidebarMenu(roleCode) {
     const nav = document.getElementById('sidebarNav');
     const titleEl = document.getElementById('sidebarRoleTitle');
@@ -145,7 +113,7 @@ function buildSidebarMenu(roleCode) {
     `).join('') + `<hr><a href="#" id="sidebarLogout" style="color:var(--danger)"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>`;
     document.getElementById('sidebarLogout')?.addEventListener('click', logout);
 }
-// Fin construction sidebar
+// Fin session et profil connecté
 
 // Début récupération ID du profil
 function getProfileIdFromUrl() {
@@ -157,7 +125,6 @@ function getProfileIdFromUrl() {
 // Début chargement du profil affiché
 async function loadProfileData(identifier) {
     setLoader(true, 'Chargement du profil...', 60);
-    // Chercher par hubisoccer_id ou par feed_id
     let query = sb.from('supabaseAuthPrive_communities')
         .select(`
             *,
@@ -185,7 +152,6 @@ async function loadProfileData(identifier) {
     profileHubisoccerId = data.hubisoccer_id;
     isOwnProfile = (profileHubisoccerId === currentProfile?.hubisoccer_id);
     
-    // Incrémenter la vue du profil (si visiteur ≠ propriétaire)
     if (!isOwnProfile) {
         await sb.from('supabaseAuthPrive_profile_views').upsert({
             profile_hubisoccer_id: profileHubisoccerId,
@@ -194,7 +160,6 @@ async function loadProfileData(identifier) {
         }, { onConflict: 'profile_hubisoccer_id,viewer_hubisoccer_id' });
     }
     
-    // Vérifier si l'utilisateur connecté suit ce profil
     if (!isOwnProfile) {
         const { data: follow } = await sb.from('supabaseAuthPrive_follows')
             .select('*')
@@ -210,22 +175,35 @@ async function loadProfileData(identifier) {
     setLoader(false);
     return data;
 }
-// Fin chargement du profil affiché
 
-// Début rendu en-tête
 function renderProfileHeader() {
     const comm = profileData;
     const prof = profileData.profiles || {};
     const coverUrl = comm.cover_url || prof.community_cover || '';
-    const avatarUrl = comm.avatar_url || prof.community_avatar || prof.avatar_url || '../../img/user-default.jpg';
+    const avatarUrl = comm.avatar_url || prof.community_avatar || prof.avatar_url || '';
     
-    document.getElementById('profileCover').style.backgroundImage = coverUrl ? `url(${coverUrl})` : 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
-    document.getElementById('profileAvatar').src = avatarUrl;
-    document.getElementById('profileName').textContent = comm.name || prof.full_name || prof.display_name || 'Utilisateur';
+    const coverEl = document.getElementById('profileCover');
+    if (coverUrl) coverEl.style.backgroundImage = `url(${coverUrl})`;
+    else coverEl.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
+    
+    const avatarImg = document.getElementById('profileAvatar');
+    const avatarInitials = document.getElementById('profileAvatarInitials');
+    const name = comm.name || prof.full_name || prof.display_name || 'Utilisateur';
+    if (avatarUrl && avatarUrl !== '') {
+        avatarImg.src = avatarUrl;
+        avatarImg.style.display = 'block';
+        avatarInitials.style.display = 'none';
+    } else {
+        avatarImg.style.display = 'none';
+        avatarInitials.style.display = 'flex';
+        avatarInitials.textContent = getInitials(name);
+    }
+    
+    document.getElementById('profileName').textContent = name;
     document.getElementById('profileHandle').textContent = '@' + (comm.feed_id || '');
     document.getElementById('profileBio').textContent = comm.bio || prof.bio || '';
     document.getElementById('profileLocation').textContent = comm.country || prof.country || 'Non spécifié';
-    document.getElementById('profileJoined').textContent = formatDate(comm.created_at || prof.created_at);
+    document.getElementById('profileJoined').textContent = new Date(comm.created_at || prof.created_at).toLocaleDateString('fr-FR', { year:'numeric', month:'long', day:'numeric' });
     document.getElementById('profileFollowers').textContent = comm.followers_count || 0;
     document.getElementById('profileFollowing').textContent = comm.following_count || 0;
     document.getElementById('profilePosts').textContent = comm.posts_count || 0;
@@ -233,12 +211,9 @@ function renderProfileHeader() {
     if (prof.certified) {
         document.getElementById('profileCertified').style.display = 'flex';
     }
-    
-    document.title = `${comm.name || 'Profil'} | HubISoccer`;
+    document.title = `${name} | HubISoccer`;
 }
-// Fin rendu en-tête
 
-// Début boutons d'action (S'abonner, Message, etc.)
 function updateFollowButton() {
     const actionsDiv = document.getElementById('profileActions');
     if (isOwnProfile) {
@@ -264,9 +239,7 @@ function updateFollowButton() {
         document.getElementById('blockBtn').addEventListener('click', blockUser);
     }
 }
-// Fin boutons d'action
 
-// Début toggle follow
 async function toggleFollow() {
     if (!currentProfile) return;
     const btn = document.getElementById('followBtn');
@@ -286,12 +259,9 @@ async function toggleFollow() {
             isFollowing = true;
             toast('Abonné !','success');
         }
-        // Mettre à jour les compteurs (simplifié)
         const { data: comm } = await sb.from('supabaseAuthPrive_communities')
             .select('followers_count').eq('hubisoccer_id', profileHubisoccerId).single();
-        if (comm) {
-            document.getElementById('profileFollowers').textContent = comm.followers_count;
-        }
+        if (comm) document.getElementById('profileFollowers').textContent = comm.followers_count;
         updateFollowButton();
     } catch (err) {
         toast('Erreur: '+err.message,'error');
@@ -299,9 +269,7 @@ async function toggleFollow() {
         btn.disabled = false;
     }
 }
-// Fin toggle follow
 
-// Début blocage
 async function blockUser() {
     if (!confirm('Bloquer cet utilisateur ? Vous ne verrez plus son contenu.')) return;
     try {
@@ -310,14 +278,11 @@ async function blockUser() {
             blocked_hubisoccer_id: profileHubisoccerId
         });
         toast('Utilisateur bloqué','success');
-        // Optionnel : rediriger
     } catch (err) {
         toast('Erreur: '+err.message,'error');
     }
 }
-// Fin blocage
 
-// Début rendu sections "À propos"
 function renderAboutSections() {
     const prof = profileData.profiles || {};
     const comm = profileData;
@@ -364,9 +329,9 @@ function renderAboutSections() {
     `;
     document.getElementById('aboutHelp').innerHTML = helpHtml;
 }
-// Fin rendu sections "À propos"
+// Fin rendu profil
 
-// Début chargement des posts
+// Début posts
 async function loadPosts(reset = false) {
     if (reset) { postOffset = 0; posts = []; }
     setLoader(true, 'Chargement des publications...', 70);
@@ -390,9 +355,7 @@ async function loadPosts(reset = false) {
     renderPostsGrid();
     setLoader(false);
 }
-// Fin chargement des posts
 
-// Début rendu grille des posts
 function renderPostsGrid() {
     const grid = document.getElementById('profilePostsGrid');
     if (posts.length === 0) {
@@ -415,30 +378,9 @@ function renderPostsGrid() {
             </div>
         `;
     }).join('');
-    
     document.getElementById('loadMorePostsWrap').style.display = hasMorePosts ? 'block' : 'none';
 }
-// Fin rendu grille
 
-// Début gestion onglets
-function initTabs() {
-    document.querySelectorAll('.profile-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            tab.classList.add('active');
-            const tabId = tab.dataset.tab;
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            activeTab = tabId;
-            if (tabId === 'posts' && posts.length === 0) loadPosts(true);
-            else if (tabId === 'media') loadMedia('image');
-            else if (tabId === 'videos') loadMedia('video');
-        });
-    });
-}
-// Fin gestion onglets
-
-// Début chargement médias
 async function loadMedia(type) {
     const grid = type === 'image' ? document.getElementById('photosGrid') : document.getElementById('videosGrid');
     grid.innerHTML = '<div class="c-spinner"></div>';
@@ -458,20 +400,35 @@ async function loadMedia(type) {
         </div>
     `).join('');
 }
-// Fin chargement médias
 
-// Début déconnexion
-async function logout() {
-    await sb.auth.signOut();
-    window.location.href = '../../authprive/users/login.html';
+function openPost(postId) {
+    window.location.href = `post-view.html?id=${postId}`;
 }
-// Fin déconnexion
+window.openPost = openPost;
+
+function initTabs() {
+    document.querySelectorAll('.profile-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            const tabId = tab.dataset.tab;
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            activeTab = tabId;
+            if (tabId === 'posts' && posts.length === 0) loadPosts(true);
+            else if (tabId === 'media') loadMedia('image');
+            else if (tabId === 'videos') loadMedia('video');
+        });
+    });
+}
+// Fin posts
 
 // Début initialisation
 async function init() {
-    const user = await checkSession(); if (!user) return;
-    await loadCurrentProfile(); if (!currentProfile) return;
-    
+    setLoader(true, 'Vérification session...', 20);
+    const sessionOk = await initSessionAndProfile();
+    if (!sessionOk) return;
+
     const identifier = getProfileIdFromUrl();
     if (!identifier) { toast('Profil non spécifié','error'); return; }
     
@@ -501,12 +458,12 @@ async function init() {
     document.addEventListener('click', () => document.getElementById('userDropdown')?.classList.remove('show'));
     document.getElementById('dropLogout').addEventListener('click', logout);
     
-    // Load more posts
     document.getElementById('loadMorePostsBtn').addEventListener('click', () => loadPosts(false));
+    
+    document.querySelectorAll('.c-modal').forEach(m => {
+        m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id); });
+    });
 }
-// Fin initialisation
-
-// Exposer des fonctions globales
-window.openPost = (postId) => { window.location.href = `post-view.html?id=${postId}`; };
 
 document.addEventListener('DOMContentLoaded', init);
+// Fin initialisation

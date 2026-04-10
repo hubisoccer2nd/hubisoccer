@@ -1,6 +1,6 @@
 // ============================================================
 //  HUBISOCCER — FEED-SETUP.JS
-//  Création de la HubiS Community — CORRIGÉ (28 rôles)
+//  Création de la HubiS Community — VERSION FINALE (refresh session)
 // ============================================================
 
 'use strict';
@@ -86,7 +86,7 @@ const COUNTRIES = [
     { code: 'BO', name: 'Bolivie' },
     { code: 'BA', name: 'Bosnie-Herzégovine' },
     { code: 'BW', name: 'Botswana' },
-    { code: 'BR', name: 'Brésil' },
+    { code: '100', name: 'Brésil' },
     { code: 'BN', name: 'Brunéi' },
     { code: 'BG', name: 'Bulgarie' },
     { code: 'BF', name: 'Burkina Faso' },
@@ -601,7 +601,15 @@ async function createCommunity() {
             throw commErr;
         }
 
+        // Mise à jour du profil
         setLoader(true, 'Mise à jour du profil...', 90);
+
+        // Forcer le rafraîchissement de la session pour garantir un token valide
+        const { error: refreshError } = await sb.auth.refreshSession();
+        if (refreshError) {
+            console.warn('Impossible de rafraîchir la session:', refreshError);
+        }
+
         await sb.from('supabaseAuthPrive_profiles').update({
             feed_id: handle,
             msg_id: socialIds.msg_id,

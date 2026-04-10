@@ -1,600 +1,724 @@
-/* ============================================================
-   HUBISOCCER — FEED-SETUP.CSS
-   Page création communauté (adaptée hubisapp)
-   ============================================================ */
+// ============================================================
+//  HUBISOCCER — FEED-SETUP.JS
+//  Création de la HubiS Community — Adapté hubisapp
+//  CORRIGÉ : Ajout des guillemets autour des noms de tables
+// ============================================================
 
-/* ===== DEBUT VARIABLES ===== */
-:root {
-    --primary: #551B8C;
-    --primary-light: #7e3db0;
-    --primary-dark: #3d1266;
-    --primary-xlight: rgba(85, 27, 140, 0.08);
-    --gold: #FFCC00;
-    --gold-dark: #e6b800;
-    --gold-light: rgba(255, 204, 0, 0.15);
-    --white: #ffffff;
-    --bg-page: #f4f1f9;
-    --dark: #1a1a2e;
-    --gray-dark: #4a4a6a;
-    --gray: #6c757d;
-    --gray-light: #e8e4f0;
-    --gray-xlight: #f9f7fd;
-    --success: #22c55e;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --info: #3b82f6;
-    --shadow-sm: 0 2px 8px rgba(85,27,140,0.06);
-    --shadow-md: 0 6px 24px rgba(85,27,140,0.1);
-    --shadow-lg: 0 12px 48px rgba(85,27,140,0.15);
-    --radius-sm: 8px;
-    --radius: 12px;
-    --radius-lg: 18px;
-    --radius-xl: 24px;
-    --radius-pill: 9999px;
-    --transition: all 0.25s ease;
-    --transition-bounce: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
-    --nav-height: 64px;
-}
-/* ===== FIN VARIABLES ===== */
+'use strict';
 
-/* ===== DEBUT RESET & BASE ===== */
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-    font-family: 'Poppins', sans-serif;
-    background: var(--bg-page);
-    color: var(--dark);
-    line-height: 1.6;
-    min-height: 100vh;
-}
-a { text-decoration:none; color:inherit; }
-button { cursor:pointer; border:none; background:none; font-family:inherit; }
-img { max-width:100%; display:block; }
-input, select, textarea { font-family:inherit; outline:none; }
-/* ===== FIN RESET & BASE ===== */
+// Début configuration Supabase
+const SUPABASE_URL  = 'https://niewavngipvowwxxguqu.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+window.__SUPABASE_CLIENT = sb;
+// Fin configuration Supabase
 
-/* ===== DEBUT LOADER ===== */
-.c-loader {
-    position:fixed; inset:0; background:rgba(255,255,255,0.92);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    z-index:9999; gap:16px; backdrop-filter:blur(4px);
-}
-.c-spinner {
-    width:40px; height:40px; border:4px solid var(--gray-light);
-    border-top-color:var(--primary); border-radius:50%;
-    animation:spin 0.8s linear infinite;
-}
-.c-loader-text { font-size:0.85rem; color:var(--gray); font-weight:500; }
-.c-loader-bar-wrap { width:200px; height:4px; background:var(--gray-light); border-radius:2px; overflow:hidden; }
-.c-loader-bar { height:100%; background:linear-gradient(90deg,var(--primary),var(--gold)); border-radius:2px; transition:width 0.3s; }
-@keyframes spin { to{transform:rotate(360deg);} }
-/* ===== FIN LOADER ===== */
+// Début état global
+let currentUser    = null;
+let currentProfile = null;
+let currentStep    = 1;
+let handleValid    = false;
+let handleTimer    = null;
+let avatarFile     = null;
+let coverFile      = null;
+let selectedSport  = '';
+let selectedPrivacy = 'public';
+// Fin état global
 
-/* ===== DEBUT NAVBAR ===== */
-.c-nav {
-    position:sticky; top:0; z-index:100;
-    height:var(--nav-height); display:flex; align-items:center; justify-content:space-between;
-    padding:0 20px; background:rgba(255,255,255,0.97);
-    backdrop-filter:blur(16px); border-bottom:1px solid var(--gray-light);
-    box-shadow:var(--shadow-sm);
-}
-.c-nav-left { display:flex; align-items:center; gap:14px; }
-.c-nav-logo { height:38px; cursor:pointer; transition:transform 0.2s; }
-.c-nav-logo:hover { transform:scale(1.05); }
-.c-nav-title {
-    font-size:0.85rem; font-weight:600; color:var(--primary);
-    padding-left:14px; border-left:2px solid var(--gray-light);
-}
-.c-nav-right { display:flex; align-items:center; gap:10px; }
-.c-user-menu {
-    display:flex; align-items:center; gap:8px; padding:5px 10px;
-    border-radius:var(--radius-pill); cursor:pointer; position:relative;
-    transition:var(--transition);
-}
-.c-user-menu:hover { background:var(--primary-xlight); }
-.c-user-avatar-container {
-    width:34px; height:34px; border-radius:50%; border:2px solid var(--gold);
-    overflow:hidden; display:flex; align-items:center; justify-content:center;
-    background:var(--primary); flex-shrink:0;
-}
-.c-user-avatar {
-    width:100%; height:100%; object-fit:cover; display:block;
-}
-.c-user-avatar-initials {
-    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    font-size:0.9rem; font-weight:700; color:white; text-transform:uppercase;
-}
-.c-user-name { font-size:0.82rem; font-weight:500; }
-.c-user-dropdown {
-    position:absolute; top:calc(100%+8px); right:0;
-    background:var(--white); border-radius:var(--radius);
-    box-shadow:var(--shadow-lg); border:1px solid var(--gray-light);
-    min-width:190px; padding:6px 0; display:none; z-index:300;
-}
-.c-user-dropdown.show { display:block; animation:fadeIn 0.18s; }
-.c-user-dropdown a, .c-user-dropdown button {
-    display:flex; align-items:center; gap:10px; width:100%;
-    padding:10px 16px; font-size:0.83rem; color:var(--dark);
-    text-align:left; transition:background 0.15s;
-    background:none; border:none; cursor:pointer;
-}
-.c-user-dropdown a:hover, .c-user-dropdown button:hover {
-    background:var(--primary-xlight); color:var(--primary);
-}
-.c-user-dropdown hr { border:none; border-top:1px solid var(--gray-light); margin:4px 0; }
-.c-logout { color:var(--danger) !important; }
-.c-logout:hover { background:rgba(239,68,68,0.08) !important; }
-/* ===== FIN NAVBAR ===== */
+// Début configuration sports (28 rôles)
+const SPORTS = [
+    { id:'football', label:'Football', emoji:'⚽' },
+    { id:'basketball', label:'Basketball', emoji:'🏀' },
+    { id:'tennis', label:'Tennis', emoji:'🎾' },
+    { id:'athletisme', label:'Athlétisme', emoji:'🏃' },
+    { id:'handball', label:'Handball', emoji:'🤾' },
+    { id:'volleyball', label:'Volleyball', emoji:'🏐' },
+    { id:'rugby', label:'Rugby', emoji:'🏉' },
+    { id:'natation', label:'Natation', emoji:'🏊' },
+    { id:'arts_martiaux', label:'Arts martiaux', emoji:'🥋' },
+    { id:'cyclisme', label:'Cyclisme', emoji:'🚴' },
+    { id:'chanteur', label:'Chanteur', emoji:'🎤' },
+    { id:'danseur', label:'Danseur', emoji:'💃' },
+    { id:'compositeur', label:'Compositeur', emoji:'🎼' },
+    { id:'acteur_cinema', label:'Acteur cinéma', emoji:'🎬' },
+    { id:'acteur_theatre', label:'Acteur théâtre', emoji:'🎭' },
+    { id:'humoriste', label:'Humoriste', emoji:'🎙️' },
+    { id:'slameur', label:'Slameur', emoji:'🗣️' },
+    { id:'dj', label:'DJ / Producteur', emoji:'🎧' },
+    { id:'cirque', label:'Artiste de cirque', emoji:'🤹' },
+    { id:'artiste_visuel', label:'Artiste visuel', emoji:'🎨' },
+    { id:'parrain', label:'Parrain', emoji:'🤝' },
+    { id:'agent_fifa', label:'Agent FIFA', emoji:'💼' },
+    { id:'coach', label:'Coach', emoji:'📋' },
+    { id:'staff_medical', label:'Staff médical', emoji:'⚕️' },
+    { id:'corps_arbitral', label:'Corps arbitral', emoji:'🏁' },
+    { id:'academie', label:'Académie sportive', emoji:'🏫' },
+    { id:'formateur', label:'Formateur', emoji:'🎓' },
+    { id:'gestionnaire_tournoi', label:'Gestionnaire tournoi', emoji:'🏆' }
+];
+// Fin configuration sports
 
-/* ===== DEBUT LAYOUT SETUP ===== */
-.setup-main { max-width:640px; margin:0 auto; padding:24px 20px 60px; }
+// Début liste des pays (codes ISO + noms)
+const COUNTRIES = [
+    { code: 'AF', name: 'Afghanistan' },
+    { code: 'ZA', name: 'Afrique du Sud' },
+    { code: 'AL', name: 'Albanie' },
+    { code: 'DZ', name: 'Algérie' },
+    { code: 'DE', name: 'Allemagne' },
+    { code: 'AD', name: 'Andorre' },
+    { code: 'AO', name: 'Angola' },
+    { code: 'AG', name: 'Antigua-et-Barbuda' },
+    { code: 'SA', name: 'Arabie saoudite' },
+    { code: 'AR', name: 'Argentine' },
+    { code: 'AM', name: 'Arménie' },
+    { code: 'AU', name: 'Australie' },
+    { code: 'AT', name: 'Autriche' },
+    { code: 'AZ', name: 'Azerbaïdjan' },
+    { code: 'BS', name: 'Bahamas' },
+    { code: 'BH', name: 'Bahreïn' },
+    { code: 'BD', name: 'Bangladesh' },
+    { code: 'BB', name: 'Barbade' },
+    { code: 'BE', name: 'Belgique' },
+    { code: 'BZ', name: 'Belize' },
+    { code: 'BJ', name: 'Bénin' },
+    { code: 'BT', name: 'Bhoutan' },
+    { code: 'BY', name: 'Biélorussie' },
+    { code: 'MM', name: 'Birmanie' },
+    { code: 'BO', name: 'Bolivie' },
+    { code: 'BA', name: 'Bosnie-Herzégovine' },
+    { code: 'BW', name: 'Botswana' },
+    { code: 'BR', name: 'Brésil' },
+    { code: 'BN', name: 'Brunéi' },
+    { code: 'BG', name: 'Bulgarie' },
+    { code: 'BF', name: 'Burkina Faso' },
+    { code: 'BI', name: 'Burundi' },
+    { code: 'KH', name: 'Cambodge' },
+    { code: 'CM', name: 'Cameroun' },
+    { code: 'CA', name: 'Canada' },
+    { code: 'CV', name: 'Cap-Vert' },
+    { code: 'CL', name: 'Chili' },
+    { code: 'CN', name: 'Chine' },
+    { code: 'CY', name: 'Chypre' },
+    { code: 'CO', name: 'Colombie' },
+    { code: 'KM', name: 'Comores' },
+    { code: 'CG', name: 'Congo' },
+    { code: 'CD', name: 'Rép. dém. du Congo' },
+    { code: 'KR', name: 'Corée du Sud' },
+    { code: 'KP', name: 'Corée du Nord' },
+    { code: 'CR', name: 'Costa Rica' },
+    { code: 'CI', name: 'Côte d\'Ivoire' },
+    { code: 'HR', name: 'Croatie' },
+    { code: 'CU', name: 'Cuba' },
+    { code: 'DK', name: 'Danemark' },
+    { code: 'DJ', name: 'Djibouti' },
+    { code: 'DO', name: 'République dominicaine' },
+    { code: 'EG', name: 'Égypte' },
+    { code: 'AE', name: 'Émirats arabes unis' },
+    { code: 'EC', name: 'Équateur' },
+    { code: 'ER', name: 'Érythrée' },
+    { code: 'ES', name: 'Espagne' },
+    { code: 'EE', name: 'Estonie' },
+    { code: 'SZ', name: 'Eswatini' },
+    { code: 'US', name: 'États-Unis' },
+    { code: 'ET', name: 'Éthiopie' },
+    { code: 'FJ', name: 'Fidji' },
+    { code: 'FI', name: 'Finlande' },
+    { code: 'FR', name: 'France' },
+    { code: 'GA', name: 'Gabon' },
+    { code: 'GM', name: 'Gambie' },
+    { code: 'GE', name: 'Géorgie' },
+    { code: 'GH', name: 'Ghana' },
+    { code: 'GR', name: 'Grèce' },
+    { code: 'GD', name: 'Grenade' },
+    { code: 'GT', name: 'Guatemala' },
+    { code: 'GN', name: 'Guinée' },
+    { code: 'GW', name: 'Guinée-Bissau' },
+    { code: 'GQ', name: 'Guinée équatoriale' },
+    { code: 'GY', name: 'Guyana' },
+    { code: 'HT', name: 'Haïti' },
+    { code: 'HN', name: 'Honduras' },
+    { code: 'HU', name: 'Hongrie' },
+    { code: 'IN', name: 'Inde' },
+    { code: 'ID', name: 'Indonésie' },
+    { code: 'IQ', name: 'Irak' },
+    { code: 'IR', name: 'Iran' },
+    { code: 'IE', name: 'Irlande' },
+    { code: 'IS', name: 'Islande' },
+    { code: 'IL', name: 'Israël' },
+    { code: 'IT', name: 'Italie' },
+    { code: 'JM', name: 'Jamaïque' },
+    { code: 'JP', name: 'Japon' },
+    { code: 'JO', name: 'Jordanie' },
+    { code: 'KZ', name: 'Kazakhstan' },
+    { code: 'KE', name: 'Kenya' },
+    { code: 'KG', name: 'Kirghizistan' },
+    { code: 'KI', name: 'Kiribati' },
+    { code: 'KW', name: 'Koweït' },
+    { code: 'LA', name: 'Laos' },
+    { code: 'LS', name: 'Lesotho' },
+    { code: 'LV', name: 'Lettonie' },
+    { code: 'LB', name: 'Liban' },
+    { code: 'LR', name: 'Libéria' },
+    { code: 'LY', name: 'Libye' },
+    { code: 'LI', name: 'Liechtenstein' },
+    { code: 'LT', name: 'Lituanie' },
+    { code: 'LU', name: 'Luxembourg' },
+    { code: 'MK', name: 'Macédoine du Nord' },
+    { code: 'MG', name: 'Madagascar' },
+    { code: 'MY', name: 'Malaisie' },
+    { code: 'MW', name: 'Malawi' },
+    { code: 'MV', name: 'Maldives' },
+    { code: 'ML', name: 'Mali' },
+    { code: 'MT', name: 'Malte' },
+    { code: 'MA', name: 'Maroc' },
+    { code: 'MH', name: 'Îles Marshall' },
+    { code: 'MU', name: 'Maurice' },
+    { code: 'MR', name: 'Mauritanie' },
+    { code: 'MX', name: 'Mexique' },
+    { code: 'FM', name: 'Micronésie' },
+    { code: 'MD', name: 'Moldavie' },
+    { code: 'MC', name: 'Monaco' },
+    { code: 'MN', name: 'Mongolie' },
+    { code: 'ME', name: 'Monténégro' },
+    { code: 'MZ', name: 'Mozambique' },
+    { code: 'NA', name: 'Namibie' },
+    { code: 'NR', name: 'Nauru' },
+    { code: 'NP', name: 'Népal' },
+    { code: 'NI', name: 'Nicaragua' },
+    { code: 'NE', name: 'Niger' },
+    { code: 'NG', name: 'Nigéria' },
+    { code: 'NO', name: 'Norvège' },
+    { code: 'NZ', name: 'Nouvelle-Zélande' },
+    { code: 'OM', name: 'Oman' },
+    { code: 'UG', name: 'Ouganda' },
+    { code: 'UZ', name: 'Ouzbékistan' },
+    { code: 'PK', name: 'Pakistan' },
+    { code: 'PW', name: 'Palaos' },
+    { code: 'PA', name: 'Panama' },
+    { code: 'PG', name: 'Papouasie-Nouvelle-Guinée' },
+    { code: 'PY', name: 'Paraguay' },
+    { code: 'NL', name: 'Pays-Bas' },
+    { code: 'PE', name: 'Pérou' },
+    { code: 'PH', name: 'Philippines' },
+    { code: 'PL', name: 'Pologne' },
+    { code: 'PT', name: 'Portugal' },
+    { code: 'QA', name: 'Qatar' },
+    { code: 'CF', name: 'République centrafricaine' },
+    { code: 'CZ', name: 'Tchéquie' },
+    { code: 'RO', name: 'Roumanie' },
+    { code: 'GB', name: 'Royaume-Uni' },
+    { code: 'RU', name: 'Russie' },
+    { code: 'RW', name: 'Rwanda' },
+    { code: 'KN', name: 'Saint-Christophe-et-Niévès' },
+    { code: 'LC', name: 'Sainte-Lucie' },
+    { code: 'SM', name: 'Saint-Marin' },
+    { code: 'VC', name: 'Saint-Vincent-et-les-Grenadines' },
+    { code: 'SB', name: 'Îles Salomon' },
+    { code: 'SV', name: 'Salvador' },
+    { code: 'WS', name: 'Samoa' },
+    { code: 'ST', name: 'Sao Tomé-et-Principe' },
+    { code: 'SN', name: 'Sénégal' },
+    { code: 'RS', name: 'Serbie' },
+    { code: 'SC', name: 'Seychelles' },
+    { code: 'SL', name: 'Sierra Leone' },
+    { code: 'SG', name: 'Singapour' },
+    { code: 'SK', name: 'Slovaquie' },
+    { code: 'SI', name: 'Slovénie' },
+    { code: 'SO', name: 'Somalie' },
+    { code: 'SD', name: 'Soudan' },
+    { code: 'SS', name: 'Soudan du Sud' },
+    { code: 'LK', name: 'Sri Lanka' },
+    { code: 'SE', name: 'Suède' },
+    { code: 'CH', name: 'Suisse' },
+    { code: 'SR', name: 'Suriname' },
+    { code: 'SY', name: 'Syrie' },
+    { code: 'TJ', name: 'Tadjikistan' },
+    { code: 'TZ', name: 'Tanzanie' },
+    { code: 'TD', name: 'Tchad' },
+    { code: 'TH', name: 'Thaïlande' },
+    { code: 'TL', name: 'Timor oriental' },
+    { code: 'TG', name: 'Togo' },
+    { code: 'TO', name: 'Tonga' },
+    { code: 'TT', name: 'Trinité-et-Tobago' },
+    { code: 'TN', name: 'Tunisie' },
+    { code: 'TM', name: 'Turkménistan' },
+    { code: 'TR', name: 'Turquie' },
+    { code: 'TV', name: 'Tuvalu' },
+    { code: 'UA', name: 'Ukraine' },
+    { code: 'UY', name: 'Uruguay' },
+    { code: 'VU', name: 'Vanuatu' },
+    { code: 'VA', name: 'Vatican' },
+    { code: 'VE', name: 'Venezuela' },
+    { code: 'VN', name: 'Viêt Nam' },
+    { code: 'YE', name: 'Yémen' },
+    { code: 'ZM', name: 'Zambie' },
+    { code: 'ZW', name: 'Zimbabwe' }
+];
+// Fin liste des pays
 
-.setup-steps {
-    display:flex; align-items:center; justify-content:center; gap:0;
-    margin-bottom:32px; padding:0 10px;
-}
-.step {
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-    position:relative;
-}
-.step-num {
-    width:36px; height:36px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-size:0.85rem; font-weight:700;
-    background:var(--gray-light); color:var(--gray);
-    transition:var(--transition); border:2px solid transparent;
-}
-.step.active .step-num {
-    background:var(--primary); color:white;
-    border-color:var(--primary-dark);
-    box-shadow:0 0 0 4px var(--primary-xlight);
-}
-.step.done .step-num { background:var(--success); color:white; border-color:#16a34a; }
-.step-label { font-size:0.7rem; font-weight:600; color:var(--gray); white-space:nowrap; }
-.step.active .step-label { color:var(--primary); }
-.step.done .step-label { color:var(--success); }
-.step-line {
-    flex:1; height:2px; background:var(--gray-light);
-    margin:0 6px; margin-bottom:22px; min-width:30px;
-    transition:var(--transition);
-}
-.step-line.done { background:var(--success); }
-
-/* Hero */
-.setup-hero { text-align:center; margin-bottom:28px; }
-.hero-badge {
-    display:inline-flex; align-items:center; gap:6px;
-    padding:6px 16px; background:var(--gold-light);
-    border:1px solid var(--gold); border-radius:var(--radius-pill);
-    font-size:0.78rem; font-weight:600; color:var(--dark);
-    margin-bottom:14px;
-}
-.hero-badge i { color:var(--gold-dark); }
-.setup-hero h1 { font-size:1.7rem; font-weight:800; line-height:1.2; margin-bottom:10px; }
-.highlight {
-    background:linear-gradient(135deg,var(--primary),var(--gold-dark));
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    background-clip:text;
-}
-.setup-hero p { color:var(--gray); font-size:0.88rem; max-width:480px; margin:0 auto; }
-
-/* Setup card */
-.setup-card {
-    background:white; border-radius:var(--radius-xl);
-    box-shadow:var(--shadow-lg); padding:32px 28px;
-    border:1px solid var(--gray-light);
-}
-.setup-step-content.hidden { display:none; }
-
-/* Step header */
-.step-header { text-align:center; margin-bottom:28px; }
-.step-icon {
-    width:56px; height:56px; border-radius:50%;
-    background:var(--primary-xlight); display:flex;
-    align-items:center; justify-content:center;
-    font-size:1.5rem; color:var(--primary);
-    margin:0 auto 14px;
-}
-.step-icon.gold { background:var(--gold-light); color:var(--gold-dark); }
-.step-header h2 { font-size:1.2rem; font-weight:700; margin-bottom:6px; }
-.step-header p { color:var(--gray); font-size:0.85rem; }
-
-/* Form fields */
-.c-field { margin-bottom:18px; }
-.c-field label { display:block; font-size:0.8rem; font-weight:600; color:var(--dark); margin-bottom:6px; }
-.req { color:var(--danger); margin-left:2px; }
-.hint { color:var(--gray); font-weight:400; font-size:0.75rem; margin-left:4px; }
-.c-input, .c-select, .c-textarea {
-    width:100%; padding:11px 16px; border:1.5px solid var(--gray-light);
-    border-radius:var(--radius-sm); font-size:0.88rem;
-    background:var(--gray-xlight); transition:var(--transition); color:var(--dark);
-}
-.c-input:focus, .c-select:focus, .c-textarea:focus {
-    border-color:var(--primary); background:white;
-    box-shadow:0 0 0 3px var(--primary-xlight);
-}
-.c-textarea { resize:vertical; min-height:80px; }
-.field-hint { display:block; font-size:0.72rem; color:var(--gray); margin-top:5px; }
-.char-count { text-align:right; font-size:0.72rem; color:var(--gray); margin-top:4px; }
-
-/* Identifiant input */
-.id-input-wrap {
-    display:flex; align-items:center; border:1.5px solid var(--gray-light);
-    border-radius:var(--radius-sm); background:var(--gray-xlight);
-    overflow:hidden; transition:var(--transition);
-}
-.id-input-wrap:focus-within {
-    border-color:var(--primary); background:white;
-    box-shadow:0 0 0 3px var(--primary-xlight);
-}
-.id-prefix {
-    padding:11px 12px; font-weight:700; color:var(--primary);
-    background:var(--primary-xlight); border-right:1px solid var(--gray-light);
-    font-size:1rem; flex-shrink:0;
-}
-.id-input {
-    border:none !important; border-radius:0 !important;
-    background:transparent !important; box-shadow:none !important;
-    flex:1;
-}
-.id-check { padding:0 12px; font-size:1rem; flex-shrink:0; }
-.id-check.valid { color:var(--success); }
-.id-check.invalid { color:var(--danger); }
-.id-check.checking { color:var(--gray); }
-
-/* Avatar picker */
-.avatar-picker {
-    display:flex; align-items:center; gap:16px; padding:16px;
-    border:2px dashed var(--gray-light); border-radius:var(--radius);
-    cursor:pointer; transition:var(--transition);
-}
-.avatar-picker:hover { border-color:var(--primary); background:var(--primary-xlight); }
-.avatar-preview {
-    width:72px; height:72px; border-radius:50%;
-    background:var(--gray-light); display:flex;
-    align-items:center; justify-content:center;
-    font-size:1.6rem; color:var(--gray); overflow:hidden;
-    flex-shrink:0; border:3px solid var(--gray-light);
-}
-.avatar-preview img { width:100%; height:100%; object-fit:cover; display:block; }
-.avatar-preview-initials {
-    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    font-size:1.8rem; font-weight:700; color:white;
-    background:var(--primary); text-transform:uppercase;
-}
-.avatar-picker-info p { font-size:0.88rem; font-weight:600; color:var(--dark); }
-.avatar-picker-info small { color:var(--gray); font-size:0.72rem; }
-
-/* Cover picker */
-.cover-picker { cursor:pointer; }
-.cover-preview {
-    height:120px; border-radius:var(--radius);
-    border:2px dashed var(--gray-light); display:flex;
-    flex-direction:column; align-items:center; justify-content:center;
-    gap:8px; color:var(--gray); font-size:0.88rem;
-    background:var(--gray-xlight); transition:var(--transition);
-    overflow:hidden;
-}
-.cover-preview:hover { border-color:var(--primary); background:var(--primary-xlight); }
-.cover-preview i { font-size:1.8rem; }
-.cover-preview img { width:100%; height:100%; object-fit:cover; }
-
-/* Mini profil preview */
-.profile-preview-card {
-    border-radius:var(--radius); border:1px solid var(--gray-light);
-    overflow:hidden; margin-top:20px;
-}
-.preview-cover {
-    height:80px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-}
-.preview-avatar-wrap { padding:0 16px; position:relative; margin-top:-28px; }
-.preview-avatar {
-    width:56px; height:56px; border-radius:50%; border:3px solid white;
-    background:var(--gray-light); display:flex;
-    align-items:center; justify-content:center;
-    font-size:1.2rem; color:var(--gray); overflow:hidden;
-    box-shadow:var(--shadow-sm);
-}
-.preview-avatar img { width:100%; height:100%; object-fit:cover; }
-.preview-avatar-initials {
-    width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    font-size:1.4rem; font-weight:700; color:white;
-    background:var(--primary); text-transform:uppercase;
-}
-.preview-info { padding:8px 16px 14px; }
-.preview-info h4 { font-size:0.9rem; font-weight:700; }
-.preview-info p { font-size:0.75rem; color:var(--gray); }
-
-/* Sport grid */
-.sport-grid {
-    display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));
-    gap:10px; margin-top:8px;
-}
-.sport-btn {
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-    padding:12px 8px; border:1.5px solid var(--gray-light);
-    border-radius:var(--radius-sm); background:white;
-    cursor:pointer; transition:var(--transition-bounce);
-    font-size:0.78rem; font-weight:500; color:var(--gray);
-    text-align:center;
-}
-.sport-btn .sport-emoji { font-size:emoji { font-size:1.6rem; line-height:1.6rem; line-height:1; }
-.sport-btn:hover { border-color1; }
-.sport-btn:hover { border-color:var(--primary); color:var(--primary); transform:translateY(-2px); box:var(--primary); color:var(--primary); transform:translateY(-2px); box-shadow:var(--shadow-sm);-shadow:var(--shadow-sm); }
-.sport-btn.selected {
-    border-color:var(--primary); background }
-.sport-btn.selected {
-    border-color:var(--primary); background:var(--primary-xlight);
-    color:var(--primary); font-weight:600:var(--primary-xlight);
-    color:var(--primary); font-weight:600;
-    box-shadow:0 0 0;
-    box-shadow:0 0 0 3px var(--primary-xlight);
+// Début fonctions utilitaires
+function toast(msg, type='info', dur=10000) {
+    const c = document.getElementById('toastContainer');
+    const icons = {success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
+    const el = document.createElement('div');
+    el.className = `c-toast ${type}`;
+    el.innerHTML = `<i class="fas ${icons[type]}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+    c.appendChild(el);
+    setTimeout(() => { el.style.animation = 'slideInRight 0.3s reverse'; setTimeout(() => el.remove(), 300); }, dur);
 }
 
-/* Privacy options */
-.privacy-options { display:flex 3px var(--primary-xlight);
+function setLoader(show, text='Chargement...', pct=0) {
+    const l = document.getElementById('globalLoader');
+    if (!l) return;
+    l.style.display = show ? 'flex' : 'none';
+    document.getElementById('loaderText').textContent = text;
+    document.getElementById('loaderBar').style.width = pct + '%';
 }
 
-/* Privacy options */
-.privacy-options { display:flex; flex-direction:column; gap:10px; margin-top:8px;; flex-direction:column; gap:10px; margin-top:8px; }
-.privacy }
-.privacy-option {
-    display:flex; align-items:center; padding:14-option {
-    display:flex; align-items:center; padding:14px;
-    border:1.5px solid var(--px;
-    border:1.5px solid var(--gray-light); border-radius:var(--radius-sm);
-    cursor:pointer; transition:var(--transition);
+function escapeHtml(s) {
+    if (!s) return '';
+    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
-.prgray-light); border-radius:var(--radius-sm);
-    cursor:pointer; transition:var(--transition);
-}
-.privacy-option input[type="radio"] { display:none;ivacy-option input[type="radio"] { display:n }
-.privacy-option:hover { border-color:var(--primary); background:var(--primary-xlight);one; }
-.privacy-option:hover { border-color:var(--primary); background:var(--primary-xlight); }
-.privacy-option.active { border-color: }
-.privacy-option.active { border-color:var(--var(--primary); background:var(--primary-xlight); }
-.privacy-opt-body { display:flexprimary); background:var(--primary-xlight); }
-.privacy-opt-body { display:flex; align-items:center; gap:12px; pointer-events:none; }
-.privacy-opt-body > i; align-items:center; gap:12px; pointer-events:none; }
-.privacy-opt-body > i {
-    width:38px; height:38px; border-radius:50 {
-    width:38px; height:38px; border-radius:50%;
-    background:var(--primary-xlight); display:flex;
-    align-items:center; justify%;
-    background:var(--primary-xlight); display:flex;
-    align-items:center; justify-content:center;
-    font-size:1rem; color:var-content:center;
-    font-size:1rem; color:var(--primary); flex-shrink:0;
-}
-.privacy-option.active .privacy-(--primary); flex-shrink:0;
-}
-.privacy-option.active .privacy-opt-body > i { background:var(--primary); coloropt-body > i { background:var(--primary); color:white;:white; }
-.privacy-opt-body strong { display:block; font-size:0.88rem; }
-.privacy }
-.privacy-opt-body strong { display:block; font-size:0.88rem; }
-.privacy-opt-body p { font-size:0.75rem-opt-body p { font-size:0.75rem; color:var(--gray); margin:0; }
+// Fin fonctions utilitaires
 
-/* Step actions */
-.step-actions {
-   ; color:var(--gray); margin:0; }
+// Début session
+async function checkSession() {
+    setLoader(true, 'Vérification de la session...', 20);
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (error || !session) { window.location.href = '../../authprive/users/login.html'; return null; }
+    currentUser = session.user;
+    return currentUser;
+}
+// Fin session
 
-/* Step actions */
-.step-actions {
-    display:flex; justify-content:flex-end; gap: display:flex; justify-content:flex-end; gap:10px10px;
-    margin-top:28px; padding-top:20px;
-    border-top:1px solid var(--gray;
-    margin-top:28px; padding-top:20px;
-    border-top:1px solid var(--gray-light);
+// Début chargement profil
+async function loadProfile() {
+    setLoader(true, 'Chargement du profil...', 50);
+    const { data, error } = await sb
+        .from('"supabaseAuthPrive_profiles"')
+        .select('*')
+        .eq('auth_uuid', currentUser.id)
+        .single();
+    if (error) { toast('Erreur chargement profil', 'error'); return null; }
+    currentProfile = data;
+
+    // UI
+    document.getElementById('userName').textContent = data.full_name || data.display_name || 'Utilisateur';
+    document.getElementById('userAvatar').src = data.avatar_url || '../../img/user-default.jpg';
+
+    // Configurer le dashboard selon le rôle
+    const roleDashboardMap = {
+        'FOOT': '../../footballeur/dashboard/foot-dash.html',
+        'BASK': '../../basketteur/dashboard/basketteur-dash.html',
+        'ADMIN': '../../authprive/admin/admin-dashboard.html'
+    };
+    const dash = roleDashboardMap[data.role_code] || '../../index.html';
+    document.getElementById('dropDashboard').href = dash;
+    document.getElementById('navLogo').onclick = () => window.location.href = dash;
+
+    return data;
+}
+// Fin chargement profil
+
+// Début vérification communauté existante
+async function checkExistingCommunity() {
+    setLoader(true, 'Vérification de ta communauté...', 75);
+    const { data } = await sb
+        .from('"supabaseAuthPrive_communities"')
+        .select('id, feed_id')
+        .eq('hubisoccer_id', currentProfile.hubisoccer_id)
+        .maybeSingle();
+    setLoader(false);
+    if (data) {
+        window.location.href = 'feed.html';
+    }
+}
+// Fin vérification communauté existante
+
+// Début peuplement UI
+function populateCountries() {
+    const sel = document.getElementById('communityCountry');
+    COUNTRIES.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.code;
+        o.textContent = c.name;
+        sel.appendChild(o);
+    });
 }
 
-/* Buttons */
-.btn-primary, .btn-gold-light);
+function buildSportGrid() {
+    const grid = document.getElementById('sportGrid');
+    grid.innerHTML = SPORTS.map(s => `
+        <button class="sport-btn" data-sport="${s.id}" type="button">
+            <span class="sport-emoji">${s.emoji}</span>
+            <span>${s.label}</span>
+        </button>
+    `).join('');
+    grid.querySelectorAll('.sport-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            grid.querySelectorAll('.sport-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedSport = btn.dataset.sport;
+            document.getElementById('selectedSport').value = selectedSport;
+        });
+    });
+}
+// Fin peuplement UI
+
+// Début validation handle
+function validateHandleFormat(handle) {
+    return /^[a-zA-Z0-9_]{3,30}$/.test(handle);
 }
 
-/* Buttons */
-.btn-primary, .btn-gold, .btn-ghost {
-    display:inline-flex; align-items:center; gap:8px;
-   , .btn-ghost {
-    display:inline-flex; align-items:center; gap:8px;
-    padding:10px 22px; border-radius:var(--radius padding:10px 22px; border-radius:var(--radius-pill);
-    font-size:0.88rem; font-weight:600; transition:var(--transition);
--pill);
-    font-size:0.88rem; font-weight:600; transition:var(--transition);
-}
-.btn-primary}
-.btn-primary { background:var(--primary); color:white; border:none; box-shadow:var(--shadow-sm); }
-.btn-primary:hover { background: { background:var(--primary); color:white; border:none; box-shadow:var(--shadow-sm); }
-.btn-primary:hover {var(--primary-dark); transform:translateY(-2px); box-shadow:var(--shadow-md); }
-.btn-gold { background: background:var(--primary-dark); transform:translateY(-2px); box-shadow:var(--shadow-md); }
-.btn-gold { background:var(--var(--gold); color:var(--dark); box-shadow:0 4px 20px rgba(255,204,0,0.gold); color:var(--dark); box-shadow:0 4px 20px rgba(255,204,0,0.25); }
-.btn-gold:hover { background:var(--gold-dark); transform25); }
-.btn-gold:hover { background:var(--gold-dark); transform:translate:translateY(-2px); box-shadow:0 8px 30px rgba(255,204,0,0.4Y(-2px); box-shadow:0 8px 30px rgba(255,204,0,0.4); }
-.btn-ghost {
-    background:); }
-.btn-ghost {
-    background:white; color:var(--primary); border:1.5px solid var(--gray-light);
-}
-.btn-ghost:hoverwhite; color:var(--primary); border:1.5px solid var(--gray-light);
-}
-.btn-ghost:hover { border-color:var(--primary); background:var(--primary-xlight); }
+async function checkHandleAvailability(handle) {
+    const el = document.getElementById('handleCheck');
+    el.innerHTML = '<i class="fas fa-spinner fa-spin checking"></i>';
+    el.className = 'id-check checking';
 
-/* Recap card */
-. { border-color:var(--primary); background:var(--primary-xlight); }
+    if (!validateHandleFormat(handle)) {
+        el.innerHTML = '<i class="fas fa-times"></i>';
+        el.className = 'id-check invalid';
+        handleValid = false;
+        return;
+    }
 
-/* Recap card */
-.recaprecap-card {
-    background:var(--gray-xlight); border-radius:var(--radius);
-    padding:20-card {
-    background:var(--gray-xlight); border-radius:var(--radius);
-    paddingpx; margin-bottom:20px;
-    border:1px solid var(--gray-light);
-}
-.recap-row {
-    display:flex; align-items:20px; margin-bottom:20px;
-    border:1px solid var(--gray-light);
-}
-.recap-row {
-    display:flex; align-items:center; gap:10px;
-    padding:8px 0; border-bottom:1px solid:center; gap:10px;
-    padding:8px 0; border-bottom:1px solid var(--gray-light);
-    font-size:0.85rem;
-}
-.recap-row:last-child var(--gray-light);
-    font-size:0.85rem;
-}
-.recap-row:last-child { border-bottom:none; }
-.recap-label { { border-bottom:none; }
-.recap-label { color:var(-- color:var(--gray); font-weight:500; min-width:120px; }
-.recgray); font-weight:500; min-width:120px; }
-.recap-valueap-value { font-weight: { font-weight:600; color:var(--dark); flex:1; }
-.rec600; color:var(--dark); flex:1; }
-.recap-avatar { width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid var(--primary); }
-.recapap-avatar { width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid var(--primary); }
-.recap-cover-thumb { width:80px;-cover-thumb { width:80 height:40px; border-radius:6px; objectpx; height:40px; border-radius:6px; object-fit:cover; }
+    const { data } = await sb
+        .from('"supabaseAuthPrive_communities"')
+        .select('id').eq('feed_id', handle.toLowerCase()).maybeSingle();
 
-/*-fit:cover; }
+    if (data) {
+        el.innerHTML = '<i class="fas fa-times"></i>';
+        el.className = 'id-check invalid';
+        handleValid = false;
+        toast('Cet identifiant est déjà pris', 'warning');
+    } else {
+        el.innerHTML = '<i class="fas fa-check"></i>';
+        el.className = 'id-check valid';
+        handleValid = true;
+    }
+}
+// Fin validation handle
 
-/* Terms Terms */
-.terms-box { margin-bottom:20 */
-.terms-box { margin-bottom:20px; }
-.terms-label {
-    display:px; }
-.terms-label {
-   flex; align-items:flex-start; gap:10px;
-    font-size:0.8 display:flex; align-items:flex-start; gap:10px;
-    font-size:0rem; color:var(--gray); cursor:pointer.8rem; color:var(--gray); cursor:pointer;
-    line-height:1.5;
+// Début génération IDs sociaux
+async function generateSocialIds(feedId) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(feedId + currentProfile.hubisoccer_id);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return {
+        feed_id: feedId,
+        msg_id:  'msg_' + hashHex.substring(0, 32),
+        svtr_id: 'svtr_' + hashHex.substring(32, 48),
+        gt_id:   'gt_' + hashHex.substring(48, 64)
+    };
 }
-.;
-    line-height:1.5;
-}
-.terms-label inputterms-label input[type="checkbox"] { margin-top:2px; flex-shr[type="checkbox"] { margin-top:2px; flex-shrink:0; accent-colorink:0; accent-color:var(--primary); width:16px;:var(--primary); width:16px; height:16px height:16px; }
-.terms; }
-.terms-label a { color:var-label a { color:var(--primary); text-decoration:underline; }
+// Fin génération IDs sociaux
 
-/* Success(--primary); text-decoration:underline; }
+// Début navigation étapes
+function goToStep(n) {
+    document.querySelectorAll('.setup-step-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`step${n}`).classList.remove('hidden');
 
-/* Success */
-.setup-success {
-    text-align: */
-.setup-success {
-    text-align:center; padding:40pxcenter; padding:40px 20 20px; background:white;
-    borderpx; background:white;
-    border-radius:var(--radius-xl-radius:var(--radius-xl); box-shadow:var(--shadow-lg);
-   ); box-shadow:var(--shadow-lg);
-    border:1px solid var border:1px solid var(--gray-light);
-}
-.setup-success.hidden { display(--gray-light);
-}
-.setup-success.hidden { display:none; }
-.success-animation { margin-bottom:none; }
-.success-animation { margin-bottom:24px; }
-.success-circle {
-    width:80px; height::24px; }
-.success-circle {
-    width:80px; height:80px; border-radius:50%;
-    background:linear-gradient(135deg,var80px; border-radius:50%;
-    background:linear-gradient(135deg,var(--success),#16a34a);
-    display:flex;(--success),#16a34a);
-    display:flex; align-items:center; justify-content:center;
-    font-size:2rem; color:white; margin:0 auto align-items:center; justify-content:center;
-    font-size:2rem; color:white; margin:0 auto;
-    animation:bounceIn 0.6s ease;
-    animation:bounceIn 0.6s ease;
-    box-shadow:0 0 0 12px rgba(34,197,94,0.15;
-    box-shadow:0 0 0 12px rgba(34,197,94,0.15);
-}
-.setup-success h2 { font-size:1.5rem);
-}
-.setup-success h2 { font-size:1.5rem; font-weight:800; margin-bottom:10px; }
-.setup-success p { color:var(--gray);; font-weight:800; margin-bottom:10px; }
-.setup-success p { color:var(--gray); font-size:0.88rem; margin-bottom:10px; font-size:0.88rem; margin-bottom:10px; }
-.success-id {
-    display:inline-block; padding:8px 20px;
-    background:var(--primary-xlight }
-.success-id {
-    display:inline-block; padding:8px 20px;
-    background:var(--primary-xlight); border:2px solid var(--primary);
-    border-radius:); border:2px solid var(--primary);
-    border-radius:var(--radius-pill); font-size:1.1rem; font-weight:800;
-    color:var(--primary);var(--radius-pill); font-size:1.1rem; font-weight:800;
-    color:var(--primary); margin:12px 0; letter-spacing:0.5 margin:12px 0; letter-spacing:0.5pxpx;
-}
-.success-note { font-size:0.78rem !important; color:var(--gray); margin-bottom:;
-}
-.success-note { font-size:0.78rem !important; color:var(--gray); margin-bottom:24px !important; }
+    document.querySelectorAll('.step').forEach(el => {
+        const s = parseInt(el.dataset.step);
+        el.classList.remove('active', 'done');
+        if (s < n) el.classList.add('done');
+        else if (s === n) el.classList.add('active');
+    });
+    document.querySelectorAll('.step-line').forEach((el, i) => {
+        el.classList.toggle('done', i < n - 1);
+    });
 
-/* Toasts */
-.c-toast-container {
-   24px !important; }
-
-/* Toasts */
-.c-toast-container {
-    position:fixed; bottom:24px; right:24px;
-    display:flex; flex-direction:column; gap: position:fixed; bottom:24px; right:24px;
-    display:flex; flex-direction:column; gap:8px;
-    z-index:3000;
+    currentStep = n;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-.c-toast {
-   8px;
-    z-index:3000;
-}
-.c-toast {
-    display: display:flex; align-items:center; gap:10px;
-    padding:12px 16px; background:white;
-   flex; align-items:center; gap:10px;
-    padding:12px 16px; background:white;
-    border-radius:var(--radius-sm); box-shadow:var(--shadow-lg border-radius:var(--radius-sm); box-shadow:var(--shadow);
-    font-size:0.83rem; min-width:240px; max-width:360px;
-    border-left:4px solid-lg);
-    font-size:0.83rem; min-width:240px; max-width:360px;
-    border-left:4px solid var(--info);
-    animation:slideInRight 0.3s ease var(--info);
-    animation:slideInRight 0.3s ease;
-}
-.c-toast.success { border-color:var(--success); }
-.c-toast.error   { border;
-}
-.c-toast.success { border-color:var(--success); }
-.c-toast.error   { border-color:var(--danger); }
-.c-toast.warning { border-color:var(--danger); }
-.c-toast.warning-color:var(--warning); }
-.c-toast i { font-size:1rem; }
-.c-toast.success i { border-color:var(--warning); }
-.c-toast i { font-size:1rem; }
-.c-toast.success i { color:var(--success); }
-.c-toast.error   i { color { color:var(--success); }
-.c-toast.error   i { color:var(--danger); }
-.c-toast.warning i { color:var(--warning); }
-.c-toast.info    i:var(--danger); }
-.c-toast.warning i { color:var(--warning); }
-.c-toast.info    i { color:var(--info); }
-.c-toast span { flex:1 { color:var(--info); }
-.c-toast span { flex:1; }
-.c-toast button { color:var(--gray); font-size:0.8rem; }
 
-/* Animations; }
-.c-toast button { color:var(--gray); font-size:0.8rem; }
+function validateStep1() {
+    const name = document.getElementById('communityName').value.trim();
+    const handle = document.getElementById('communityHandle').value.trim();
+    const bio = document.getElementById('communityBio').value.trim();
+    const country = document.getElementById('communityCountry').value;
 
-/* Animations */
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-@ */
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-@keyframes slideInRight { from{opacity:0;transform:translateX(40px)} to{opacity:keyframes slideInRight { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
-@keyframes bounce1;transform:translateX(0)} }
-@keyframes bounceIn { 0%{opacity:0;transform:scale(0.7)} 60%{transform:scaleIn { 0%{opacity:0;transform:scale(0.7)} 60%{transform:scale(1.05)} 100%{opacity:1;transform:scale((1.05)} 100%{opacity:1;transform:scale(1)} }
-
-/* Responsive */
-@media(max-width:600px) {
-    .setup-card { padding:24px1)} }
-
-/* Responsive */
-@media(max-width:600px) {
-    .setup-card { padding:24px 18px; }
-    .setup-hero h1 18px; }
-    .setup-hero h1 { font { font-size:1.4rem; }
-    .sport-grid { grid-template-columns:repeat-size:1.4rem; }
-    .sport-grid { grid-template-columns:repeat(3,1fr); }
-    .step-label { display:none;(3,1fr); }
-    .step-label { display:none; }
+    if (!name) { toast('Entre le nom de ta communauté', 'warning'); return false; }
+    if (!handle || !handleValid) { toast('Choisis un identifiant valide et disponible', 'warning'); return false; }
+    if (!bio) { toast('Ajoute une bio', 'warning'); return false; }
+    if (!country) { toast('Sélectionne ton pays', 'warning'); return false; }
+    return true;
 }
-/* ===== FIN CSS ===== */
+
+function validateStep2() {
+    if (!avatarFile) { toast('Ajoute une photo de profil', 'warning'); return false; }
+    if (!coverFile)  { toast('Ajoute une photo de couverture', 'warning'); return false; }
+    return true;
+}
+
+function validateStep3() {
+    if (!selectedSport) { toast('Sélectionne ton sport principal', 'warning'); return false; }
+    return true;
+}
+// Fin navigation étapes
+
+// Début upload fichier
+async function uploadFile(file, bucket, path) {
+    const { error } = await sb.storage.from(bucket).upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data } = sb.storage.from(bucket).getPublicUrl(path);
+    return data.publicUrl;
+}
+// Fin upload fichier
+
+// Début récapitulatif
+function buildRecap() {
+    const name   = document.getElementById('communityName').value.trim();
+    const handle = document.getElementById('communityHandle').value.trim().toLowerCase();
+    const bio    = document.getElementById('communityBio').value.trim();
+    const countrySelect = document.getElementById('communityCountry');
+    const countryCode = countrySelect.value;
+    const countryName = countrySelect.options[countrySelect.selectedIndex]?.text || countryCode;
+    const lang   = document.getElementById('communityLang').value;
+    const sport  = SPORTS.find(s => s.id === selectedSport);
+
+    const avatarUrl = avatarFile ? URL.createObjectURL(avatarFile) : '';
+    const coverUrl  = coverFile  ? URL.createObjectURL(coverFile)  : '';
+
+    document.getElementById('recapCard').innerHTML = `
+        <div class="recap-row">
+            <span class="recap-label">Photo de profil</span>
+            <span class="recap-value">${avatarUrl ? `<img class="recap-avatar" src="${avatarUrl}" alt="">` : '—'}</span>
+        </div>
+        <div class="recap-row">
+            <span class="recap-label">Couverture</span>
+            <span class="recap-value">${coverUrl ? `<img class="recap-cover-thumb" src="${coverUrl}" alt="">` : '—'}</span>
+        </div>
+        <div class="recap-row">
+            <span class="recap-label">Nom</span>
+            <span class="recap-value">${escapeHtml(name)}</span>
+        </div>
+        <div class="recap-row">
+            <span class="recap-label">Identifiant HubiS</span>
+            <span class="recap-value" style="color:var(--primary);font-family:monospace">@${escapeHtml(handle)}</span>
+        </div>
+        <div class="recap-row">
+            <span class="recap-label">Bio</span>
+            <span class="recap-value">${escapeHtml(bio.substring(0,80))}${bio.length>80?'...':''}</span>
+        </div>
+        <div class="recap-row">
+            <span class="recap-label">Pays</span>
+            <span class="recap-value">${escapeHtml(countryName)}</span>
+        </div>
+        <div class="recap-row">
+            <span class="recap-label">Sport</span>
+            <span class="recap-value">${sport ? sport.emoji+' '+sport.label : '—'}</span>
+        </div>
+        <div class="recap-row">
+            <span class="recap-label">Confidentialité</span>
+            <span class="recap-value">${selectedPrivacy === 'public' ? '🌍 Publique' : selectedPrivacy === 'followers' ? '👥 Abonnés' : '🔒 Privée'}</span>
+        </div>
+    `;
+}
+// Fin récapitulatif
+
+// Début création communauté
+async function createCommunity() {
+    const btn = document.getElementById('createCommunityBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
+    setLoader(true, 'Upload des photos...', 30);
+
+    try {
+        const uid = currentProfile.hubisoccer_id;
+        const handle = document.getElementById('communityHandle').value.trim().toLowerCase();
+        const name = document.getElementById('communityName').value.trim();
+        const bio = document.getElementById('communityBio').value.trim();
+        const country = document.getElementById('communityCountry').value; // Code pays (2 lettres)
+        const lang = document.getElementById('communityLang').value;
+        const specialty = document.getElementById('communitySpecialty').value.trim();
+        const website = document.getElementById('communityWebsite').value.trim();
+
+        // Génération IDs sociaux
+        const socialIds = await generateSocialIds(handle);
+
+        // Upload avatar
+        setLoader(true, 'Upload photo de profil...', 40);
+        const avatarExt = avatarFile.name.split('.').pop();
+        const avatarPath = `communities/${uid}/avatar_${Date.now()}.${avatarExt}`;
+        const avatarUrl = await uploadFile(avatarFile, 'feed_avatars', avatarPath);
+
+        // Upload cover
+        setLoader(true, 'Upload photo de couverture...', 60);
+        const coverExt = coverFile.name.split('.').pop();
+        const coverPath = `communities/${uid}/cover_${Date.now()}.${coverExt}`;
+        const coverUrl = await uploadFile(coverFile, 'feed_avatars', coverPath);
+
+        // Insérer communauté
+        setLoader(true, 'Création de ta communauté...', 80);
+        const { error: commErr } = await sb.from('"supabaseAuthPrive_communities"').insert({
+            hubisoccer_id: uid,
+            feed_id: handle,
+            msg_id: socialIds.msg_id,
+            svtr_id: socialIds.svtr_id,
+            gt_id: socialIds.gt_id,
+            name, bio, sport: selectedSport, specialty, website,
+            country, lang, privacy: selectedPrivacy,
+            avatar_url: avatarUrl, cover_url: coverUrl,
+            followers_count: 0, following_count: 0, posts_count: 0
+        });
+
+        if (commErr) {
+            if (commErr.code === '23505') {
+                toast('Cet identifiant est déjà pris. Choisis-en un autre.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i> Lancer ma communauté';
+                setLoader(false);
+                return;
+            }
+            throw commErr;
+        }
+
+        // Mettre à jour profiles avec les IDs sociaux
+        setLoader(true, 'Mise à jour du profil...', 90);
+        await sb.from('"supabaseAuthPrive_profiles"').update({
+            feed_id: handle,
+            msg_id: socialIds.msg_id,
+            svtr_id: socialIds.svtr_id,
+            gt_id: socialIds.gt_id,
+            community_avatar: avatarUrl,
+            community_cover: coverUrl
+        }).eq('hubisoccer_id', uid);
+
+        setLoader(false);
+
+        // Afficher succès
+        document.getElementById('setupCard').classList.add('hidden');
+        document.getElementById('setupSteps').classList.add('hidden');
+        document.querySelector('.setup-hero').classList.add('hidden');
+        document.getElementById('successId').textContent = `@${handle}`;
+        document.getElementById('setupSuccess').classList.remove('hidden');
+
+    } catch (err) {
+        console.error('Erreur création communauté:', err);
+        toast('Une erreur est survenue : ' + err.message, 'error');
+        setLoader(false);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-rocket"></i> Lancer ma communauté';
+    }
+}
+// Fin création communauté
+
+// Début initialisation
+async function init() {
+    const user = await checkSession();
+    if (!user) return;
+    await loadProfile();
+    await checkExistingCommunity();
+
+    populateCountries();
+    buildSportGrid();
+
+    // Bio char count
+    const bioInput = document.getElementById('communityBio');
+    bioInput.addEventListener('input', () => {
+        document.getElementById('bioCount').textContent = bioInput.value.length;
+    });
+
+    // Handle check
+    document.getElementById('communityHandle').addEventListener('input', (e) => {
+        clearTimeout(handleTimer);
+        let val = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+        e.target.value = val;
+        if (val.length >= 3) {
+            handleTimer = setTimeout(() => checkHandleAvailability(val), 600);
+        } else {
+            document.getElementById('handleCheck').innerHTML = '';
+            handleValid = false;
+        }
+    });
+
+    // Sync preview
+    document.getElementById('communityName').addEventListener('input', (e) => {
+        document.getElementById('previewName').textContent = e.target.value || 'Nom de ta communauté';
+    });
+    document.getElementById('communityHandle').addEventListener('input', (e) => {
+        document.getElementById('previewHandle').textContent = '@' + (e.target.value || 'identifiant');
+    });
+
+    // Avatar picker
+    const avatarPicker = document.getElementById('avatarPicker');
+    const avatarInput = document.getElementById('avatarInput');
+    avatarPicker.addEventListener('click', () => avatarInput.click());
+    avatarInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 800 * 1024) { toast('Image trop lourde (max 800 Ko)', 'warning'); return; }
+        avatarFile = file;
+        const url = URL.createObjectURL(file);
+        document.getElementById('avatarPreview').innerHTML = `<img src="${url}" alt="">`;
+        document.getElementById('previewAvatarEl').innerHTML = `<img src="${url}" alt="">`;
+    });
+
+    // Cover picker
+    const coverPicker = document.getElementById('coverPicker');
+    const coverInput = document.getElementById('coverInput');
+    coverPicker.addEventListener('click', () => coverInput.click());
+    coverInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) { toast('Image trop lourde (max 2 Mo)', 'warning'); return; }
+        coverFile = file;
+        const url = URL.createObjectURL(file);
+        document.getElementById('coverPreview').innerHTML = `<img src="${url}" alt="">`;
+        document.getElementById('previewCoverBg').style.background = `url(${url}) center/cover`;
+    });
+
+    // Privacy options
+    document.querySelectorAll('.privacy-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            document.querySelectorAll('.privacy-option').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            opt.querySelector('input').checked = true;
+            selectedPrivacy = opt.dataset.value;
+        });
+    });
+
+    // Step navigation
+    document.getElementById('step1Next').addEventListener('click', () => {
+        if (validateStep1()) goToStep(2);
+    });
+    document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
+    document.getElementById('step2Next').addEventListener('click', () => {
+        if (validateStep2()) goToStep(3);
+    });
+    document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
+    document.getElementById('step3Next').addEventListener('click', () => {
+        if (validateStep3()) { buildRecap(); goToStep(4); }
+    });
+    document.getElementById('step4Back').addEventListener('click', () => goToStep(3));
+
+    // Terms checkbox
+    document.getElementById('termsAccept').addEventListener('change', (e) => {
+        document.getElementById('createCommunityBtn').disabled = !e.target.checked;
+    });
+
+    // Create button
+    document.getElementById('createCommunityBtn').addEventListener('click', createCommunity);
+
+    // Go to community after success
+    document.getElementById('goToCommunityBtn').addEventListener('click', () => {
+        window.location.href = 'feed.html';
+    });
+
+    // Navbar dropdown
+    document.getElementById('userMenu').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('userDropdown').classList.toggle('show');
+    });
+    document.addEventListener('click', () => document.getElementById('userDropdown')?.classList.remove('show'));
+    document.getElementById('dropLogout').addEventListener('click', async () => {
+        await sb.auth.signOut();
+        window.location.href = '../../authprive/users/login.html';
+    });
+}
+// Fin initialisation
+
+document.addEventListener('DOMContentLoaded', init);

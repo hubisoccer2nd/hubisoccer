@@ -37,7 +37,7 @@
             <div class="stories-user-info">
                 <div class="stories-nav-avatar-wrap">
                     <div class="stories-nav-avatar-initials" id="navUserAvatarInitials"></div>
-                    <img src="../../img/user-default.jpg" id="navUserAvatar" alt="" class="stories-nav-avatar" style="display:none;">
+                    <img id="navUserAvatar" alt="" class="stories-nav-avatar" style="display:none;">
                 </div>
                 <span id="navUserName">...</span>
             </div>
@@ -54,14 +54,14 @@
                 <div class="my-story-add" id="myStoryAdd">
                     <div class="my-story-avatar-wrap">
                         <div class="my-story-avatar-initials" id="myStoryAvatarInitials"></div>
-                        <img src="../../img/user-default.jpg" id="myStoryAvatar" alt="" style="display:none;">
+                        <img id="myStoryAvatar" alt="" style="display:none;">
                         <div class="my-story-plus"><i class="fas fa-plus"></i></div>
                     </div>
                     <span>Ajouter une story</span>
                 </div>
                 <div class="my-story-existing" id="myStoryExisting" style="display:none">
                     <div class="story-thumb-wrap active-story" id="myStoryThumb" onclick="viewMyStory()">
-                        <img src="../../img/user-default.jpg" id="myStoryThumbImg" alt="">
+                        <img id="myStoryThumbImg" alt="">
                         <div class="story-thumb-overlay"><span id="myStoryTime"></span></div>
                     </div>
                     <div class="my-story-actions">
@@ -99,7 +99,7 @@
     <div class="sv-header">
         <div class="sv-author" id="svAuthor">
             <div class="sv-author-avatar-initials" id="svAuthorAvatarInitials"></div>
-            <img src="../../img/user-default.jpg" id="svAuthorAvatar" alt="" class="sv-author-avatar" style="display:none;">
+            <img id="svAuthorAvatar" alt="" class="sv-author-avatar" style="display:none;">
             <div class="sv-author-info">
                 <span class="sv-author-name" id="svAuthorName">...</span>
                 <span class="sv-author-time" id="svAuthorTime">...</span>
@@ -143,7 +143,7 @@
         <div class="sv-reply-row" id="svReplyRow">
             <div class="sv-reply-input-wrap" id="svReplyInputWrap">
                 <div class="sv-reply-avatar-initials" id="svReplyAvatarInitials"></div>
-                <img src="../../img/user-default.jpg" id="svReplyAvatar" alt="" class="sv-reply-avatar" style="display:none;">
+                <img id="svReplyAvatar" alt="" class="sv-reply-avatar" style="display:none;">
                 <input type="text" id="svReplyInput" placeholder="Répondre à la story..." maxlength="300">
                 <button class="sv-reply-send-btn" id="svReplySendBtn" title="Envoyer">
                     <i class="fas fa-paper-plane"></i>
@@ -428,8 +428,10 @@
 <div id="toastContainer" class="c-toast-container"></div>
 <!-- ===== FIN TOAST CONTAINER ===== -->
 
-<!-- ===== DEBUT SCRIPT ===== -->
+<!-- ===== DEBUT SCRIPTS ===== -->
+<script src="utils.js"></script>
+<script src="session.js"></script>
 <script src="stories.js"></script>
-<!-- ===== FIN SCRIPT ===== -->
+<!-- ===== FIN SCRIPTS ===== -->
 </body>
 </html>

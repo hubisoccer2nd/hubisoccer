@@ -1,6 +1,7 @@
 // ============================================================
 //  HUBISOCCER — STORIES.JS
 //  Visionneuse complète de stories — Adapté hubisapp
+//  Utilise utils.js et session.js
 // ============================================================
 
 'use strict';
@@ -43,51 +44,23 @@ let touchStartTime    = 0;
 let longPressTimer    = null;
 // Fin état global
 
-// Début fonctions utilitaires
-function toast(msg, type='info', dur=20000) {
-    const c = document.getElementById('toastContainer');
-    const icons = {success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
-    const el = document.createElement('div');
-    el.className = `c-toast ${type}`;
-    el.innerHTML = `<i class="fas ${icons[type]||icons.info}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
-    c.appendChild(el);
-    setTimeout(() => { el.style.animation = 'slideInRight 0.3s reverse'; setTimeout(() => el.remove(), 300); }, dur);
-}
+// Début session et profil
+async function initSessionAndProfile() {
+    const user = await checkSession();
+    if (!user) return false;
+    currentUser = user;
 
-function getInitials(name) {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return name[0].toUpperCase();
-}
+    const profile = await loadProfile(user.id);
+    if (!profile) return false;
+    currentProfile = profile;
 
-function timeSince(d) {
-    const s = Math.floor((new Date() - new Date(d)) / 1000);
-    if (s < 60) return 'À l\'instant';
-    if (s < 3600) return `${Math.floor(s/60)} min`;
-    if (s < 86400) return `${Math.floor(s/3600)}h`;
-    return `${Math.floor(s/86400)}j`;
-}
+    document.getElementById('navUserName').textContent = profile.full_name || profile.display_name || 'Utilisateur';
+    updateAvatarDisplay(profile.avatar_url, profile.full_name || profile.display_name, 'navUserAvatar', 'navUserAvatarInitials');
+    updateAvatarDisplay(profile.avatar_url, profile.full_name || profile.display_name, 'myStoryAvatar', 'myStoryAvatarInitials');
+    updateAvatarDisplay(profile.avatar_url, profile.full_name || profile.display_name, 'svReplyAvatar', 'svReplyAvatarInitials');
 
-function escapeHtml(s) {
-    if (!s) return '';
-    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    return true;
 }
-
-function setLoader(show) {
-    document.getElementById('globalLoader').style.display = show ? 'flex' : 'none';
-}
-
-function openModal(id) {
-    const e = document.getElementById(id);
-    if (e) { e.style.display = 'flex'; setTimeout(() => e.classList.add('show'), 10); }
-}
-
-function closeModal(id) {
-    const e = document.getElementById(id);
-    if (e) { e.classList.remove('show'); e.style.display = 'none'; }
-}
-window.closeModal = closeModal;
 
 function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
     const img = document.getElementById(imgId);
@@ -103,32 +76,6 @@ function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
         initials.style.display = 'flex';
         initials.textContent = text;
     }
-}
-// Fin fonctions utilitaires
-
-// Début session et profil
-async function checkSession() {
-    const { data: { session }, error } = await sb.auth.getSession();
-    if (error || !session) { window.location.href = '../../authprive/users/login.html'; return null; }
-    currentUser = session.user;
-    return currentUser;
-}
-
-async function loadProfile() {
-    const { data, error } = await sb
-        .from('supabaseAuthPrive_profiles')
-        .select('*')
-        .eq('auth_uuid', currentUser.id)
-        .single();
-    if (error) { toast('Erreur chargement profil', 'error'); return null; }
-    currentProfile = data;
-
-    document.getElementById('navUserName').textContent = data.full_name || data.display_name || 'Utilisateur';
-    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'navUserAvatar', 'navUserAvatarInitials');
-    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'myStoryAvatar', 'myStoryAvatarInitials');
-    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'svReplyAvatar', 'svReplyAvatarInitials');
-
-    return data;
 }
 // Fin session et profil
 
@@ -208,11 +155,13 @@ function renderStoriesList() {
 function makeStoryListItem(g, idx, seen) {
     const p = g.profile || {};
     const name = p.full_name || p.display_name || 'Utilisateur';
+    const avatarUrl = p.avatar_url;
+    const initials = getInitials(name);
     return `
         <div class="story-list-item" data-group-idx="${idx}">
             <div class="story-list-avatar-wrap ${seen ? 'seen' : ''}">
-                ${p.avatar_url ? `<img src="${p.avatar_url}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
-                <div class="story-list-avatar-initials" style="display:${p.avatar_url ? 'none' : 'flex'};">${getInitials(name)}</div>
+                ${avatarUrl ? `<img src="${avatarUrl}" alt="" style="display:block;">` : ''}
+                <div class="story-list-avatar-initials" style="display:${avatarUrl ? 'none' : 'flex'};">${initials}</div>
             </div>
             <div class="story-list-info">
                 <div class="story-list-name">${escapeHtml(name)}</div>
@@ -233,7 +182,13 @@ function setupMyStoryUI() {
     if (myStory) {
         addEl.style.display = 'none';
         existingEl.style.display = 'flex';
-        document.getElementById('myStoryThumbImg').src = myStory.media_url || currentProfile.avatar_url || '../../img/user-default.jpg';
+        const thumbImg = document.getElementById('myStoryThumbImg');
+        if (myStory.media_url) {
+            thumbImg.src = myStory.media_url;
+            thumbImg.style.display = 'block';
+        } else {
+            thumbImg.style.display = 'none';
+        }
         document.getElementById('myStoryTime').textContent = timeSince(myStory.created_at);
     } else {
         addEl.style.display = 'flex';
@@ -852,9 +807,10 @@ async function showStoryViewers() {
     list.innerHTML = (data || []).map(v => {
         const viewer = v.viewer || {};
         const name = viewer.full_name || viewer.display_name || 'Utilisateur';
+        const avatarUrl = viewer.avatar_url;
         return `<div class="sv-viewer-item">
-            <div class="sv-viewer-avatar-initials">${getInitials(name)}</div>
-            <img src="${viewer.avatar_url || '../../img/user-default.jpg'}" alt="" style="display:${viewer.avatar_url ? 'block' : 'none'};">
+            <div class="sv-viewer-avatar-initials" style="display:${avatarUrl ? 'none' : 'flex'};">${getInitials(name)}</div>
+            <img src="${avatarUrl || ''}" alt="" style="display:${avatarUrl ? 'block' : 'none'}; width:36px;height:36px;border-radius:50%;object-fit:cover;">
             <span class="sv-viewer-name">${escapeHtml(name)}</span>
             <span class="sv-viewer-time">${timeSince(v.viewed_at)}</span>
         </div>`;
@@ -951,12 +907,12 @@ async function publishStory() {
         };
         if (activeType === 'text') {
             const textContent = document.getElementById('storyTextContent').value.trim();
-            if (!textContent) { toast('Écris quelque chose', 'warning'); return; }
+            if (!textContent) { toast('Écris quelque chose', 'warning'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publier la story'; return; }
             storyData.media_type = 'text';
             storyData.text_content = textContent;
             storyData.text_bg = storyTextBg;
         } else {
-            if (!storyUploadFile) { toast('Sélectionne un fichier', 'warning'); return; }
+            if (!storyUploadFile) { toast('Sélectionne un fichier', 'warning'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publier la story'; return; }
             const ext = storyUploadFile.name.split('.').pop();
             const path = `stories/${currentProfile.hubisoccer_id}/${Date.now()}.${ext}`;
             const { error: upErr } = await sb.storage.from('post_media').upload(path, storyUploadFile);
@@ -981,10 +937,10 @@ async function publishStory() {
 
 // Début initialisation
 async function init() {
-    const user = await checkSession();
-    if (!user) return;
     setLoader(true);
-    await loadProfile();
+    const sessionOk = await initSessionAndProfile();
+    if (!sessionOk) return;
+
     await loadAllStories();
     await loadCoinsBalance();
     setLoader(false);

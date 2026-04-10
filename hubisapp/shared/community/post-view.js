@@ -1,6 +1,7 @@
 // ============================================================
 //  HUBISOCCER — POST-VIEW.JS
 //  Vue détaillée d'une publication
+//  Utilise utils.js et session.js
 // ============================================================
 
 'use strict';
@@ -24,9 +25,7 @@ let commentOffset     = 0;
 const COMMENT_PAGE    = 15;
 let hasMoreComments   = false;
 let commentMediaFile  = null;
-let activeReplyCommentId = null;
 let commentSubscription = null;
-let currentReportPostId = null;
 // Fin état global
 
 // Début mapping rôles
@@ -36,95 +35,26 @@ const ROLE_DASHBOARD_MAP = {
 };
 // Fin mapping rôles
 
-// Début fonctions utilitaires
-function toast(msg, type='info', dur=20000) {
-    const c = document.getElementById('toastContainer');
-    const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
-    const el = document.createElement('div');
-    el.className = `c-toast ${type}`;
-    el.innerHTML = `<i class="fas ${icons[type]}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
-    c.appendChild(el);
-    setTimeout(() => { el.style.animation = 'slideInRight 0.3s reverse'; setTimeout(() => el.remove(), 300); }, dur);
-}
-
-function timeSince(d) {
-    const s = Math.floor((new Date() - new Date(d)) / 1000);
-    if (s < 60) return 'À l\'instant';
-    const m = Math.floor(s / 60); if (m < 60) return `${m} min`;
-    const h = Math.floor(m / 60); if (h < 24) return `${h}h`;
-    const j = Math.floor(h / 24);
-    return j < 7 ? `${j}j` : new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'2-digit' });
-}
-
-function escapeHtml(s) {
-    if (!s) return '';
-    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-function formatText(t) {
-    if (!t) return '';
-    return escapeHtml(t)
-        .replace(/@(\w+)/g, '<span class="mention" style="color:var(--primary-light);font-weight:700;cursor:pointer">@$1</span>')
-        .replace(/#(\w+)/g, '<span class="hashtag" style="color:var(--primary);font-weight:700;cursor:pointer">#$1</span>')
-        .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline">$1</a>')
-        .replace(/\n/g, '<br>');
-}
-
-function getInitials(name) {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return name[0].toUpperCase();
-}
-
-function setLoader(show, text='', pct=0) {
-    const l = document.getElementById('globalLoader');
-    if (!l) return;
-    l.style.display = show ? 'flex' : 'none';
-    if (text) document.getElementById('loaderText').textContent = text;
-    document.getElementById('loaderBar').style.width = pct + '%';
-}
-
-function openModal(id) {
-    const e = document.getElementById(id);
-    if (e) { e.style.display = 'flex'; setTimeout(() => e.classList.add('show'), 10); }
-}
-
-function closeModal(id) {
-    const e = document.getElementById(id);
-    if (e) { e.classList.remove('show'); e.style.display = 'none'; }
-}
-window.closeModal = closeModal;
-// Fin fonctions utilitaires
-
 // Début session et profil
-async function checkSession() {
-    const { data: { session }, error } = await sb.auth.getSession();
-    if (error || !session) { window.location.href = '../../authprive/users/login.html'; return null; }
-    currentUser = session.user;
-    return currentUser;
-}
+async function initSessionAndProfile() {
+    const user = await checkSession();
+    if (!user) return false;
+    currentUser = user;
 
-async function loadProfile() {
-    const { data, error } = await sb
-        .from('supabaseAuthPrive_profiles')
-        .select('*')
-        .eq('auth_uuid', currentUser.id)
-        .single();
-    if (error) { toast('Erreur chargement profil', 'error'); return null; }
-    currentProfile = data;
+    const profile = await loadProfile(user.id);
+    if (!profile) return false;
+    currentProfile = profile;
 
-    // UI
-    document.getElementById('userName').textContent = data.full_name || data.display_name || 'Utilisateur';
-    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'user');
-    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'composer');
+    document.getElementById('userName').textContent = profile.full_name || profile.display_name || 'Utilisateur';
+    updateAvatarDisplay(profile.avatar_url, profile.full_name || profile.display_name, 'user');
+    updateAvatarDisplay(profile.avatar_url, profile.full_name || profile.display_name, 'composer');
 
-    const dash = ROLE_DASHBOARD_MAP[data.role_code] || '../../index.html';
+    const dash = ROLE_DASHBOARD_MAP[profile.role_code] || '../../index.html';
     document.getElementById('dropDashboard').href = dash;
     document.getElementById('navLogo').onclick = () => window.location.href = dash;
     document.getElementById('backBtn').addEventListener('click', () => window.history.back() || window.location.href = 'feed.html');
 
-    return data;
+    return true;
 }
 
 function updateAvatarDisplay(avatarUrl, fullName, type) {
@@ -163,7 +93,6 @@ async function loadPost(postId) {
     currentPost = data;
     document.title = `${data.author?.full_name || 'Publication'} | HubISoccer`;
 
-    // Vérifier like/dislike/save
     const [likeRes, dislikeRes, saveRes] = await Promise.all([
         sb.from('supabaseAuthPrive_post_likes').select('id').eq('post_id', postId).eq('user_hubisoccer_id', currentProfile.hubisoccer_id).maybeSingle(),
         sb.from('supabaseAuthPrive_post_dislikes').select('id').eq('post_id', postId).eq('user_hubisoccer_id', currentProfile.hubisoccer_id).maybeSingle(),
@@ -177,7 +106,6 @@ async function loadPost(postId) {
     loadAuthorCard(data.author, data.community);
     loadRelatedPosts(data.author_hubisoccer_id, postId);
 
-    // Incrémenter vue
     await sb.from('supabaseAuthPrive_post_views').upsert({
         post_id: postId,
         user_hubisoccer_id: currentProfile.hubisoccer_id,
@@ -256,15 +184,14 @@ function renderPost(post) {
         `;
     }
 
+    const authorInitials = getInitials(authorName);
+    const authorAvatarHtml = author.avatar_url
+        ? `<img class="pv-avatar" src="${author.avatar_url}" alt="" onclick="openUserProfile('${post.author_hubisoccer_id}')" style="display:block;">`
+        : `<div class="pv-avatar-initials" onclick="openUserProfile('${post.author_hubisoccer_id}')">${authorInitials}</div>`;
+
     document.getElementById('postFullCard').innerHTML = `
         <div class="pv-post-header">
-            <div class="pv-avatar-initials" onclick="openUserProfile('${post.author_hubisoccer_id}')">
-                ${getInitials(authorName)}
-            </div>
-            <img class="pv-avatar" src="${author.avatar_url || '../../img/user-default.jpg'}"
-                alt="" onclick="openUserProfile('${post.author_hubisoccer_id}')"
-                onerror="this.style.display='none';this.previousElementSibling.style.display='flex';"
-                style="display:${author.avatar_url ? 'block' : 'none'};">
+            ${authorAvatarHtml}
             <div class="pv-meta">
                 <div class="pv-author" onclick="openUserProfile('${post.author_hubisoccer_id}')">
                     ${escapeHtml(authorName)}${certified}
@@ -443,17 +370,16 @@ function makeCommentCard(c, replies = []) {
     const author = c.author || {};
     const authorName = author.full_name || author.display_name || 'Utilisateur';
     const isOwn = c.author_hubisoccer_id === currentProfile.hubisoccer_id;
+    const avatarUrl = author.avatar_url;
+    const initials = getInitials(authorName);
+
+    const avatarBlock = avatarUrl
+        ? `<img class="cm-avatar" src="${avatarUrl}" alt="" onclick="openUserProfile('${c.author_hubisoccer_id}')" style="display:block;">`
+        : `<div class="cm-avatar-initials" onclick="openUserProfile('${c.author_hubisoccer_id}')">${initials}</div>`;
 
     return `
         <div class="comment-card" id="cm_${c.id}">
-            <div class="cm-avatar-initials" onclick="openUserProfile('${c.author_hubisoccer_id}')"
-                style="display:${author.avatar_url ? 'none' : 'flex'};">
-                ${getInitials(authorName)}
-            </div>
-            <img class="cm-avatar" src="${author.avatar_url || '../../img/user-default.jpg'}"
-                alt="" onclick="openUserProfile('${c.author_hubisoccer_id}')"
-                onerror="this.style.display='none';this.previousElementSibling.style.display='flex';"
-                style="display:${author.avatar_url ? 'block' : 'none'};">
+            ${avatarBlock}
             <div class="cm-body">
                 <div class="cm-bubble">
                     <div class="cm-author">
@@ -477,7 +403,7 @@ function makeCommentCard(c, replies = []) {
                 <div id="replyCompose_${c.id}" style="display:none; margin-top:8px;">
                     <div class="cm-reply-compose">
                         <div class="cm-reply-avatar-initials">${getInitials(currentProfile.full_name || '')}</div>
-                        <img src="${currentProfile.avatar_url || '../../img/user-default.jpg'}" alt="" style="display:${currentProfile.avatar_url ? 'block' : 'none'}; width:26px;height:26px;border-radius:50%;">
+                        <img src="${currentProfile.avatar_url || ''}" alt="" style="display:${currentProfile.avatar_url ? 'block' : 'none'}; width:26px;height:26px;border-radius:50%;">
                         <textarea rows="1" id="replyInput_${c.id}" placeholder="Répondre à ${escapeHtml(authorName)}..."></textarea>
                         <button onclick="sendReply('${c.id}')"><i class="fas fa-paper-plane"></i></button>
                     </div>
@@ -490,16 +416,14 @@ function makeCommentCard(c, replies = []) {
 function makeReplyCard(r) {
     const author = r.author || {};
     const authorName = author.full_name || author.display_name || 'Utilisateur';
+    const avatarUrl = author.avatar_url;
+    const initials = getInitials(authorName);
     return `
         <div class="cm-reply-card" id="cm_${r.id}">
-            <div class="cm-reply-avatar-initials" onclick="openUserProfile('${r.author_hubisoccer_id}')"
-                style="display:${author.avatar_url ? 'none' : 'flex'};">
-                ${getInitials(authorName)}
+            <div class="cm-reply-avatar-initials" onclick="openUserProfile('${r.author_hubisoccer_id}')" style="display:${avatarUrl ? 'none' : 'flex'};">
+                ${initials}
             </div>
-            <img class="cm-reply-avatar" src="${author.avatar_url || '../../img/user-default.jpg'}"
-                alt="" onclick="openUserProfile('${r.author_hubisoccer_id}')"
-                onerror="this.style.display='none';this.previousElementSibling.style.display='flex';"
-                style="display:${author.avatar_url ? 'block' : 'none'};">
+            <img class="cm-reply-avatar" src="${avatarUrl || ''}" alt="" onclick="openUserProfile('${r.author_hubisoccer_id}')" style="display:${avatarUrl ? 'block' : 'none'};">
             <div class="cm-reply-bubble">
                 <div class="cm-reply-author">${escapeHtml(authorName)}</div>
                 <div class="cm-reply-text">${formatText(r.content)}</div>
@@ -668,7 +592,6 @@ async function loadAuthorCard(author, community) {
         : `<button class="btn-primary" id="authorFollowBtn" onclick="toggleFollow('${author.hubisoccer_id}', this)" style="flex:1"><i class="fas fa-user-plus"></i> S'abonner</button>
            <a class="btn-outline" href="../messagerie/conversation.html?to=${author.hubisoccer_id}"><i class="fas fa-envelope"></i></a>`;
 
-    // Vérifier si déjà abonné
     const { data: follow } = await sb.from('supabaseAuthPrive_follows')
         .select('id').eq('follower_hubisoccer_id', currentProfile.hubisoccer_id)
         .eq('following_hubisoccer_id', author.hubisoccer_id).maybeSingle();
@@ -738,8 +661,9 @@ function showLikes() {
             list.innerHTML = (data || []).map(l => {
                 const p = l.profiles || {};
                 const name = p.full_name || p.display_name || 'Utilisateur';
+                const avatarUrl = p.avatar_url;
                 return `<li class="pv-user-item" onclick="openUserProfile('${l.user_hubisoccer_id}')">
-                    <img src="${p.avatar_url || '../../img/user-default.jpg'}" alt="">
+                    ${avatarUrl ? `<img src="${avatarUrl}" alt="">` : `<div class="pv-user-avatar-initials">${getInitials(name)}</div>`}
                     <span class="pv-user-item-name">${escapeHtml(name)}</span>
                 </li>`;
             }).join('') || '<li style="padding:16px;color:var(--gray);text-align:center">Aucun j\'aime</li>';
@@ -758,8 +682,9 @@ function showDislikes() {
             list.innerHTML = (data || []).map(l => {
                 const p = l.profiles || {};
                 const name = p.full_name || p.display_name || 'Utilisateur';
+                const avatarUrl = p.avatar_url;
                 return `<li class="pv-user-item" onclick="openUserProfile('${l.user_hubisoccer_id}')">
-                    <img src="${p.avatar_url || '../../img/user-default.jpg'}" alt="">
+                    ${avatarUrl ? `<img src="${avatarUrl}" alt="">` : `<div class="pv-user-avatar-initials">${getInitials(name)}</div>`}
                     <span class="pv-user-item-name">${escapeHtml(name)}</span>
                 </li>`;
             }).join('') || '<li style="padding:16px;color:var(--gray);text-align:center">Aucun dislike</li>';
@@ -825,7 +750,7 @@ function openMediaZoom(url, type) {
     openModal('modalMedia');
 }
 
-async function openUserProfile(userId) {
+function openUserProfile(userId) {
     window.location.href = `profil-feed.html?id=${userId}`;
 }
 
@@ -835,20 +760,11 @@ function removeCommentMedia() {
 }
 // Fin modales et actions
 
-// Début déconnexion
-async function logout() {
-    await sb.auth.signOut();
-    window.location.href = '../../authprive/users/login.html';
-}
-// Fin déconnexion
-
 // Début initialisation
 async function init() {
-    const user = await checkSession();
-    if (!user) return;
-
     setLoader(true, 'Chargement du profil...', 20);
-    await loadProfile();
+    const sessionOk = await initSessionAndProfile();
+    if (!sessionOk) return;
 
     const params = new URLSearchParams(window.location.search);
     const postId = params.get('id');
@@ -862,7 +778,6 @@ async function init() {
     await loadComments();
     subscribeComments();
 
-    // Event listeners
     const ta = document.getElementById('mainCommentInput');
     ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; });
     ta.addEventListener('keydown', e => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); sendComment(); } });

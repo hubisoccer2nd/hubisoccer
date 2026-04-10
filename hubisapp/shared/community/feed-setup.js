@@ -1,7 +1,6 @@
 // ============================================================
 //  HUBISOCCER — FEED-SETUP.JS
-//  Création de la HubiS Community — Adapté hubisapp
-//  CORRIGÉ : Ajout des guillemets autour des noms de tables
+//  Création de la HubiS Community — CORRIGÉ
 // ============================================================
 
 'use strict';
@@ -295,7 +294,7 @@ async function checkSession() {
 async function loadProfile() {
     setLoader(true, 'Chargement du profil...', 50);
     const { data, error } = await sb
-        .from('"supabaseAuthPrive_profiles"')
+        .from('supabaseAuthPrive_profiles')
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
@@ -304,7 +303,12 @@ async function loadProfile() {
 
     // UI
     document.getElementById('userName').textContent = data.full_name || data.display_name || 'Utilisateur';
-    document.getElementById('userAvatar').src = data.avatar_url || '../../img/user-default.jpg';
+    if (data.avatar_url) {
+        document.getElementById('userAvatar').src = data.avatar_url;
+    } else {
+        // Fallback sur initiales (mais nous n'avons pas l'élément, on garde l'image cachée ou on met une icône)
+        document.getElementById('userAvatar').style.display = 'none';
+    }
 
     // Configurer le dashboard selon le rôle
     const roleDashboardMap = {
@@ -324,7 +328,7 @@ async function loadProfile() {
 async function checkExistingCommunity() {
     setLoader(true, 'Vérification de ta communauté...', 75);
     const { data } = await sb
-        .from('"supabaseAuthPrive_communities"')
+        .from('supabaseAuthPrive_communities')
         .select('id, feed_id')
         .eq('hubisoccer_id', currentProfile.hubisoccer_id)
         .maybeSingle();
@@ -383,7 +387,7 @@ async function checkHandleAvailability(handle) {
     }
 
     const { data } = await sb
-        .from('"supabaseAuthPrive_communities"')
+        .from('supabaseAuthPrive_communities')
         .select('id').eq('feed_id', handle.toLowerCase()).maybeSingle();
 
     if (data) {
@@ -531,29 +535,25 @@ async function createCommunity() {
         const handle = document.getElementById('communityHandle').value.trim().toLowerCase();
         const name = document.getElementById('communityName').value.trim();
         const bio = document.getElementById('communityBio').value.trim();
-        const country = document.getElementById('communityCountry').value; // Code pays (2 lettres)
+        const country = document.getElementById('communityCountry').value;
         const lang = document.getElementById('communityLang').value;
         const specialty = document.getElementById('communitySpecialty').value.trim();
         const website = document.getElementById('communityWebsite').value.trim();
 
-        // Génération IDs sociaux
         const socialIds = await generateSocialIds(handle);
 
-        // Upload avatar
         setLoader(true, 'Upload photo de profil...', 40);
         const avatarExt = avatarFile.name.split('.').pop();
         const avatarPath = `communities/${uid}/avatar_${Date.now()}.${avatarExt}`;
         const avatarUrl = await uploadFile(avatarFile, 'feed_avatars', avatarPath);
 
-        // Upload cover
         setLoader(true, 'Upload photo de couverture...', 60);
         const coverExt = coverFile.name.split('.').pop();
         const coverPath = `communities/${uid}/cover_${Date.now()}.${coverExt}`;
         const coverUrl = await uploadFile(coverFile, 'feed_avatars', coverPath);
 
-        // Insérer communauté
         setLoader(true, 'Création de ta communauté...', 80);
-        const { error: commErr } = await sb.from('"supabaseAuthPrive_communities"').insert({
+        const { error: commErr } = await sb.from('supabaseAuthPrive_communities').insert({
             hubisoccer_id: uid,
             feed_id: handle,
             msg_id: socialIds.msg_id,
@@ -576,9 +576,8 @@ async function createCommunity() {
             throw commErr;
         }
 
-        // Mettre à jour profiles avec les IDs sociaux
         setLoader(true, 'Mise à jour du profil...', 90);
-        await sb.from('"supabaseAuthPrive_profiles"').update({
+        await sb.from('supabaseAuthPrive_profiles').update({
             feed_id: handle,
             msg_id: socialIds.msg_id,
             svtr_id: socialIds.svtr_id,
@@ -588,8 +587,6 @@ async function createCommunity() {
         }).eq('hubisoccer_id', uid);
 
         setLoader(false);
-
-        // Afficher succès
         document.getElementById('setupCard').classList.add('hidden');
         document.getElementById('setupSteps').classList.add('hidden');
         document.querySelector('.setup-hero').classList.add('hidden');
@@ -616,13 +613,10 @@ async function init() {
     populateCountries();
     buildSportGrid();
 
-    // Bio char count
-    const bioInput = document.getElementById('communityBio');
-    bioInput.addEventListener('input', () => {
-        document.getElementById('bioCount').textContent = bioInput.value.length;
+    document.getElementById('communityBio').addEventListener('input', (e) => {
+        document.getElementById('bioCount').textContent = e.target.value.length;
     });
 
-    // Handle check
     document.getElementById('communityHandle').addEventListener('input', (e) => {
         clearTimeout(handleTimer);
         let val = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
@@ -635,7 +629,6 @@ async function init() {
         }
     });
 
-    // Sync preview
     document.getElementById('communityName').addEventListener('input', (e) => {
         document.getElementById('previewName').textContent = e.target.value || 'Nom de ta communauté';
     });
@@ -643,10 +636,8 @@ async function init() {
         document.getElementById('previewHandle').textContent = '@' + (e.target.value || 'identifiant');
     });
 
-    // Avatar picker
-    const avatarPicker = document.getElementById('avatarPicker');
+    document.getElementById('avatarPicker').addEventListener('click', () => avatarInput.click());
     const avatarInput = document.getElementById('avatarInput');
-    avatarPicker.addEventListener('click', () => avatarInput.click());
     avatarInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -657,10 +648,8 @@ async function init() {
         document.getElementById('previewAvatarEl').innerHTML = `<img src="${url}" alt="">`;
     });
 
-    // Cover picker
-    const coverPicker = document.getElementById('coverPicker');
+    document.getElementById('coverPicker').addEventListener('click', () => coverInput.click());
     const coverInput = document.getElementById('coverInput');
-    coverPicker.addEventListener('click', () => coverInput.click());
     coverInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -671,7 +660,6 @@ async function init() {
         document.getElementById('previewCoverBg').style.background = `url(${url}) center/cover`;
     });
 
-    // Privacy options
     document.querySelectorAll('.privacy-option').forEach(opt => {
         opt.addEventListener('click', () => {
             document.querySelectorAll('.privacy-option').forEach(o => o.classList.remove('active'));
@@ -681,7 +669,6 @@ async function init() {
         });
     });
 
-    // Step navigation
     document.getElementById('step1Next').addEventListener('click', () => {
         if (validateStep1()) goToStep(2);
     });
@@ -695,20 +682,15 @@ async function init() {
     });
     document.getElementById('step4Back').addEventListener('click', () => goToStep(3));
 
-    // Terms checkbox
     document.getElementById('termsAccept').addEventListener('change', (e) => {
         document.getElementById('createCommunityBtn').disabled = !e.target.checked;
     });
 
-    // Create button
     document.getElementById('createCommunityBtn').addEventListener('click', createCommunity);
-
-    // Go to community after success
     document.getElementById('goToCommunityBtn').addEventListener('click', () => {
         window.location.href = 'feed.html';
     });
 
-    // Navbar dropdown
     document.getElementById('userMenu').addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('userDropdown').classList.toggle('show');

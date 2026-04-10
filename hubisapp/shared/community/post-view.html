@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Publication | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="post-view.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="c-loader" style="display:none;">
+    <div class="c-spinner"></div>
+    <div class="c-loader-bar-wrap">
+        <div class="c-loader-bar" id="loaderBar" style="width:0%"></div>
+    </div>
+    <span class="c-loader-text" id="loaderText">Chargement de la publication...</span>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="c-nav">
+    <div class="c-nav-left">
+        <button class="back-nav-btn" id="backBtn" title="Retour">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="c-nav-logo" id="navLogo">
+        <span class="c-nav-title">Publication</span>
+    </div>
+    <div class="c-nav-right">
+        <button class="c-menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="c-user-menu" id="userMenu">
+            <div class="c-user-avatar-wrap" id="userAvatarWrap">
+                <div class="c-user-avatar-initials" id="userAvatarInitials"></div>
+                <img src="../../img/user-default.jpg" class="c-user-avatar" id="userAvatar" alt="" style="display:none;">
+            </div>
+            <span class="c-user-name" id="userName">...</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="c-user-dropdown" id="userDropdown">
+                <a href="#" id="dropDashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="feed.html"><i class="fas fa-users"></i> Ma Communauté</a>
+                <hr>
+                <button id="dropLogout" class="c-logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+            </div>
+        </div>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT CONTENU ===== -->
+<main class="post-view-main">
+    <div class="post-view-layout">
+
+        <!-- Colonne principale -->
+        <div class="post-view-center">
+
+            <!-- Fil d'Ariane -->
+            <div class="breadcrumb">
+                <a href="feed.html"><i class="fas fa-home"></i> Communauté</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Publication</span>
+            </div>
+
+            <!-- Carte du post -->
+            <div class="post-full-card" id="postFullCard">
+                <div class="post-skeleton-full">
+                    <div class="skel-row"></div>
+                    <div class="skel-text"></div>
+                    <div class="skel-text short"></div>
+                </div>
+            </div>
+
+            <!-- Section commentaires -->
+            <div class="comments-section" id="commentsSection" style="display:none">
+                <div class="comments-header">
+                    <h3><i class="fas fa-comments"></i> Commentaires <span id="commentCount">0</span></h3>
+                    <select class="c-select sort-select" id="commentSort">
+                        <option value="recent">Plus récents</option>
+                        <option value="popular">Plus populaires</option>
+                    </select>
+                </div>
+
+                <!-- Saisie commentaire -->
+                <div class="comment-compose">
+                    <div class="composer-avatar-wrap">
+                        <div class="composer-avatar-initials" id="composerAvatarInitials"></div>
+                        <img id="composerAvatar" src="../../img/user-default.jpg" alt="" class="composer-avatar" style="display:none;">
+                    </div>
+                    <div class="composer-box">
+                        <div class="composer-inner" id="composerInner">
+                            <textarea id="mainCommentInput" rows="1" placeholder="Partage ta pensée..."></textarea>
+                            <div class="composer-actions">
+                                <button class="composer-media-btn" id="commentMediaBtn" title="Ajouter une image">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                                <button class="composer-audio-btn" id="commentAudioBtn" title="Commentaire audio">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <button class="composer-emoji-btn" id="commentEmojiBtn" title="Émoji">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                                <button class="composer-send-btn" id="sendCommentBtn">
+                                    <i class="fas fa-paper-plane"></i> Commenter
+                                </button>
+                            </div>
+                        </div>
+                        <div class="comment-media-preview" id="commentMediaPreview" style="display:none"></div>
+                        <input type="file" id="commentMediaInput" accept="image/*,video/*" style="display:none">
+                    </div>
+                </div>
+
+                <!-- Liste des commentaires -->
+                <div class="comments-feed" id="commentsFeed">
+                    <div class="comments-loading">
+                        <div class="c-spinner" style="width:28px;height:28px;border-width:3px"></div>
+                    </div>
+                </div>
+
+                <!-- Load more commentaires -->
+                <div id="loadMoreCommentsWrap" style="text-align:center;padding:12px;display:none">
+                    <button class="btn-ghost" id="loadMoreCommentsBtn">
+                        <i class="fas fa-arrow-down"></i> Voir plus de commentaires
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Colonne latérale -->
+        <aside class="post-view-aside">
+
+            <!-- Profil auteur -->
+            <div class="author-card" id="authorCard" style="display:none">
+                <div class="author-cover" id="authorCover"></div>
+                <div class="author-avatar-wrap">
+                    <div class="author-avatar-initials" id="authorAvatarInitials"></div>
+                    <img id="authorAvatar" src="../../img/user-default.jpg" alt="" class="author-avatar" style="display:none;">
+                    <div class="author-online" id="authorOnline"></div>
+                </div>
+                <div class="author-info">
+                    <h4 id="authorName">...</h4>
+                    <p id="authorHandle">@...</p>
+                    <p id="authorRole" class="author-role"></p>
+                    <p id="authorBio" class="author-bio"></p>
+                </div>
+                <div class="author-stats">
+                    <div class="a-stat"><strong id="authorFollowers">0</strong><span>Abonnés</span></div>
+                    <div class="a-stat"><strong id="authorPosts">0</strong><span>Posts</span></div>
+                </div>
+                <div class="author-actions" id="authorActions"></div>
+            </div>
+
+            <!-- Posts liés -->
+            <div class="related-card" id="relatedCard" style="display:none">
+                <h4 class="related-title"><i class="fas fa-th-large"></i> Autres publications</h4>
+                <div id="relatedPosts"></div>
+            </div>
+
+        </aside>
+
+    </div>
+</main>
+<!-- ===== FIN CONTENU ===== -->
+
+<!-- ========== DEBUT MODALES ========== -->
+
+<!-- Profil utilisateur -->
+<div id="modalUserProfile" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-user"></i> Profil</h2>
+            <button class="c-modal-close" onclick="closeModal('modalUserProfile')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body" id="userProfileBody"></div>
+    </div>
+</div>
+
+<!-- Zoom média -->
+<div id="modalMedia" class="c-modal" style="background:rgba(0,0,0,0.92)">
+    <div style="position:relative;max-width:92vw;max-height:92vh">
+        <button onclick="closeModal('modalMedia')" style="position:absolute;top:-40px;right:0;color:white;font-size:1.3rem;background:none;border:none;cursor:pointer"><i class="fas fa-times"></i></button>
+        <div id="mediaViewer"></div>
+    </div>
+</div>
+
+<!-- Partage -->
+<div id="modalShare" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-share-alt"></i> Partager</h2>
+            <button class="c-modal-close" onclick="closeModal('modalShare')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="share-grid-pv">
+                <button class="share-btn-pv" data-network="facebook"><i class="fab fa-facebook-f"></i> Facebook</button>
+                <button class="share-btn-pv" data-network="twitter"><i class="fab fa-twitter"></i> Twitter/X</button>
+                <button class="share-btn-pv" data-network="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                <button class="share-btn-pv" data-network="copy"><i class="fas fa-link"></i> Copier le lien</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Signalement -->
+<div id="modalReport" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-flag"></i> Signaler</h2>
+            <button class="c-modal-close" onclick="closeModal('modalReport')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="report-reasons">
+                <label class="report-reason-opt" data-value="spam"><input type="radio" name="reportReason" value="spam"> Spam ou publicité</label>
+                <label class="report-reason-opt" data-value="inappropriate"><input type="radio" name="reportReason" value="inappropriate"> Contenu inapproprié</label>
+                <label class="report-reason-opt" data-value="violence"><input type="radio" name="reportReason" value="violence"> Violence ou harcèlement</label>
+                <label class="report-reason-opt" data-value="false_info"><input type="radio" name="reportReason" value="false_info"> Fausses informations</label>
+                <label class="report-reason-opt" data-value="other"><input type="radio" name="reportReason" value="other"> Autre</label>
+            </div>
+            <textarea class="c-textarea" id="reportDetails" rows="2" placeholder="Détails supplémentaires..."></textarea>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalReport')">Annuler</button>
+            <button class="btn-danger" id="submitReportBtn"><i class="fas fa-flag"></i> Signaler</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation supprimer -->
+<div id="modalConfirm" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2 id="confirmTitle">Confirmation</h2>
+            <button class="c-modal-close" onclick="closeModal('modalConfirm')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body"><p id="confirmDesc" style="color:var(--gray)"></p></div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalConfirm')">Annuler</button>
+            <button class="btn-danger" id="confirmActionBtn">Confirmer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Likes liste -->
+<div id="modalLikes" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-heart"></i> Personnes qui aiment</h2>
+            <button class="c-modal-close" onclick="closeModal('modalLikes')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body"><ul id="likesList" class="pv-users-list"></ul></div>
+    </div>
+</div>
+
+<!-- Dislikes liste -->
+<div id="modalDislikes" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-heart-broken"></i> Personnes qui n'aiment pas</h2>
+            <button class="c-modal-close" onclick="closeModal('modalDislikes')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body"><ul id="dislikesList" class="pv-users-list"></ul></div>
+    </div>
+</div>
+
+<!-- ========== FIN MODALES ========== -->
+
+<!-- ===== DEBUT TOAST CONTAINER ===== -->
+<div id="toastContainer" class="c-toast-container"></div>
+<!-- ===== FIN TOAST CONTAINER ===== -->
+
+<!-- ===== DEBUT SCRIPT ===== -->
+<script src="post-view.js"></script>
+<!-- ===== FIN SCRIPT ===== -->
+</body>
+</html>

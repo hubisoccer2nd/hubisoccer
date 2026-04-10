@@ -39,7 +39,10 @@
             <span class="c-notif-badge" id="notifBadge" style="display:none">0</span>
         </button>
         <div class="c-user-menu" id="userMenu">
-            <img src="../../img/user-default.jpg" class="c-user-avatar" id="userAvatar" alt="">
+            <div class="c-user-avatar-wrap">
+                <div class="c-user-avatar-initials" id="userAvatarInitials"></div>
+                <img class="c-user-avatar" id="userAvatar" alt="" style="display:none;">
+            </div>
             <span class="c-user-name" id="userName">...</span>
             <i class="fas fa-chevron-down fa-xs"></i>
             <div class="c-user-dropdown" id="userDropdown">
@@ -75,7 +78,8 @@
     <div class="profile-header">
         <div class="profile-cover" id="profileCover"></div>
         <div class="profile-avatar-wrap">
-            <img id="profileAvatar" src="../../img/user-default.jpg" alt="" class="profile-avatar">
+            <div class="profile-avatar-initials" id="profileAvatarInitials"></div>
+            <img id="profileAvatar" alt="" class="profile-avatar" style="display:none;">
             <div class="profile-certified" id="profileCertified" style="display:none">
                 <i class="fas fa-check-circle"></i>
             </div>
@@ -96,7 +100,7 @@
                 </div>
             </div>
             <div class="profile-actions" id="profileActions">
-                <!-- Boutons dynamiques : S'abonner, Message, Modifier, etc. -->
+                <!-- Boutons dynamiques -->
             </div>
         </div>
     </div>
@@ -113,9 +117,7 @@
     <div class="profile-tab-content">
         <!-- Onglet Publications -->
         <div id="tab-posts" class="tab-pane active">
-            <div class="posts-grid" id="profilePostsGrid">
-                <!-- Grille des posts -->
-            </div>
+            <div class="posts-grid" id="profilePostsGrid"></div>
             <div id="loadMorePostsWrap" style="text-align:center;padding:20px;display:none">
                 <button class="btn-ghost" id="loadMorePostsBtn">Charger plus</button>
             </div>
@@ -124,27 +126,22 @@
         <!-- Onglet À propos -->
         <div id="tab-about" class="tab-pane">
             <div class="about-sections">
-                <!-- Section Identité -->
                 <section class="about-section">
                     <h2><i class="fas fa-id-card"></i> Identité</h2>
                     <div class="about-grid" id="aboutIdentity"></div>
                 </section>
-                <!-- Section Sport -->
                 <section class="about-section">
                     <h2><i class="fas fa-futbol"></i> Volet Sportif</h2>
                     <div class="about-grid" id="aboutSport"></div>
                 </section>
-                <!-- Section Études -->
                 <section class="about-section">
                     <h2><i class="fas fa-graduation-cap"></i> Études & Formations</h2>
                     <div class="about-grid" id="aboutStudies"></div>
                 </section>
-                <!-- Section Carrière -->
                 <section class="about-section">
                     <h2><i class="fas fa-briefcase"></i> Carrière & Métier</h2>
                     <div class="about-grid" id="aboutCareer"></div>
                 </section>
-                <!-- Section Entraide -->
                 <section class="about-section">
                     <h2><i class="fas fa-handshake"></i> Entraide & Réseau</h2>
                     <div class="about-grid" id="aboutHelp"></div>
@@ -165,8 +162,7 @@
 </main>
 <!-- ===== FIN CONTENU PRINCIPAL ===== -->
 
-<!-- ===== MODALES ===== -->
-<!-- Profil rapide, zoom média, partage, signalement, confirmation -->
+<!-- ===== MODALES (squelettes simplifiés, remplis dynamiquement) ===== -->
 <div id="modalUserProfile" class="c-modal">...</div>
 <div id="modalMedia" class="c-modal">...</div>
 <div id="modalShare" class="c-modal">...</div>
@@ -176,6 +172,9 @@
 <!-- ===== TOASTS ===== -->
 <div id="toastContainer" class="c-toast-container"></div>
 
+<!-- ===== SCRIPTS ===== -->
+<script src="utils.js"></script>
+<script src="session.js"></script>
 <script src="profil-feed.js"></script>
 </body>
 </html>

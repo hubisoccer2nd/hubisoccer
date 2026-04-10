@@ -36,7 +36,7 @@
         <div class="live-user">
             <div class="live-user-avatar-wrap">
                 <div class="live-user-avatar-initials" id="liveUserAvatarInitials"></div>
-                <img src="../../img/user-default.jpg" id="liveUserAvatar" alt="" class="live-user-avatar" style="display:none;">
+                <img id="liveUserAvatar" alt="" class="live-user-avatar" style="display:none;">
             </div>
             <span id="liveUserName">...</span>
         </div>
@@ -85,7 +85,7 @@
                 <div class="live-overlay-top">
                     <div class="live-host-info" id="liveHostInfo">
                         <div class="live-host-avatar-initials" id="liveHostAvatarInitials"></div>
-                        <img id="liveHostAvatar" src="../../img/user-default.jpg" alt="" class="live-host-avatar" style="display:none;">
+                        <img id="liveHostAvatar" alt="" class="live-host-avatar" style="display:none;">
                         <div>
                             <div class="live-host-name" id="liveHostName">Live en cours</div>
                             <div class="live-host-title" id="liveHostTitle"></div>
@@ -156,7 +156,7 @@
             <div class="live-chat-messages" id="liveChatMessages"></div>
             <div class="live-chat-input">
                 <div class="chat-mini-avatar-initials" id="chatUserAvatarInitials"></div>
-                <img id="chatUserAvatar" src="../../img/user-default.jpg" alt="" class="chat-mini-avatar" style="display:none;">
+                <img id="chatUserAvatar" alt="" class="chat-mini-avatar" style="display:none;">
                 <input type="text" id="liveChatInput" placeholder="Écrire dans le chat..." maxlength="200">
                 <div class="chat-emoji-row" id="chatEmojiRow">
                     <span onclick="appendEmoji('😂')">😂</span>
@@ -264,8 +264,10 @@
 <div id="toastContainer" class="c-toast-container"></div>
 <!-- ===== FIN TOAST CONTAINER ===== -->
 
-<!-- ===== DEBUT SCRIPT ===== -->
+<!-- ===== DEBUT SCRIPTS ===== -->
+<script src="utils.js"></script>
+<script src="session.js"></script>
 <script src="live.js"></script>
-<!-- ===== FIN SCRIPT ===== -->
+<!-- ===== FIN SCRIPTS ===== -->
 </body>
 </html>

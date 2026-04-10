@@ -30,7 +30,11 @@
     </div>
     <div class="c-nav-right">
         <div class="c-user-menu" id="userMenu">
-            <img src="../../img/user-default.jpg" class="c-user-avatar" id="userAvatar" alt="">
+            <!-- Conteneur d'avatar avec initiales par défaut -->
+            <div class="c-user-avatar-wrap" id="userAvatarWrap">
+                <div class="c-user-avatar-initials" id="userAvatarInitials"></div>
+                <img class="c-user-avatar" id="userAvatar" alt="" style="display:none;">
+            </div>
             <span class="c-user-name" id="userName">...</span>
             <i class="fas fa-chevron-down fa-xs"></i>
             <div class="c-user-dropdown" id="userDropdown">

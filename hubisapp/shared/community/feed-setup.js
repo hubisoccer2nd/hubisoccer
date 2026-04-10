@@ -1,6 +1,6 @@
 // ============================================================
 //  HUBISOCCER — FEED-SETUP.JS
-//  Création de la HubiS Community — Adapté hubisapp
+//  Création de la HubiS Community — Sans image par défaut
 // ============================================================
 
 'use strict';
@@ -256,7 +256,7 @@ const COUNTRIES = [
 // Fin liste des pays
 
 // Début fonctions utilitaires
-function toast(msg, type='info', dur=10000) {
+function toast(msg, type='info', dur=20000) {
     const c = document.getElementById('toastContainer');
     const icons = {success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
     const el = document.createElement('div');
@@ -264,6 +264,13 @@ function toast(msg, type='info', dur=10000) {
     el.innerHTML = `<i class="fas ${icons[type]}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
     c.appendChild(el);
     setTimeout(() => { el.style.animation = 'slideInRight 0.3s reverse'; setTimeout(() => el.remove(), 300); }, dur);
+}
+
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name[0].toUpperCase();
 }
 
 function setLoader(show, text='Chargement...', pct=0) {
@@ -277,6 +284,40 @@ function setLoader(show, text='Chargement...', pct=0) {
 function escapeHtml(s) {
     if (!s) return '';
     return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// Gestion des avatars (initiales uniquement)
+function renderNavAvatar(avatarUrl, fullName) {
+    const container = document.getElementById('navUserAvatarContainer');
+    if (!container) return;
+    const initials = getInitials(fullName);
+    if (avatarUrl && avatarUrl !== '') {
+        container.innerHTML = `<img src="${avatarUrl}" alt="Avatar" class="c-user-avatar">`;
+    } else {
+        container.innerHTML = `<div class="c-user-avatar-initials">${initials}</div>`;
+    }
+}
+
+function renderAvatarPreview(avatarUrl, fullName) {
+    const preview = document.getElementById('avatarPreview');
+    if (!preview) return;
+    const initials = getInitials(fullName || '');
+    if (avatarUrl) {
+        preview.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+    } else {
+        preview.innerHTML = `<div class="avatar-preview-initials">${initials}</div>`;
+    }
+}
+
+function renderPreviewAvatar(avatarUrl, fullName) {
+    const preview = document.getElementById('previewAvatarEl');
+    if (!preview) return;
+    const initials = getInitials(fullName || '');
+    if (avatarUrl) {
+        preview.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+    } else {
+        preview.innerHTML = `<div class="preview-avatar-initials">${initials}</div>`;
+    }
 }
 // Fin fonctions utilitaires
 
@@ -303,9 +344,8 @@ async function loadProfile() {
 
     // UI
     document.getElementById('userName').textContent = data.full_name || data.display_name || 'Utilisateur';
-    document.getElementById('userAvatar').src = data.avatar_url || '../../img/user-default.jpg';
+    renderNavAvatar(data.avatar_url, data.full_name || data.display_name);
 
-    // Configurer le dashboard selon le rôle
     const roleDashboardMap = {
         'FOOT': '../../footballeur/dashboard/foot-dash.html',
         'BASK': '../../basketteur/dashboard/basketteur-dash.html',
@@ -475,7 +515,6 @@ function buildRecap() {
     const countrySelect = document.getElementById('communityCountry');
     const countryCode = countrySelect.value;
     const countryName = countrySelect.options[countrySelect.selectedIndex]?.text || countryCode;
-    const lang   = document.getElementById('communityLang').value;
     const sport  = SPORTS.find(s => s.id === selectedSport);
 
     const avatarUrl = avatarFile ? URL.createObjectURL(avatarFile) : '';
@@ -530,27 +569,23 @@ async function createCommunity() {
         const handle = document.getElementById('communityHandle').value.trim().toLowerCase();
         const name = document.getElementById('communityName').value.trim();
         const bio = document.getElementById('communityBio').value.trim();
-        const country = document.getElementById('communityCountry').value; // Code pays (2 lettres)
+        const country = document.getElementById('communityCountry').value;
         const lang = document.getElementById('communityLang').value;
         const specialty = document.getElementById('communitySpecialty').value.trim();
         const website = document.getElementById('communityWebsite').value.trim();
 
-        // Génération IDs sociaux
         const socialIds = await generateSocialIds(handle);
 
-        // Upload avatar
         setLoader(true, 'Upload photo de profil...', 40);
         const avatarExt = avatarFile.name.split('.').pop();
         const avatarPath = `communities/${uid}/avatar_${Date.now()}.${avatarExt}`;
         const avatarUrl = await uploadFile(avatarFile, 'feed_avatars', avatarPath);
 
-        // Upload cover
         setLoader(true, 'Upload photo de couverture...', 60);
         const coverExt = coverFile.name.split('.').pop();
         const coverPath = `communities/${uid}/cover_${Date.now()}.${coverExt}`;
         const coverUrl = await uploadFile(coverFile, 'feed_avatars', coverPath);
 
-        // Insérer communauté
         setLoader(true, 'Création de ta communauté...', 80);
         const { error: commErr } = await sb.from('supabaseAuthPrive_communities').insert({
             hubisoccer_id: uid,
@@ -575,7 +610,6 @@ async function createCommunity() {
             throw commErr;
         }
 
-        // Mettre à jour profiles avec les IDs sociaux
         setLoader(true, 'Mise à jour du profil...', 90);
         await sb.from('supabaseAuthPrive_profiles').update({
             feed_id: handle,
@@ -588,7 +622,6 @@ async function createCommunity() {
 
         setLoader(false);
 
-        // Afficher succès
         document.getElementById('setupCard').classList.add('hidden');
         document.getElementById('setupSteps').classList.add('hidden');
         document.querySelector('.setup-hero').classList.add('hidden');
@@ -615,13 +648,15 @@ async function init() {
     populateCountries();
     buildSportGrid();
 
-    // Bio char count
+    // Avatar preview initial
+    renderAvatarPreview(null, '');
+    renderPreviewAvatar(null, '');
+
     const bioInput = document.getElementById('communityBio');
     bioInput.addEventListener('input', () => {
         document.getElementById('bioCount').textContent = bioInput.value.length;
     });
 
-    // Handle check
     document.getElementById('communityHandle').addEventListener('input', (e) => {
         clearTimeout(handleTimer);
         let val = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
@@ -634,7 +669,6 @@ async function init() {
         }
     });
 
-    // Sync preview
     document.getElementById('communityName').addEventListener('input', (e) => {
         document.getElementById('previewName').textContent = e.target.value || 'Nom de ta communauté';
     });
@@ -642,7 +676,6 @@ async function init() {
         document.getElementById('previewHandle').textContent = '@' + (e.target.value || 'identifiant');
     });
 
-    // Avatar picker
     const avatarPicker = document.getElementById('avatarPicker');
     const avatarInput = document.getElementById('avatarInput');
     avatarPicker.addEventListener('click', () => avatarInput.click());
@@ -652,11 +685,10 @@ async function init() {
         if (file.size > 800 * 1024) { toast('Image trop lourde (max 800 Ko)', 'warning'); return; }
         avatarFile = file;
         const url = URL.createObjectURL(file);
-        document.getElementById('avatarPreview').innerHTML = `<img src="${url}" alt="">`;
-        document.getElementById('previewAvatarEl').innerHTML = `<img src="${url}" alt="">`;
+        renderAvatarPreview(url, '');
+        renderPreviewAvatar(url, '');
     });
 
-    // Cover picker
     const coverPicker = document.getElementById('coverPicker');
     const coverInput = document.getElementById('coverInput');
     coverPicker.addEventListener('click', () => coverInput.click());
@@ -670,7 +702,6 @@ async function init() {
         document.getElementById('previewCoverBg').style.background = `url(${url}) center/cover`;
     });
 
-    // Privacy options
     document.querySelectorAll('.privacy-option').forEach(opt => {
         opt.addEventListener('click', () => {
             document.querySelectorAll('.privacy-option').forEach(o => o.classList.remove('active'));
@@ -680,7 +711,6 @@ async function init() {
         });
     });
 
-    // Step navigation
     document.getElementById('step1Next').addEventListener('click', () => {
         if (validateStep1()) goToStep(2);
     });
@@ -694,20 +724,16 @@ async function init() {
     });
     document.getElementById('step4Back').addEventListener('click', () => goToStep(3));
 
-    // Terms checkbox
     document.getElementById('termsAccept').addEventListener('change', (e) => {
         document.getElementById('createCommunityBtn').disabled = !e.target.checked;
     });
 
-    // Create button
     document.getElementById('createCommunityBtn').addEventListener('click', createCommunity);
 
-    // Go to community after success
     document.getElementById('goToCommunityBtn').addEventListener('click', () => {
         window.location.href = 'feed.html';
     });
 
-    // Navbar dropdown
     document.getElementById('userMenu').addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('userDropdown').classList.toggle('show');

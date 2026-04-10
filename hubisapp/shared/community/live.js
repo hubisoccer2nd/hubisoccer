@@ -1,6 +1,7 @@
 // ============================================================
 //  HUBISOCCER — LIVE.JS
 //  Page Lives en direct — PeerJS + Supabase Realtime
+//  Utilise utils.js et session.js
 // ============================================================
 
 'use strict';
@@ -15,20 +16,20 @@ window.__SUPABASE_CLIENT = sb;
 // Début état global
 let currentUser       = null;
 let currentProfile    = null;
-let peer             = null;
-let localStream      = null;
-let currentCall      = null;
-let currentLiveId    = null;
-let isHost           = false;
-let liveStartTime    = null;
-let durationTimer    = null;
-let viewersTimer     = null;
-let chatChannel      = null;
-let cameraStream     = null;
-let micEnabled       = true;
-let camEnabled       = true;
-let facingMode       = 'user';
-let strengthCount    = 0;
+let peer              = null;
+let localStream       = null;
+let currentCall       = null;
+let currentLiveId     = null;
+let isHost            = false;
+let liveStartTime     = null;
+let durationTimer     = null;
+let viewersTimer      = null;
+let chatChannel       = null;
+let cameraStream      = null;
+let micEnabled        = true;
+let camEnabled        = true;
+let facingMode        = 'user';
+let strengthCount     = 0;
 // Fin état global
 
 // Début configuration des cadeaux
@@ -44,72 +45,21 @@ const GIFTS = [
 ];
 // Fin configuration des cadeaux
 
-// Début fonctions utilitaires
-function toast(msg, type='info', dur=20000) {
-    const c = document.getElementById('toastContainer');
-    const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
-    const el = document.createElement('div');
-    el.className = `c-toast ${type}`;
-    el.innerHTML = `<i class="fas ${icons[type]||icons.info}"></i><span>${msg}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
-    c.appendChild(el);
-    setTimeout(() => { el.style.animation = 'slideInRight 0.3s reverse'; setTimeout(() => el.remove(), 300); }, dur);
-}
-
-function getInitials(name) {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return name[0].toUpperCase();
-}
-
-function setLoader(show, text='') {
-    const l = document.getElementById('globalLoader');
-    if (l) {
-        l.style.display = show ? 'flex' : 'none';
-        if (text) document.getElementById('loaderText').textContent = text;
-    }
-}
-
-function openModal(id) {
-    const e = document.getElementById(id);
-    if (e) { e.style.display = 'flex'; setTimeout(() => e.classList.add('show'), 10); }
-}
-
-function closeModal(id) {
-    const e = document.getElementById(id);
-    if (e) { e.classList.remove('show'); e.style.display = 'none'; }
-}
-window.closeModal = closeModal;
-
-function escapeHtml(s) {
-    if (!s) return '';
-    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-// Fin fonctions utilitaires
-
 // Début session et profil
-async function checkSession() {
-    const { data: { session }, error } = await sb.auth.getSession();
-    if (error || !session) { window.location.href = '../../authprive/users/login.html'; return null; }
-    currentUser = session.user;
-    return currentUser;
-}
+async function initSessionAndProfile() {
+    const user = await checkSession();
+    if (!user) return false;
+    currentUser = user;
 
-async function loadProfile() {
-    const { data, error } = await sb
-        .from('supabaseAuthPrive_profiles')
-        .select('*')
-        .eq('auth_uuid', currentUser.id)
-        .single();
-    if (error) { toast('Erreur chargement profil', 'error'); return null; }
-    currentProfile = data;
+    const profile = await loadProfile(user.id);
+    if (!profile) return false;
+    currentProfile = profile;
 
-    // UI
-    document.getElementById('liveUserName').textContent = data.full_name || data.display_name || 'Utilisateur';
-    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'liveUser');
-    updateAvatarDisplay(data.avatar_url, data.full_name || data.display_name, 'chatUser');
+    document.getElementById('liveUserName').textContent = profile.full_name || profile.display_name || 'Utilisateur';
+    updateAvatarDisplay(profile.avatar_url, profile.full_name || profile.display_name, 'liveUser');
+    updateAvatarDisplay(profile.avatar_url, profile.full_name || profile.display_name, 'chatUser');
 
-    return data;
+    return true;
 }
 
 function updateAvatarDisplay(avatarUrl, fullName, type) {
@@ -152,10 +102,12 @@ async function loadLives() {
 function makeLiveCard(l) {
     const host = l.host || {};
     const hostName = host.full_name || host.display_name || 'Hôte';
+    const avatarUrl = host.avatar_url;
+    const initials = getInitials(hostName);
     return `
         <div class="live-card">
             <div class="live-card-thumb">
-                ${host.avatar_url ? `<img src="${host.avatar_url}" alt="" onerror="this.style.display='none'">` : ''}
+                ${avatarUrl ? `<img src="${avatarUrl}" alt="" style="display:block;">` : ''}
                 <div class="live-card-thumb-placeholder"><i class="fas fa-video"></i></div>
                 <div class="live-card-overlay"></div>
                 <div class="live-card-badge"><i class="fas fa-circle" style="font-size:0.5rem"></i> LIVE</div>
@@ -164,7 +116,7 @@ function makeLiveCard(l) {
             <div class="live-card-body">
                 <div class="live-card-title">${escapeHtml(l.title || 'Live sans titre')}</div>
                 <div class="live-card-host">
-                    ${host.avatar_url ? `<img src="${host.avatar_url}" alt="">` : `<div class="live-card-host-initials">${getInitials(hostName)}</div>`}
+                    ${avatarUrl ? `<img src="${avatarUrl}" alt="">` : `<div class="live-card-host-initials">${initials}</div>`}
                     <span class="live-card-host-name">${escapeHtml(hostName)}</span>
                 </div>
                 ${host.role_code ? `<div class="live-card-sport">${escapeHtml(host.role_code)}</div>` : ''}
@@ -585,11 +537,10 @@ function buildGiftsGrid() {
 
 // Début initialisation
 async function init() {
-    const user = await checkSession();
-    if (!user) return;
-
     setLoader(true, 'Chargement du profil...');
-    await loadProfile();
+    const sessionOk = await initSessionAndProfile();
+    if (!sessionOk) return;
+
     await loadLives();
     buildGiftsGrid();
     setLoader(false);

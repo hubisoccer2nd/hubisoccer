@@ -1,6 +1,6 @@
 // ============================================================
 //  HUBISOCCER — FEED-SETUP.JS
-//  Création de la HubiS Community — CORRIGÉ
+//  Création de la HubiS Community — CORRIGÉ (28 rôles)
 // ============================================================
 
 'use strict';
@@ -306,14 +306,39 @@ async function loadProfile() {
     if (data.avatar_url) {
         document.getElementById('userAvatar').src = data.avatar_url;
     } else {
-        // Fallback sur initiales (mais nous n'avons pas l'élément, on garde l'image cachée ou on met une icône)
         document.getElementById('userAvatar').style.display = 'none';
     }
 
-    // Configurer le dashboard selon le rôle
+    // Configurer le dashboard selon le rôle (28 rôles)
     const roleDashboardMap = {
         'FOOT': '../../footballeur/dashboard/foot-dash.html',
         'BASK': '../../basketteur/dashboard/basketteur-dash.html',
+        'TENN': '../../tennisman/dashboard/tennisman-dash.html',
+        'ATHL': '../../athlete/dashboard/athlete-dash.html',
+        'HANDB': '../../handballeur/dashboard/handballeur-dash.html',
+        'VOLL': '../../volleyeur/dashboard/volleyeur-dash.html',
+        'RUGBY': '../../rugbyman/dashboard/rugbyman-dash.html',
+        'NATA': '../../nageur/dashboard/nageur-dash.html',
+        'ARTSM': '../../arts_martiaux/dashboard/arts_martiaux-dash.html',
+        'CYCL': '../../cycliste/dashboard/cycliste-dash.html',
+        'CHAN': '../../chanteur/dashboard/chanteur-dash.html',
+        'DANS': '../../danseur/dashboard/danseur-dash.html',
+        'COMP': '../../compositeur/dashboard/compositeur-dash.html',
+        'ACIN': '../../acteur_cinema/dashboard/acteur_cinema-dash.html',
+        'ATHE': '../../acteur_theatre/dashboard/acteur_theatre-dash.html',
+        'HUMO': '../../humoriste/dashboard/humoriste-dash.html',
+        'SLAM': '../../slameur/dashboard/slameur-dash.html',
+        'DJ': '../../dj/dashboard/dj-dash.html',
+        'CIRQ': '../../cirque/dashboard/cirque-dash.html',
+        'VISU': '../../artiste_visuel/dashboard/artiste_visuel-dash.html',
+        'PARRAIN': '../../parrain/dashboard/parrain-dash.html',
+        'AGENT': '../../agent_fifa/dashboard/agent_fifa-dash.html',
+        'COACH': '../../coach/dashboard/coach-dash.html',
+        'MEDIC': '../../staff_medical/dashboard/staff_medical-dash.html',
+        'ARBIT': '../../corps_arbitral/dashboard/corps_arbitral-dash.html',
+        'ACAD': '../../academie_sportive/dashboard/academie_sportive-dash.html',
+        'FORM': '../../formateur/dashboard/formateur-dash.html',
+        'TOURN': '../../gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html',
         'ADMIN': '../../authprive/admin/admin-dashboard.html'
     };
     const dash = roleDashboardMap[data.role_code] || '../../index.html';

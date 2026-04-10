@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Lives en direct | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="live.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- PeerJS -->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body class="live-page">
+
+<!-- ===== DEBUT LOADER ===== -->
+<div class="c-loader" id="globalLoader">
+    <div class="c-spinner"></div>
+    <span class="c-loader-text" id="loaderText">Chargement des lives...</span>
+</div>
+<!-- ===== FIN LOADER ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="live-nav">
+    <div class="live-nav-left">
+        <a href="feed.html" class="live-back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="live-logo">
+        <span class="live-nav-title">Lives en direct</span>
+    </div>
+    <div class="live-nav-right">
+        <div class="live-user">
+            <div class="live-user-avatar-wrap">
+                <div class="live-user-avatar-initials" id="liveUserAvatarInitials"></div>
+                <img src="../../img/user-default.jpg" id="liveUserAvatar" alt="" class="live-user-avatar" style="display:none;">
+            </div>
+            <span id="liveUserName">...</span>
+        </div>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT LISTE DES LIVES ===== -->
+<div id="livesListView">
+    <div class="live-list-container">
+        <div class="live-list-header">
+            <h1><i class="fas fa-broadcast-tower"></i> Lives en direct</h1>
+            <button class="start-live-btn" id="startLiveBtn">
+                <i class="fas fa-video"></i> Démarrer mon live
+            </button>
+        </div>
+
+        <!-- Lives actifs -->
+        <div class="lives-grid" id="livesGrid">
+            <div class="lives-empty">
+                <div class="c-spinner"></div>
+                <p>Chargement des lives...</p>
+            </div>
+        </div>
+
+        <!-- Lives passés -->
+        <div class="past-lives-section">
+            <h3><i class="fas fa-history"></i> Lives récents</h3>
+            <div id="pastLivesGrid" class="past-lives-grid"></div>
+        </div>
+    </div>
+</div>
+<!-- ===== FIN LISTE DES LIVES ===== -->
+
+<!-- ===== DEBUT ROOM LIVE ===== -->
+<div id="liveRoomView" style="display:none">
+    <div class="live-room">
+
+        <!-- Vidéo principale -->
+        <div class="live-video-section">
+            <div class="live-video-wrap">
+                <video id="remoteVideo" autoplay playsinline class="live-remote-video"></video>
+                <video id="localVideo" autoplay playsinline muted class="live-local-video" style="display:none"></video>
+
+                <!-- Overlay infos live -->
+                <div class="live-overlay-top">
+                    <div class="live-host-info" id="liveHostInfo">
+                        <div class="live-host-avatar-initials" id="liveHostAvatarInitials"></div>
+                        <img id="liveHostAvatar" src="../../img/user-default.jpg" alt="" class="live-host-avatar" style="display:none;">
+                        <div>
+                            <div class="live-host-name" id="liveHostName">Live en cours</div>
+                            <div class="live-host-title" id="liveHostTitle"></div>
+                        </div>
+                    </div>
+                    <div class="live-badges">
+                        <div class="live-badge-red"><i class="fas fa-circle"></i> LIVE</div>
+                        <div class="live-badge-viewers" id="liveViewersBadge">
+                            <i class="fas fa-eye"></i> <span id="viewersCount">0</span>
+                        </div>
+                        <div class="live-duration" id="liveDuration">0:00</div>
+                    </div>
+                </div>
+
+                <!-- Réactions flottantes -->
+                <div class="live-floating-reactions" id="floatingReactions"></div>
+
+                <!-- Overlay contrôles bas -->
+                <div class="live-overlay-bottom" id="liveOverlayBottom">
+                    <div class="live-controls" id="liveControls">
+                        <button class="live-ctrl-btn" id="toggleCamBtn" title="Caméra">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button class="live-ctrl-btn" id="toggleMicBtn" title="Micro">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button class="live-ctrl-btn" id="flipCamBtn" title="Retourner la caméra">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="live-ctrl-btn danger" id="stopLiveBtn" style="display:none">
+                            <i class="fas fa-stop"></i> Terminer
+                        </button>
+                        <button class="live-ctrl-btn" id="leaveLiveBtn">
+                            <i class="fas fa-sign-out-alt"></i> Quitter
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barre d'actions -->
+            <div class="live-action-bar">
+                <button class="live-action-item strength-btn" id="strengthBtn">
+                    <i class="fas fa-fist-raised"></i>
+                    <span>Force</span>
+                    <strong id="strengthCount">0</strong>
+                </button>
+                <button class="live-action-item gift-btn" id="openGiftBtn">
+                    <i class="fas fa-gift"></i>
+                    <span>Cadeau</span>
+                </button>
+                <button class="live-action-item" id="shareBtn">
+                    <i class="fas fa-share-alt"></i>
+                    <span>Partager</span>
+                </button>
+                <button class="live-action-item react-btn" id="reactBtn" data-emoji="❤️">
+                    <span style="font-size:1.2rem">❤️</span>
+                    <span>Réagir</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat live -->
+        <div class="live-chat-section">
+            <div class="live-chat-header">
+                <h3><i class="fas fa-comments"></i> Chat live</h3>
+                <button class="chat-clear-btn" id="clearChatBtn" title="Effacer le chat"><i class="fas fa-trash"></i></button>
+            </div>
+            <div class="live-chat-messages" id="liveChatMessages"></div>
+            <div class="live-chat-input">
+                <div class="chat-mini-avatar-initials" id="chatUserAvatarInitials"></div>
+                <img id="chatUserAvatar" src="../../img/user-default.jpg" alt="" class="chat-mini-avatar" style="display:none;">
+                <input type="text" id="liveChatInput" placeholder="Écrire dans le chat..." maxlength="200">
+                <div class="chat-emoji-row" id="chatEmojiRow">
+                    <span onclick="appendEmoji('😂')">😂</span>
+                    <span onclick="appendEmoji('❤️')">❤️</span>
+                    <span onclick="appendEmoji('🔥')">🔥</span>
+                    <span onclick="appendEmoji('⚽')">⚽</span>
+                    <span onclick="appendEmoji('👏')">👏</span>
+                    <span onclick="appendEmoji('😮')">😮</span>
+                </div>
+                <button class="chat-send-btn" id="chatSendBtn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- ===== FIN ROOM LIVE ===== -->
+
+<!-- ========== DEBUT MODALES ========== -->
+
+<!-- Démarrer un live -->
+<div id="modalStartLive" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-video"></i> Démarrer un live</h2>
+            <button class="c-modal-close" onclick="closeModal('modalStartLive')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="c-field">
+                <label>Titre du live <span class="req">*</span></label>
+                <input type="text" class="c-input" id="liveTitle" maxlength="80" placeholder="Ex: Entraînement en direct, Q&A, Match...">
+            </div>
+            <div class="c-field">
+                <label>Description <span class="hint">(optionnel)</span></label>
+                <textarea class="c-textarea" id="liveDescription" rows="2" placeholder="Décris ton live..."></textarea>
+            </div>
+            <div class="c-field">
+                <label>Catégorie</label>
+                <select class="c-select" id="liveCategory">
+                    <option value="training">Entraînement</option>
+                    <option value="match">Match</option>
+                    <option value="qa">Q&A</option>
+                    <option value="event">Événement</option>
+                    <option value="other">Autre</option>
+                </select>
+            </div>
+
+            <!-- Preview caméra -->
+            <div class="camera-preview-box">
+                <video id="cameraPreview" autoplay playsinline muted style="width:100%;border-radius:var(--radius-sm)"></video>
+                <div class="camera-preview-overlay">
+                    <button class="preview-cam-btn" id="previewCamBtn"><i class="fas fa-video"></i> Activer la caméra</button>
+                </div>
+            </div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalStartLive')">Annuler</button>
+            <button class="btn-danger" id="goLiveBtn" disabled>
+                <i class="fas fa-circle"></i> Go Live !
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Cadeaux -->
+<div id="modalGifts" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-gift"></i> Envoyer un cadeau</h2>
+            <button class="c-modal-close" onclick="closeModal('modalGifts')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <p style="font-size:0.82rem;color:var(--gray);margin-bottom:16px">Ton solde : <strong id="userBalance" style="color:var(--primary)">0 HubiCoins</strong></p>
+            <div class="gifts-grid" id="giftsGrid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Réactions -->
+<div id="modalReact" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2>Réagir</h2>
+            <button class="c-modal-close" onclick="closeModal('modalReact')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="emoji-react-grid">
+                <span onclick="sendReaction('❤️')">❤️</span>
+                <span onclick="sendReaction('🔥')">🔥</span>
+                <span onclick="sendReaction('😂')">😂</span>
+                <span onclick="sendReaction('👏')">👏</span>
+                <span onclick="sendReaction('⚽')">⚽</span>
+                <span onclick="sendReaction('😮')">😮</span>
+                <span onclick="sendReaction('💪')">💪</span>
+                <span onclick="sendReaction('🏆')">🏆</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== FIN MODALES ========== -->
+
+<!-- ===== DEBUT TOAST CONTAINER ===== -->
+<div id="toastContainer" class="c-toast-container"></div>
+<!-- ===== FIN TOAST CONTAINER ===== -->
+
+<!-- ===== DEBUT SCRIPT ===== -->
+<script src="live.js"></script>
+<!-- ===== FIN SCRIPT ===== -->
+</body>
+</html>

@@ -84,9 +84,10 @@
         <!-- Menu utilisateur -->
         <div class="c-user-menu" id="userMenu">
             <div class="c-user-avatar-wrap" id="userAvatarWrap">
+                <!-- Initiales affichées par défaut -->
                 <div class="c-user-avatar-initials" id="userAvatarInitials"></div>
+                <!-- Image masquée par défaut, src défini dynamiquement si avatar_url existe -->
                 <img
-                    src="../../img/user-default.jpg"
                     class="c-user-avatar"
                     id="userAvatar"
                     alt=""
@@ -142,10 +143,11 @@
         <div class="my-community-card" id="myCommunityCard">
             <div class="my-comm-cover" id="myCommCover"></div>
             <div class="my-comm-avatar-wrap">
+                <!-- Initiales affichées par défaut -->
                 <div class="my-comm-avatar-initials" id="myCommAvatarInitials"></div>
+                <!-- Image masquée par défaut -->
                 <img
                     id="myCommAvatar"
-                    src="../../img/user-default.jpg"
                     alt=""
                     class="my-comm-avatar"
                     style="display:none;"
@@ -306,9 +308,10 @@
                 <!-- Ajouter une story -->
                 <div class="story-add-btn" id="addStoryBtn">
                     <div class="story-ring add-ring">
+                        <!-- Initiales affichées par défaut -->
                         <div class="story-add-avatar-initials" id="storyAddAvatarInitials"></div>
+                        <!-- Image masquée par défaut -->
                         <img
-                            src="../../img/user-default.jpg"
                             id="storyAddAvatar"
                             alt=""
                             style="display:none;"
@@ -326,9 +329,10 @@
         <div class="publish-box" id="publishBox">
             <div class="publish-top">
                 <div class="publish-avatar-wrap">
+                    <!-- Initiales affichées par défaut -->
                     <div class="publish-avatar-initials" id="publishAvatarInitials"></div>
+                    <!-- Image masquée par défaut -->
                     <img
-                        src="../../img/user-default.jpg"
                         id="publishAvatar"
                         alt=""
                         class="publish-avatar"
@@ -989,8 +993,10 @@
 </footer>
 <!-- ===== FIN FOOTER ===== -->
 
-<!-- ===== DEBUT SCRIPT ===== -->
+<!-- ===== DEBUT SCRIPTS ===== -->
+<script src="utils.js"></script>
+<script src="session.js"></script>
 <script src="feed.js"></script>
-<!-- ===== FIN SCRIPT ===== -->
+<!-- ===== FIN SCRIPTS ===== -->
 </body>
 </html>

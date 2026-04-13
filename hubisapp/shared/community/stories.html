@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Stories | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="stories.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="stories-body">
+
+<!-- ===== DEBUT LOADER ===== -->
+<div class="c-loader" id="globalLoader">
+    <div class="c-spinner"></div>
+    <span class="c-loader-text">Chargement des stories...</span>
+</div>
+<!-- ===== FIN LOADER ===== -->
+
+<!-- ===== DEBUT PAGE LISTE ===== -->
+<div id="storiesListPage" class="stories-list-page" style="display:none">
+
+    <!-- Navbar -->
+    <nav class="stories-nav">
+        <div class="stories-nav-left">
+            <a href="feed.html" class="stories-back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="stories-nav-logo">
+            <span class="stories-nav-title">Stories</span>
+        </div>
+        <div class="stories-nav-right">
+            <div class="stories-user-info">
+                <div class="stories-nav-avatar-wrap">
+                    <div class="stories-nav-avatar-initials" id="navUserAvatarInitials"></div>
+                    <img id="navUserAvatar" alt="" class="stories-nav-avatar" style="display:none;">
+                </div>
+                <span id="navUserName">...</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu liste -->
+    <div class="stories-list-content">
+
+        <!-- Ma story -->
+        <div class="my-story-section">
+            <h3>Ma story</h3>
+            <div class="my-story-card" id="myStoryCard">
+                <div class="my-story-add" id="myStoryAdd">
+                    <div class="my-story-avatar-wrap">
+                        <div class="my-story-avatar-initials" id="myStoryAvatarInitials"></div>
+                        <img id="myStoryAvatar" alt="" style="display:none;">
+                        <div class="my-story-plus"><i class="fas fa-plus"></i></div>
+                    </div>
+                    <span>Ajouter une story</span>
+                </div>
+                <div class="my-story-existing" id="myStoryExisting" style="display:none">
+                    <div class="story-thumb-wrap active-story" id="myStoryThumb" onclick="viewMyStory()">
+                        <img id="myStoryThumbImg" alt="">
+                        <div class="story-thumb-overlay"><span id="myStoryTime"></span></div>
+                    </div>
+                    <div class="my-story-actions">
+                        <button class="my-story-action-btn" onclick="openMyStoryOptions()">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stories des abonnements -->
+        <div class="following-stories-section">
+            <h3>Récentes</h3>
+            <div id="followingStoriesList" class="following-stories-list"></div>
+        </div>
+
+        <!-- Stories vues -->
+        <div class="viewed-stories-section" id="viewedStoriesSection" style="display:none">
+            <h3>Vues</h3>
+            <div id="viewedStoriesList" class="following-stories-list dimmed"></div>
+        </div>
+
+    </div>
+</div>
+<!-- ===== FIN PAGE LISTE ===== -->
+
+<!-- ===== DEBUT VISIONNEUSE ===== -->
+<div id="storyViewerPage" class="story-viewer-page" style="display:none">
+
+    <!-- Barres de progression -->
+    <div class="sv-progress-bar-container" id="svProgressBars"></div>
+
+    <!-- Header -->
+    <div class="sv-header">
+        <div class="sv-author" id="svAuthor">
+            <div class="sv-author-avatar-initials" id="svAuthorAvatarInitials"></div>
+            <img id="svAuthorAvatar" alt="" class="sv-author-avatar" style="display:none;">
+            <div class="sv-author-info">
+                <span class="sv-author-name" id="svAuthorName">...</span>
+                <span class="sv-author-time" id="svAuthorTime">...</span>
+                <span class="sv-author-handle" id="svAuthorHandle"></span>
+            </div>
+        </div>
+        <div class="sv-header-actions">
+            <button class="sv-option-btn" id="svOptionsBtn" style="display:none">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <button class="sv-option-btn" id="svOtherOptionsBtn" style="display:none">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <button class="sv-close-btn" id="svCloseBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Zone média -->
+    <div class="sv-media-area" id="svMediaArea">
+        <div class="sv-media-loader" id="svMediaLoader">
+            <div class="c-spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:white"></div>
+        </div>
+    </div>
+
+    <!-- Caption -->
+    <div class="sv-caption" id="svCaption" style="display:none"></div>
+
+    <!-- Zones tap -->
+    <div class="sv-tap-prev" id="svTapPrev"></div>
+    <div class="sv-tap-next" id="svTapNext"></div>
+
+    <!-- Mute -->
+    <button class="sv-mute-btn" id="svMuteBtn" style="display:none">
+        <i class="fas fa-volume-up" id="svMuteIcon"></i>
+    </button>
+
+    <!-- Footer -->
+    <div class="sv-footer" id="svFooter">
+        <div class="sv-reply-row" id="svReplyRow">
+            <div class="sv-reply-input-wrap" id="svReplyInputWrap">
+                <div class="sv-reply-avatar-initials" id="svReplyAvatarInitials"></div>
+                <img id="svReplyAvatar" alt="" class="sv-reply-avatar" style="display:none;">
+                <input type="text" id="svReplyInput" placeholder="Répondre à la story..." maxlength="300">
+                <button class="sv-reply-send-btn" id="svReplySendBtn" title="Envoyer">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+
+            <div class="sv-quick-actions">
+                <button class="sv-quick-btn" id="svSendPhotoBtn" title="Répondre par photo">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <button class="sv-quick-btn" id="svSendAudioBtn" title="Répondre par audio">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button class="sv-quick-btn" id="svSendVideoBtn" title="Répondre par vidéo">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button class="sv-quick-btn gold" id="svSendCoinsBtn" title="Envoyer des HubiCoins">
+                    <i class="fas fa-coins"></i>
+                </button>
+                <button class="sv-quick-btn" id="svLikeStoryBtn" title="Réagir">
+                    <i class="far fa-heart" id="svLikeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Enregistreur audio -->
+        <div class="sv-audio-recorder" id="svAudioRecorder" style="display:none">
+            <div class="sv-rec-left">
+                <span class="sv-rec-dot"></span>
+                <span class="sv-rec-time" id="svRecTime">0:00</span>
+            </div>
+            <div class="sv-rec-waves">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="sv-rec-btns">
+                <button class="sv-rec-cancel" id="svRecCancel"><i class="fas fa-trash-alt"></i></button>
+                <button class="sv-rec-stop" id="svRecStop"><i class="fas fa-stop"></i> Envoyer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Viewers panel -->
+    <div class="sv-viewers-panel" id="svViewersPanel" style="display:none">
+        <div class="sv-viewers-header">
+            <span><i class="fas fa-eye"></i> Vues <strong id="svViewersCount">0</strong></span>
+            <button onclick="closeViewersPanel()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="sv-viewers-list" id="svViewersList"></div>
+    </div>
+
+</div>
+<!-- ===== FIN VISIONNEUSE ===== -->
+
+<!-- ========== DEBUT MODALES ========== -->
+
+<!-- Upload story -->
+<div id="modalUploadStory" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-smile"></i> Nouvelle story</h2>
+            <button class="c-modal-close" onclick="closeModal('modalUploadStory')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="story-type-tabs">
+                <button class="story-type-tab active" data-type="photo"><i class="fas fa-camera"></i> Photo</button>
+                <button class="story-type-tab" data-type="video"><i class="fas fa-video"></i> Vidéo</button>
+                <button class="story-type-tab" data-type="text"><i class="fas fa-font"></i> Texte</button>
+            </div>
+
+            <div class="story-upload-zone" id="storyUploadZone">
+                <div class="story-drop-area" id="storyDropArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Glisse ton fichier ici ou <span class="upload-link">clique pour choisir</span></p>
+                    <small>Photo : max 10 Mo · Vidéo : max 100 Mo</small>
+                </div>
+                <input type="file" id="storyFileInput" accept="image/*,video/*" style="display:none">
+                <div class="story-file-preview" id="storyFilePreview" style="display:none"></div>
+            </div>
+
+            <div class="story-text-zone" id="storyTextZone" style="display:none">
+                <div class="story-text-canvas" id="storyTextCanvas">
+                    <textarea id="storyTextContent" maxlength="200" placeholder="Écris quelque chose..."></textarea>
+                </div>
+                <div class="story-text-style-bar">
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#551B8C,#3d1266)">Violet</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#1a1a2e,#0d0d1a)">Nuit</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#FFCC00,#e6b800)" style="color:#333">Or</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#22c55e,#16a34a)">Vert</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#ef4444,#dc2626)">Rouge</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#3b82f6,#1d4ed8)">Bleu</button>
+                </div>
+            </div>
+
+            <div class="c-field" style="margin-top:16px">
+                <label>Légende <span class="hint">(optionnel · max 120 caractères)</span></label>
+                <input type="text" class="c-input" id="storyCaptionInput" maxlength="120" placeholder="Ajouter une légende...">
+            </div>
+
+            <div class="c-field">
+    <label>Durée d'affichage</label>
+    <select class="c-select" id="storyDurationSelect">
+        <option value="5">5 secondes</option>
+        <option value="10" selected>10 secondes</option>
+        <option value="15">15 secondes</option>
+        <option value="30">30 secondes</option>
+        <option value="60">1 minute</option>
+        <option value="300">5 minutes</option>
+        <option value="600">10 minutes</option>
+        <option value="900">15 minutes</option>
+    </select>
+</div>
+
+            <div class="c-field">
+                <label>Visibilité</label>
+                <select class="c-select" id="storyVisibilitySelect">
+                    <option value="all">Tout le monde (abonnés)</option>
+                    <option value="close_friends">Amis proches uniquement</option>
+                </select>
+            </div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalUploadStory')">Annuler</button>
+            <button class="btn-primary" id="publishStoryBtn">
+                <i class="fas fa-paper-plane"></i> Publier la story
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Options MA story -->
+<div id="modalMyStoryOptions" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2>Options de ma story</h2>
+            <button class="c-modal-close" onclick="closeModal('modalMyStoryOptions')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body" style="padding:8px 0">
+            <button class="story-option-item" onclick="showStoryViewers()">
+                <i class="fas fa-eye"></i> Voir les vues
+            </button>
+            <button class="story-option-item" onclick="downloadMyStory()">
+                <i class="fas fa-download"></i> Télécharger
+            </button>
+            <button class="story-option-item" onclick="openHideStoryOptions()">
+                <i class="fas fa-eye-slash"></i> Masquer pour certaines personnes
+            </button>
+            <hr style="border-color:var(--gray-light);margin:4px 16px">
+            <button class="story-option-item danger" onclick="confirmDeleteStory()">
+                <i class="fas fa-trash-alt"></i> Supprimer ma story
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Options story d'un autre -->
+<div id="modalOtherStoryOptions" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2>Options</h2>
+            <button class="c-modal-close" onclick="closeModal('modalOtherStoryOptions')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body" style="padding:8px 0">
+            <button class="story-option-item" onclick="muteStoryAuthor()">
+                <i class="fas fa-bell-slash"></i> Masquer les stories de cette personne
+            </button>
+            <button class="story-option-item danger" onclick="reportCurrentStory()">
+                <i class="fas fa-flag"></i> Signaler cette story
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Envoyer HubiCoins -->
+<div id="modalSendCoins" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-coins" style="color:var(--gold)"></i> Envoyer des HubiCoins</h2>
+            <button class="c-modal-close" onclick="closeModal('modalSendCoins')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <p style="font-size:0.82rem;color:var(--gray);margin-bottom:14px">
+                Ton solde : <strong id="coinsBalance" style="color:var(--gold)">0 🪙</strong>
+            </p>
+            <div class="coins-presets">
+                <button class="coins-preset" data-amount="10">10 🪙</button>
+                <button class="coins-preset" data-amount="50">50 🪙</button>
+                <button class="coins-preset" data-amount="100">100 🪙</button>
+                <button class="coins-preset" data-amount="200">200 🪙</button>
+                <button class="coins-preset" data-amount="500">500 🪙</button>
+            </div>
+            <div class="c-field" style="margin-top:14px">
+                <label>Montant personnalisé</label>
+                <input type="number" class="c-input" id="coinsCustomAmount" min="1" max="9999" placeholder="Ex : 75">
+            </div>
+            <div class="c-field">
+                <label>Message <span class="hint">(optionnel)</span></label>
+                <input type="text" class="c-input" id="coinsMessage" maxlength="80" placeholder="Bravo ! Continue comme ça ⚽">
+            </div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalSendCoins')">Annuler</button>
+            <button class="btn-gold" id="confirmSendCoinsBtn">
+                <i class="fas fa-paper-plane"></i> Envoyer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Réaction rapide -->
+<div id="modalStoryReact" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2>Réagir à la story</h2>
+            <button class="c-modal-close" onclick="closeModal('modalStoryReact')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="story-react-grid">
+                <span data-emoji="❤️">❤️</span>
+                <span data-emoji="🔥">🔥</span>
+                <span data-emoji="😂">😂</span>
+                <span data-emoji="😮">😮</span>
+                <span data-emoji="👏">👏</span>
+                <span data-emoji="⚽">⚽</span>
+                <span data-emoji="💪">💪</span>
+                <span data-emoji="🏆">🏆</span>
+                <span data-emoji="😢">😢</span>
+                <span data-emoji="🥳">🥳</span>
+                <span data-emoji="👍">👍</span>
+                <span data-emoji="🌟">🌟</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Répondre par média -->
+<div id="modalMediaReply" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2 id="mediaReplyTitle">Répondre par photo</h2>
+            <button class="c-modal-close" onclick="closeModal('modalMediaReply')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="media-reply-preview" id="mediaReplyPreview">
+                <div class="media-reply-drop" id="mediaReplyDrop">
+                    <i class="fas fa-camera" id="mediaReplyIcon" style="font-size:2rem;color:var(--gray)"></i>
+                    <p id="mediaReplyHint">Clique pour choisir une photo</p>
+                    <input type="file" id="mediaReplyInput" accept="image/*,video/*" style="display:none">
+                </div>
+            </div>
+            <div class="c-field" style="margin-top:12px">
+                <label>Légende <span class="hint">(optionnel)</span></label>
+                <input type="text" class="c-input" id="mediaReplyCaption" maxlength="100" placeholder="Ajouter un message...">
+            </div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalMediaReply')">Annuler</button>
+            <button class="btn-primary" id="sendMediaReplyBtn">
+                <i class="fas fa-paper-plane"></i> Envoyer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation suppression -->
+<div id="modalConfirmDelete" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-trash-alt"></i> Supprimer la story</h2>
+            <button class="c-modal-close" onclick="closeModal('modalConfirmDelete')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <p style="color:var(--gray)">Cette story sera définitivement supprimée. Confirmer ?</p>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalConfirmDelete')">Annuler</button>
+            <button class="btn-danger" id="deleteStoryConfirmBtn">
+                <i class="fas fa-trash-alt"></i> Supprimer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== FIN MODALES ========== -->
+
+<!-- ===== DEBUT TOAST CONTAINER ===== -->
+<div id="toastContainer" class="c-toast-container"></div>
+<!-- ===== FIN TOAST CONTAINER ===== -->
+
+<!-- ===== DEBUT SCRIPTS ===== -->
+<script src="utils.js"></script>
+<script src="session.js"></script>
+<script src="stories.js"></script>
+<!-- ===== FIN SCRIPTS ===== -->
+</body>
+</html>

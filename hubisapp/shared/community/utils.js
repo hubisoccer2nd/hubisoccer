@@ -90,12 +90,12 @@ function escapeHtml(str) {
     if (!str) return '';
     const map = {
         '&': '&amp;',
-        //'<': '&lt;',
-        //'>': '&gt;',
-        //'"': '&quot;',
-        //"'": '&#39;'
+        // '<': '&lt;',
+        // '>': '&gt;',
+        // '"': '&quot;',
+        // "'": '&#39;'
     };
-    return String(str).replace(/[&<>"']/g, c => map[c]);
+    return String(str).replace(/[&]/g, c => map[c]);
 }
 
 function getInitials(name) {

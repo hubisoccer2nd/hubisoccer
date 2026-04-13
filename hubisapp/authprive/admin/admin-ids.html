@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion des IDs | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ----- RESET & VARIABLES ----- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        :root {
+            --primary: #551B8C;
+            --primary-light: #7e3db0;
+            --primary-dark: #3d1266;
+            --gold: #FFCC00;
+            --gold-dark: #e6b800;
+            --bg-light: #F0F8FF;
+            --white: #ffffff;
+            --dark: #1a1a1a;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --danger: #dc3545;
+            --success: #28a745;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
+            --transition: all 0.3s ease;
+        }
+
+        /* ----- NAVBAR ADMINISTRATION ----- */
+        .admin-nav {
+            background: var(--white);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 0.8rem 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--gold);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-nav { height: 40px; }
+        .admin-title { font-weight: 700; color: var(--primary); font-size: 1.2rem; }
+        .nav-links { display: flex; gap: 2rem; align-items: center; }
+        .nav-links a {
+            color: var(--dark); text-decoration: none; font-weight: 500;
+            transition: var(--transition); font-size: 0.95rem;
+        }
+        .nav-links a:hover { color: var(--primary); }
+        .nav-links a.active { color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--gold); }
+        .logout-btn {
+            background: var(--danger); color: white; border: none; padding: 8px 18px;
+            border-radius: 30px; font-weight: 500; cursor: pointer; transition: var(--transition);
+            font-size: 0.9rem;
+        }
+        .logout-btn:hover { background: #c82333; transform: translateY(-2px); }
+
+        /* ----- MAIN CONTENT ----- */
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 30px 5%; flex: 1; }
+        h1 { color: var(--primary); font-size: 2rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .subtitle { color: var(--gray); margin-bottom: 30px; border-left: 4px solid var(--gold); padding-left: 15px; }
+        .glass-card {
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border-radius: 30px;
+            padding: 30px; margin-bottom: 30px; box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--dark); }
+        select, input {
+            width: 100%; padding: 12px 15px; border: 2px solid var(--light-gray);
+            border-radius: 30px; font-family: 'Poppins', sans-serif; transition: var(--transition);
+            background: white;
+        }
+        select:focus, input:focus {
+            border-color: var(--primary); outline: none;
+            box-shadow: 0 0 0 4px rgba(85,27,140,0.1);
+        }
+        .btn-generate, .btn-save, .btn-refresh {
+            padding: 12px 25px; border-radius: 50px; font-weight: 600; cursor: pointer;
+            transition: var(--transition); display: inline-flex; align-items: center; gap: 8px;
+            border: none;
+        }
+        .btn-generate { background: var(--primary); color: white; }
+        .btn-generate:hover { background: var(--primary-light); transform: translateY(-2px); }
+        .btn-save { background: var(--gold); color: black; }
+        .btn-save:hover { background: var(--gold-dark); transform: translateY(-2px); }
+        .btn-refresh { background: var(--light-gray); color: var(--primary); }
+        .generated-id {
+            background: var(--bg-light); border-radius: 20px; padding: 20px; margin: 20px 0;
+            text-align: center; font-family: monospace; font-size: 1rem; word-break: break-all;
+            border: 1px dashed var(--primary);
+        }
+        .ids-list { background: white; border-radius: 20px; padding: 20px; overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--light-gray); }
+        th { background: var(--bg-light); color: var(--primary); }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .status-disponible { background: #d4edda; color: #155724; }
+        .status-utilise { background: #fff3cd; color: #856404; }
+        .flex-buttons { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
+
+        /* ----- FOOTER ADMINISTRATION ----- */
+        .admin-footer {
+            background: var(--white); padding: 1.2rem 5%; border-top: 1px solid var(--light-gray);
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+            font-size: 0.85rem; color: var(--gray);
+        }
+        .footer-links { display: flex; gap: 1.5rem; }
+        .footer-links a { color: var(--gray); text-decoration: none; transition: var(--transition); }
+        .footer-links a:hover { color: var(--primary); }
+
+        /* ----- TOAST ----- */
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast {
+            background: white; border-radius: 12px; padding: 12px 20px; margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-left: 4px solid; animation: slideIn 0.3s ease;
+        }
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+        .toast.warning { border-left-color: #ffc107; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ----- RESPONSIVE ----- */
+        @media (max-width: 700px) {
+            .nav-links { display: none; }
+            .admin-footer { flex-direction: column; gap: 10px; text-align: center; }
+            .footer-links { flex-wrap: wrap; justify-content: center; }
+        }
+
+        /* Cache le contenu tant que l'admin n'est pas validé */
+        #mainContent { display: none; }
+    </style>
+</head>
+<body>
+
+<!-- ===== INITIALISATION SUPABASE (exécution synchrone) ===== -->
+<script>
+    // Début initialisation Supabase
+    const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
+    const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.__SUPABASE_CLIENT = supabaseAuth; // Exposition globale immédiate
+    // Fin initialisation Supabase
+</script>
+
+<!-- ===== VÉRIFICATION ADMIN ASYNCHRONE ===== -->
+<script>
+    // Début vérification session admin
+    (async function() {
+        try {
+            const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+            if (userError || !user) throw new Error('Non authentifié');
+
+            const { data: profile, error: profileError } = await supabaseAuth
+                .from('supabaseAuthPrive_profiles')
+                .select('role_code')
+                .eq('auth_uuid', user.id)
+                .single();
+
+            if (profileError || !profile) throw new Error('Profil introuvable');
+            if (profile.role_code !== 'ADMIN') throw new Error('Accès non autorisé');
+
+            document.getElementById('mainContent').style.display = 'block';
+        } catch (err) {
+            console.error(err);
+            alert('Accès réservé aux administrateurs. Veuillez vous connecter.');
+            window.location.href = '../users/login.html';
+        }
+    })();
+    // Fin vérification session admin
+</script>
+
+<!-- ===== NAVBAR ADMIN ===== -->
+<nav class="admin-nav">
+    <div class="logo-area">
+        <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onerror="this.style.display='none'">
+        <span class="admin-title"><i class="fas fa-shield-alt" style="color: var(--gold);"></i> HubISoccer Admin</span>
+    </div>
+    <div class="nav-links">
+        <a href="admin-dashboard.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="admin-ids.html" class="active"><i class="fas fa-id-card"></i> Gestion IDs</a>
+        <a href="admin-users.html"><i class="fas fa-users-cog"></i> Utilisateurs</a>
+        <a href="admin-logs.html"><i class="fas fa-history"></i> Logs</a>
+    </div>
+    <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+</nav>
+
+<!-- ===== CONTENU PRINCIPAL (masqué jusqu'à validation admin) ===== -->
+<div id="mainContent">
+    <div class="admin-container">
+        <h1><i class="fas fa-id-card"></i> Gestion des IDs HubISoccer</h1>
+        <div class="subtitle">Générez des identifiants uniques de 40 caractères (dispersion HU/BI/S/O) et assignez-les aux rôles.</div>
+
+        <div class="glass-card">
+            <h2><i class="fas fa-magic"></i> Générer un nouvel ID</h2>
+            <div class="form-group">
+                <label>Rôle</label>
+                <select id="roleCode">
+                    <option value="FOOT">Footballeur</option><option value="BASK">Basketteur</option><option value="TENN">Tennisman</option>
+                    <option value="ATHL">Athlète</option><option value="HANDB">Handballeur</option><option value="VOLL">Volleyeur</option>
+                    <option value="RUGBY">Rugbyman</option><option value="NATA">Nageur</option><option value="ARTSM">Arts martiaux</option>
+                    <option value="CYCL">Cycliste</option><option value="CHAN">Chanteur</option><option value="DANS">Danseur</option>
+                    <option value="COMP">Compositeur</option><option value="ACIN">Acteur cinéma</option><option value="ATHE">Acteur théâtre</option>
+                    <option value="HUMO">Humoriste</option><option value="SLAM">Slameur</option><option value="DJ">DJ / Producteur</option>
+                    <option value="CIRQ">Artiste de cirque</option><option value="VISU">Artiste visuel</option><option value="PARRAIN">Parrain</option>
+                    <option value="AGENT">Agent FIFA</option><option value="COACH">Coach</option><option value="MEDIC">Staff médical</option>
+                    <option value="ARBIT">Corps arbitral</option><option value="ACAD">Académie sportive</option><option value="FORM">Formateur</option>
+                    <option value="TOURN">Gestionnaire tournoi</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Pays (code 2 lettres)</label>
+                <input type="text" id="countryCode" placeholder="BJ, FR, SN, ..." maxlength="2" style="text-transform:uppercase" value="BJ">
+            </div>
+            <button id="generateBtn" class="btn-generate"><i class="fas fa-sync-alt"></i> Générer un ID</button>
+            <div id="generatedIdContainer" class="generated-id" style="display: none;">
+                <strong>ID généré :</strong><br><span id="generatedId"></span>
+            </div>
+            <div class="flex-buttons">
+                <button id="saveIdBtn" class="btn-save" style="display: none;"><i class="fas fa-save"></i> Enregistrer dans la base</button>
+                <button id="copyIdBtn" class="btn-generate" style="display: none;"><i class="fas fa-copy"></i> Copier</button>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2><i class="fas fa-list"></i> IDs existants</h2>
+            <button id="refreshListBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+            <div id="idsList" class="ids-list"><p>Chargement...</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== FOOTER ADMIN ===== -->
+<footer class="admin-footer">
+    <div class="copyright">&copy; 2026 HubISoccer. Tous droits réservés.</div>
+    <div class="footer-links">
+        <a href="../../../public/mentions-legales.html">Mentions légales</a>
+        <a href="../../../public/cgu.html">CGU</a>
+        <a href="../../../public/faq.html">FAQ</a>
+        <a href="../../../public/contact.html">Support</a>
+    </div>
+</footer>
+
+<!-- ===== TOAST ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script>
+    // Début script principal gestion des IDs
+    const supabaseClient = window.__SUPABASE_CLIENT;
+
+    let currentGeneratedId = null;
+    let currentRole = null;
+
+    // Début fonction generateHubisId
+    function generateHubisId(role, country) {
+        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const rand = (n) => {
+            let res = "";
+            const values = new Uint32Array(n);
+            window.crypto.getRandomValues(values);
+            for (let i = 0; i < n; i++) res += charset[values[i] % charset.length];
+            return res;
+        };
+
+        let code = rand(2);                 // 0-1
+        code += "HU";                       // 2-3
+        code += rand(5);                    // 4-8
+        code += "BI";                       // 9-10
+        code += "2026";                     // 11-14
+        code += "S";                        // 15
+        code += country.slice(0,2).toUpperCase().padEnd(2, 'X'); // 16-17
+        code += role.slice(0,4).toUpperCase().padEnd(4, 'X');    // 18-21
+        code += "O";                        // 22
+        code += rand(15);                   // 23-37
+
+        // Checksum (38-39)
+        let sum = 0;
+        for(let i=0; i<code.length; i++) sum += code.charCodeAt(i);
+        code += (sum % 99).toString().padStart(2, '0');
+
+        return code; // 40 caractères
+    }
+    // Fin fonction generateHubisId
+
+    // Début fonction showToast
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<div>${message}</div>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+    // Fin fonction showToast
+
+    // Début fonction loadIds
+    async function loadIds() {
+        const container = document.getElementById('idsList');
+        container.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Chargement...</p>';
+        try {
+            const { data, error } = await supabaseClient
+                .from('supabaseAuthPrive_ids_pregenerees')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p>Aucun ID généré pour le moment.</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>ID HubISoccer</th><th>Rôle</th><th>Statut</th><th>Créé le</th></tr></thead><tbody>';
+            data.forEach(row => {
+                const statusText = row.used ? 'Utilisé' : 'Disponible';
+                const statusClass = row.used ? 'status-utilise' : 'status-disponible';
+                html += `<tr>
+                    <td><code>${row.id}</code></td>
+                    <td>${row.role_code}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>${new Date(row.created_at).toLocaleString()}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = '<p>Erreur lors du chargement des IDs.</p>';
+            showToast(err.message, 'error');
+        }
+    }
+    // Fin fonction loadIds
+
+    // Début fonction saveIdToDatabase
+    async function saveIdToDatabase(id, roleCode) {
+        const { error } = await supabaseClient
+            .from('supabaseAuthPrive_ids_pregenerees')
+            .insert({
+                id: id,
+                role_code: roleCode,
+                used: false,
+                created_at: new Date().toISOString()
+            });
+
+        if (error) {
+            if (error.code === '23505') {
+                throw new Error('Cet ID existe déjà (doublon rarissime). Veuillez en générer un autre.');
+            }
+            throw error;
+        }
+        return true;
+    }
+    // Fin fonction saveIdToDatabase
+
+    // Début événement génération
+    document.getElementById('generateBtn').addEventListener('click', () => {
+        const roleCode = document.getElementById('roleCode').value;
+        let countryCode = document.getElementById('countryCode').value.trim().toUpperCase();
+        if (!countryCode) countryCode = 'BJ';
+
+        if (!roleCode) {
+            showToast('Veuillez sélectionner un rôle', 'warning');
+            return;
+        }
+
+        try {
+            const generated = generateHubisId(roleCode, countryCode);
+            currentGeneratedId = generated;
+            currentRole = roleCode;
+
+            document.getElementById('generatedId').textContent = generated;
+            document.getElementById('generatedIdContainer').style.display = 'block';
+            document.getElementById('saveIdBtn').style.display = 'inline-flex';
+            document.getElementById('copyIdBtn').style.display = 'inline-flex';
+
+            showToast('ID généré avec succès', 'success');
+        } catch (err) {
+            showToast('Erreur lors de la génération: ' + err.message, 'error');
+        }
+    });
+    // Fin événement génération
+
+    // Début événement sauvegarde
+    document.getElementById('saveIdBtn').addEventListener('click', async () => {
+        if (!currentGeneratedId || !currentRole) {
+            showToast('Aucun ID à enregistrer', 'warning');
+            return;
+        }
+
+        const btn = document.getElementById('saveIdBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+
+        try {
+            await saveIdToDatabase(currentGeneratedId, currentRole);
+            showToast('ID enregistré dans la base de données', 'success');
+
+            document.getElementById('generatedIdContainer').style.display = 'none';
+            document.getElementById('saveIdBtn').style.display = 'none';
+            document.getElementById('copyIdBtn').style.display = 'none';
+            currentGeneratedId = null;
+            currentRole = null;
+
+            loadIds();
+        } catch (err) {
+            showToast(err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer dans la base';
+        }
+    });
+    // Fin événement sauvegarde
+
+    // Début événement copie
+    document.getElementById('copyIdBtn').addEventListener('click', () => {
+        if (currentGeneratedId) {
+            navigator.clipboard.writeText(currentGeneratedId).then(() => {
+                showToast('ID copié dans le presse-papier', 'success');
+            }).catch(() => {
+                showToast('Erreur lors de la copie', 'error');
+            });
+        }
+    });
+    // Fin événement copie
+
+    // Début événement rafraîchir
+    document.getElementById('refreshListBtn').addEventListener('click', () => loadIds());
+    // Fin événement rafraîchir
+
+    // Début événement déconnexion
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await supabaseClient.auth.signOut();
+        window.location.href = '../users/login.html';
+    });
+    // Fin événement déconnexion
+
+    // Chargement initial
+    loadIds();
+    // Fin script principal gestion des IDs
+</script>
+</body>
+</html>

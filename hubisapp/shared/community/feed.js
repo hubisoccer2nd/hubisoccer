@@ -1,17 +1,18 @@
 // ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 1/10 : Variables globales, constantes, utilitaires
+//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
+//  PARTIE 1 : Variables, constantes, session, menu latéral complet
 // ============================================================
-//  Corrections appliquées :
-//  - Déclaration explicite de commentMediaFile, commentAudioFile, storyUploadFile
-//  - Tous les problèmes de code listés sont résolus
+//  Corrections :
+//  - Gestion des tableaux vides pour éviter les erreurs 400
+//  - Toutes les variables sont correctement déclarées
+//  - Menu latéral intégral inclus sans troncature
 // ============================================================
 
 'use strict';
 
-// ========== DEBUT : VARIABLES GLOBALES ==========
 // sb, currentUser, currentProfile sont déjà définis dans session.js
 
+// ========== DEBUT : VARIABLES GLOBALES ==========
 let myCommunity = null;
 let posts = [];
 let likedPosts = new Set();
@@ -28,9 +29,8 @@ const PAGE_SIZE = 20;
 let hasMorePosts = false;
 let loadingPosts = false;
 let mediaFile = null;
-let commentMediaFile = null; // ← CORRIGÉ : Déclaration explicite
-let commentAudioFile = null; // ← CORRIGÉ : Déclaration explicite
-let storyUploadFile = null; // ← CORRIGÉ : Déclaration explicite
+let commentMediaFile = null;
+let commentAudioFile = null;
 let pendingPoll = null;
 let pendingEvent = null;
 let scheduledAt = null;
@@ -48,7 +48,7 @@ let mentionTargetInput = null;
 let mentionDropdown = null;
 let mentionsCache = [];
 let lastMentionsFetch = 0;
-const MENTIONS_CACHE_TTL = 120000; // 2 minutes
+const MENTIONS_CACHE_TTL = 120000;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DEBUT : CONSTANTES ROLES ET DASHBOARDS ==========
@@ -116,18 +116,18 @@ const ALL_ROLES = [
 ];
 // ========== FIN : CONSTANTES ROLES ==========
 
-// ========== DEBUT : FONCTIONS DE SESSION ET AVATAR ==========
+// ========== DEBUT : SESSION ET AVATAR ==========
 async function initSessionAndProfile() {
     const auth = await requireAuth();
     if (!auth) return false;
-    
+
     document.getElementById('userName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
     updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name);
-    
+
     const dash = ROLE_DASHBOARD_MAP[currentProfile.role_code] || '../../index.html';
     document.getElementById('dropDashboard').href = dash;
     document.getElementById('navLogo').onclick = () => window.location.href = dash;
-    
+
     buildSidebarMenu(currentProfile.role_code);
     return true;
 }
@@ -141,9 +141,9 @@ function updateAvatarDisplay(avatarUrl, fullName) {
     const storyAddInitials = document.getElementById('storyAddAvatarInitials');
     const sidebarAvatar = document.getElementById('sidebarAvatar');
     const sidebarInitials = document.getElementById('sidebarAvatarInitials');
-    
+
     const initials = getInitials(fullName);
-    
+
     const apply = (img, init, url) => {
         if (url) {
             img.src = url;
@@ -155,21 +155,19 @@ function updateAvatarDisplay(avatarUrl, fullName) {
             init.textContent = initials;
         }
     };
-    
+
     apply(userAvatar, userInitials, avatarUrl);
     apply(publishAvatar, publishInitials, avatarUrl);
     apply(storyAddAvatar, storyAddInitials, avatarUrl);
     apply(sidebarAvatar, sidebarInitials, avatarUrl);
 }
-// ========== FIN : FONCTIONS DE SESSION ET AVATAR ==========
+// ========== FIN : SESSION ET AVATAR ==========
 
-// ========== DEBUT : CONSTRUCTION DU MENU LATERAL ==========
+// ========== DEBUT : MENU LATERAL (28 ROLES COMPLET) ==========
 function buildSidebarMenu(roleCode) {
     const nav = document.getElementById('sidebarNav');
     const titleEl = document.getElementById('sidebarRoleTitle');
-    
-    // Configuration des menus pour les 28 rôles (extrait partiel pour la Partie 1,
-    // la suite sera dans la Partie 2)
+
     const menuConfig = {
         'FOOT': {
             title: 'Menu Footballeur',
@@ -186,9 +184,6 @@ function buildSidebarMenu(roleCode) {
                 { icon: 'fa-headset', label: 'Support', href: '../../footballeur/support/foot-supp.html' }
             ]
         },
-//  PARTIE 2/10 : Suite buildSidebarMenu + gestion communauté
-// ============================================================
-
         'BASK': {
             title: 'Menu Basketteur',
             items: [
@@ -638,7 +633,12 @@ function buildSidebarMenu(roleCode) {
     document.getElementById('sidebarHiddenPosts')?.addEventListener('click', e => { e.preventDefault(); openModal('modalHiddenPosts'); loadHiddenPosts(); });
     document.getElementById('sidebarBlockedUsers')?.addEventListener('click', e => { e.preventDefault(); openModal('modalBlockedUsers'); loadBlockedUsers(); });
 }
-// ========== FIN : CONSTRUCTION DU MENU LATERAL ==========
+// ========== FIN : MENU LATERAL ==========
+
+// ============================================================
+//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
+//  PARTIE 2 : Chargement communauté, posts, rendu
+// ============================================================
 
 // ========== DEBUT : CHARGEMENT DE LA COMMUNAUTE ==========
 async function loadMyCommunity() {
@@ -688,11 +688,6 @@ async function loadMyCommunity() {
 }
 // ========== FIN : CHARGEMENT DE LA COMMUNAUTE ==========
 
-// ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 3/10 : Chargement et rendu des posts
-// ============================================================
-
 // ========== DEBUT : CHARGEMENT DES POSTS ==========
 async function loadPosts(reset = false) {
     if (loadingPosts) return;
@@ -738,10 +733,26 @@ async function loadPosts(reset = false) {
                 .select('following_hubisoccer_id')
                 .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
             const ids = (follows || []).map(f => f.following_hubisoccer_id);
-            if (ids.length) query = query.in('author_hubisoccer_id', ids);
-            else { posts = []; renderPosts(); loadingPosts = false; return; }
+            if (ids.length) {
+                query = query.in('author_hubisoccer_id', ids);
+            } else {
+                posts = [];
+                renderPosts();
+                loadingPosts = false;
+                return;
+            }
         }
-        if (activeFilter === 'saved') query = query.in('id', Array.from(savedPosts));
+        if (activeFilter === 'saved') {
+            const savedArray = Array.from(savedPosts);
+            if (savedArray.length) {
+                query = query.in('id', savedArray);
+            } else {
+                posts = [];
+                renderPosts();
+                loadingPosts = false;
+                return;
+            }
+        }
         if (activeFilter === 'media') query = query.not('media_url', 'is', null);
         if (activeFilter === 'polls') query = query.not('poll_data', 'is', null);
         if (activeRoleFilter !== 'all') query = query.eq('author.role_code', activeRoleFilter);
@@ -946,6 +957,11 @@ function attachPostEvents() {
 }
 // ========== FIN : RENDU DES POSTS ==========
 
+// ============================================================
+//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
+//  PARTIE 3 : Interactions posts, commentaires, sondages, menus
+// ============================================================
+
 // ========== DEBUT : INTERACTIONS POSTS (LIKE, DISLIKE, SAVE, REPOST) ==========
 async function toggleLike(postId, btn) {
     const isLiked = likedPosts.has(postId);
@@ -1052,151 +1068,7 @@ async function repostPost(postId) {
     renderPosts();
     await sb.from('supabaseAuthPrive_posts').update({ reposts_count: (post.reposts_count || 0) + 1 }).eq('id', postId);
 }
-
-function togglePostMenu(btn, postId, isOwn) {
-    const menu = document.getElementById(`menu_${postId}`);
-    if (!menu) {
-        console.error(`Menu avec ID menu_${postId} introuvable`);
-        return;
-    }
-    
-    document.querySelectorAll('.post-dropdown.show').forEach(m => {
-        if (m !== menu) m.classList.remove('show');
-    });
-    
-    menu.classList.toggle('show');
-    
-    if (menu.classList.contains('show')) {
-        const closeMenu = (e) => {
-            if (!menu.contains(e.target) && e.target !== btn) {
-                menu.classList.remove('show');
-                document.removeEventListener('click', closeMenu);
-            }
-        };
-        setTimeout(() => document.addEventListener('click', closeMenu), 0);
-    }
-}
-
-function expandPost(postId) {
-    const el = document.getElementById(`txt_${postId}`);
-    if (el) { el.classList.remove('collapsed'); el.querySelector('.post-see-more')?.remove(); }
-}
-
-async function editPost(postId) {
-    const post = posts.find(p => String(p.id) === String(postId));
-    if (!post) return;
-    const newContent = prompt('Modifier la publication :', post.content || '');
-    if (newContent === null) return;
-    await sb.from('supabaseAuthPrive_posts').update({ content: newContent, edited: true }).eq('id', postId);
-    post.content = newContent;
-    post.edited = true;
-    renderPosts();
-    toast('Publication modifiée ✅', 'success');
-}
-
-async function deletePost(postId) {
-    if (!confirm('Supprimer cette publication ?')) return;
-    await sb.from('supabaseAuthPrive_posts').delete().eq('id', postId);
-    posts = posts.filter(p => String(p.id) !== String(postId));
-    renderPosts();
-    toast('Publication supprimée', 'success');
-}
-
-function openShareModal(postId) {
-    currentSharePostId = postId;
-    openModal('modalShare');
-}
-
-function sharePost(network) {
-    const post = posts.find(p => p.id === currentSharePostId);
-    const url = `${window.location.origin}/hubisoccer/hubisapp/shared/community/post-view.html?id=${currentSharePostId}`;
-    const text = post?.content?.substring(0, 100) || '';
-    const shareUrls = {
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-        twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
-        whatsapp: `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`
-    };
-    if (network === 'copy') {
-        navigator.clipboard.writeText(url);
-        toast('Lien copié !', 'success');
-    } else {
-        window.open(shareUrls[network], '_blank');
-    }
-    closeModal('modalShare');
-    sb.from('supabaseAuthPrive_posts').update({ shares_count: (post?.shares_count || 0) + 1 }).eq('id', currentSharePostId);
-}
-
-function openReportModal(postId) {
-    currentReportPostId = postId;
-    document.getElementById('reportReason').value = '';
-    openModal('modalReport');
-}
-
-async function submitReport() {
-    const reason = document.getElementById('reportReason').value.trim();
-    if (!reason) { toast('Écris la raison', 'warning'); return; }
-    await sb.from('supabaseAuthPrive_reports').insert({
-        post_id: currentReportPostId,
-        reporter_hubisoccer_id: currentProfile.hubisoccer_id,
-        reason
-    });
-    closeModal('modalReport');
-    toast('Signalement envoyé. Merci !', 'success');
-}
-
-function openBlockModal(userId) {
-    currentBlockUserId = userId;
-    openModal('modalBlock');
-}
-
-async function confirmBlock() {
-    await sb.from('supabaseAuthPrive_blocked_users').insert({
-        user_hubisoccer_id: currentProfile.hubisoccer_id,
-        blocked_hubisoccer_id: currentBlockUserId
-    });
-    blockedUsers.add(currentBlockUserId);
-    closeModal('modalBlock');
-    toast('Utilisateur bloqué', 'success');
-    posts = posts.filter(p => p.author_hubisoccer_id !== currentBlockUserId);
-    renderPosts();
-}
-
-async function hidePost(postId) {
-    await sb.from('supabaseAuthPrive_hidden_posts').insert({
-        post_id: postId,
-        user_hubisoccer_id: currentProfile.hubisoccer_id
-    });
-    hiddenPosts.add(postId);
-    posts = posts.filter(p => String(p.id) !== String(postId));
-    renderPosts();
-    toast('Publication masquée', 'info');
-}
-
-function openUserProfile(userId) {
-    window.location.href = `profil-feed.html?id=${userId}`;
-}
-
-function openUserByHandle(handle) {
-    window.location.href = `profil-feed.html?handle=${handle}`;
-}
-
-function searchByHashtag(tag) {
-    window.location.href = `search.html?q=%23${tag}`;
-}
-
-function openMediaModal(url, type) {
-    const viewer = document.getElementById('mediaViewer');
-    viewer.innerHTML = type === 'video'
-        ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:8px"></video>`
-        : `<img src="${url}" alt="" style="max-width:90vw;max-height:80vh;border-radius:8px">`;
-    openModal('modalMedia');
-}
 // ========== FIN : INTERACTIONS POSTS ==========
-
-// ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 4/10 : Gestion des commentaires et sondages
-// ============================================================
 
 // ========== DEBUT : GESTION DES COMMENTAIRES ==========
 async function toggleComments(postId, btn) {
@@ -1248,7 +1120,7 @@ async function loadComments(postId) {
     if (ta) {
         ta.addEventListener('input', () => {
             ta.style.height = 'auto';
-            ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
+            ta.style.height = Math.min(ta.scrollHeight, 80) + 'px';
         });
         ta.addEventListener('keydown', e => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -1577,7 +1449,6 @@ async function votePoll(postId, optionIdx) {
     if (!post || !post.poll_data) return;
     const poll = typeof post.poll_data === 'string' ? JSON.parse(post.poll_data) : post.poll_data;
     
-    // Vérifier si le sondage est expiré
     if (poll.ends_at && new Date(poll.ends_at) < new Date()) {
         toast('Ce sondage est terminé', 'warning');
         return;
@@ -1596,14 +1467,153 @@ async function votePoll(postId, optionIdx) {
 }
 // ========== FIN : VOTE SONDAGE ==========
 
+// ========== DEBUT : ACTIONS SUR LES MENUS ==========
+function togglePostMenu(btn, postId, isOwn) {
+    const menu = document.getElementById(`menu_${postId}`);
+    if (!menu) return;
+    
+    document.querySelectorAll('.post-dropdown.show').forEach(m => {
+        if (m !== menu) m.classList.remove('show');
+    });
+    
+    menu.classList.toggle('show');
+    
+    if (menu.classList.contains('show')) {
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target) && e.target !== btn) {
+                menu.classList.remove('show');
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeMenu), 0);
+    }
+}
+
+function expandPost(postId) {
+    const el = document.getElementById(`txt_${postId}`);
+    if (el) { el.classList.remove('collapsed'); el.querySelector('.post-see-more')?.remove(); }
+}
+
+async function editPost(postId) {
+    const post = posts.find(p => String(p.id) === String(postId));
+    if (!post) return;
+    const newContent = prompt('Modifier la publication :', post.content || '');
+    if (newContent === null) return;
+    await sb.from('supabaseAuthPrive_posts').update({ content: newContent, edited: true }).eq('id', postId);
+    post.content = newContent;
+    post.edited = true;
+    renderPosts();
+    toast('Publication modifiée ✅', 'success');
+}
+
+async function deletePost(postId) {
+    if (!confirm('Supprimer cette publication ?')) return;
+    await sb.from('supabaseAuthPrive_posts').delete().eq('id', postId);
+    posts = posts.filter(p => String(p.id) !== String(postId));
+    renderPosts();
+    toast('Publication supprimée', 'success');
+}
+
+function openShareModal(postId) {
+    currentSharePostId = postId;
+    openModal('modalShare');
+}
+
+function sharePost(network) {
+    const post = posts.find(p => p.id === currentSharePostId);
+    const url = `${window.location.origin}/hubisoccer/hubisapp/shared/community/post-view.html?id=${currentSharePostId}`;
+    const text = post?.content?.substring(0, 100) || '';
+    const shareUrls = {
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+        twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+        whatsapp: `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`
+    };
+    if (network === 'copy') {
+        navigator.clipboard.writeText(url);
+        toast('Lien copié !', 'success');
+    } else {
+        window.open(shareUrls[network], '_blank');
+    }
+    closeModal('modalShare');
+    sb.from('supabaseAuthPrive_posts').update({ shares_count: (post?.shares_count || 0) + 1 }).eq('id', currentSharePostId);
+}
+
+function openReportModal(postId) {
+    currentReportPostId = postId;
+    document.getElementById('reportReason').value = '';
+    openModal('modalReport');
+}
+
+async function submitReport() {
+    const reason = document.getElementById('reportReason').value.trim();
+    if (!reason) { toast('Écris la raison', 'warning'); return; }
+    await sb.from('supabaseAuthPrive_reports').insert({
+        post_id: currentReportPostId,
+        reporter_hubisoccer_id: currentProfile.hubisoccer_id,
+        reason
+    });
+    closeModal('modalReport');
+    toast('Signalement envoyé. Merci !', 'success');
+}
+
+function openBlockModal(userId) {
+    currentBlockUserId = userId;
+    openModal('modalBlock');
+}
+
+async function confirmBlock() {
+    await sb.from('supabaseAuthPrive_blocked_users').insert({
+        user_hubisoccer_id: currentProfile.hubisoccer_id,
+        blocked_hubisoccer_id: currentBlockUserId
+    });
+    blockedUsers.add(currentBlockUserId);
+    closeModal('modalBlock');
+    toast('Utilisateur bloqué', 'success');
+    posts = posts.filter(p => p.author_hubisoccer_id !== currentBlockUserId);
+    renderPosts();
+}
+
+async function hidePost(postId) {
+    await sb.from('supabaseAuthPrive_hidden_posts').insert({
+        post_id: postId,
+        user_hubisoccer_id: currentProfile.hubisoccer_id
+    });
+    hiddenPosts.add(postId);
+    posts = posts.filter(p => String(p.id) !== String(postId));
+    renderPosts();
+    toast('Publication masquée', 'info');
+}
+
+function openUserProfile(userId) {
+    window.location.href = `profil-feed.html?id=${userId}`;
+}
+
+function openUserByHandle(handle) {
+    window.location.href = `profil-feed.html?handle=${handle}`;
+}
+
+function searchByHashtag(tag) {
+    window.location.href = `search.html?q=%23${tag}`;
+}
+
+function openMediaModal(url, type) {
+    const viewer = document.getElementById('mediaViewer');
+    viewer.innerHTML = type === 'video'
+        ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:8px"></video>`
+        : `<img src="${url}" alt="" style="max-width:90vw;max-height:80vh;border-radius:8px">`;
+    openModal('modalMedia');
+}
+// ========== FIN : ACTIONS SUR LES MENUS ==========
+
 // ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 5/10 : Stories, lives, suggestions, tendances
+//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
+//  PARTIE 4 : Stories, lives, suggestions, followers, tendances,
+//             insights, notifications, bloqués, masqués,
+//             collections, mentions, audio
 // ============================================================
 
 // ========== DEBUT : GESTION DES STORIES ==========
 async function loadStories() {
-    // 1. Récupérer les stories de l'utilisateur connecté
     const { data: myStories } = await sb.from('supabaseAuthPrive_stories')
         .select('*')
         .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
@@ -1611,7 +1621,6 @@ async function loadStories() {
         .order('created_at', { ascending: false })
         .limit(5);
     
-    // 2. Récupérer les stories des abonnements
     const { data: following } = await sb.from('supabaseAuthPrive_follows')
         .select('following_hubisoccer_id')
         .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
@@ -1628,7 +1637,6 @@ async function loadStories() {
         followingStories = data || [];
     }
     
-    // 3. Remplir le conteneur "My HubIS Mood" (stories perso)
     const myContainer = document.getElementById('myStoriesContainer');
     if (myContainer) {
         if (myStories && myStories.length > 0) {
@@ -1638,7 +1646,6 @@ async function loadStories() {
         }
     }
     
-    // 4. Remplir le conteneur "HubIS Enjoy" (stories des abonnés)
     const followingContainer = document.getElementById('followingStoriesContainer');
     if (followingContainer) {
         if (followingStories.length > 0) {
@@ -1648,7 +1655,6 @@ async function loadStories() {
         }
     }
     
-    // 5. Gérer l'affichage du bouton "Voir plus"
     const totalStories = (myStories?.length || 0) + followingStories.length;
     const moreWrap = document.getElementById('storiesMoreWrap');
     if (moreWrap) {
@@ -1812,14 +1818,21 @@ async function loadSuggestions() {
         .select('following_hubisoccer_id')
         .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
     const followingIds = (following || []).map(f => f.following_hubisoccer_id);
+    
     const { data: blocked } = await sb.from('supabaseAuthPrive_blocked_users')
         .select('blocked_hubisoccer_id')
         .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
     const blockedIds = (blocked || []).map(b => b.blocked_hubisoccer_id);
+    
     const exclude = [...followingIds, currentProfile.hubisoccer_id, ...blockedIds];
+    
     let query = sb.from('supabaseAuthPrive_communities')
         .select('*, profiles:supabaseAuthPrive_profiles!hubisoccer_id(role_code, certified)');
-    if (exclude.length) query = query.not('hubisoccer_id', 'in', exclude);
+    
+    if (exclude.length) {
+        query = query.not('hubisoccer_id', 'in', `(${exclude.join(',')})`);
+    }
+    
     const { data } = await query.limit(5);
     const container = document.getElementById('suggestionsList');
     if (!data || data.length === 0) {
@@ -1842,7 +1855,10 @@ async function loadSuggestions() {
 }
 
 window.followUser = async function(userId, btn) {
-    await sb.from('supabaseAuthPrive_follows').insert({ follower_hubisoccer_id: currentProfile.hubisoccer_id, following_hubisoccer_id: userId });
+    await sb.from('supabaseAuthPrive_follows').insert({
+        follower_hubisoccer_id: currentProfile.hubisoccer_id,
+        following_hubisoccer_id: userId
+    });
     btn.textContent = 'Abonné';
     btn.classList.add('following');
     toast('Abonné !', 'success');
@@ -1962,11 +1978,6 @@ async function loadInsights() {
     document.getElementById('insightEngagement').textContent = engagementRate + '%';
 }
 // ========== FIN : TENDANCES ET INSIGHTS ==========
-
-// ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 6/10 : Notifications, bloqués, masqués, collections, mentions, audio
-// ============================================================
 
 // ========== DEBUT : GESTION DES NOTIFICATIONS ==========
 async function loadNotifications() {
@@ -2129,10 +2140,9 @@ async function handleMentionInput(e) {
     const cursorPos = e.target.selectionStart;
     const textBeforeCursor = val.substring(0, cursorPos);
     const atIndex = textBeforeCursor.lastIndexOf('@');
-    if (atIndex !== -1 && (atIndex === 0 || textBeforeCursor[atIndex - 1] === ' ')) {
-        const query = textBeforeCursor.substring(atIndex + 1).toLowerCase();
+    if (atIndex !== -1 && (atIndex === 0 || textBeforeCursor[atIndex-1] === ' ')) {
+        const query = textBeforeCursor.substring(atIndex+1).toLowerCase();
         if (query.length >= 1) {
-            // Rafraîchir le cache si nécessaire
             const now = Date.now();
             if (mentionsCache.length === 0 || now - lastMentionsFetch > MENTIONS_CACHE_TTL) {
                 const { data } = await sb.from('supabaseAuthPrive_communities')
@@ -2165,11 +2175,11 @@ function showMentionSuggestions(users, input) {
     mentionDropdown.style.overflowY = 'auto';
     mentionDropdown.style.zIndex = '1000';
     mentionDropdown.style.minWidth = '200px';
-    
+
     const rect = input.getBoundingClientRect();
     mentionDropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
     mentionDropdown.style.left = (rect.left + window.scrollX) + 'px';
-    
+
     users.forEach(user => {
         const item = document.createElement('div');
         item.style.padding = '8px 12px';
@@ -2192,7 +2202,7 @@ function showMentionSuggestions(users, input) {
         });
         mentionDropdown.appendChild(item);
     });
-    
+
     document.body.appendChild(mentionDropdown);
 }
 
@@ -2229,8 +2239,8 @@ async function startAudioRecording(postId) {
 // ========== FIN : ENREGISTREMENT AUDIO ==========
 
 // ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 7/10 : Publication de posts et modales associées
+//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
+//  PARTIE 5 : Publication, modales, initialisation, fin
 // ============================================================
 
 // ========== DEBUT : PUBLICATION DE POST ==========
@@ -2415,11 +2425,6 @@ function cancelMedia() {
 }
 // ========== FIN : APERÇU ET ÉDITION DE PROFIL ==========
 
-// ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 8/8 : Initialisation, écouteurs, fin du fichier
-// ============================================================
-
 // ========== DEBUT : INITIALISATION PRINCIPALE ==========
 async function init() {
     setLoader(true, 'Vérification de votre session...', 20);
@@ -2490,7 +2495,6 @@ async function init() {
     document.getElementById('uploadStoryBtn').addEventListener('click', uploadStory);
     document.getElementById('seeMoreStoriesBtn').addEventListener('click', () => window.location.href = 'stories.html');
     
-    // Gestion de la modale d'ajout de story
     const storyTabs = document.querySelectorAll('.story-type-tab');
     const uploadZone = document.getElementById('storyUploadZone');
     const textZone = document.getElementById('storyTextZone');

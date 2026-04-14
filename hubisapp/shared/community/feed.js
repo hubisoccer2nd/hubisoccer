@@ -1,13 +1,6 @@
 // ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 1 : Variables, constantes, session, menu latéral complet
+//  HUBISOCCER — FEED.JS (VERSION FINALE – TOUTES ERREURS 400 CORRIGÉES)
 // ============================================================
-//  Corrections :
-//  - Gestion des tableaux vides pour éviter les erreurs 400
-//  - Toutes les variables sont correctement déclarées
-//  - Menu latéral intégral inclus sans troncature
-// ============================================================
-
 'use strict';
 
 // sb, currentUser, currentProfile sont déjà définis dans session.js
@@ -634,10 +627,6 @@ function buildSidebarMenu(roleCode) {
     document.getElementById('sidebarBlockedUsers')?.addEventListener('click', e => { e.preventDefault(); openModal('modalBlockedUsers'); loadBlockedUsers(); });
 }
 // ========== FIN : MENU LATERAL ==========
-// ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 2 : Chargement communauté, posts, rendu
-// ============================================================
 
 // ========== DEBUT : CHARGEMENT DE LA COMMUNAUTE ==========
 async function loadMyCommunity() {
@@ -956,17 +945,12 @@ function attachPostEvents() {
 }
 // ========== FIN : RENDU DES POSTS ==========
 
-// ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 3 : Interactions posts, commentaires, sondages, menus
-// ============================================================
-
 // ========== DEBUT : INTERACTIONS POSTS (LIKE, DISLIKE, SAVE, REPOST) ==========
 async function toggleLike(postId, btn) {
     const isLiked = likedPosts.has(postId);
     const post = posts.find(p => String(p.id) === String(postId));
     const countEl = document.getElementById(`likeCount_${postId}`);
-    
+
     if (isLiked) {
         likedPosts.delete(postId);
         btn.classList.remove('liked');
@@ -1002,7 +986,7 @@ async function toggleDislike(postId, btn) {
     const isDisliked = dislikedPosts.has(postId);
     const post = posts.find(p => String(p.id) === String(postId));
     const countEl = document.getElementById(`dislikeCount_${postId}`);
-    
+
     if (isDisliked) {
         dislikedPosts.delete(postId);
         btn.classList.remove('disliked');
@@ -1083,7 +1067,7 @@ async function toggleComments(postId, btn) {
 async function loadComments(postId) {
     const section = document.getElementById(`comments_${postId}`);
     if (!section) return;
-    
+
     const { data, error } = await sb
         .from('supabaseAuthPrive_comments')
         .select('*, author:supabaseAuthPrive_profiles!author_hubisoccer_id(full_name, display_name, avatar_url, role_code)')
@@ -1091,12 +1075,12 @@ async function loadComments(postId) {
         .is('parent_id', null)
         .order('created_at', { ascending: true })
         .limit(10);
-    
+
     if (error) {
         toast('Erreur chargement des commentaires', 'error');
         return;
     }
-    
+
     section.innerHTML = `
         <div class="comments-list">
             ${(data || []).map(c => makeCommentHtml(c, postId)).join('')}
@@ -1114,7 +1098,7 @@ async function loadComments(postId) {
             <input type="file" id="commentMediaInput_${postId}" accept="image/*" style="display:none">
         </div>
     `;
-    
+
     const ta = document.getElementById(`commentInput_${postId}`);
     if (ta) {
         ta.addEventListener('input', () => {
@@ -1129,7 +1113,7 @@ async function loadComments(postId) {
         });
         ta.addEventListener('input', handleMentionInput);
     }
-    
+
     const mediaInput = document.getElementById(`commentMediaInput_${postId}`);
     if (mediaInput) {
         mediaInput.addEventListener('change', (e) => {
@@ -1212,15 +1196,15 @@ async function sendComment(postId) {
     if (!content && !commentMediaFile && !commentAudioFile) return;
     input.value = '';
     input.style.height = 'auto';
-    
+
     const btn = document.querySelector(`#comments_${postId} .comment-send-btn`);
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    
+
     try {
         let mediaUrl = null;
         let audioUrl = null;
-        
+
         if (commentMediaFile) {
             const ext = commentMediaFile.name.split('.').pop();
             const path = `comments/${currentProfile.hubisoccer_id}/${Date.now()}.${ext}`;
@@ -1231,7 +1215,7 @@ async function sendComment(postId) {
             }
             commentMediaFile = null;
         }
-        
+
         if (commentAudioFile) {
             const path = `comments_audio/${currentProfile.hubisoccer_id}/${Date.now()}.webm`;
             const { error: upErr } = await sb.storage.from('post_media').upload(path, commentAudioFile);
@@ -1241,7 +1225,7 @@ async function sendComment(postId) {
             }
             commentAudioFile = null;
         }
-        
+
         const { data, error } = await sb.from('supabaseAuthPrive_comments').insert({
             post_id: postId,
             author_hubisoccer_id: currentProfile.hubisoccer_id,
@@ -1250,19 +1234,19 @@ async function sendComment(postId) {
             audio_url: audioUrl,
             parent_id: null
         }).select('*, author:supabaseAuthPrive_profiles!author_hubisoccer_id(full_name, display_name, avatar_url, role_code)').single();
-        
+
         if (error) throw error;
-        
+
         const list = document.querySelector(`#comments_${postId} .comments-list`);
         if (list) list.insertAdjacentHTML('beforeend', makeCommentHtml(data, postId));
-        
+
         const post = posts.find(p => String(p.id) === String(postId));
         if (post) post.comments_count = (post.comments_count || 0) + 1;
         await sb.from('supabaseAuthPrive_posts').update({ comments_count: post?.comments_count || 0 }).eq('id', postId);
-        
+
         const countSpan = document.querySelector(`.post-card[data-post-id="${postId}"] .post-action-count`);
         if (countSpan) countSpan.textContent = post.comments_count;
-        
+
         if (post && post.author_hubisoccer_id !== currentProfile.hubisoccer_id) {
             await sb.from('supabaseAuthPrive_notifications').insert({
                 recipient_hubisoccer_id: post.author_hubisoccer_id,
@@ -1272,7 +1256,7 @@ async function sendComment(postId) {
                 data: { link: `post-view.html?id=${postId}` }
             });
         }
-        
+
         const mentions = content?.match(/@(\w+)/g);
         if (mentions) {
             for (const m of mentions) {
@@ -1301,18 +1285,18 @@ async function sendComment(postId) {
 async function likeComment(commentId, btn) {
     const liked = btn.classList.contains('liked');
     const countEl = btn.querySelector('span');
-    
+
     const { data: comment, error } = await sb
         .from('supabaseAuthPrive_comments')
         .select('likes_count, author_hubisoccer_id')
         .eq('id', commentId)
         .single();
-    
+
     if (error || !comment) {
         toast('Commentaire introuvable', 'error');
         return;
     }
-    
+
     let newLikes;
     if (liked) {
         btn.classList.remove('liked');
@@ -1329,7 +1313,7 @@ async function likeComment(commentId, btn) {
             comment_id: commentId,
             user_hubisoccer_id: currentProfile.hubisoccer_id
         });
-        
+
         if (comment.author_hubisoccer_id && comment.author_hubisoccer_id !== currentProfile.hubisoccer_id) {
             await sb.from('supabaseAuthPrive_notifications').insert({
                 recipient_hubisoccer_id: comment.author_hubisoccer_id,
@@ -1340,7 +1324,7 @@ async function likeComment(commentId, btn) {
             });
         }
     }
-    
+
     if (countEl) countEl.textContent = newLikes;
     await sb.from('supabaseAuthPrive_comments').update({ likes_count: newLikes }).eq('id', commentId);
 }
@@ -1371,17 +1355,17 @@ async function sendReply(commentId = null, postId = null) {
         toast('Erreur : aucune réponse sélectionnée', 'error');
         return;
     }
-    
+
     const input = document.getElementById('replyContent');
     const content = input?.value.trim();
     if (!content) return;
-    
+
     const btn = document.getElementById('sendReplyBtn');
     if (!btn) return;
-    
+
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
-    
+
     try {
         const { data, error } = await sb.from('supabaseAuthPrive_comments').insert({
             post_id: pId,
@@ -1389,14 +1373,14 @@ async function sendReply(commentId = null, postId = null) {
             content,
             parent_id: id
         }).select('*, author:supabaseAuthPrive_profiles!author_hubisoccer_id(full_name, display_name, avatar_url, role_code)').single();
-        
+
         if (error) throw error;
-        
+
         const repliesContainer = document.getElementById(`replies_${id}`);
         if (repliesContainer) {
             repliesContainer.insertAdjacentHTML('beforeend', makeReplyCard(data));
         }
-        
+
         closeModal('modalReply');
         input.value = '';
         toast('Réponse envoyée ✅', 'success');
@@ -1447,12 +1431,12 @@ async function votePoll(postId, optionIdx) {
     const post = posts.find(p => p.id === postId);
     if (!post || !post.poll_data) return;
     const poll = typeof post.poll_data === 'string' ? JSON.parse(post.poll_data) : post.poll_data;
-    
+
     if (poll.ends_at && new Date(poll.ends_at) < new Date()) {
         toast('Ce sondage est terminé', 'warning');
         return;
     }
-    
+
     if (poll.voted_by?.includes(currentProfile.hubisoccer_id)) return;
 
     poll.votes = poll.votes || {};
@@ -1470,13 +1454,13 @@ async function votePoll(postId, optionIdx) {
 function togglePostMenu(btn, postId, isOwn) {
     const menu = document.getElementById(`menu_${postId}`);
     if (!menu) return;
-    
+
     document.querySelectorAll('.post-dropdown.show').forEach(m => {
         if (m !== menu) m.classList.remove('show');
     });
-    
+
     menu.classList.toggle('show');
-    
+
     if (menu.classList.contains('show')) {
         const closeMenu = (e) => {
             if (!menu.contains(e.target) && e.target !== btn) {
@@ -1603,12 +1587,6 @@ function openMediaModal(url, type) {
     openModal('modalMedia');
 }
 // ========== FIN : ACTIONS SUR LES MENUS ==========
-// ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 4 : Stories, lives, suggestions, followers, tendances,
-//             insights, notifications, bloqués, masqués,
-//             collections, mentions, audio
-// ============================================================
 
 // ========== DEBUT : GESTION DES STORIES ==========
 async function loadStories() {
@@ -1619,12 +1597,12 @@ async function loadStories() {
             .gt('expires_at', new Date().toISOString())
             .order('created_at', { ascending: false })
             .limit(5);
-        
+
         const { data: following } = await sb.from('supabaseAuthPrive_follows')
             .select('following_hubisoccer_id')
             .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
         const followingIds = (following || []).map(f => f.following_hubisoccer_id);
-        
+
         let followingStories = [];
         if (followingIds.length > 0) {
             const { data } = await sb.from('supabaseAuthPrive_stories')
@@ -1635,7 +1613,7 @@ async function loadStories() {
                 .limit(5);
             followingStories = data || [];
         }
-        
+
         const myContainer = document.getElementById('myStoriesContainer');
         if (myContainer) {
             if (myStories && myStories.length > 0) {
@@ -1644,7 +1622,7 @@ async function loadStories() {
                 myContainer.innerHTML = '<p style="font-size:0.8rem;color:var(--gray);padding:0 8px;">Aucune story</p>';
             }
         }
-        
+
         const followingContainer = document.getElementById('followingStoriesContainer');
         if (followingContainer) {
             if (followingStories.length > 0) {
@@ -1653,7 +1631,7 @@ async function loadStories() {
                 followingContainer.innerHTML = '<p style="font-size:0.8rem;color:var(--gray);padding:0 8px;">Aucune story</p>';
             }
         }
-        
+
         const totalStories = (myStories?.length || 0) + followingStories.length;
         const moreWrap = document.getElementById('storiesMoreWrap');
         if (moreWrap) moreWrap.style.display = totalStories > 5 ? 'block' : 'none';
@@ -1667,7 +1645,7 @@ function makeStoryItem(story, author, isOwn = false) {
     const avatar = author.avatar_url;
     const initials = getInitials(name);
     let preview = '';
-    
+
     if (story.media_type === 'text') {
         preview = `<div class="story-ring-text" style="background:${story.text_bg || 'var(--primary)'}">${initials}</div>`;
     } else if (story.media_type === 'video') {
@@ -1676,7 +1654,7 @@ function makeStoryItem(story, author, isOwn = false) {
         preview = `<img src="${story.media_url}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                    <div class="story-ring-text" style="display:none; background:var(--primary);">${initials}</div>`;
     }
-    
+
     return `
         <div class="story-item" onclick="viewStory('${story.id}')">
             <div class="story-ring">${preview}</div>
@@ -1725,7 +1703,7 @@ async function uploadStory() {
     const textContent = document.getElementById('storyTextContent')?.value.trim();
     const caption = document.getElementById('storyCaption').value.trim();
     const duration = parseInt(document.getElementById('storyDurationSelect').value);
-    
+
     if (!isTextStory && !file) {
         toast('Sélectionne un fichier', 'warning');
         return;
@@ -1734,16 +1712,16 @@ async function uploadStory() {
         toast('Écris quelque chose pour ta story texte', 'warning');
         return;
     }
-    
+
     const btn = document.getElementById('uploadStoryBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publication...';
-    
+
     try {
         let mediaUrl = null;
         let mediaType = 'text';
         let textBg = document.getElementById('storyTextCanvas').style.background;
-        
+
         if (!isTextStory && file) {
             const ext = file.name.split('.').pop();
             const path = `stories/${currentProfile.hubisoccer_id}/${Date.now()}.${ext}`;
@@ -1753,10 +1731,10 @@ async function uploadStory() {
             mediaUrl = urlData.publicUrl;
             mediaType = file.type.startsWith('video/') ? 'video' : 'image';
         }
-        
+
         const expires = new Date();
         expires.setSeconds(expires.getSeconds() + duration);
-        
+
         const storyData = {
             user_hubisoccer_id: currentProfile.hubisoccer_id,
             media_url: mediaUrl,
@@ -1765,14 +1743,14 @@ async function uploadStory() {
             duration,
             expires_at: expires.toISOString()
         };
-        
+
         if (isTextStory) {
             storyData.text_bg = textBg;
             storyData.text_content = textContent;
         }
-        
+
         await sb.from('supabaseAuthPrive_stories').insert(storyData);
-        
+
         closeModal('modalStoryUpload');
         toast('Story publiée !', 'success');
         loadStories();
@@ -1795,12 +1773,12 @@ async function loadLives() {
             .eq('is_active', true)
             .order('started_at', { ascending: false })
             .limit(5);
-        
+
         if (!data || data.length === 0) {
             container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Aucun live en ce moment</p>';
             return;
         }
-        
+
         container.innerHTML = data.map(l => {
             const host = l.host || {};
             const name = host.full_name || host.display_name || 'Hôte';
@@ -1826,21 +1804,21 @@ async function loadSuggestions() {
         .select('following_hubisoccer_id')
         .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
     const followingIds = (following || []).map(f => f.following_hubisoccer_id);
-    
+
     const { data: blocked } = await sb.from('supabaseAuthPrive_blocked_users')
         .select('blocked_hubisoccer_id')
         .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
     const blockedIds = (blocked || []).map(b => b.blocked_hubisoccer_id);
-    
+
     const exclude = [...followingIds, currentProfile.hubisoccer_id, ...blockedIds];
-    
+
     let query = sb.from('supabaseAuthPrive_communities')
         .select('*, profiles:supabaseAuthPrive_profiles!hubisoccer_id(role_code, certified)');
-    
+
     if (exclude.length) {
         query = query.not('hubisoccer_id', 'in', `(${exclude.join(',')})`);
     }
-    
+
     const { data } = await query.limit(5);
     const container = document.getElementById('suggestionsList');
     if (!data || data.length === 0) {
@@ -1876,32 +1854,29 @@ window.followUser = async function(userId, btn) {
 async function loadFollowers() {
     const container = document.getElementById('followersList');
     try {
-        // 1. Récupérer les IDs des followers
         const { data: follows } = await sb
             .from('supabaseAuthPrive_follows')
             .select('follower_hubisoccer_id')
             .eq('following_hubisoccer_id', currentProfile.hubisoccer_id);
         const followerIds = (follows || []).map(f => f.follower_hubisoccer_id);
-        
-        // 2. Si aucun follower, message et sortie
+
         if (followerIds.length === 0) {
             container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Pas encore d\'abonnés</p>';
             return;
         }
-        
-        // 3. Requête uniquement si IDs existent
+
         const { data } = await sb
             .from('supabaseAuthPrive_profiles')
             .select('hubisoccer_id, full_name, display_name, avatar_url, feed_id')
             .in('hubisoccer_id', followerIds)
             .order('created_at', { ascending: false })
             .limit(5);
-        
+
         if (!data || data.length === 0) {
             container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Pas encore d\'abonnés</p>';
             return;
         }
-        
+
         container.innerHTML = data.map(user => {
             const name = user.full_name || user.display_name || 'Utilisateur';
             return `<div class="follower-item" onclick="openUserProfile('${user.hubisoccer_id}')">
@@ -2267,10 +2242,6 @@ async function startAudioRecording(postId) {
     }
 }
 // ========== FIN : ENREGISTREMENT AUDIO ==========
-// ============================================================
-//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 5 : Publication, modales, initialisation, fin
-// ============================================================
 
 // ========== DEBUT : PUBLICATION DE POST ==========
 async function publishPost() {
@@ -2409,7 +2380,7 @@ function confirmSchedule() {
 function showPreview() {
     const content = document.getElementById('postContent').value.trim();
     let mediaHtml = '';
-    
+
     if (mediaFile) {
         const url = URL.createObjectURL(mediaFile);
         const isVideo = mediaFile.type.startsWith('video/');
@@ -2417,7 +2388,7 @@ function showPreview() {
             `<div class="post-media"><video src="${url}" controls></video></div>` :
             `<div class="post-media"><img src="${url}" alt=""></div>`;
     }
-    
+
     document.getElementById('previewBody').innerHTML = `
         <div class="post-card" style="box-shadow:none;border:none">
             <div class="post-header">
@@ -2459,14 +2430,14 @@ async function init() {
     setLoader(true, 'Vérification de votre session...', 20);
     const sessionOk = await initSessionAndProfile();
     if (!sessionOk) return;
-    
+
     setLoader(true, 'Vérification de ta communauté...', 40);
     const comm = await loadMyCommunity();
     if (!comm) return;
-    
+
     setLoader(true, 'Chargement du feed...', 60);
     await loadPosts(true);
-    
+
     setLoader(true, 'Chargement de la communauté...', 80);
     await Promise.all([
         loadStories(),
@@ -2478,10 +2449,10 @@ async function init() {
         loadInsights(),
         loadBlockedUsers().catch(() => {})
     ]);
-    
+
     setLoader(false);
     subscribeToNewPosts();
-    
+
     // ========== ÉCOUTEURS D'ÉVÉNEMENTS ==========
     document.getElementById('publishBtn').addEventListener('click', publishPost);
     document.getElementById('attachMediaBtn').addEventListener('click', () => document.getElementById('mediaInput').click());
@@ -2498,7 +2469,7 @@ async function init() {
                 <button class="remove-media-btn" onclick="cancelMedia()"><i class="fas fa-times"></i></button>
             </div>`;
     });
-    
+
     document.getElementById('pollBtn').addEventListener('click', () => openModal('modalPoll'));
     document.getElementById('eventBtn').addEventListener('click', () => openModal('modalEvent'));
     document.getElementById('scheduleBtn').addEventListener('click', () => openModal('modalSchedule'));
@@ -2509,21 +2480,21 @@ async function init() {
         toast(pinPostActive ? 'Post épinglé activé' : 'Épinglage désactivé', 'info');
     });
     document.getElementById('previewPostBtn').addEventListener('click', showPreview);
-    
+
     document.getElementById('createPollBtn').addEventListener('click', createPoll);
     document.getElementById('createEventBtn').addEventListener('click', createEvent);
     document.getElementById('confirmScheduleBtn').addEventListener('click', confirmSchedule);
-    
+
     document.getElementById('submitReportBtn').addEventListener('click', submitReport);
     document.getElementById('confirmBlockBtn').addEventListener('click', confirmBlock);
     document.querySelectorAll('.share-btn').forEach(btn => btn.addEventListener('click', () => sharePost(btn.dataset.network)));
-    
+
     document.getElementById('sendReplyBtn').addEventListener('click', () => sendReply(replyCommentId, replyPostId));
-    
+
     document.getElementById('addStoryBtn').addEventListener('click', () => openModal('modalStoryUpload'));
     document.getElementById('uploadStoryBtn').addEventListener('click', uploadStory);
     document.getElementById('seeMoreStoriesBtn').addEventListener('click', () => window.location.href = 'stories.html');
-    
+
     const storyTabs = document.querySelectorAll('.story-type-tab');
     const uploadZone = document.getElementById('storyUploadZone');
     const textZone = document.getElementById('storyTextZone');
@@ -2531,7 +2502,7 @@ async function init() {
     const fileInput = document.getElementById('storyFileInput');
     const textCanvas = document.getElementById('storyTextCanvas');
     const styleBtns = document.querySelectorAll('.txt-style-btn');
-    
+
     storyTabs.forEach(tab => {
         tab.addEventListener('click', () => {
             storyTabs.forEach(t => t.classList.remove('active'));
@@ -2546,7 +2517,7 @@ async function init() {
             }
         });
     });
-    
+
     dropArea.addEventListener('click', () => fileInput.click());
     dropArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -2561,12 +2532,12 @@ async function init() {
         const file = e.dataTransfer.files[0];
         if (file) handleStoryFileSelect(file);
     });
-    
+
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) handleStoryFileSelect(file);
     });
-    
+
     styleBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             styleBtns.forEach(b => b.classList.remove('active'));
@@ -2574,7 +2545,7 @@ async function init() {
             textCanvas.style.background = btn.dataset.bg;
         });
     });
-    
+
     document.querySelectorAll('.feed-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.feed-filter-btn').forEach(b => b.classList.remove('active'));
@@ -2583,7 +2554,7 @@ async function init() {
             loadPosts(true);
         });
     });
-    
+
     document.querySelectorAll('.role-chip').forEach(chip => {
         chip.addEventListener('click', () => {
             document.querySelectorAll('.role-chip').forEach(c => c.classList.remove('active'));
@@ -2592,14 +2563,14 @@ async function init() {
             loadPosts(true);
         });
     });
-    
+
     document.getElementById('feedSearch').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             const q = e.target.value.trim();
             if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
         }
     });
-    
+
     const sentinel = document.getElementById('scrollSentinel');
     if (sentinel) {
         const observer = new IntersectionObserver((entries) => {
@@ -2609,13 +2580,13 @@ async function init() {
         });
         observer.observe(sentinel);
     }
-    
+
     document.getElementById('newPostsBarBtn').addEventListener('click', () => {
         newPostsCount = 0;
         document.getElementById('newPostsBar').style.display = 'none';
         loadPosts(true);
     });
-    
+
     document.getElementById('notifBtn').addEventListener('click', () => {
         openModal('modalNotifs');
         loadNotifications();
@@ -2629,14 +2600,14 @@ async function init() {
         loadTrends();
         loadInsights();
     });
-    
+
     document.getElementById('userMenu').addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('userDropdown').classList.toggle('show');
     });
     document.addEventListener('click', () => document.getElementById('userDropdown')?.classList.remove('show'));
     document.getElementById('dropLogout').addEventListener('click', logout);
-    
+
     document.getElementById('menuToggle').addEventListener('click', () => {
         document.getElementById('leftSidebar').classList.add('open');
         document.getElementById('overlay').classList.add('show');
@@ -2652,16 +2623,16 @@ async function init() {
     };
     document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
     document.getElementById('overlay').addEventListener('click', closeSidebar);
-    
+
     document.getElementById('sidebarAvatarClick').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
     document.getElementById('sidebarCoverClick').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
     document.getElementById('myCommAvatar').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
     document.getElementById('myCommCover').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
-    
+
     document.querySelectorAll('.c-modal').forEach(m => {
         m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id); });
     });
-    
+
     document.addEventListener('click', (e) => {
         if (mentionDropdown && !mentionDropdown.contains(e.target) && e.target !== mentionTargetInput) {
             hideMentionSuggestions();

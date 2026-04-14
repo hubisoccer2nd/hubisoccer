@@ -30,9 +30,32 @@
         <span class="c-nav-title" id="navSpaceTitle">Profil</span>
     </div>
     <div class="c-nav-right">
+        <!-- Sélecteur de langue 24 options -->
         <select class="c-lang-picker" id="langSelect">
-            <option value="fr">🇫🇷 FR</option>
-            <option value="en">🇺🇸 EN</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
         </select>
         <button class="c-notif-btn" id="notifBtn">
             <i class="fas fa-bell"></i>
@@ -83,6 +106,8 @@
             <div class="profile-certified" id="profileCertified" style="display:none">
                 <i class="fas fa-check-circle"></i>
             </div>
+            <!-- Indicateur en ligne -->
+            <div class="online-indicator" id="onlineIndicator" style="display:none;" title="En ligne"></div>
         </div>
         <div class="profile-header-content">
             <div class="profile-info">
@@ -94,8 +119,8 @@
                     <span><i class="fas fa-calendar-alt"></i> Inscrit le <span id="profileJoined">...</span></span>
                 </div>
                 <div class="profile-stats">
-                    <div class="stat"><strong id="profileFollowers">0</strong> abonnés</div>
-                    <div class="stat"><strong id="profileFollowing">0</strong> abonnements</div>
+                    <div class="stat clickable" id="statFollowers"><strong id="profileFollowers">0</strong> abonnés</div>
+                    <div class="stat clickable" id="statFollowing"><strong id="profileFollowing">0</strong> abonnements</div>
                     <div class="stat"><strong id="profilePosts">0</strong> publications</div>
                 </div>
             </div>
@@ -103,6 +128,14 @@
                 <!-- Boutons dynamiques -->
             </div>
         </div>
+    </div>
+
+    <!-- Stories de l'utilisateur (si visiteur) -->
+    <div class="profile-stories-section" id="profileStoriesSection" style="display:none;">
+        <div class="stories-title">
+            <h4><i class="fas fa-smile"></i> Stories de <span id="storyOwnerName"></span></h4>
+        </div>
+        <div class="stories-scroll" id="profileStoriesContainer"></div>
     </div>
 
     <!-- Onglets -->
@@ -159,15 +192,113 @@
             <div class="media-grid" id="videosGrid"></div>
         </div>
     </div>
+
+    <!-- Suggestions de communautés similaires -->
+    <div class="profile-suggestions" id="profileSuggestions">
+        <div class="section-head">
+            <h4><i class="fas fa-user-plus"></i> Vous pourriez aussi aimer</h4>
+            <button class="section-refresh" id="refreshSuggestionsBtn" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div id="suggestionsList" class="suggestions-grid"></div>
+    </div>
 </main>
 <!-- ===== FIN CONTENU PRINCIPAL ===== -->
 
-<!-- ===== MODALES (squelettes simplifiés, remplis dynamiquement) ===== -->
-<div id="modalUserProfile" class="c-modal">...</div>
-<div id="modalMedia" class="c-modal">...</div>
-<div id="modalShare" class="c-modal">...</div>
-<div id="modalReport" class="c-modal">...</div>
-<div id="modalConfirm" class="c-modal">...</div>
+<!-- ===== MODALES ===== -->
+
+<!-- Lightbox pour agrandir photo profil / couverture -->
+<div id="lightboxModal" class="lightbox-modal">
+    <span class="lightbox-close" id="lightboxClose">&times;</span>
+    <img id="lightboxImage" src="" alt="">
+</div>
+
+<!-- Modale de confirmation personnalisée -->
+<div id="modalConfirm" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2 id="confirmTitle">Confirmation</h2>
+            <button class="c-modal-close" onclick="closeModal('modalConfirm')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <p id="confirmDesc"></p>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalConfirm')">Annuler</button>
+            <button class="btn-danger" id="confirmActionBtn">Confirmer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale d'édition rapide du profil (appelée pour son propre profil) -->
+<div id="modalEditProfile" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-pen"></i> Modifier ma communauté</h2>
+            <button class="c-modal-close" onclick="closeModal('modalEditProfile')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="c-field"><label>Nom</label><input type="text" class="c-input" id="editCommName"></div>
+            <div class="c-field"><label>Bio</label><textarea class="c-textarea" id="editCommBio" rows="3"></textarea></div>
+            <div class="c-field"><label>Spécialité</label><input type="text" class="c-input" id="editCommSpecialty"></div>
+            <div class="c-field"><label>Site web</label><input type="url" class="c-input" id="editCommWebsite"></div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalEditProfile')">Annuler</button>
+            <button class="btn-primary" id="saveProfileBtn"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale pour followers / following -->
+<div id="modalFollowers" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2 id="followModalTitle">Abonnés</h2>
+            <button class="c-modal-close" onclick="closeModal('modalFollowers')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <ul id="followList" class="users-list"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modale pour signaler -->
+<div id="modalReport" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-flag"></i> Signaler</h2>
+            <button class="c-modal-close" onclick="closeModal('modalReport')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="c-field">
+                <label>Raison <span class="req">*</span></label>
+                <textarea class="c-textarea" id="reportReason" rows="3" placeholder="Pourquoi signalez-vous ce profil ?"></textarea>
+            </div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalReport')">Annuler</button>
+            <button class="btn-danger" id="submitReportBtn"><i class="fas fa-flag"></i> Envoyer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale de partage -->
+<div id="modalShare" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-share-alt"></i> Partager ce profil</h2>
+            <button class="c-modal-close" onclick="closeModal('modalShare')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="share-grid">
+                <button class="share-btn" data-network="facebook"><i class="fab fa-facebook-f"></i><span>Facebook</span></button>
+                <button class="share-btn" data-network="twitter"><i class="fab fa-twitter"></i><span>Twitter/X</span></button>
+                <button class="share-btn" data-network="whatsapp"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></button>
+                <button class="share-btn" data-network="copy"><i class="fas fa-link"></i><span>Copier le lien</span></button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- ===== TOASTS ===== -->
 <div id="toastContainer" class="c-toast-container"></div>

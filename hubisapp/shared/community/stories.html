@@ -15,7 +15,7 @@
 <body class="stories-body">
 
 <!-- ===== DEBUT LOADER ===== -->
-<div class="c-loader" id="globalLoader">
+<div class="c-loader" id="globalLoader" style="display:flex;">
     <div class="c-spinner"></div>
     <span class="c-loader-text">Chargement des stories...</span>
 </div>
@@ -47,9 +47,9 @@
     <!-- Contenu liste -->
     <div class="stories-list-content">
 
-        <!-- Ma story -->
+        <!-- My HubIS Mood -->
         <div class="my-story-section">
-            <h3>Ma story</h3>
+            <h3>My HubIS Mood</h3>
             <div class="my-story-card" id="myStoryCard">
                 <div class="my-story-add" id="myStoryAdd">
                     <div class="my-story-avatar-wrap">
@@ -73,9 +73,9 @@
             </div>
         </div>
 
-        <!-- Stories des abonnements -->
+        <!-- HubIS Enjoy -->
         <div class="following-stories-section">
-            <h3>Récentes</h3>
+            <h3>HubIS Enjoy</h3>
             <div id="followingStoriesList" class="following-stories-list"></div>
         </div>
 
@@ -217,7 +217,7 @@
                 <div class="story-drop-area" id="storyDropArea">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p>Glisse ton fichier ici ou <span class="upload-link">clique pour choisir</span></p>
-                    <small>Photo : max 10 Mo · Vidéo : max 100 Mo</small>
+                    <small>Photo : max 10 Mo · Vidéo : max 900 Mo (≈15 min)</small>
                 </div>
                 <input type="file" id="storyFileInput" accept="image/*,video/*" style="display:none">
                 <div class="story-file-preview" id="storyFilePreview" style="display:none"></div>
@@ -243,18 +243,21 @@
             </div>
 
             <div class="c-field">
-    <label>Durée d'affichage</label>
-    <select class="c-select" id="storyDurationSelect">
-        <option value="5">5 secondes</option>
-        <option value="10" selected>10 secondes</option>
-        <option value="15">15 secondes</option>
-        <option value="30">30 secondes</option>
-        <option value="60">1 minute</option>
-        <option value="300">5 minutes</option>
-        <option value="600">10 minutes</option>
-        <option value="900">15 minutes</option>
-    </select>
-</div>
+                <label>Durée d'affichage</label>
+                <select class="c-select" id="storyDurationSelect">
+                    <option value="5">5 secondes</option>
+                    <option value="10" selected>10 secondes</option>
+                    <option value="15">15 secondes</option>
+                    <option value="30">30 secondes</option>
+                    <option value="60">1 minute</option>
+                    <option value="300">5 minutes</option>
+                    <option value="600">10 minutes</option>
+                    <option value="900">15 minutes</option>
+                    <option value="1800">30 minutes</option>
+                    <option value="2700">45 minutes</option>
+                    <option value="3600">60 minutes</option>
+                </select>
+            </div>
 
             <div class="c-field">
                 <label>Visibilité</label>

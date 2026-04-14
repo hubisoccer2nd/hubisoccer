@@ -1612,51 +1612,53 @@ function openMediaModal(url, type) {
 
 // ========== DEBUT : GESTION DES STORIES ==========
 async function loadStories() {
-    const { data: myStories } = await sb.from('supabaseAuthPrive_stories')
-        .select('*')
-        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
-        .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(5);
-    
-    const { data: following } = await sb.from('supabaseAuthPrive_follows')
-        .select('following_hubisoccer_id')
-        .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
-    const followingIds = (following || []).map(f => f.following_hubisoccer_id);
-    
-    let followingStories = [];
-    if (followingIds.length > 0) {
-        const { data } = await sb.from('supabaseAuthPrive_stories')
-            .select('*, author:supabaseAuthPrive_profiles!user_hubisoccer_id(hubisoccer_id, full_name, display_name, avatar_url)')
-            .in('user_hubisoccer_id', followingIds)
+    try {
+        const { data: myStories } = await sb.from('supabaseAuthPrive_stories')
+            .select('*')
+            .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
             .gt('expires_at', new Date().toISOString())
             .order('created_at', { ascending: false })
             .limit(5);
-        followingStories = data || [];
-    }
-    
-    const myContainer = document.getElementById('myStoriesContainer');
-    if (myContainer) {
-        if (myStories && myStories.length > 0) {
-            myContainer.innerHTML = myStories.map(s => makeStoryItem(s, currentProfile, true)).join('');
-        } else {
-            myContainer.innerHTML = '<p style="font-size:0.8rem;color:var(--gray);padding:0 8px;">Aucune story</p>';
+        
+        const { data: following } = await sb.from('supabaseAuthPrive_follows')
+            .select('following_hubisoccer_id')
+            .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
+        const followingIds = (following || []).map(f => f.following_hubisoccer_id);
+        
+        let followingStories = [];
+        if (followingIds.length > 0) {
+            const { data } = await sb.from('supabaseAuthPrive_stories')
+                .select('*, author:supabaseAuthPrive_profiles!user_hubisoccer_id(hubisoccer_id, full_name, display_name, avatar_url)')
+                .in('user_hubisoccer_id', followingIds)
+                .gt('expires_at', new Date().toISOString())
+                .order('created_at', { ascending: false })
+                .limit(5);
+            followingStories = data || [];
         }
-    }
-    
-    const followingContainer = document.getElementById('followingStoriesContainer');
-    if (followingContainer) {
-        if (followingStories.length > 0) {
-            followingContainer.innerHTML = followingStories.map(s => makeStoryItem(s, s.author, false)).join('');
-        } else {
-            followingContainer.innerHTML = '<p style="font-size:0.8rem;color:var(--gray);padding:0 8px;">Aucune story</p>';
+        
+        const myContainer = document.getElementById('myStoriesContainer');
+        if (myContainer) {
+            if (myStories && myStories.length > 0) {
+                myContainer.innerHTML = myStories.map(s => makeStoryItem(s, currentProfile, true)).join('');
+            } else {
+                myContainer.innerHTML = '<p style="font-size:0.8rem;color:var(--gray);padding:0 8px;">Aucune story</p>';
+            }
         }
-    }
-    
-    const totalStories = (myStories?.length || 0) + followingStories.length;
-    const moreWrap = document.getElementById('storiesMoreWrap');
-    if (moreWrap) {
-        moreWrap.style.display = totalStories > 5 ? 'block' : 'none';
+        
+        const followingContainer = document.getElementById('followingStoriesContainer');
+        if (followingContainer) {
+            if (followingStories.length > 0) {
+                followingContainer.innerHTML = followingStories.map(s => makeStoryItem(s, s.author, false)).join('');
+            } else {
+                followingContainer.innerHTML = '<p style="font-size:0.8rem;color:var(--gray);padding:0 8px;">Aucune story</p>';
+            }
+        }
+        
+        const totalStories = (myStories?.length || 0) + followingStories.length;
+        const moreWrap = document.getElementById('storiesMoreWrap');
+        if (moreWrap) moreWrap.style.display = totalStories > 5 ? 'block' : 'none';
+    } catch (err) {
+        console.warn('Erreur stories:', err);
     }
 }
 
@@ -2064,11 +2066,12 @@ function subscribeToNewPosts() {
 
 // ========== DEBUT : UTILISATEURS BLOQUÉS ==========
 async function loadBlockedUsers() {
+    const list = document.getElementById('blockedUsersList');
     try {
-        const { data } = await sb.from('supabaseAuthPrive_blocked_users')
+        const { data } = await sb
+            .from('supabaseAuthPrive_blocked_users')
             .select('blocked_hubisoccer_id, blocked:supabaseAuthPrive_profiles!blocked_hubisoccer_id(full_name, display_name, avatar_url, feed_id)')
             .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
-        const list = document.getElementById('blockedUsersList');
         if (!data || data.length === 0) {
             list.innerHTML = '<li style="padding:16px;color:var(--gray);text-align:center">Aucun utilisateur bloqué</li>';
             return;
@@ -2083,7 +2086,7 @@ async function loadBlockedUsers() {
             </li>`;
         }).join('');
     } catch (err) {
-        toast('Erreur chargement utilisateurs bloqués', 'error');
+        list.innerHTML = '<li style="padding:16px;color:var(--gray);text-align:center">Aucun utilisateur bloqué</li>';
     }
 }
 

@@ -634,7 +634,6 @@ function buildSidebarMenu(roleCode) {
     document.getElementById('sidebarBlockedUsers')?.addEventListener('click', e => { e.preventDefault(); openModal('modalBlockedUsers'); loadBlockedUsers(); });
 }
 // ========== FIN : MENU LATERAL ==========
-
 // ============================================================
 //  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
 //  PARTIE 2 : Chargement communauté, posts, rendu
@@ -1604,7 +1603,6 @@ function openMediaModal(url, type) {
     openModal('modalMedia');
 }
 // ========== FIN : ACTIONS SUR LES MENUS ==========
-
 // ============================================================
 //  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
 //  PARTIE 4 : Stories, lives, suggestions, followers, tendances,
@@ -1787,28 +1785,36 @@ async function uploadStory() {
 
 // ========== DEBUT : GESTION DES LIVES ==========
 async function loadLives() {
-    const { data } = await sb.from('supabaseAuthPrive_live_sessions')
-        .select('*, host:supabaseAuthPrive_profiles!host_hubisoccer_id(full_name, display_name, avatar_url)')
-        .eq('is_active', true)
-        .order('started_at', { ascending: false })
-        .limit(5);
     const container = document.getElementById('livesList');
-    if (!data || data.length === 0) {
+    try {
+        const { data } = await sb
+            .from('supabaseAuthPrive_live_sessions')
+            .select('*, host:supabaseAuthPrive_profiles!host_hubisoccer_id(full_name, display_name, avatar_url)')
+            .eq('is_active', true)
+            .order('started_at', { ascending: false })
+            .limit(5);
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Aucun live en ce moment</p>';
+            return;
+        }
+        
+        container.innerHTML = data.map(l => {
+            const host = l.host || {};
+            const name = host.full_name || host.display_name || 'Hôte';
+            return `<div class="live-sidebar-item" onclick="window.location.href='live.html?room=${l.id}'">
+                <img class="live-avatar" src="${host.avatar_url || '../../img/user-default.jpg'}" alt="">
+                <div class="live-info-small">
+                    <div class="live-name">${escapeHtml(name)}</div>
+                    <div class="live-viewers"><i class="fas fa-eye"></i> ${l.viewers_count || 0}</div>
+                </div>
+                <div class="live-dot"></div>
+            </div>`;
+        }).join('');
+    } catch (err) {
+        console.warn('Lives non disponibles:', err);
         container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Aucun live en ce moment</p>';
-        return;
     }
-    container.innerHTML = data.map(l => {
-        const host = l.host || {};
-        const name = host.full_name || host.display_name || 'Hôte';
-        return `<div class="live-sidebar-item" onclick="window.location.href='live.html?room=${l.id}'">
-            <img class="live-avatar" src="${host.avatar_url || '../../img/user-default.jpg'}" alt="">
-            <div class="live-info-small">
-                <div class="live-name">${escapeHtml(name)}</div>
-                <div class="live-viewers"><i class="fas fa-eye"></i> ${l.viewers_count || 0}</div>
-            </div>
-            <div class="live-dot"></div>
-        </div>`;
-    }).join('');
 }
 // ========== FIN : GESTION DES LIVES ==========
 
@@ -1866,24 +1872,45 @@ window.followUser = async function(userId, btn) {
 };
 
 async function loadFollowers() {
-    const { data } = await sb.from('supabaseAuthPrive_follows')
-        .select('follower:supabaseAuthPrive_profiles!follower_hubisoccer_id(full_name, display_name, avatar_url, feed_id)')
-        .eq('following_hubisoccer_id', currentProfile.hubisoccer_id)
-        .order('created_at', { ascending: false })
-        .limit(5);
     const container = document.getElementById('followersList');
-    if (!data || data.length === 0) {
+    try {
+        // 1. Récupérer les IDs des followers
+        const { data: follows } = await sb
+            .from('supabaseAuthPrive_follows')
+            .select('follower_hubisoccer_id')
+            .eq('following_hubisoccer_id', currentProfile.hubisoccer_id);
+        const followerIds = (follows || []).map(f => f.follower_hubisoccer_id);
+        
+        // 2. Si aucun follower, message et sortie
+        if (followerIds.length === 0) {
+            container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Pas encore d\'abonnés</p>';
+            return;
+        }
+        
+        // 3. Requête uniquement si IDs existent
+        const { data } = await sb
+            .from('supabaseAuthPrive_profiles')
+            .select('hubisoccer_id, full_name, display_name, avatar_url, feed_id')
+            .in('hubisoccer_id', followerIds)
+            .order('created_at', { ascending: false })
+            .limit(5);
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Pas encore d\'abonnés</p>';
+            return;
+        }
+        
+        container.innerHTML = data.map(user => {
+            const name = user.full_name || user.display_name || 'Utilisateur';
+            return `<div class="follower-item" onclick="openUserProfile('${user.hubisoccer_id}')">
+                <img class="follower-avatar" src="${user.avatar_url || '../../img/user-default.jpg'}" alt="">
+                <span class="follower-name">${escapeHtml(name)}</span>
+            </div>`;
+        }).join('');
+    } catch (err) {
+        console.warn('Erreur chargement followers:', err);
         container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Pas encore d\'abonnés</p>';
-        return;
     }
-    container.innerHTML = data.map(f => {
-        const user = f.follower || {};
-        const name = user.full_name || user.display_name || 'Utilisateur';
-        return `<div class="follower-item" onclick="openUserProfile('${user.hubisoccer_id}')">
-            <img class="follower-avatar" src="${user.avatar_url || '../../img/user-default.jpg'}" alt="">
-            <span class="follower-name">${escapeHtml(name)}</span>
-        </div>`;
-    }).join('');
 }
 
 async function openFollowersModal(type) {
@@ -2237,7 +2264,6 @@ async function startAudioRecording(postId) {
     }
 }
 // ========== FIN : ENREGISTREMENT AUDIO ==========
-
 // ============================================================
 //  HUBISOCCER — FEED.JS (VERSION CORRIGÉE - ERREURS 400)
 //  PARTIE 5 : Publication, modales, initialisation, fin

@@ -1544,3 +1544,99 @@
         box-shadow: 0 0 60px rgba(0,0,0,0.6);
     }
 }
+
+/* ===== CORRECTIF MODALE UPLOAD ===== */
+.c-modal .c-field {
+    margin-bottom: 18px;
+}
+
+.c-modal .c-field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 6px;
+}
+
+.c-modal .c-field .hint {
+    color: var(--gray);
+    font-weight: 400;
+    font-size: 0.75rem;
+    margin-left: 4px;
+}
+
+.c-modal .c-input,
+.c-modal .c-select,
+.c-modal .c-textarea {
+    width: 100%;
+    padding: 11px 16px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    background: var(--gray-xlight);
+    transition: var(--transition);
+    color: var(--dark);
+}
+
+.c-modal .c-input:focus,
+.c-modal .c-select:focus,
+.c-modal .c-textarea:focus {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px var(--primary-xlight);
+}
+
+.c-modal .c-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.c-modal .c-select {
+    cursor: pointer;
+}
+
+.c-modal .btn-primary,
+.c-modal .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    border-radius: var(--radius-pill);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.c-modal .btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+}
+
+.c-modal .btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.c-modal .btn-ghost {
+    background: var(--gray-xlight);
+    color: var(--gray-dark);
+    border: 1px solid var(--gray-light);
+}
+
+.c-modal .btn-ghost:hover {
+    background: var(--primary-xlight);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Style pour le sélecteur de durée et visibilité */
+#storyDurationSelect,
+#storyVisibilitySelect {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23551B8C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 36px;
+}

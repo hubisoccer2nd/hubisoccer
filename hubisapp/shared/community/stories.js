@@ -1,11 +1,6 @@
 // ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION FINALE CORRIGÉE)
+//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
 //  PARTIE 1/5 : Variables globales, session, chargement liste
-// ============================================================
-//  Corrections :
-//  - Stories toujours affichées même si déjà vues
-//  - Titres alignés sur feed.html
-//  - Gestion des erreurs améliorée
 // ============================================================
 
 'use strict';
@@ -13,31 +8,31 @@
 // sb, currentUser, currentProfile sont déjà définis dans session.js
 
 // ========== DEBUT : VARIABLES GLOBALES ==========
-let myStory = null;
-let storyGroups = [];
-let activeGroupIdx = 0;
-let activeStoryIdx = 0;
-let isPaused = false;
-let isMuted = false;
-let storyTimer = null;
-let storyStartTime = null;
-let groupStartTime = null;
-const MAX_GROUP_DURATION = 10 * 60 * 1000; // 10 minutes par groupe
+let myStory           = null;
+let storyGroups       = [];
+let activeGroupIdx    = 0;
+let activeStoryIdx    = 0;
+let isPaused          = false;
+let isMuted           = false;
+let storyTimer        = null;
+let storyStartTime    = null;
+let groupStartTime    = null;
+const MAX_GROUP_DURATION = 10 * 60 * 1000;
 let currentStoryDuration = 10000;
-let mediaRecorder = null;
-let audioChunks = [];
-let recInterval = null;
-let recSeconds = 0;
-let pendingAudioBlob = null;
+let mediaRecorder     = null;
+let audioChunks       = [];
+let recInterval       = null;
+let recSeconds        = 0;
+let pendingAudioBlob  = null;
 let pendingMediaReplyFile = null;
 let pendingMediaReplyType = null;
-let selectedCoinsAmount = 0;
-let storyUploadFile = null;
-let storyTextBg = 'linear-gradient(135deg,#551B8C,#3d1266)';
-let touchStartX = 0;
-let touchStartY = 0;
-let touchStartTime = 0;
-let longPressTimer = null;
+let selectedCoinsAmount   = 0;
+let storyUploadFile   = null;
+let storyTextBg       = 'linear-gradient(135deg,#551B8C,#3d1266)';
+let touchStartX       = 0;
+let touchStartY       = 0;
+let touchStartTime    = 0;
+let longPressTimer    = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DEBUT : SESSION ET AVATAR ==========
@@ -45,8 +40,7 @@ async function initSessionAndProfile() {
     try {
         const auth = await requireAuth();
         if (!auth) return false;
-        
-        // Vérifier que l'utilisateur a bien une communauté
+
         const { data: comm } = await sb
             .from('supabaseAuthPrive_communities')
             .select('id')
@@ -57,12 +51,12 @@ async function initSessionAndProfile() {
             window.location.href = 'feed-setup.html';
             return false;
         }
-        
+
         document.getElementById('navUserName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
         updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'navUserAvatar', 'navUserAvatarInitials');
         updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'myStoryAvatar', 'myStoryAvatarInitials');
         updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'svReplyAvatar', 'svReplyAvatarInitials');
-        
+
         return true;
     } catch (err) {
         toast('Erreur de session : ' + err.message, 'error');
@@ -100,14 +94,14 @@ async function loadAllStories() {
             .limit(1)
             .maybeSingle();
         myStory = mine;
-        
+
         // Récupérer les abonnements
         const { data: follows } = await sb
             .from('supabaseAuthPrive_follows')
             .select('following_hubisoccer_id')
             .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
         const followIds = (follows || []).map(f => f.following_hubisoccer_id).filter(id => id !== currentProfile.hubisoccer_id);
-        
+
         let allStories = [];
         if (followIds.length > 0) {
             const { data } = await sb
@@ -118,22 +112,18 @@ async function loadAllStories() {
                 .order('created_at', { ascending: false });
             allStories = data || [];
         }
-        
+
         // Regrouper par auteur
         const groups = {};
         allStories.forEach(s => {
-            // Ignorer les stories dont l'auteur est masqué
             if (s.hidden_for && s.hidden_for.includes(currentProfile.hubisoccer_id)) return;
-            
             if (!groups[s.user_hubisoccer_id]) {
                 groups[s.user_hubisoccer_id] = { profile: s.author, stories: [], userId: s.user_hubisoccer_id };
             }
             groups[s.user_hubisoccer_id].stories.push(s);
         });
         storyGroups = Object.values(groups);
-        
-        // CORRECTION : Ne plus séparer par vues/non vues. Tout afficher dans "HubIS Enjoy".
-        // Les stories déjà vues seront simplement grisées visuellement.
+
         renderStoriesList();
         setupMyStoryUI();
     } catch (err) {
@@ -146,18 +136,15 @@ async function loadAllStories() {
 function renderStoriesList() {
     const followList = document.getElementById('followingStoriesList');
     
-    // Afficher tous les groupes dans "HubIS Enjoy", sans distinction vu/non vu
     if (storyGroups.length === 0) {
         followList.innerHTML = '<p style="color:var(--gray);font-size:0.82rem;padding:10px 0">Aucune nouvelle story.</p>';
     } else {
         followList.innerHTML = storyGroups.map((g, i) => makeStoryListItem(g, i)).join('');
     }
-    
-    // Titres des sections alignés sur feed.html
+
     document.querySelector('.following-stories-section h3').textContent = 'HubIS Enjoy';
     document.querySelector('.my-story-section h3').textContent = 'My HubIS Mood';
-    
-    // Attacher les écouteurs
+
     document.querySelectorAll('.story-list-item').forEach(el => {
         el.addEventListener('click', () => openStoryGroup(parseInt(el.dataset.groupIdx)));
     });
@@ -189,7 +176,7 @@ function makeStoryListItem(g, idx) {
 function setupMyStoryUI() {
     const addEl = document.getElementById('myStoryAdd');
     const existingEl = document.getElementById('myStoryExisting');
-    
+
     if (myStory) {
         addEl.style.display = 'none';
         existingEl.style.display = 'flex';
@@ -205,7 +192,7 @@ function setupMyStoryUI() {
         addEl.style.display = 'flex';
         existingEl.style.display = 'none';
     }
-    
+
     addEl.removeEventListener('click', openUploadModal);
     addEl.addEventListener('click', openUploadModal);
 }
@@ -215,7 +202,7 @@ function openUploadModal() {
 }
 // ========== FIN : RENDU DE LA LISTE ==========
 // ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION FINALE CORRIGÉE)
+//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
 //  PARTIE 2/5 : Visionneuse (ouverture, rendu, timers, navigation)
 // ============================================================
 
@@ -239,7 +226,6 @@ function viewMyStory() {
         toast('Vous n\'avez pas de story active', 'info');
         return;
     }
-    // Créer un groupe temporaire complet pour sa propre story
     const tempGroup = {
         profile: currentProfile,
         stories: [myStory],
@@ -257,7 +243,6 @@ function renderCurrentStory() {
     const group = storyGroups[activeGroupIdx];
     if (!group) { closeViewer(); return; }
 
-    // Vérifier la limite de 10 minutes par groupe
     if (groupStartTime && Date.now() - groupStartTime >= MAX_GROUP_DURATION) {
         toast('Limite de 10 minutes atteinte pour ce groupe', 'info');
         goToNextGroup();
@@ -270,7 +255,6 @@ function renderCurrentStory() {
     clearStoryTimer();
     buildProgressBars(group.stories.length);
 
-    // Afficher les infos de l'auteur
     const p = group.profile || {};
     const name = p.full_name || p.display_name || 'Utilisateur';
     updateAvatarDisplay(p.avatar_url, name, 'svAuthorAvatar', 'svAuthorAvatarInitials');
@@ -278,12 +262,10 @@ function renderCurrentStory() {
     document.getElementById('svAuthorTime').textContent = timeSince(story.created_at);
     document.getElementById('svAuthorHandle').textContent = p.feed_id ? '@' + p.feed_id : '';
 
-    // Afficher les bons boutons d'options
     const isOwn = story.user_hubisoccer_id === currentProfile.hubisoccer_id;
     document.getElementById('svOptionsBtn').style.display = isOwn ? 'flex' : 'none';
     document.getElementById('svOtherOptionsBtn').style.display = !isOwn ? 'flex' : 'none';
 
-    // Légende
     const captionEl = document.getElementById('svCaption');
     if (story.caption) {
         captionEl.textContent = story.caption;
@@ -292,16 +274,13 @@ function renderCurrentStory() {
         captionEl.style.display = 'none';
     }
 
-    // Zone média
     const mediaArea = document.getElementById('svMediaArea');
     const mediaLoader = document.getElementById('svMediaLoader');
     mediaLoader.style.display = 'flex';
-    // Nettoyer les anciens médias (garder le loader)
     while (mediaArea.children.length > 1) {
         mediaArea.removeChild(mediaArea.lastChild);
     }
 
-    // Définir la durée (minimum 5 secondes, maximum 3600 = 60 minutes)
     currentStoryDuration = Math.min(3600, Math.max(5, story.duration || 10)) * 1000;
 
     if (story.media_type === 'video') {
@@ -334,7 +313,6 @@ function renderCurrentStory() {
         document.getElementById('svMuteBtn').style.display = 'none';
         startStoryTimer(currentStoryDuration);
     } else {
-        // Image
         const img = document.createElement('img');
         img.className = 'sv-story-img';
         img.src = story.media_url;
@@ -351,7 +329,6 @@ function renderCurrentStory() {
         document.getElementById('svMuteBtn').style.display = 'none';
     }
 
-    // Marquer comme vue
     markStoryViewed(story.id, group.userId);
 }
 
@@ -478,11 +455,9 @@ function closeViewer() {
     document.querySelectorAll('.sv-story-video').forEach(v => { v.pause(); v.src = ''; });
     document.getElementById('storyViewerPage').style.display = 'none';
     document.getElementById('storiesListPage').style.display = 'block';
-    // Retirer le groupe temporaire "ma story" s'il existe
     if (storyGroups[0]?.isOwn) {
         storyGroups.shift();
     }
-    // Rafraîchir la liste après visionnage
     loadAllStories();
 }
 
@@ -562,13 +537,12 @@ async function markStoryViewed(storyId, authorId) {
             viewed_at: new Date().toISOString()
         }, { onConflict: 'story_id, viewer_hubisoccer_id' });
     } catch (err) {
-        // Silencieux, ne pas bloquer l'expérience
         console.warn('Erreur marquage vue:', err);
     }
 }
 // ========== FIN : MARQUAGE DES VUES ==========
 // ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION FINALE CORRIGÉE)
+//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
 //  PARTIE 3/5 : Réponses, réactions, HubiCoins, vues
 // ============================================================
 
@@ -911,11 +885,9 @@ async function sendHubiCoins() {
 // ========== FIN : HUBICOINS ==========
 
 // ========== DEBUT : AFFICHAGE DES VUES (CORRIGÉ) ==========
-// Variable temporaire pour stocker la story courante hors visionneuse
 let currentOptionsStory = null;
 
 function openMyStoryOptions() {
-    // Déterminer la story à utiliser
     let story = null;
     if (document.getElementById('storyViewerPage').style.display === 'flex') {
         const group = storyGroups[activeGroupIdx];
@@ -972,7 +944,7 @@ function closeViewersPanel() {
 window.closeViewersPanel = closeViewersPanel;
 // ========== FIN : AFFICHAGE DES VUES ==========
 // ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION FINALE CORRIGÉE)
+//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
 //  PARTIE 4/5 : Options story, suppression, masquage, upload
 // ============================================================
 
@@ -1007,12 +979,10 @@ async function deleteStory() {
         toast('Story supprimée', 'success');
         closeModal('modalConfirmDelete');
         
-        // Mettre à jour myStory si c'était la story courante
         if (myStory && myStory.id === story.id) {
             myStory = null;
         }
         
-        // Retirer du groupe courant
         const group = storyGroups[activeGroupIdx];
         if (group) {
             group.stories = group.stories.filter(s => s.id !== story.id);
@@ -1067,7 +1037,6 @@ async function muteStoryAuthor() {
     if (!group || !story) return;
     
     try {
-        // Ajouter l'utilisateur courant dans hidden_for pour toutes les stories de ce groupe
         for (const s of group.stories) {
             const { data: storyData } = await sb
                 .from('supabaseAuthPrive_stories')
@@ -1084,7 +1053,6 @@ async function muteStoryAuthor() {
         }
         toast('Stories masquées', 'success');
         
-        // Retirer le groupe de la liste et passer au suivant
         storyGroups.splice(activeGroupIdx, 1);
         if (storyGroups.length === 0) {
             closeViewer();
@@ -1165,7 +1133,7 @@ function initTextStyleButtons() {
 }
 // ========== FIN : STYLES TEXTE ==========
 // ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION FINALE CORRIGÉE)
+//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
 //  PARTIE 5/5 : Publication, initialisation, fin du fichier
 // ============================================================
 
@@ -1176,14 +1144,14 @@ async function publishStory() {
     const visibility = document.getElementById('storyVisibilitySelect').value;
     const activeType = document.querySelector('.story-type-tab.active')?.dataset.type || 'photo';
     const btn = document.getElementById('publishStoryBtn');
-    
+
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publication...';
-    
+
     try {
         const expires = new Date();
         expires.setHours(expires.getHours() + 24);
-        
+
         let storyData = {
             user_hubisoccer_id: currentProfile.hubisoccer_id,
             caption: caption || null,
@@ -1192,7 +1160,7 @@ async function publishStory() {
             expires_at: expires.toISOString(),
             hidden_for: []
         };
-        
+
         if (activeType === 'text') {
             const textContent = document.getElementById('storyTextContent').value.trim();
             if (!textContent) {
@@ -1219,13 +1187,13 @@ async function publishStory() {
             storyData.media_url = urlData.publicUrl;
             storyData.media_type = storyUploadFile.type.startsWith('video/') ? 'video' : 'image';
         }
-        
+
         const { error } = await sb.from('supabaseAuthPrive_stories').insert(storyData);
         if (error) throw error;
-        
+
         closeModal('modalUploadStory');
         toast('Story publiée ! 🎉', 'success');
-        
+
         // Nettoyage
         storyUploadFile = null;
         document.getElementById('storyCaptionInput').value = '';
@@ -1233,7 +1201,7 @@ async function publishStory() {
         document.getElementById('storyFilePreview').style.display = 'none';
         document.getElementById('storyDropArea').style.display = 'flex';
         document.getElementById('storyFileInput').value = '';
-        
+
         await loadAllStories();
     } catch (err) {
         toast('Erreur publication : ' + err.message, 'error');
@@ -1252,17 +1220,17 @@ async function init() {
         setLoader(false);
         return;
     }
-    
+
     await loadAllStories();
     await loadCoinsBalance();
     setLoader(false);
     document.getElementById('storiesListPage').style.display = 'block';
-    
+
     // Vérifier si un groupe/story est demandé dans l'URL
     const params = new URLSearchParams(window.location.search);
     const groupUserId = params.get('user') || params.get('group');
     const storyId = params.get('story');
-    
+
     if (groupUserId) {
         const idx = storyGroups.findIndex(g => g.userId === groupUserId);
         if (idx >= 0) {
@@ -1276,30 +1244,30 @@ async function init() {
             }
         }
     }
-    
+
     // Écouteurs visionneuse
     document.getElementById('svCloseBtn').addEventListener('click', closeViewer);
     document.getElementById('svOptionsBtn').addEventListener('click', openSvOptions);
     document.getElementById('svOtherOptionsBtn').addEventListener('click', openSvOptions);
     document.getElementById('svMuteBtn').addEventListener('click', toggleMute);
-    
+
     // Réponse texte
     const replyInput = document.getElementById('svReplyInput');
     replyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendTextReply(); });
     replyInput.addEventListener('focus', pauseStory);
     replyInput.addEventListener('blur', resumeStory);
     document.getElementById('svReplySendBtn').addEventListener('click', sendTextReply);
-    
+
     // Audio
     document.getElementById('svSendAudioBtn').addEventListener('click', startAudioRecorder);
     document.getElementById('svRecStop').addEventListener('click', stopAudioRecorder);
     document.getElementById('svRecCancel').addEventListener('click', cancelAudioRecorder);
-    
+
     // Média
     document.getElementById('svSendPhotoBtn').addEventListener('click', () => openMediaReply('photo'));
     document.getElementById('svSendVideoBtn').addEventListener('click', () => openMediaReply('video'));
     document.getElementById('sendMediaReplyBtn').addEventListener('click', sendMediaReply);
-    
+
     // Réactions
     document.getElementById('svLikeStoryBtn').addEventListener('click', () => {
         pauseStory();
@@ -1308,7 +1276,7 @@ async function init() {
     document.querySelectorAll('.story-react-grid span').forEach(el => {
         el.addEventListener('click', () => sendStoryReaction(el.dataset.emoji));
     });
-    
+
     // HubiCoins
     document.getElementById('svSendCoinsBtn').addEventListener('click', () => {
         pauseStory();
@@ -1328,7 +1296,7 @@ async function init() {
         selectedCoinsAmount = 0;
     });
     document.getElementById('confirmSendCoinsBtn').addEventListener('click', sendHubiCoins);
-    
+
     // Upload story
     const storyDropArea = document.getElementById('storyDropArea');
     storyDropArea.addEventListener('click', () => document.getElementById('storyFileInput').click());
@@ -1347,7 +1315,7 @@ async function init() {
         const file = e.target.files[0];
         if (file) handleStoryFileSelect(file);
     });
-    
+
     // Tabs (photo/vidéo/texte)
     document.querySelectorAll('.story-type-tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -1358,19 +1326,19 @@ async function init() {
             document.getElementById('storyTextZone').style.display = type === 'text' ? 'block' : 'none';
         });
     });
-    
+
     // Styles texte
     initTextStyleButtons();
-    
+
     // Publier
     document.getElementById('publishStoryBtn').addEventListener('click', publishStory);
-    
+
     // Ouvrir modale upload
     document.getElementById('myStoryAdd').addEventListener('click', () => openModal('modalUploadStory'));
-    
+
     // Suppression confirmée
     document.getElementById('deleteStoryConfirmBtn').addEventListener('click', deleteStory);
-    
+
     // Fermeture modales
     document.querySelectorAll('.c-modal').forEach(m => {
         m.addEventListener('click', (e) => {
@@ -1380,7 +1348,7 @@ async function init() {
             }
         });
     });
-    
+
     // Raccourcis clavier visionneuse
     document.addEventListener('keydown', (e) => {
         if (document.getElementById('storyViewerPage').style.display !== 'flex') return;

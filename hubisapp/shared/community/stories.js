@@ -1,8 +1,6 @@
 // ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 1/5 : Variables globales, session, chargement liste
+//  HUBISOCCER — STORIES.JS (VERSION FINALE – TOUTES ERREURS 400 CORRIGÉES)
 // ============================================================
-
 'use strict';
 
 // sb, currentUser, currentProfile sont déjà définis dans session.js
@@ -17,7 +15,7 @@ let isMuted           = false;
 let storyTimer        = null;
 let storyStartTime    = null;
 let groupStartTime    = null;
-const MAX_GROUP_DURATION = 10 * 60 * 1000;
+const MAX_GROUP_DURATION = 10 * 60 * 1000; // 10 minutes par groupe
 let currentStoryDuration = 10000;
 let mediaRecorder     = null;
 let audioChunks       = [];
@@ -33,6 +31,7 @@ let touchStartX       = 0;
 let touchStartY       = 0;
 let touchStartTime    = 0;
 let longPressTimer    = null;
+let currentOptionsStory = null;       // stocke la story courante pour les options
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DEBUT : SESSION ET AVATAR ==========
@@ -135,15 +134,17 @@ async function loadAllStories() {
 // ========== DEBUT : RENDU DE LA LISTE ==========
 function renderStoriesList() {
     const followList = document.getElementById('followingStoriesList');
-    
+
     if (storyGroups.length === 0) {
         followList.innerHTML = '<p style="color:var(--gray);font-size:0.82rem;padding:10px 0">Aucune nouvelle story.</p>';
     } else {
         followList.innerHTML = storyGroups.map((g, i) => makeStoryListItem(g, i)).join('');
     }
 
-    document.querySelector('.following-stories-section h3').textContent = 'HubIS Enjoy';
-    document.querySelector('.my-story-section h3').textContent = 'My HubIS Mood';
+    const followingSectionTitle = document.querySelector('.following-stories-section h3');
+    if (followingSectionTitle) followingSectionTitle.textContent = 'HubIS Enjoy';
+    const mySectionTitle = document.querySelector('.my-story-section h3');
+    if (mySectionTitle) mySectionTitle.textContent = 'My HubIS Mood';
 
     document.querySelectorAll('.story-list-item').forEach(el => {
         el.addEventListener('click', () => openStoryGroup(parseInt(el.dataset.groupIdx)));
@@ -201,15 +202,11 @@ function openUploadModal() {
     openModal('modalUploadStory');
 }
 // ========== FIN : RENDU DE LA LISTE ==========
-// ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 2/5 : Visionneuse (ouverture, rendu, timers, navigation)
-// ============================================================
 
 // ========== DEBUT : OUVERTURE DE LA VISIONNEUSE ==========
 function openStoryGroup(groupIdx) {
     if (groupIdx < 0 || groupIdx >= storyGroups.length) return;
-    
+
     activeGroupIdx = groupIdx;
     activeStoryIdx = 0;
     groupStartTime = Date.now();
@@ -541,10 +538,6 @@ async function markStoryViewed(storyId, authorId) {
     }
 }
 // ========== FIN : MARQUAGE DES VUES ==========
-// ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 3/5 : Réponses, réactions, HubiCoins, vues
-// ============================================================
 
 // ========== DEBUT : RÉPONSES TEXTE ==========
 async function sendTextReply() {
@@ -884,9 +877,7 @@ async function sendHubiCoins() {
 }
 // ========== FIN : HUBICOINS ==========
 
-// ========== DEBUT : AFFICHAGE DES VUES (CORRIGÉ) ==========
-let currentOptionsStory = null;
-
+// ========== DEBUT : AFFICHAGE DES VUES ==========
 function openMyStoryOptions() {
     let story = null;
     if (document.getElementById('storyViewerPage').style.display === 'flex') {
@@ -895,12 +886,12 @@ function openMyStoryOptions() {
     } else {
         story = myStory;
     }
-    
+
     if (!story) {
         toast('Aucune story trouvée', 'warning');
         return;
     }
-    
+
     currentOptionsStory = story;
     openModal('modalMyStoryOptions');
 }
@@ -910,7 +901,7 @@ async function showStoryViewers() {
     closeModal('modalMyStoryOptions');
     const story = currentOptionsStory || storyGroups[activeGroupIdx]?.stories[activeStoryIdx];
     if (!story) return;
-    
+
     try {
         const { data } = await sb
             .from('supabaseAuthPrive_story_views')
@@ -943,10 +934,6 @@ function closeViewersPanel() {
 }
 window.closeViewersPanel = closeViewersPanel;
 // ========== FIN : AFFICHAGE DES VUES ==========
-// ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 4/5 : Options story, suppression, masquage, upload
-// ============================================================
 
 // ========== DEBUT : OPTIONS DE SA PROPRE STORY ==========
 function openSvOptions() {
@@ -973,16 +960,16 @@ window.confirmDeleteStory = confirmDeleteStory;
 async function deleteStory() {
     const story = currentOptionsStory || storyGroups[activeGroupIdx]?.stories[activeStoryIdx];
     if (!story || story.user_hubisoccer_id !== currentProfile.hubisoccer_id) return;
-    
+
     try {
         await sb.from('supabaseAuthPrive_stories').delete().eq('id', story.id);
         toast('Story supprimée', 'success');
         closeModal('modalConfirmDelete');
-        
+
         if (myStory && myStory.id === story.id) {
             myStory = null;
         }
-        
+
         const group = storyGroups[activeGroupIdx];
         if (group) {
             group.stories = group.stories.filter(s => s.id !== story.id);
@@ -994,7 +981,7 @@ async function deleteStory() {
                 renderCurrentStory();
             }
         }
-        
+
         setupMyStoryUI();
         renderStoriesList();
     } catch (err) {
@@ -1035,7 +1022,7 @@ async function muteStoryAuthor() {
     const group = storyGroups[activeGroupIdx];
     const story = group?.stories[activeStoryIdx];
     if (!group || !story) return;
-    
+
     try {
         for (const s of group.stories) {
             const { data: storyData } = await sb
@@ -1052,7 +1039,7 @@ async function muteStoryAuthor() {
             }
         }
         toast('Stories masquées', 'success');
-        
+
         storyGroups.splice(activeGroupIdx, 1);
         if (storyGroups.length === 0) {
             closeViewer();
@@ -1132,10 +1119,6 @@ function initTextStyleButtons() {
     });
 }
 // ========== FIN : STYLES TEXTE ==========
-// ============================================================
-//  HUBISOCCER — STORIES.JS (VERSION CORRIGÉE - ERREURS 400)
-//  PARTIE 5/5 : Publication, initialisation, fin du fichier
-// ============================================================
 
 // ========== DEBUT : PUBLICATION D'UNE STORY ==========
 async function publishStory() {

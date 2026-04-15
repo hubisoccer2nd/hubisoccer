@@ -1,10 +1,5 @@
-// ============================================================
 //  HUBISOCCER — FEED.JS (VERSION FINALE – TOUTES ERREURS 400 CORRIGÉES)
-// ============================================================
 'use strict';
-
-// sb, currentUser, currentProfile sont déjà définis dans session.js
-
 // ========== DEBUT : VARIABLES GLOBALES ==========
 let myCommunity = null;
 let posts = [];
@@ -43,7 +38,6 @@ let mentionsCache = [];
 let lastMentionsFetch = 0;
 const MENTIONS_CACHE_TTL = 120000;
 // ========== FIN : VARIABLES GLOBALES ==========
-
 // ========== DEBUT : CONSTANTES ROLES ET DASHBOARDS ==========
 const ROLE_DASHBOARD_MAP = {
     'FOOT': '../../footballeur/dashboard/foot-dash.html',
@@ -108,7 +102,6 @@ const ALL_ROLES = [
     { code: 'TOURN', label: 'Gestionnaire tournoi', icon: '🏆' }
 ];
 // ========== FIN : CONSTANTES ROLES ==========
-
 // ========== DEBUT : SESSION ET AVATAR ==========
 async function initSessionAndProfile() {
     const auth = await requireAuth();
@@ -155,7 +148,6 @@ function updateAvatarDisplay(avatarUrl, fullName) {
     apply(sidebarAvatar, sidebarInitials, avatarUrl);
 }
 // ========== FIN : SESSION ET AVATAR ==========
-
 // ========== DEBUT : MENU LATERAL (28 ROLES COMPLET) ==========
 function buildSidebarMenu(roleCode) {
     const nav = document.getElementById('sidebarNav');
@@ -627,7 +619,6 @@ function buildSidebarMenu(roleCode) {
     document.getElementById('sidebarBlockedUsers')?.addEventListener('click', e => { e.preventDefault(); openModal('modalBlockedUsers'); loadBlockedUsers(); });
 }
 // ========== FIN : MENU LATERAL ==========
-
 // ========== DEBUT : CHARGEMENT DE LA COMMUNAUTE ==========
 async function loadMyCommunity() {
     const { data, error } = await sb
@@ -675,7 +666,6 @@ async function loadMyCommunity() {
     return data;
 }
 // ========== FIN : CHARGEMENT DE LA COMMUNAUTE ==========
-
 // ========== DEBUT : CHARGEMENT DES POSTS ==========
 async function loadPosts(reset = false) {
     if (loadingPosts) return;
@@ -768,7 +758,6 @@ async function loadPosts(reset = false) {
     }
 }
 // ========== FIN : CHARGEMENT DES POSTS ==========
-
 // ========== DEBUT : RENDU DES POSTS ==========
 function renderPosts() {
     const feed = document.getElementById('postsFeed');
@@ -944,7 +933,6 @@ function attachPostEvents() {
     });
 }
 // ========== FIN : RENDU DES POSTS ==========
-
 // ========== DEBUT : INTERACTIONS POSTS (LIKE, DISLIKE, SAVE, REPOST) ==========
 async function toggleLike(postId, btn) {
     const isLiked = likedPosts.has(postId);
@@ -1052,7 +1040,6 @@ async function repostPost(postId) {
     await sb.from('supabaseAuthPrive_posts').update({ reposts_count: (post.reposts_count || 0) + 1 }).eq('id', postId);
 }
 // ========== FIN : INTERACTIONS POSTS ==========
-
 // ========== DEBUT : GESTION DES COMMENTAIRES ==========
 async function toggleComments(postId, btn) {
     const section = document.getElementById(`comments_${postId}`);
@@ -1425,7 +1412,6 @@ async function loadMoreComments(postId) {
     toast('Chargement des commentaires supplémentaires... (fonction à implémenter)', 'info');
 }
 // ========== FIN : GESTION DES COMMENTAIRES ==========
-
 // ========== DEBUT : VOTE SONDAGE ==========
 async function votePoll(postId, optionIdx) {
     const post = posts.find(p => p.id === postId);
@@ -1449,7 +1435,6 @@ async function votePoll(postId, optionIdx) {
     renderPosts();
 }
 // ========== FIN : VOTE SONDAGE ==========
-
 // ========== DEBUT : ACTIONS SUR LES MENUS ==========
 function togglePostMenu(btn, postId, isOwn) {
     const menu = document.getElementById(`menu_${postId}`);
@@ -1587,7 +1572,6 @@ function openMediaModal(url, type) {
     openModal('modalMedia');
 }
 // ========== FIN : ACTIONS SUR LES MENUS ==========
-
 // ========== DEBUT : GESTION DES STORIES ==========
 async function loadStories() {
     try {
@@ -1762,7 +1746,6 @@ async function uploadStory() {
     }
 }
 // ========== FIN : GESTION DES STORIES ==========
-
 // ========== DEBUT : GESTION DES LIVES ==========
 async function loadLives() {
     const container = document.getElementById('livesList');
@@ -1797,7 +1780,6 @@ async function loadLives() {
     }
 }
 // ========== FIN : GESTION DES LIVES ==========
-
 // ========== DEBUT : SUGGESTIONS ET ABONNÉS ==========
 async function loadSuggestions() {
     const { data: following } = await sb.from('supabaseAuthPrive_follows')
@@ -1841,14 +1823,40 @@ async function loadSuggestions() {
 }
 
 window.followUser = async function(userId, btn) {
-    await sb.from('supabaseAuthPrive_follows').insert({
-        follower_hubisoccer_id: currentProfile.hubisoccer_id,
-        following_hubisoccer_id: userId
-    });
     btn.textContent = 'Abonné';
     btn.classList.add('following');
-    toast('Abonné !', 'success');
-    loadSuggestions();
+    
+    try {
+        await sb.from('supabaseAuthPrive_follows').insert({
+            follower_hubisoccer_id: currentProfile.hubisoccer_id,
+            following_hubisoccer_id: userId
+        });
+        const { data: myComm } = await sb
+            .from('supabaseAuthPrive_communities')
+            .select('following_count')
+            .eq('hubisoccer_id', currentProfile.hubisoccer_id)
+            .single();
+        const newFollowing = (myComm?.following_count || 0) + 1;
+        await sb.from('supabaseAuthPrive_communities')
+            .update({ following_count: newFollowing })
+            .eq('hubisoccer_id', currentProfile.hubisoccer_id);
+        const { data: targetComm } = await sb
+            .from('supabaseAuthPrive_communities')
+            .select('followers_count')
+            .eq('hubisoccer_id', userId)
+            .single();
+        const newFollowers = (targetComm?.followers_count || 0) + 1;
+        await sb.from('supabaseAuthPrive_communities')
+            .update({ followers_count: newFollowers })
+            .eq('hubisoccer_id', userId);
+        
+        toast('Abonné !', 'success');
+        loadSuggestions();
+    } catch (err) {
+        toast('Erreur : ' + err.message, 'error');
+        btn.textContent = 'Suivre';
+        btn.classList.remove('following');
+    }
 };
 
 async function loadFollowers() {
@@ -1924,7 +1932,6 @@ async function openFollowersModal(type) {
     }).join('');
 }
 // ========== FIN : SUGGESTIONS ET ABONNÉS ==========
-
 // ========== DEBUT : TENDANCES ET INSIGHTS ==========
 async function loadTrends() {
     const { data } = await sb.from('supabaseAuthPrive_posts')
@@ -1982,7 +1989,6 @@ async function loadInsights() {
     document.getElementById('insightEngagement').textContent = engagementRate + '%';
 }
 // ========== FIN : TENDANCES ET INSIGHTS ==========
-
 // ========== DEBUT : GESTION DES NOTIFICATIONS ==========
 async function loadNotifications() {
     const { data } = await sb.from('supabaseAuthPrive_notifications')
@@ -2038,7 +2044,6 @@ function subscribeToNewPosts() {
         .subscribe();
 }
 // ========== FIN : GESTION DES NOTIFICATIONS ==========
-
 // ========== DEBUT : UTILISATEURS BLOQUÉS ==========
 async function loadBlockedUsers() {
     const list = document.getElementById('blockedUsersList');
@@ -2075,7 +2080,6 @@ window.unblockUser = async function(userId) {
     toast('Utilisateur débloqué', 'success');
 };
 // ========== FIN : UTILISATEURS BLOQUÉS ==========
-
 // ========== DEBUT : POSTS MASQUÉS ==========
 async function loadHiddenPosts() {
     const { data } = await sb.from('supabaseAuthPrive_hidden_posts')
@@ -2107,7 +2111,6 @@ window.unhidePost = async function(postId) {
     loadPosts(true);
 };
 // ========== FIN : POSTS MASQUÉS ==========
-
 // ========== DEBUT : COLLECTIONS (POSTS SAUVEGARDÉS) ==========
 async function loadCollections() {
     const { data } = await sb.from('supabaseAuthPrive_saved_posts')
@@ -2138,7 +2141,6 @@ window.removeFromCollection = async function(postId) {
     toast('Retiré des collections', 'info');
 };
 // ========== FIN : COLLECTIONS ==========
-
 // ========== DEBUT : MENTIONS ==========
 async function handleMentionInput(e) {
     const val = e.target.value;
@@ -2219,7 +2221,6 @@ function hideMentionSuggestions() {
     }
 }
 // ========== FIN : MENTIONS ==========
-
 // ========== DEBUT : ENREGISTREMENT AUDIO ==========
 async function startAudioRecording(postId) {
     if (isRecording) return;
@@ -2242,7 +2243,6 @@ async function startAudioRecording(postId) {
     }
 }
 // ========== FIN : ENREGISTREMENT AUDIO ==========
-
 // ========== DEBUT : PUBLICATION DE POST ==========
 async function publishPost() {
     const content = document.getElementById('postContent').value.trim();
@@ -2341,7 +2341,6 @@ async function publishPost() {
     }
 }
 // ========== FIN : PUBLICATION DE POST ==========
-
 // ========== DEBUT : MODALES DE CRÉATION (SONDAGE, ÉVÉNEMENT, PROGRAMMATION) ==========
 function createPoll() {
     const q = document.getElementById('pollQuestion').value.trim();
@@ -2375,7 +2374,6 @@ function confirmSchedule() {
     toast(`Publication programmée pour ${new Date(scheduledAt).toLocaleString('fr-FR')}`, 'success');
 }
 // ========== FIN : MODALES DE CRÉATION ==========
-
 // ========== DEBUT : APERÇU ET ÉDITION DE PROFIL ==========
 function showPreview() {
     const content = document.getElementById('postContent').value.trim();
@@ -2424,7 +2422,6 @@ function cancelMedia() {
     document.getElementById('mediaPreview').style.display = 'none';
 }
 // ========== FIN : APERÇU ET ÉDITION DE PROFIL ==========
-
 // ========== DEBUT : INITIALISATION PRINCIPALE ==========
 async function init() {
     setLoader(true, 'Vérification de votre session...', 20);
@@ -2452,8 +2449,6 @@ async function init() {
 
     setLoader(false);
     subscribeToNewPosts();
-
-    // ========== ÉCOUTEURS D'ÉVÉNEMENTS ==========
     document.getElementById('publishBtn').addEventListener('click', publishPost);
     document.getElementById('attachMediaBtn').addEventListener('click', () => document.getElementById('mediaInput').click());
     document.getElementById('mediaInput').addEventListener('change', (e) => {
@@ -2640,7 +2635,6 @@ async function init() {
     });
 }
 // ========== FIN : INITIALISATION PRINCIPALE ==========
-
 // ========== DEBUT : EXPOSITION GLOBALE DES FONCTIONS ==========
 window.openUserProfile = openUserProfile;
 window.openUserByHandle = openUserByHandle;
@@ -2678,11 +2672,5 @@ window.unhidePost = unhidePost;
 window.removeFromCollection = removeFromCollection;
 window.handleNotifClick = handleNotifClick;
 // ========== FIN : EXPOSITION GLOBALE ==========
-
-// ========== DEBUT : DÉMARRAGE ==========
 document.addEventListener('DOMContentLoaded', init);
 // ========== FIN : DÉMARRAGE ==========
-
-// ============================================================
-//  FIN DU FICHIER FEED.JS
-// ============================================================

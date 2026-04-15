@@ -20,6 +20,7 @@ let mediaFile = null;
 let commentMediaFile = null;
 let commentAudioFile = null;
 let storyUploadFile = null;
+let storyTextBg = 'linear-gradient(135deg,#551B8C,#3d1266)';
 let pendingPoll = null;
 let pendingEvent = null;
 let scheduledAt = null;

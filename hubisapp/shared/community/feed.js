@@ -19,6 +19,7 @@ let loadingPosts = false;
 let mediaFile = null;
 let commentMediaFile = null;
 let commentAudioFile = null;
+let storyUploadFile = null;
 let pendingPoll = null;
 let pendingEvent = null;
 let scheduledAt = null;
@@ -1660,35 +1661,47 @@ function handleStoryFileSelect(file) {
     storyUploadFile = file;
     const url = URL.createObjectURL(file);
     const preview = document.getElementById('storyFilePreview');
+    const dropArea = document.getElementById('storyDropArea');
     const isVideo = file.type.startsWith('video/');
-    preview.innerHTML = `
-        <div style="position:relative">
-            ${isVideo ? `<video src="${url}" controls style="width:100%;max-height:240px;border-radius:8px"></video>` : `<img src="${url}" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px">`}
-            <button class="story-preview-remove" onclick="clearStoryFile()"><i class="fas fa-times"></i></button>
-        </div>
-        <p style="font-size:0.72rem;color:var(--gray);margin-top:6px;text-align:center">${file.name} — ${(file.size/1024/1024).toFixed(1)} Mo</p>
-    `;
-    preview.style.display = 'block';
-    document.getElementById('storyDropArea').style.display = 'none';
+    
+    if (preview) {
+        preview.innerHTML = `
+            <div style="position:relative">
+                ${isVideo ? `<video src="${url}" controls style="width:100%;max-height:240px;border-radius:8px"></video>` : `<img src="${url}" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px">`}
+                <button class="story-preview-remove" onclick="clearStoryFile()"><i class="fas fa-times"></i></button>
+            </div>
+            <p style="font-size:0.72rem;color:var(--gray);margin-top:6px;text-align:center">${file.name} — ${(file.size/1024/1024).toFixed(1)} Mo</p>
+        `;
+        preview.style.display = 'block';
+    }
+    if (dropArea) dropArea.style.display = 'none';
+    
     toast(`✅ Fichier "${file.name}" sélectionné`, 'success');
 }
 
 window.clearStoryFile = function() {
     storyUploadFile = null;
-    document.getElementById('storyFilePreview').style.display = 'none';
-    document.getElementById('storyFilePreview').innerHTML = '';
-    document.getElementById('storyDropArea').style.display = 'flex';
-    document.getElementById('storyFileInput').value = '';
+    const preview = document.getElementById('storyFilePreview');
+    const dropArea = document.getElementById('storyDropArea');
+    if (preview) {
+        preview.style.display = 'none';
+        preview.innerHTML = '';
+    }
+    if (dropArea) dropArea.style.display = 'flex';
+    const fileInput = document.getElementById('storyFileInput');
+    if (fileInput) fileInput.value = '';
+    toast('Fichier retiré', 'info');
 };
 
 async function uploadStory() {
-    const file = storyUploadFile;
     const isTextStory = document.querySelector('.story-type-tab.active')?.dataset.type === 'text';
     const textContent = document.getElementById('storyTextContent')?.value.trim();
     const caption = document.getElementById('storyCaption').value.trim();
-    const duration = parseInt(document.getElementById('storyDurationSelect').value);
-
-    if (!isTextStory && !file) {
+    const duration = parseInt(document.getElementById('storyDurationSelect').value) || 10;
+    const btn = document.getElementById('uploadStoryBtn');
+    
+    // Validation
+    if (!isTextStory && !storyUploadFile) {
         toast('Sélectionne un fichier', 'warning');
         return;
     }
@@ -1696,53 +1709,63 @@ async function uploadStory() {
         toast('Écris quelque chose pour ta story texte', 'warning');
         return;
     }
-
-    const btn = document.getElementById('uploadStoryBtn');
+    
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publication...';
-
+    
     try {
         let mediaUrl = null;
         let mediaType = 'text';
-        let textBg = document.getElementById('storyTextCanvas').style.background;
-
-        if (!isTextStory && file) {
-            const ext = file.name.split('.').pop();
+        const textBg = storyTextBg || 'linear-gradient(135deg,#551B8C,#3d1266)';
+        
+        if (!isTextStory && storyUploadFile) {
+            const ext = storyUploadFile.name.split('.').pop();
             const path = `stories/${currentProfile.hubisoccer_id}/${Date.now()}.${ext}`;
-            const { error: upErr } = await sb.storage.from('post_media').upload(path, file);
+            const { error: upErr } = await sb.storage.from('post_media').upload(path, storyUploadFile);
             if (upErr) throw upErr;
             const { data: urlData } = sb.storage.from('post_media').getPublicUrl(path);
             mediaUrl = urlData.publicUrl;
-            mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+            mediaType = storyUploadFile.type.startsWith('video/') ? 'video' : 'image';
         }
-
+        
         const expires = new Date();
         expires.setSeconds(expires.getSeconds() + duration);
-
+        
         const storyData = {
             user_hubisoccer_id: currentProfile.hubisoccer_id,
             media_url: mediaUrl,
             media_type: mediaType,
             caption: caption || (isTextStory ? textContent : null),
-            duration,
-            expires_at: expires.toISOString()
+            duration: Math.min(3600, Math.max(5, duration)),
+            expires_at: expires.toISOString(),
+            hidden_for: []
         };
-
+        
         if (isTextStory) {
             storyData.text_bg = textBg;
             storyData.text_content = textContent;
         }
-
+        
         await sb.from('supabaseAuthPrive_stories').insert(storyData);
-
+        
         closeModal('modalStoryUpload');
-        toast('Story publiée !', 'success');
-        loadStories();
+        toast('Story publiée ! 🎉', 'success');
+        
+        // Nettoyage
+        storyUploadFile = null;
+        document.getElementById('storyCaptionInput').value = '';
+        if (document.getElementById('storyTextContent')) document.getElementById('storyTextContent').value = '';
+        clearStoryFile();
+        
+        // Recharger les stories dans le feed
+        if (typeof loadStories === 'function') {
+            loadStories();
+        }
     } catch (err) {
-        toast('Erreur: ' + err.message, 'error');
+        toast('Erreur publication : ' + err.message, 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-upload"></i> Publier la story';
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publier la story';
     }
 }
 // ========== FIN : GESTION DES STORIES ==========
@@ -2434,18 +2457,19 @@ function cancelMedia() {
 }
 // ========== FIN : APERÇU ET ÉDITION DE PROFIL ==========
 // ========== DEBUT : INITIALISATION PRINCIPALE ==========
+// ========== DEBUT : INITIALISATION PRINCIPALE ==========
 async function init() {
     setLoader(true, 'Vérification de votre session...', 20);
     const sessionOk = await initSessionAndProfile();
     if (!sessionOk) return;
-
+    
     setLoader(true, 'Vérification de ta communauté...', 40);
     const comm = await loadMyCommunity();
     if (!comm) return;
-
+    
     setLoader(true, 'Chargement du feed...', 60);
     await loadPosts(true);
-
+    
     setLoader(true, 'Chargement de la communauté...', 80);
     await Promise.all([
         loadStories(),
@@ -2457,9 +2481,10 @@ async function init() {
         loadInsights(),
         loadBlockedUsers().catch(() => {})
     ]);
-
+    
     setLoader(false);
     subscribeToNewPosts();
+    
     document.getElementById('publishBtn').addEventListener('click', publishPost);
     document.getElementById('attachMediaBtn').addEventListener('click', () => document.getElementById('mediaInput').click());
     document.getElementById('mediaInput').addEventListener('change', (e) => {
@@ -2475,7 +2500,7 @@ async function init() {
                 <button class="remove-media-btn" onclick="cancelMedia()"><i class="fas fa-times"></i></button>
             </div>`;
     });
-
+    
     document.getElementById('pollBtn').addEventListener('click', () => openModal('modalPoll'));
     document.getElementById('eventBtn').addEventListener('click', () => openModal('modalEvent'));
     document.getElementById('scheduleBtn').addEventListener('click', () => openModal('modalSchedule'));
@@ -2486,21 +2511,21 @@ async function init() {
         toast(pinPostActive ? 'Post épinglé activé' : 'Épinglage désactivé', 'info');
     });
     document.getElementById('previewPostBtn').addEventListener('click', showPreview);
-
+    
     document.getElementById('createPollBtn').addEventListener('click', createPoll);
     document.getElementById('createEventBtn').addEventListener('click', createEvent);
     document.getElementById('confirmScheduleBtn').addEventListener('click', confirmSchedule);
-
+    
     document.getElementById('submitReportBtn').addEventListener('click', submitReport);
     document.getElementById('confirmBlockBtn').addEventListener('click', confirmBlock);
     document.querySelectorAll('.share-btn').forEach(btn => btn.addEventListener('click', () => sharePost(btn.dataset.network)));
-
+    
     document.getElementById('sendReplyBtn').addEventListener('click', () => sendReply(replyCommentId, replyPostId));
-
+    
     document.getElementById('addStoryBtn').addEventListener('click', () => openModal('modalStoryUpload'));
     document.getElementById('uploadStoryBtn').addEventListener('click', uploadStory);
     document.getElementById('seeMoreStoriesBtn').addEventListener('click', () => window.location.href = 'stories.html');
-
+    
     const storyTabs = document.querySelectorAll('.story-type-tab');
     const uploadZone = document.getElementById('storyUploadZone');
     const textZone = document.getElementById('storyTextZone');
@@ -2508,7 +2533,7 @@ async function init() {
     const fileInput = document.getElementById('storyFileInput');
     const textCanvas = document.getElementById('storyTextCanvas');
     const styleBtns = document.querySelectorAll('.txt-style-btn');
-
+    
     storyTabs.forEach(tab => {
         tab.addEventListener('click', () => {
             storyTabs.forEach(t => t.classList.remove('active'));
@@ -2523,7 +2548,7 @@ async function init() {
             }
         });
     });
-
+    
     dropArea.addEventListener('click', () => fileInput.click());
     dropArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -2538,20 +2563,21 @@ async function init() {
         const file = e.dataTransfer.files[0];
         if (file) handleStoryFileSelect(file);
     });
-
+    
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) handleStoryFileSelect(file);
     });
-
+    
     styleBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             styleBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            storyTextBg = btn.dataset.bg; // ← CORRECTION : Mise à jour de la variable globale
             textCanvas.style.background = btn.dataset.bg;
         });
     });
-
+    
     document.querySelectorAll('.feed-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.feed-filter-btn').forEach(b => b.classList.remove('active'));
@@ -2560,7 +2586,7 @@ async function init() {
             loadPosts(true);
         });
     });
-
+    
     document.querySelectorAll('.role-chip').forEach(chip => {
         chip.addEventListener('click', () => {
             document.querySelectorAll('.role-chip').forEach(c => c.classList.remove('active'));
@@ -2569,14 +2595,14 @@ async function init() {
             loadPosts(true);
         });
     });
-
+    
     document.getElementById('feedSearch').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             const q = e.target.value.trim();
             if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
         }
     });
-
+    
     const sentinel = document.getElementById('scrollSentinel');
     if (sentinel) {
         const observer = new IntersectionObserver((entries) => {
@@ -2586,13 +2612,13 @@ async function init() {
         });
         observer.observe(sentinel);
     }
-
+    
     document.getElementById('newPostsBarBtn').addEventListener('click', () => {
         newPostsCount = 0;
         document.getElementById('newPostsBar').style.display = 'none';
         loadPosts(true);
     });
-
+    
     document.getElementById('notifBtn').addEventListener('click', () => {
         openModal('modalNotifs');
         loadNotifications();
@@ -2606,14 +2632,14 @@ async function init() {
         loadTrends();
         loadInsights();
     });
-
+    
     document.getElementById('userMenu').addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('userDropdown').classList.toggle('show');
     });
     document.addEventListener('click', () => document.getElementById('userDropdown')?.classList.remove('show'));
     document.getElementById('dropLogout').addEventListener('click', logout);
-
+    
     document.getElementById('menuToggle').addEventListener('click', () => {
         document.getElementById('leftSidebar').classList.add('open');
         document.getElementById('overlay').classList.add('show');
@@ -2629,22 +2655,23 @@ async function init() {
     };
     document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
     document.getElementById('overlay').addEventListener('click', closeSidebar);
-
+    
     document.getElementById('sidebarAvatarClick').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
     document.getElementById('sidebarCoverClick').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
     document.getElementById('myCommAvatar').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
     document.getElementById('myCommCover').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
-
+    
     document.querySelectorAll('.c-modal').forEach(m => {
         m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id); });
     });
-
+    
     document.addEventListener('click', (e) => {
         if (mentionDropdown && !mentionDropdown.contains(e.target) && e.target !== mentionTargetInput) {
             hideMentionSuggestions();
         }
     });
 }
+// ========== FIN : INITIALISATION PRINCIPALE ==========
 // ========== FIN : INITIALISATION PRINCIPALE ==========
 // ========== DEBUT : EXPOSITION GLOBALE DES FONCTIONS ==========
 window.openUserProfile = openUserProfile;

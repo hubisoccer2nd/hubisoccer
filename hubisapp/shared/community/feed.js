@@ -1752,16 +1752,21 @@ async function loadLives() {
     try {
         const { data } = await sb
             .from('supabaseAuthPrive_live_sessions')
-            .select('*, host:supabaseAuthPrive_profiles!host_hubisoccer_id(full_name, display_name, avatar_url)')
+            .select(`
+                *,
+                host:host_hubisoccer_id(
+                    hubisoccer_id, full_name, display_name, avatar_url
+                )
+            `)
             .eq('is_active', true)
             .order('started_at', { ascending: false })
             .limit(5);
-
+        
         if (!data || data.length === 0) {
             container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Aucun live en ce moment</p>';
             return;
         }
-
+        
         container.innerHTML = data.map(l => {
             const host = l.host || {};
             const name = host.full_name || host.display_name || 'Hôte';
@@ -1775,7 +1780,6 @@ async function loadLives() {
             </div>`;
         }).join('');
     } catch (err) {
-        console.warn('Lives non disponibles:', err);
         container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Aucun live en ce moment</p>';
     }
 }
@@ -2050,12 +2054,19 @@ async function loadBlockedUsers() {
     try {
         const { data } = await sb
             .from('supabaseAuthPrive_blocked_users')
-            .select('blocked_hubisoccer_id, blocked:supabaseAuthPrive_profiles!blocked_hubisoccer_id(full_name, display_name, avatar_url, feed_id)')
+            .select(`
+                blocked_hubisoccer_id,
+                blocked:supabaseAuthPrive_profiles!blocked_hubisoccer_id(
+                    hubisoccer_id, full_name, display_name, avatar_url, feed_id
+                )
+            `)
             .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
+        
         if (!data || data.length === 0) {
             list.innerHTML = '<li style="padding:16px;color:var(--gray);text-align:center">Aucun utilisateur bloqué</li>';
             return;
         }
+        
         list.innerHTML = data.map(b => {
             const user = b.blocked || {};
             const name = user.full_name || user.display_name || 'Utilisateur';

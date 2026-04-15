@@ -1,9 +1,8 @@
 // ============================================================
-//  HUBISOCCER — FEED-SETUP.JS (VERSION CORRIGÉE - PROBLÈME 1)
+//  HUBISOCCER — FEED-SETUP.JS (VERSION CORRIGÉE – PATCH 400)
 // ============================================================
-//  Correction : crypto.subtle remplacé par hachage pure JS
-//  Auteur : HubISoccer
-//  Date   : 2026-04-13
+//  Correction : suppression des colonnes msg_id, svtr_id, gt_id
+//  de la mise à jour du profil (elles n'existent pas dans profiles).
 // ============================================================
 
 'use strict';
@@ -281,7 +280,7 @@ function generateSocialIds(feedId) {
     // Pour obtenir plus de longueur, on hache le hash avec une graine différente
     const hash2 = cyrb53(combined, 1);
     const hash3 = cyrb53(combined, 2);
-    
+
     // Construction des IDs :
     // msg_id : 32 caractères = hash64 (16) + première moitié de hash2 (8) + deuxième moitié de hash3 (8)
     const msg_id = 'msg_' + (hash64 + hash2.substring(0,8) + hash3.substring(8,16)).substring(0,32);
@@ -289,7 +288,7 @@ function generateSocialIds(feedId) {
     const svtr_id = 'svtr_' + (hash2.substring(0,8) + hash3.substring(0,8));
     // gt_id : 16 caractères = deuxième moitié de hash64 + deuxième moitié de hash2
     const gt_id = 'gt_' + (hash64.substring(8,16) + hash2.substring(8,16));
-    
+
     return {
         feed_id: feedId,
         msg_id: msg_id,
@@ -524,11 +523,10 @@ async function createCommunity() {
         }
 
         setLoader(true, 'Mise à jour de ton profil...', 95);
+        // CORRECTION : On ne met plus à jour msg_id, svtr_id, gt_id
+        // car ces colonnes n'existent pas dans supabaseAuthPrive_profiles
         await sb.from('supabaseAuthPrive_profiles').update({
             feed_id: handle,
-            msg_id: socialIds.msg_id,
-            svtr_id: socialIds.svtr_id,
-            gt_id: socialIds.gt_id,
             community_avatar: avatarUrl,
             community_cover: coverUrl
         }).eq('hubisoccer_id', uid);

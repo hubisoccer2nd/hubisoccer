@@ -1714,7 +1714,7 @@ window.clearStoryFile = function() {
     if (dropArea) dropArea.style.display = 'flex';
     const fileInput = document.getElementById('storyFileInput');
     if (fileInput) fileInput.value = '';
-    toast('Fichier retiré', 'info');
+    // toast('Fichier retiré', 'info');
 };
 
 async function uploadStory() {

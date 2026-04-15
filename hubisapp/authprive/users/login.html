@@ -92,17 +92,20 @@
     </style>
 </head>
 <body>
-<!-- ===== VÉRIFICATION DU RÔLE (script critique) ===== -->
+<!-- ===== VÉRIFICATION DU RÔLE (script critique corrigé – sans erreur visible) ===== -->
 <script>
-    // Début vérification rôle
     (function() {
         const urlParams = new URLSearchParams(window.location.search);
         const role = urlParams.get('role');
-        if (!role) { window.location.replace('role-select.html?mode=login'); throw new Error('Redirection'); }
+        if (!role) {
+            window.location.replace('role-select.html?mode=login');
+            return;   // Arrête l'exécution sans lever d'erreur
+        }
         window.__HUBI_ROLE = role;
-        document.addEventListener('DOMContentLoaded', function() { document.getElementById('mainContent').style.display = 'block'; });
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('mainContent').style.display = 'block';
+        });
     })();
-    // Fin vérification rôle
 </script>
 
 <!-- ===== NAVBAR ===== -->

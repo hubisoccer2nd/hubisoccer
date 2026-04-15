@@ -1,5 +1,17 @@
-//  HUBISOCCER — FEED.JS (VERSION FINALE – TOUTES ERREURS 400 CORRIGÉES)
+// ============================================================
+//  HUBISOCCER — FEED.JS (VERSION CORRIGÉE – EXPIRATION 24H)
+// ============================================================
+//  Corrections :
+//  - expires_at fixé à 24h (indépendant de la durée d'affichage)
+//  - Vérifications de sécurité pour éviter les erreurs null
+//  - Nettoyage robuste des champs après publication
+//  - Toutes les fonctions sont présentes et définies
+// ============================================================
+
 'use strict';
+
+// sb, currentUser, currentProfile sont déjà définis dans session.js
+
 // ========== DEBUT : VARIABLES GLOBALES ==========
 let myCommunity = null;
 let posts = [];
@@ -40,6 +52,7 @@ let mentionsCache = [];
 let lastMentionsFetch = 0;
 const MENTIONS_CACHE_TTL = 120000;
 // ========== FIN : VARIABLES GLOBALES ==========
+
 // ========== DEBUT : CONSTANTES ROLES ET DASHBOARDS ==========
 const ROLE_DASHBOARD_MAP = {
     'FOOT': '../../footballeur/dashboard/foot-dash.html',
@@ -104,6 +117,7 @@ const ALL_ROLES = [
     { code: 'TOURN', label: 'Gestionnaire tournoi', icon: '🏆' }
 ];
 // ========== FIN : CONSTANTES ROLES ==========
+
 // ========== DEBUT : SESSION ET AVATAR ==========
 async function initSessionAndProfile() {
     const auth = await requireAuth();
@@ -150,6 +164,7 @@ function updateAvatarDisplay(avatarUrl, fullName) {
     apply(sidebarAvatar, sidebarInitials, avatarUrl);
 }
 // ========== FIN : SESSION ET AVATAR ==========
+
 // ========== DEBUT : MENU LATERAL (28 ROLES COMPLET) ==========
 function buildSidebarMenu(roleCode) {
     const nav = document.getElementById('sidebarNav');
@@ -621,6 +636,7 @@ function buildSidebarMenu(roleCode) {
     document.getElementById('sidebarBlockedUsers')?.addEventListener('click', e => { e.preventDefault(); openModal('modalBlockedUsers'); loadBlockedUsers(); });
 }
 // ========== FIN : MENU LATERAL ==========
+
 // ========== DEBUT : CHARGEMENT DE LA COMMUNAUTE ==========
 async function loadMyCommunity() {
     const { data, error } = await sb
@@ -668,6 +684,7 @@ async function loadMyCommunity() {
     return data;
 }
 // ========== FIN : CHARGEMENT DE LA COMMUNAUTE ==========
+
 // ========== DEBUT : CHARGEMENT DES POSTS ==========
 async function loadPosts(reset = false) {
     if (loadingPosts) return;
@@ -760,6 +777,7 @@ async function loadPosts(reset = false) {
     }
 }
 // ========== FIN : CHARGEMENT DES POSTS ==========
+
 // ========== DEBUT : RENDU DES POSTS ==========
 function renderPosts() {
     const feed = document.getElementById('postsFeed');
@@ -935,6 +953,7 @@ function attachPostEvents() {
     });
 }
 // ========== FIN : RENDU DES POSTS ==========
+
 // ========== DEBUT : INTERACTIONS POSTS (LIKE, DISLIKE, SAVE, REPOST) ==========
 async function toggleLike(postId, btn) {
     const isLiked = likedPosts.has(postId);
@@ -1042,6 +1061,7 @@ async function repostPost(postId) {
     await sb.from('supabaseAuthPrive_posts').update({ reposts_count: (post.reposts_count || 0) + 1 }).eq('id', postId);
 }
 // ========== FIN : INTERACTIONS POSTS ==========
+
 // ========== DEBUT : GESTION DES COMMENTAIRES ==========
 async function toggleComments(postId, btn) {
     const section = document.getElementById(`comments_${postId}`);
@@ -1414,6 +1434,7 @@ async function loadMoreComments(postId) {
     toast('Chargement des commentaires supplémentaires... (fonction à implémenter)', 'info');
 }
 // ========== FIN : GESTION DES COMMENTAIRES ==========
+
 // ========== DEBUT : VOTE SONDAGE ==========
 async function votePoll(postId, optionIdx) {
     const post = posts.find(p => p.id === postId);
@@ -1437,6 +1458,7 @@ async function votePoll(postId, optionIdx) {
     renderPosts();
 }
 // ========== FIN : VOTE SONDAGE ==========
+
 // ========== DEBUT : ACTIONS SUR LES MENUS ==========
 function togglePostMenu(btn, postId, isOwn) {
     const menu = document.getElementById(`menu_${postId}`);
@@ -1574,6 +1596,7 @@ function openMediaModal(url, type) {
     openModal('modalMedia');
 }
 // ========== FIN : ACTIONS SUR LES MENUS ==========
+
 // ========== DEBUT : GESTION DES STORIES ==========
 async function loadStories() {
     try {
@@ -1664,7 +1687,7 @@ function handleStoryFileSelect(file) {
     const preview = document.getElementById('storyFilePreview');
     const dropArea = document.getElementById('storyDropArea');
     const isVideo = file.type.startsWith('video/');
-    
+
     if (preview) {
         preview.innerHTML = `
             <div style="position:relative">
@@ -1676,7 +1699,7 @@ function handleStoryFileSelect(file) {
         preview.style.display = 'block';
     }
     if (dropArea) dropArea.style.display = 'none';
-    
+
     toast(`✅ Fichier "${file.name}" sélectionné`, 'success');
 }
 
@@ -1697,10 +1720,11 @@ window.clearStoryFile = function() {
 async function uploadStory() {
     const isTextStory = document.querySelector('.story-type-tab.active')?.dataset.type === 'text';
     const textContent = document.getElementById('storyTextContent')?.value.trim();
-    const caption = document.getElementById('storyCaption').value.trim();
+    const captionInput = document.getElementById('storyCaptionInput');
+    const caption = captionInput?.value.trim() || '';
     const duration = parseInt(document.getElementById('storyDurationSelect').value) || 10;
     const btn = document.getElementById('uploadStoryBtn');
-    
+
     // Validation
     if (!isTextStory && !storyUploadFile) {
         toast('Sélectionne un fichier', 'warning');
@@ -1710,15 +1734,15 @@ async function uploadStory() {
         toast('Écris quelque chose pour ta story texte', 'warning');
         return;
     }
-    
+
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publication...';
-    
+
     try {
         let mediaUrl = null;
         let mediaType = 'text';
         const textBg = storyTextBg || 'linear-gradient(135deg,#551B8C,#3d1266)';
-        
+
         if (!isTextStory && storyUploadFile) {
             const ext = storyUploadFile.name.split('.').pop();
             const path = `stories/${currentProfile.hubisoccer_id}/${Date.now()}.${ext}`;
@@ -1728,39 +1752,41 @@ async function uploadStory() {
             mediaUrl = urlData.publicUrl;
             mediaType = storyUploadFile.type.startsWith('video/') ? 'video' : 'image';
         }
-        
+
+        // --- CORRECTION : expires_at fixé à 24 heures, indépendant de la durée de lecture ---
         const expires = new Date();
-        expires.setSeconds(expires.getSeconds() + duration);
-        
+        expires.setHours(expires.getHours() + 24);
+
         const storyData = {
             user_hubisoccer_id: currentProfile.hubisoccer_id,
             media_url: mediaUrl,
             media_type: mediaType,
             caption: caption || (isTextStory ? textContent : null),
-            duration: Math.min(3600, Math.max(5, duration)),
-            expires_at: expires.toISOString(),
+            duration: Math.min(3600, Math.max(5, duration)), // Durée de lecture (5s à 60min)
+            expires_at: expires.toISOString(), // Expiration fixe à 24h
             hidden_for: []
         };
-        
+
         if (isTextStory) {
             storyData.text_bg = textBg;
             storyData.text_content = textContent;
         }
-        
+
         await sb.from('supabaseAuthPrive_stories').insert(storyData);
-        
+
         closeModal('modalStoryUpload');
         toast('Story publiée ! 🎉', 'success');
-        
-        // Nettoyage
+
+        // Nettoyage sécurisé
         storyUploadFile = null;
-        document.getElementById('storyCaptionInput').value = '';
-        if (document.getElementById('storyTextContent')) document.getElementById('storyTextContent').value = '';
+        if (captionInput) captionInput.value = '';
+        const textContentField = document.getElementById('storyTextContent');
+        if (textContentField) textContentField.value = '';
         clearStoryFile();
-        
+
         // Recharger les stories dans le feed
         if (typeof loadStories === 'function') {
-            loadStories();
+            await loadStories();
         }
     } catch (err) {
         toast('Erreur publication : ' + err.message, 'error');
@@ -1770,6 +1796,7 @@ async function uploadStory() {
     }
 }
 // ========== FIN : GESTION DES STORIES ==========
+
 // ========== DEBUT : GESTION DES LIVES ==========
 async function loadLives() {
     const container = document.getElementById('livesList');
@@ -1785,12 +1812,12 @@ async function loadLives() {
             .eq('is_active', true)
             .order('started_at', { ascending: false })
             .limit(5);
-        
+
         if (!data || data.length === 0) {
             container.innerHTML = '<p style="font-size:0.78rem;color:var(--gray);">Aucun live en ce moment</p>';
             return;
         }
-        
+
         container.innerHTML = data.map(l => {
             const host = l.host || {};
             const name = host.full_name || host.display_name || 'Hôte';
@@ -1808,6 +1835,7 @@ async function loadLives() {
     }
 }
 // ========== FIN : GESTION DES LIVES ==========
+
 // ========== DEBUT : SUGGESTIONS ET ABONNÉS ==========
 async function loadSuggestions() {
     const { data: following } = await sb.from('supabaseAuthPrive_follows')
@@ -1853,7 +1881,7 @@ async function loadSuggestions() {
 window.followUser = async function(userId, btn) {
     btn.textContent = 'Abonné';
     btn.classList.add('following');
-    
+
     try {
         await sb.from('supabaseAuthPrive_follows').insert({
             follower_hubisoccer_id: currentProfile.hubisoccer_id,
@@ -1877,7 +1905,7 @@ window.followUser = async function(userId, btn) {
         await sb.from('supabaseAuthPrive_communities')
             .update({ followers_count: newFollowers })
             .eq('hubisoccer_id', userId);
-        
+
         toast('Abonné !', 'success');
         loadSuggestions();
     } catch (err) {
@@ -1960,6 +1988,7 @@ async function openFollowersModal(type) {
     }).join('');
 }
 // ========== FIN : SUGGESTIONS ET ABONNÉS ==========
+
 // ========== DEBUT : TENDANCES ET INSIGHTS ==========
 async function loadTrends() {
     const { data } = await sb.from('supabaseAuthPrive_posts')
@@ -2017,6 +2046,7 @@ async function loadInsights() {
     document.getElementById('insightEngagement').textContent = engagementRate + '%';
 }
 // ========== FIN : TENDANCES ET INSIGHTS ==========
+
 // ========== DEBUT : GESTION DES NOTIFICATIONS ==========
 async function loadNotifications() {
     const { data } = await sb.from('supabaseAuthPrive_notifications')
@@ -2072,6 +2102,7 @@ function subscribeToNewPosts() {
         .subscribe();
 }
 // ========== FIN : GESTION DES NOTIFICATIONS ==========
+
 // ========== DEBUT : UTILISATEURS BLOQUÉS ==========
 async function loadBlockedUsers() {
     const list = document.getElementById('blockedUsersList');
@@ -2085,12 +2116,12 @@ async function loadBlockedUsers() {
                 )
             `)
             .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
-        
+
         if (!data || data.length === 0) {
             list.innerHTML = '<li style="padding:16px;color:var(--gray);text-align:center">Aucun utilisateur bloqué</li>';
             return;
         }
-        
+
         list.innerHTML = data.map(b => {
             const user = b.blocked || {};
             const name = user.full_name || user.display_name || 'Utilisateur';
@@ -2115,6 +2146,7 @@ window.unblockUser = async function(userId) {
     toast('Utilisateur débloqué', 'success');
 };
 // ========== FIN : UTILISATEURS BLOQUÉS ==========
+
 // ========== DEBUT : POSTS MASQUÉS ==========
 async function loadHiddenPosts() {
     const { data } = await sb.from('supabaseAuthPrive_hidden_posts')
@@ -2146,6 +2178,7 @@ window.unhidePost = async function(postId) {
     loadPosts(true);
 };
 // ========== FIN : POSTS MASQUÉS ==========
+
 // ========== DEBUT : COLLECTIONS (POSTS SAUVEGARDÉS) ==========
 async function loadCollections() {
     const { data } = await sb.from('supabaseAuthPrive_saved_posts')
@@ -2176,6 +2209,7 @@ window.removeFromCollection = async function(postId) {
     toast('Retiré des collections', 'info');
 };
 // ========== FIN : COLLECTIONS ==========
+
 // ========== DEBUT : MENTIONS ==========
 async function handleMentionInput(e) {
     const val = e.target.value;
@@ -2256,6 +2290,7 @@ function hideMentionSuggestions() {
     }
 }
 // ========== FIN : MENTIONS ==========
+
 // ========== DEBUT : ENREGISTREMENT AUDIO ==========
 async function startAudioRecording(postId) {
     if (isRecording) return;
@@ -2278,6 +2313,7 @@ async function startAudioRecording(postId) {
     }
 }
 // ========== FIN : ENREGISTREMENT AUDIO ==========
+
 // ========== DEBUT : PUBLICATION DE POST ==========
 async function publishPost() {
     const content = document.getElementById('postContent').value.trim();
@@ -2376,6 +2412,7 @@ async function publishPost() {
     }
 }
 // ========== FIN : PUBLICATION DE POST ==========
+
 // ========== DEBUT : MODALES DE CRÉATION (SONDAGE, ÉVÉNEMENT, PROGRAMMATION) ==========
 function createPoll() {
     const q = document.getElementById('pollQuestion').value.trim();
@@ -2409,6 +2446,7 @@ function confirmSchedule() {
     toast(`Publication programmée pour ${new Date(scheduledAt).toLocaleString('fr-FR')}`, 'success');
 }
 // ========== FIN : MODALES DE CRÉATION ==========
+
 // ========== DEBUT : APERÇU ET ÉDITION DE PROFIL ==========
 function showPreview() {
     const content = document.getElementById('postContent').value.trim();
@@ -2457,20 +2495,20 @@ function cancelMedia() {
     document.getElementById('mediaPreview').style.display = 'none';
 }
 // ========== FIN : APERÇU ET ÉDITION DE PROFIL ==========
-// ========== DEBUT : INITIALISATION PRINCIPALE ==========
+
 // ========== DEBUT : INITIALISATION PRINCIPALE ==========
 async function init() {
     setLoader(true, 'Vérification de votre session...', 20);
     const sessionOk = await initSessionAndProfile();
     if (!sessionOk) return;
-    
+
     setLoader(true, 'Vérification de ta communauté...', 40);
     const comm = await loadMyCommunity();
     if (!comm) return;
-    
+
     setLoader(true, 'Chargement du feed...', 60);
     await loadPosts(true);
-    
+
     setLoader(true, 'Chargement de la communauté...', 80);
     await Promise.all([
         loadStories(),
@@ -2482,10 +2520,10 @@ async function init() {
         loadInsights(),
         loadBlockedUsers().catch(() => {})
     ]);
-    
+
     setLoader(false);
     subscribeToNewPosts();
-    
+
     document.getElementById('publishBtn').addEventListener('click', publishPost);
     document.getElementById('attachMediaBtn').addEventListener('click', () => document.getElementById('mediaInput').click());
     document.getElementById('mediaInput').addEventListener('change', (e) => {
@@ -2501,7 +2539,7 @@ async function init() {
                 <button class="remove-media-btn" onclick="cancelMedia()"><i class="fas fa-times"></i></button>
             </div>`;
     });
-    
+
     document.getElementById('pollBtn').addEventListener('click', () => openModal('modalPoll'));
     document.getElementById('eventBtn').addEventListener('click', () => openModal('modalEvent'));
     document.getElementById('scheduleBtn').addEventListener('click', () => openModal('modalSchedule'));
@@ -2512,21 +2550,21 @@ async function init() {
         toast(pinPostActive ? 'Post épinglé activé' : 'Épinglage désactivé', 'info');
     });
     document.getElementById('previewPostBtn').addEventListener('click', showPreview);
-    
+
     document.getElementById('createPollBtn').addEventListener('click', createPoll);
     document.getElementById('createEventBtn').addEventListener('click', createEvent);
     document.getElementById('confirmScheduleBtn').addEventListener('click', confirmSchedule);
-    
+
     document.getElementById('submitReportBtn').addEventListener('click', submitReport);
     document.getElementById('confirmBlockBtn').addEventListener('click', confirmBlock);
     document.querySelectorAll('.share-btn').forEach(btn => btn.addEventListener('click', () => sharePost(btn.dataset.network)));
-    
+
     document.getElementById('sendReplyBtn').addEventListener('click', () => sendReply(replyCommentId, replyPostId));
-    
+
     document.getElementById('addStoryBtn').addEventListener('click', () => openModal('modalStoryUpload'));
     document.getElementById('uploadStoryBtn').addEventListener('click', uploadStory);
     document.getElementById('seeMoreStoriesBtn').addEventListener('click', () => window.location.href = 'stories.html');
-    
+
     const storyTabs = document.querySelectorAll('.story-type-tab');
     const uploadZone = document.getElementById('storyUploadZone');
     const textZone = document.getElementById('storyTextZone');
@@ -2534,7 +2572,7 @@ async function init() {
     const fileInput = document.getElementById('storyFileInput');
     const textCanvas = document.getElementById('storyTextCanvas');
     const styleBtns = document.querySelectorAll('.txt-style-btn');
-    
+
     storyTabs.forEach(tab => {
         tab.addEventListener('click', () => {
             storyTabs.forEach(t => t.classList.remove('active'));
@@ -2549,7 +2587,7 @@ async function init() {
             }
         });
     });
-    
+
     dropArea.addEventListener('click', () => fileInput.click());
     dropArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -2564,21 +2602,21 @@ async function init() {
         const file = e.dataTransfer.files[0];
         if (file) handleStoryFileSelect(file);
     });
-    
+
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) handleStoryFileSelect(file);
     });
-    
+
     styleBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             styleBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            storyTextBg = btn.dataset.bg; // ← CORRECTION : Mise à jour de la variable globale
+            storyTextBg = btn.dataset.bg;
             textCanvas.style.background = btn.dataset.bg;
         });
     });
-    
+
     document.querySelectorAll('.feed-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.feed-filter-btn').forEach(b => b.classList.remove('active'));
@@ -2587,7 +2625,7 @@ async function init() {
             loadPosts(true);
         });
     });
-    
+
     document.querySelectorAll('.role-chip').forEach(chip => {
         chip.addEventListener('click', () => {
             document.querySelectorAll('.role-chip').forEach(c => c.classList.remove('active'));
@@ -2596,14 +2634,14 @@ async function init() {
             loadPosts(true);
         });
     });
-    
+
     document.getElementById('feedSearch').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             const q = e.target.value.trim();
             if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
         }
     });
-    
+
     const sentinel = document.getElementById('scrollSentinel');
     if (sentinel) {
         const observer = new IntersectionObserver((entries) => {
@@ -2613,13 +2651,13 @@ async function init() {
         });
         observer.observe(sentinel);
     }
-    
+
     document.getElementById('newPostsBarBtn').addEventListener('click', () => {
         newPostsCount = 0;
         document.getElementById('newPostsBar').style.display = 'none';
         loadPosts(true);
     });
-    
+
     document.getElementById('notifBtn').addEventListener('click', () => {
         openModal('modalNotifs');
         loadNotifications();
@@ -2633,14 +2671,14 @@ async function init() {
         loadTrends();
         loadInsights();
     });
-    
+
     document.getElementById('userMenu').addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('userDropdown').classList.toggle('show');
     });
     document.addEventListener('click', () => document.getElementById('userDropdown')?.classList.remove('show'));
     document.getElementById('dropLogout').addEventListener('click', logout);
-    
+
     document.getElementById('menuToggle').addEventListener('click', () => {
         document.getElementById('leftSidebar').classList.add('open');
         document.getElementById('overlay').classList.add('show');
@@ -2656,16 +2694,16 @@ async function init() {
     };
     document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
     document.getElementById('overlay').addEventListener('click', closeSidebar);
-    
+
     document.getElementById('sidebarAvatarClick').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
     document.getElementById('sidebarCoverClick').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
     document.getElementById('myCommAvatar').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
     document.getElementById('myCommCover').addEventListener('click', () => openUserProfile(currentProfile.hubisoccer_id));
-    
+
     document.querySelectorAll('.c-modal').forEach(m => {
         m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id); });
     });
-    
+
     document.addEventListener('click', (e) => {
         if (mentionDropdown && !mentionDropdown.contains(e.target) && e.target !== mentionTargetInput) {
             hideMentionSuggestions();
@@ -2673,7 +2711,7 @@ async function init() {
     });
 }
 // ========== FIN : INITIALISATION PRINCIPALE ==========
-// ========== FIN : INITIALISATION PRINCIPALE ==========
+
 // ========== DEBUT : EXPOSITION GLOBALE DES FONCTIONS ==========
 window.openUserProfile = openUserProfile;
 window.openUserByHandle = openUserByHandle;
@@ -2711,5 +2749,6 @@ window.unhidePost = unhidePost;
 window.removeFromCollection = removeFromCollection;
 window.handleNotifClick = handleNotifClick;
 // ========== FIN : EXPOSITION GLOBALE ==========
+
 document.addEventListener('DOMContentLoaded', init);
 // ========== FIN : DÉMARRAGE ==========

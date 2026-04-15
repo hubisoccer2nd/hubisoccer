@@ -129,6 +129,15 @@ async function initSessionAndProfile() {
     const dash = ROLE_DASHBOARD_MAP[currentProfile.role_code] || '../../index.html';
     document.getElementById('dropDashboard').href = dash;
     document.getElementById('navLogo').onclick = () => window.location.href = dash;
+    
+    // Lien "Mon profil" (tous rôles)
+    document.getElementById('dropProfile').href = `profil-feed.html?id=${currentProfile.hubisoccer_id}`;
+
+// Lien "Messages" (tous rôles)
+    document.getElementById('dropMessages').href = '../messagerie/conversation.html';
+
+// Lien "Paramètres" (tous rôles)
+    document.getElementById('dropSettings').href = 'settings-feed.html';
 
     buildSidebarMenu(currentProfile.role_code);
     return true;

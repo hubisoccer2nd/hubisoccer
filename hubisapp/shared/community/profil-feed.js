@@ -1,16 +1,6 @@
-// ============================================================
 //  HUBISOCCER — PROFIL-FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 1/5 : Variables globales, constantes, session, menu latéral
-// ============================================================
-//  Corrections :
-//  - Menu latéral pour les 28 rôles
-//  - Variables correctement déclarées
-//  - Gestion des toasts pour toutes les erreurs
-// ============================================================
 
 'use strict';
-
-// sb, currentUser, currentProfile sont déjà définis dans session.js
 
 // ========== DEBUT : VARIABLES GLOBALES ==========
 let profileData = null;
@@ -27,7 +17,6 @@ const MEDIA_PAGE_SIZE = 20;
 let hasMoreMedia = false;
 let currentConfirmCallback = null;
 // ========== FIN : VARIABLES GLOBALES ==========
-
 // ========== DEBUT : CONSTANTES ROLES ET DASHBOARDS ==========
 const ROLE_DASHBOARD_MAP = {
     'FOOT': '../../footballeur/dashboard/foot-dash.html',
@@ -92,7 +81,6 @@ const ALL_ROLES = [
     { code: 'TOURN', label: 'Gestionnaire tournoi', icon: '🏆' }
 ];
 // ========== FIN : CONSTANTES ROLES ==========
-
 // ========== DEBUT : SESSION ET AVATAR ==========
 async function initSessionAndProfile() {
     try {
@@ -133,7 +121,6 @@ function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
     }
 }
 // ========== FIN : SESSION ET AVATAR ==========
-
 // ========== DEBUT : MENU LATERAL (28 ROLES) ==========
 function buildSidebarMenu(roleCode) {
     const nav = document.getElementById('sidebarNav');
@@ -591,11 +578,6 @@ function buildSidebarMenu(roleCode) {
     document.getElementById('sidebarLogout')?.addEventListener('click', logout);
 }
 // ========== FIN : MENU LATERAL ==========
-// ============================================================
-//  HUBISOCCER — PROFIL-FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 2/5 : Chargement du profil, follow/unfollow, blocage
-// ============================================================
-
 // ========== DEBUT : UTILITAIRES URL ET CHARGEMENT PROFIL ==========
 function getProfileIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -614,7 +596,6 @@ async function loadProfileData(identifier) {
     setLoader(true, 'Chargement du profil...', 40);
 
     try {
-        // Jointure corrigée : profiles!hubisoccer_id(...)
         const { data, error } = await sb
             .from('supabaseAuthPrive_communities')
             .select(`
@@ -648,8 +629,6 @@ async function loadProfileData(identifier) {
         profileData = data;
         profileHubisoccerId = data.hubisoccer_id;
         isOwnProfile = (profileHubisoccerId === currentProfile?.hubisoccer_id);
-
-        // Vérifier si l'utilisateur est en ligne (dernière activité < 5 min)
         if (data.profiles?.last_seen) {
             const lastSeen = new Date(data.profiles.last_seen);
             const now = new Date();
@@ -658,8 +637,6 @@ async function loadProfileData(identifier) {
                 document.getElementById('onlineIndicator').style.display = 'block';
             }
         }
-
-        // Enregistrer la vue du profil (sauf si c'est le sien)
         if (!isOwnProfile) {
             await sb.from('supabaseAuthPrive_profile_views').upsert({
                 profile_hubisoccer_id: profileHubisoccerId,
@@ -667,8 +644,6 @@ async function loadProfileData(identifier) {
                 viewed_at: new Date().toISOString()
             }, { onConflict: 'profile_hubisoccer_id,viewer_hubisoccer_id' });
         }
-
-        // Vérifier si on suit ce profil
         if (!isOwnProfile) {
             const { data: follow } = await sb
                 .from('supabaseAuthPrive_follows')
@@ -678,13 +653,11 @@ async function loadProfileData(identifier) {
                 .maybeSingle();
             isFollowing = !!follow;
         }
-
         renderProfileHeader();
         renderAboutSections();
         updateFollowButton();
         await loadProfileStories();
         await loadSuggestions();
-
         setLoader(false);
         return data;
     } catch (err) {
@@ -694,7 +667,6 @@ async function loadProfileData(identifier) {
     }
 }
 // ========== FIN : CHARGEMENT PROFIL ==========
-
 // ========== DEBUT : RENDU EN-TETE ==========
 function renderProfileHeader() {
     const comm = profileData;
@@ -702,22 +674,16 @@ function renderProfileHeader() {
 
     const coverUrl = comm.cover_url || prof.community_cover || '';
     const avatarUrl = comm.avatar_url || prof.community_avatar || prof.avatar_url || '';
-
-    // Couverture
     const coverEl = document.getElementById('profileCover');
     if (coverUrl) {
         coverEl.style.backgroundImage = `url(${coverUrl})`;
     } else {
         coverEl.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
     }
-    // Clic sur couverture pour agrandir
     coverEl.onclick = () => openLightbox(coverUrl || '');
-
-    // Avatar
     const avatarImg = document.getElementById('profileAvatar');
     const avatarInitials = document.getElementById('profileAvatarInitials');
     const name = comm.name || prof.full_name || prof.display_name || 'Utilisateur';
-
     if (avatarUrl && avatarUrl !== '') {
         avatarImg.src = avatarUrl;
         avatarImg.style.display = 'block';
@@ -727,10 +693,8 @@ function renderProfileHeader() {
         avatarInitials.style.display = 'flex';
         avatarInitials.textContent = getInitials(name);
     }
-    // Clic sur avatar pour agrandir
     avatarImg.onclick = () => openLightbox(avatarUrl || '');
     avatarInitials.onclick = () => openLightbox(avatarUrl || '');
-
     document.getElementById('profileName').textContent = name;
     document.getElementById('profileHandle').textContent = '@' + (comm.feed_id || '');
     document.getElementById('profileBio').textContent = comm.bio || prof.bio || 'Aucune bio.';
@@ -738,7 +702,6 @@ function renderProfileHeader() {
     document.getElementById('profileJoined').textContent = new Date(comm.created_at || prof.created_at).toLocaleDateString('fr-FR', {
         year: 'numeric', month: 'long', day: 'numeric'
     });
-
     document.getElementById('profileFollowers').textContent = comm.followers_count || 0;
     document.getElementById('profileFollowing').textContent = comm.following_count || 0;
     document.getElementById('profilePosts').textContent = comm.posts_count || 0;
@@ -750,7 +713,6 @@ function renderProfileHeader() {
     document.title = `${name} | HubISoccer`;
 }
 // ========== FIN : RENDU EN-TETE ==========
-
 // ========== DEBUT : BOUTONS D'ACTION ==========
 function updateFollowButton() {
     const actionsDiv = document.getElementById('profileActions');
@@ -789,70 +751,6 @@ function updateFollowButton() {
         });
     }
 }
-
-async function toggleFollow() {
-    if (!currentProfile) return;
-    const btn = document.getElementById('followBtn');
-    btn.disabled = true;
-
-    try {
-        if (isFollowing) {
-            await sb.from('supabaseAuthPrive_follows')
-                .delete()
-                .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id)
-                .eq('following_hubisoccer_id', profileHubisoccerId);
-            isFollowing = false;
-            toast('Vous n\'êtes plus abonné', 'info');
-        } else {
-            await sb.from('supabaseAuthPrive_follows')
-                .insert({
-                    follower_hubisoccer_id: currentProfile.hubisoccer_id,
-                    following_hubisoccer_id: profileHubisoccerId
-                });
-            isFollowing = true;
-            toast('Abonné !', 'success');
-
-            // Notification
-            await sb.from('supabaseAuthPrive_notifications').insert({
-                recipient_hubisoccer_id: profileHubisoccerId,
-                type: 'follow',
-                title: 'Nouvel abonné',
-                message: `${currentProfile.full_name || currentProfile.display_name} s'est abonné à votre communauté.`,
-                data: { link: `profil-feed.html?id=${currentProfile.hubisoccer_id}` }
-            });
-        }
-
-        // Rafraîchir les compteurs
-        const { data: comm } = await sb
-            .from('supabaseAuthPrive_communities')
-            .select('followers_count, following_count')
-            .eq('hubisoccer_id', profileHubisoccerId)
-            .single();
-        if (comm) {
-            document.getElementById('profileFollowers').textContent = comm.followers_count || 0;
-            document.getElementById('profileFollowing').textContent = comm.following_count || 0;
-        }
-
-        // Mettre à jour le compteur d'abonnements du profil courant (si c'est le sien)
-        if (isOwnProfile) {
-            const { data: myComm } = await sb
-                .from('supabaseAuthPrive_communities')
-                .select('following_count')
-                .eq('hubisoccer_id', currentProfile.hubisoccer_id)
-                .single();
-            if (myComm) {
-                document.getElementById('profileFollowing').textContent = myComm.following_count || 0;
-            }
-        }
-
-        updateFollowButton();
-    } catch (err) {
-        toast('Erreur : ' + err.message, 'error');
-    } finally {
-        btn.disabled = false;
-    }
-}
-
 async function blockUser() {
     try {
         await sb.from('supabaseAuthPrive_blocked_users').insert({
@@ -860,14 +758,12 @@ async function blockUser() {
             blocked_hubisoccer_id: profileHubisoccerId
         });
         toast('Utilisateur bloqué', 'success');
-        // Redirection vers le feed
         setTimeout(() => { window.location.href = 'feed.html'; }, 1500);
     } catch (err) {
         toast('Erreur : ' + err.message, 'error');
     }
 }
 // ========== FIN : BOUTONS D'ACTION ==========
-
 // ========== DEBUT : SECTIONS À PROPOS ==========
 function renderAboutSections() {
     const prof = profileData.profiles || {};
@@ -918,50 +814,40 @@ function renderAboutSections() {
     document.getElementById('aboutHelp').innerHTML = helpHtml;
 }
 // ========== FIN : SECTIONS À PROPOS ==========
-
-// ============================================================
-//  HUBISOCCER — PROFIL-FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 3/5 : Stories, Lightbox, Suggestions
-// ============================================================
-
 // ========== DEBUT : STORIES DE L'UTILISATEUR ==========
 async function loadProfileStories() {
     if (isOwnProfile) {
-        // Pas de section stories pour son propre profil
         document.getElementById('profileStoriesSection').style.display = 'none';
         return;
     }
-
+    
     const { data: stories } = await sb
         .from('supabaseAuthPrive_stories')
         .select('*')
         .eq('user_hubisoccer_id', profileHubisoccerId)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
-
+    
     if (!stories || stories.length === 0) {
         document.getElementById('profileStoriesSection').style.display = 'none';
         return;
     }
-
+    
     document.getElementById('profileStoriesSection').style.display = 'block';
     document.getElementById('storyOwnerName').textContent = profileData.name || profileData.profiles?.full_name || 'cet utilisateur';
-
+    
     const container = document.getElementById('profileStoriesContainer');
     container.innerHTML = stories.map(story => makeStoryItem(story)).join('');
-
-    // Attacher les événements de clic sur chaque story
-    container.querySelectorAll('.story-item').forEach((el, index) => {
+        container.querySelectorAll('.story-item').forEach((el, index) => {
         el.addEventListener('click', () => viewStory(stories[index].id));
     });
 }
-
 function makeStoryItem(story) {
     const name = profileData.name || profileData.profiles?.full_name || 'Utilisateur';
     const avatar = profileData.avatar_url || profileData.profiles?.community_avatar || profileData.profiles?.avatar_url;
     const initials = getInitials(name);
     let preview = '';
-
+    
     if (story.media_type === 'text') {
         preview = `<div class="story-ring-text" style="background:${story.text_bg || 'var(--primary)'}">${initials}</div>`;
     } else if (story.media_type === 'video') {
@@ -970,7 +856,7 @@ function makeStoryItem(story) {
         preview = `<img src="${story.media_url}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                    <div class="story-ring-text" style="display:none; background:var(--primary);">${initials}</div>`;
     }
-
+    
     return `
         <div class="story-item" data-story-id="${story.id}">
             <div class="story-ring">${preview}</div>
@@ -980,11 +866,9 @@ function makeStoryItem(story) {
 }
 
 function viewStory(storyId) {
-    // Redirige vers la page stories avec ce groupe
-    window.location.href = `stories.html?user=${profileHubisoccerId}&story=${storyId}`;
+     window.location.href = `stories.html?user=${profileHubisoccerId}&story=${storyId}`;
 }
 // ========== FIN : STORIES ==========
-
 // ========== DEBUT : LIGHTBOX (agrandissement images) ==========
 function openLightbox(imageUrl) {
     if (!imageUrl) {
@@ -995,41 +879,32 @@ function openLightbox(imageUrl) {
     const img = document.getElementById('lightboxImage');
     img.src = imageUrl;
     modal.style.display = 'flex';
-
+    
     const closeBtn = document.getElementById('lightboxClose');
     closeBtn.onclick = () => { modal.style.display = 'none'; };
     modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
 }
 // ========== FIN : LIGHTBOX ==========
-
 // ========== DEBUT : SUGGESTIONS DE COMMUNAUTÉS ==========
 async function loadSuggestions() {
     const container = document.getElementById('suggestionsList');
     if (!container) return;
-
-    // Ne pas afficher de suggestions pour son propre profil
     if (isOwnProfile) {
         document.getElementById('profileSuggestions').style.display = 'none';
         return;
     }
-
-    // Récupérer les abonnements de l'utilisateur courant pour les exclure
     const { data: following } = await sb
         .from('supabaseAuthPrive_follows')
         .select('following_hubisoccer_id')
         .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
     const followingIds = (following || []).map(f => f.following_hubisoccer_id);
     const exclude = [currentProfile.hubisoccer_id, profileHubisoccerId, ...followingIds];
-
-    // Récupérer les bloqués
     const { data: blocked } = await sb
         .from('supabaseAuthPrive_blocked_users')
         .select('blocked_hubisoccer_id')
         .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
     const blockedIds = (blocked || []).map(b => b.blocked_hubisoccer_id);
     exclude.push(...blockedIds);
-
-    // Suggérer des communautés avec le même sport ou le même pays
     let query = sb
         .from('supabaseAuthPrive_communities')
         .select(`
@@ -1038,20 +913,20 @@ async function loadSuggestions() {
         `)
         .not('hubisoccer_id', 'in', `(${exclude.join(',')})`)
         .limit(6);
-
+    
     if (profileData.sport) {
         query = query.eq('sport', profileData.sport);
     } else if (profileData.country) {
         query = query.eq('country', profileData.country);
     }
-
+    
     const { data: suggestions } = await query;
-
+    
     if (!suggestions || suggestions.length === 0) {
         document.getElementById('profileSuggestions').style.display = 'none';
         return;
     }
-
+    
     document.getElementById('profileSuggestions').style.display = 'block';
     renderSuggestions(suggestions);
 }
@@ -1061,9 +936,9 @@ function renderSuggestions(suggestions) {
     container.innerHTML = suggestions.map(comm => {
         const name = comm.name || 'Communauté';
         const avatar = comm.avatar_url || comm.profiles?.avatar_url || '';
-        const role = comm.profiles?.role_code
-            ? ALL_ROLES.find(r => r.code === comm.profiles.role_code)?.label || ''
-            : '';
+        const role = comm.profiles?.role_code ?
+            ALL_ROLES.find(r => r.code === comm.profiles.role_code)?.label || '' :
+            '';
         return `
             <div class="suggestion-card" onclick="window.location.href='profil-feed.html?id=${comm.hubisoccer_id}'">
                 <img src="${avatar || '../../img/user-default.jpg'}" alt="${escapeHtml(name)}">
@@ -1092,16 +967,8 @@ window.followSuggestion = async function(userId, btn) {
         toast('Erreur : ' + err.message, 'error');
     }
 };
-
-// Rafraîchir les suggestions manuellement
 document.getElementById('refreshSuggestionsBtn')?.addEventListener('click', () => loadSuggestions());
 // ========== FIN : SUGGESTIONS ==========
-
-// ============================================================
-//  HUBISOCCER — PROFIL-FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 4/5 : Onglets, Posts, Médias
-// ============================================================
-
 // ========== DEBUT : GESTION DES ONGLETS ==========
 function initTabs() {
     document.querySelectorAll('.profile-tab').forEach(tab => {
@@ -1128,7 +995,6 @@ function initTabs() {
     document.getElementById('statFollowing').addEventListener('click', () => openFollowModal('following'));
 }
 // ========== FIN : GESTION DES ONGLETS ==========
-
 // ========== DEBUT : CHARGEMENT ET RENDU DES POSTS ==========
 async function loadPosts(reset = false) {
     if (reset) {
@@ -1267,23 +1133,19 @@ async function loadMedia(type, reset = false) {
 }
 // ========== FIN : MÉDIAS ==========
 // ============================================================
-//  HUBISOCCER — PROFIL-FEED.JS (VERSION CORRIGÉE ET COMPLÈTE)
-//  PARTIE 5/5 : Modales, initialisation, fin du fichier
-// ============================================================
-
 // ========== DEBUT : MODALES FOLLOWERS / FOLLOWING ==========
 async function openFollowModal(type) {
     const modal = document.getElementById('modalFollowers');
     const title = document.getElementById('followModalTitle');
     const list = document.getElementById('followList');
-
+    
     title.textContent = type === 'followers' ? 'Abonnés' : 'Abonnements';
     list.innerHTML = '<div class="c-spinner" style="margin:20px auto;"></div>';
     openModal('modalFollowers');
-
+    
     const column = type === 'followers' ? 'follower_hubisoccer_id' : 'following_hubisoccer_id';
     const selectField = type === 'followers' ? 'follower' : 'following';
-
+    
     try {
         const { data, error } = await sb
             .from('supabaseAuthPrive_follows')
@@ -1294,21 +1156,21 @@ async function openFollowModal(type) {
             `)
             .eq(type === 'followers' ? 'following_hubisoccer_id' : 'follower_hubisoccer_id', profileHubisoccerId)
             .limit(50);
-
+        
         if (error) throw error;
-
+        
         if (!data || data.length === 0) {
             list.innerHTML = '<li style="padding:16px; color:var(--gray); text-align:center;">Aucun résultat</li>';
             return;
         }
-
+        
         list.innerHTML = data.map(item => {
             const user = item[selectField] || {};
             const name = user.full_name || user.display_name || 'Utilisateur';
             const avatar = user.avatar_url || '';
             const initials = getInitials(name);
             const certified = user.certified ? '<i class="fas fa-check-circle" style="color:var(--primary); margin-left:4px;"></i>' : '';
-
+            
             return `
                 <li class="users-list-item" onclick="window.location.href='profil-feed.html?id=${user.hubisoccer_id}'">
                     ${avatar ? `<img src="${avatar}" alt="">` : `<div class="user-avatar-placeholder">${initials}</div>`}
@@ -1339,23 +1201,23 @@ async function saveProfile() {
     const bio = document.getElementById('editCommBio').value.trim();
     const specialty = document.getElementById('editCommSpecialty').value.trim();
     const website = document.getElementById('editCommWebsite').value.trim();
-
+    
     if (!name) {
         toast('Le nom est requis', 'warning');
         return;
     }
-
+    
     setLoader(true, 'Mise à jour...', 80);
     try {
         await sb.from('supabaseAuthPrive_communities')
             .update({ name, bio, specialty, website })
             .eq('hubisoccer_id', profileHubisoccerId);
-
+        
         profileData.name = name;
         profileData.bio = bio;
         profileData.specialty = specialty;
         profileData.website = website;
-
+        
         renderProfileHeader();
         renderAboutSections();
         closeModal('modalEditProfile');
@@ -1375,7 +1237,7 @@ async function submitReport() {
         toast('Veuillez indiquer une raison', 'warning');
         return;
     }
-
+    
     try {
         await sb.from('supabaseAuthPrive_reports').insert({
             reporter_hubisoccer_id: currentProfile.hubisoccer_id,
@@ -1405,13 +1267,13 @@ function shareProfile(network) {
     const url = window.location.href;
     const name = profileData.name || profileData.profiles?.full_name || 'Profil HubISoccer';
     const text = `Découvrez ${name} sur HubISoccer !`;
-
+    
     const shareUrls = {
         facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
         twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
         whatsapp: `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`
     };
-
+    
     if (network === 'copy') {
         navigator.clipboard.writeText(url);
         toast('Lien copié !', 'success');
@@ -1428,20 +1290,20 @@ async function init() {
     setLoader(true, 'Vérification de votre session...', 20);
     const sessionOk = await initSessionAndProfile();
     if (!sessionOk) return;
-
+    
     const identifier = getProfileIdFromUrl();
     if (!identifier) {
         toast('Profil non spécifié', 'error');
         setLoader(false);
         return;
     }
-
+    
     await loadProfileData(identifier);
     if (!profileData) return;
-
+    
     initTabs();
     await loadPosts(true);
-
+    
     // Écouteurs d'événements globaux
     document.getElementById('menuToggle').addEventListener('click', () => {
         document.getElementById('leftSidebar').classList.add('open');
@@ -1453,7 +1315,7 @@ async function init() {
     };
     document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
     document.getElementById('overlay').addEventListener('click', closeSidebar);
-
+    
     document.getElementById('userMenu').addEventListener('click', e => {
         e.stopPropagation();
         document.getElementById('userDropdown').classList.toggle('show');
@@ -1461,15 +1323,15 @@ async function init() {
     document.addEventListener('click', () => {
         document.getElementById('userDropdown')?.classList.remove('show');
     });
-
+    
     document.getElementById('dropLogout').addEventListener('click', logout);
-
+    
     document.getElementById('loadMorePostsBtn')?.addEventListener('click', () => loadPosts(false));
-
+    
     document.getElementById('saveProfileBtn')?.addEventListener('click', saveProfile);
-
+    
     document.getElementById('submitReportBtn')?.addEventListener('click', submitReport);
-
+    
     document.getElementById('confirmActionBtn')?.addEventListener('click', () => {
         if (currentConfirmCallback) {
             currentConfirmCallback();
@@ -1477,33 +1339,30 @@ async function init() {
         }
         closeModal('modalConfirm');
     });
-
+    
     // Boutons de partage dans la modale
     document.querySelectorAll('.share-btn').forEach(btn => {
         btn.addEventListener('click', () => shareProfile(btn.dataset.network));
     });
-
+    
     // Fermer les modales en cliquant sur l'overlay
     document.querySelectorAll('.c-modal').forEach(m => {
         m.addEventListener('click', (e) => {
             if (e.target === m) closeModal(m.id);
         });
     });
-
+    
     // Fermer la lightbox avec Échap
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.getElementById('lightboxModal').style.display = 'none';
         }
     });
-
+    
     setLoader(false);
 }
 // ========== FIN : INITIALISATION ==========
-
-// ========== DEBUT : DÉMARRAGE ==========
 document.addEventListener('DOMContentLoaded', init);
-// ========== FIN : DÉMARRAGE ==========
 
 // ============================================================
 //  FIN DU FICHIER PROFIL-FEED.JS

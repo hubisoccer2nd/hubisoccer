@@ -355,7 +355,12 @@ function setupSwipeGestures() {
     viewer.addEventListener('touchend', onTouchEnd, { passive: false });
 }
 
+function shouldIgnoreTouchTarget(element) {
+    return element.closest('button, a, input, select, textarea, .sv-prog-bar, .sv-option-btn, .sv-close-btn, .sv-mute-btn, .sv-quick-btn, .sv-reply-send-btn, .sv-rec-cancel, .sv-rec-stop, .coins-preset, .c-modal-close, .btn-primary, .btn-ghost, .btn-danger, .btn-gold, .story-option-item, .story-react-grid span') !== null;
+}
+
 function onTouchStart(e) {
+    if (shouldIgnoreTouchTarget(e.target)) return;
     const t = e.touches[0];
     touchStartX = t.clientX;
     touchStartY = t.clientY;
@@ -367,6 +372,7 @@ function onTouchStart(e) {
 }
 
 function onTouchMove(e) {
+    if (shouldIgnoreTouchTarget(e.target)) return;
     clearTimeout(longPressTimer);
     const dy = e.touches[0].clientY - touchStartY;
     if (dy > 80 && Math.abs(e.touches[0].clientX - touchStartX) < 60) {
@@ -376,21 +382,22 @@ function onTouchMove(e) {
 }
 
 function onTouchEnd(e) {
+    if (shouldIgnoreTouchTarget(e.target)) return;
     clearTimeout(longPressTimer);
     showPauseOverlay(false);
     document.getElementById('storyViewerPage').style.transform = '';
     document.getElementById('storyViewerPage').style.opacity = '';
-
+    
     const dx = e.changedTouches[0].clientX - touchStartX;
     const dy = e.changedTouches[0].clientY - touchStartY;
     const dt = Date.now() - touchStartTime;
-
+    
     if (Math.abs(dx) > 60 && Math.abs(dy) < 40 && dt < 400) {
         if (dx < 0) goToNextStory();
         else goToPrevStory();
         return;
     }
-
+    
     if (dy > 100 && Math.abs(dx) < 60) {
         closeViewer();
         return;
@@ -420,14 +427,39 @@ function toggleMute() {
 
 // ========== DEBUT : MARQUAGE DES VUES ==========
 async function markStoryViewed(storyId) {
+    if (!currentProfile || !currentProfile.hubisoccer_id) {
+        console.warn('markStoryViewed: profil non chargé');
+        return;
+    }
+    
     try {
-        await sb.from('supabaseAuthPrive_story_views').upsert({
-            story_id: storyId,
-            viewer_hubisoccer_id: currentProfile.hubisoccer_id,
-            viewed_at: new Date().toISOString()
-        }, { onConflict: 'story_id, viewer_hubisoccer_id' });
+        const { error } = await sb
+            .from('supabaseAuthPrive_story_views')
+            .upsert({
+                story_id: storyId,
+                viewer_hubisoccer_id: currentProfile.hubisoccer_id,
+                viewed_at: new Date().toISOString()
+            }, {
+                onConflict: 'story_id, viewer_hubisoccer_id',
+                ignoreDuplicates: false // force la mise à jour du timestamp
+            });
+        
+        if (error) {
+            console.error('Erreur upsert story_views:', error.message, error.details);
+            // Essayer une insertion simple si l'upsert échoue (table sans contrainte)
+            const { error: insertError } = await sb
+                .from('supabaseAuthPrive_story_views')
+                .insert({
+                    story_id: storyId,
+                    viewer_hubisoccer_id: currentProfile.hubisoccer_id,
+                    viewed_at: new Date().toISOString()
+                });
+            if (insertError) {
+                console.error('Erreur insertion simple story_views:', insertError.message);
+            }
+        }
     } catch (err) {
-        /* silencieux */
+        console.error('Exception markStoryViewed:', err);
     }
 }
 // ========== FIN : MARQUAGE ==========
@@ -791,13 +823,17 @@ async function sendStoryReaction(emoji) {
 // ========== FIN : RÉACTIONS ==========
 
 // ========== DEBUT : OPTIONS ==========
-function openSvOptions() {
+    function openSvOptions() {
     const story = storyGroups[activeGroupIdx]?.stories[activeStoryIdx];
     if (!story) return;
-
+    
+    // 🔥 Correction : mettre à jour currentOptionsStory
+    currentOptionsStory = story;
+    
     const isOwn = story.user_hubisoccer_id === currentProfile.hubisoccer_id;
     document.getElementById('optionsModalTitle').textContent = isOwn ? 'Options de ma story' : 'Options';
 
+    // On génère le HTML des options
     document.getElementById('optionsModalBody').innerHTML = isOwn
         ? `
             <button class="story-option-item" id="viewStoryViewsBtn"><i class="fas fa-eye"></i> Voir les vues</button>
@@ -810,6 +846,7 @@ function openSvOptions() {
             <button class="story-option-item danger" id="reportStoryBtn"><i class="fas fa-flag"></i> Signaler</button>
         `;
 
+    // Attacher les écouteurs (une seule fois, car la modale est regénérée à chaque ouverture)
     if (isOwn) {
         document.getElementById('viewStoryViewsBtn').addEventListener('click', showStoryViewers);
         document.getElementById('downloadStoryBtn').addEventListener('click', downloadCurrentStory);
@@ -823,6 +860,7 @@ function openSvOptions() {
         document.getElementById('reportStoryBtn').addEventListener('click', reportCurrentStory);
     }
 
+    // Ouvrir la modale
     openModal('modalStoryOptions');
 }
 
@@ -831,25 +869,29 @@ async function showStoryViewers() {
     const story = currentOptionsStory;
     if (!story) return;
 
-    const { data } = await sb
-        .from('supabaseAuthPrive_story_views')
-        .select('*, viewer:supabaseAuthPrive_profiles!viewer_hubisoccer_id(full_name, display_name, avatar_url)')
-        .eq('story_id', story.id)
-        .order('viewed_at', { ascending: false });
+    try {
+        const { data } = await sb
+            .from('supabaseAuthPrive_story_views')
+            .select('*, viewer:supabaseAuthPrive_profiles!viewer_hubisoccer_id(full_name, display_name, avatar_url)')
+            .eq('story_id', story.id)
+            .order('viewed_at', { ascending: false });
 
-    document.getElementById('svViewersCount').textContent = data?.length || 0;
-    const list = document.getElementById('svViewersList');
-    list.innerHTML = (data || []).map(v => {
-        const viewer = v.viewer || {};
-        const name = viewer.full_name || viewer.display_name || 'Utilisateur';
-        return `<div class="sv-viewer-item">
-            ${viewer.avatar_url ? `<img src="${viewer.avatar_url}">` : `<div class="sv-viewer-avatar-initials">${getInitials(name)}</div>`}
-            <span class="sv-viewer-name">${escapeHtml(name)}</span>
-            <span class="sv-viewer-time">${timeSince(v.viewed_at)}</span>
-        </div>`;
-    }).join('') || '<p style="padding:20px;text-align:center">Aucune vue</p>';
+        document.getElementById('svViewersCount').textContent = data?.length || 0;
+        const list = document.getElementById('svViewersList');
+        list.innerHTML = (data || []).map(v => {
+            const viewer = v.viewer || {};
+            const name = viewer.full_name || viewer.display_name || 'Utilisateur';
+            return `<div class="sv-viewer-item">
+                ${viewer.avatar_url ? `<img src="${viewer.avatar_url}">` : `<div class="sv-viewer-avatar-initials">${getInitials(name)}</div>`}
+                <span class="sv-viewer-name">${escapeHtml(name)}</span>
+                <span class="sv-viewer-time">${timeSince(v.viewed_at)}</span>
+            </div>`;
+        }).join('') || '<p style="padding:20px;text-align:center">Aucune vue</p>';
 
-    document.getElementById('svViewersPanel').style.display = 'flex';
+        document.getElementById('svViewersPanel').style.display = 'flex';
+    } catch (err) {
+        toast('Erreur chargement vues', 'error');
+    }
 }
 
 function closeViewersPanel() {

@@ -31,8 +31,14 @@
             <div class="stories-nav-avatar-wrap">
                 <div class="stories-nav-avatar-initials" id="navUserAvatarInitials"></div>
                 <img id="navUserAvatar" alt="" class="stories-nav-avatar" style="display:none;">
+                <!-- 🔥 Pastille de statut en ligne -->
+                <span class="online-status-dot" id="navOnlineStatus" style="display:none;"></span>
             </div>
             <span id="navUserName">...</span>
+            <!-- 🔥 Bouton Menu (⋮) -->
+            <button class="nav-menu-btn" id="navMenuBtn" title="Options">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
         </div>
     </div>
 </nav>
@@ -54,11 +60,7 @@
             </div>
             <div class="my-story-existing" id="myStoryExisting" style="display:none">
                 <div id="myStoriesList" class="my-stories-thumbs"></div>
-                <div class="my-story-actions">
-                    <button class="my-story-action-btn" id="myStoryOptionsBtn" title="Options">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                </div>
+                <!-- Les actions sont désormais directement sous chaque miniature, plus de bouton global -->
             </div>
         </div>
     </div>

@@ -48,12 +48,22 @@ async function initSession() {
     if (!user) return false;
     const profile = await fetchCurrentProfile();
     if (!profile) {
-        toast('Profil introuvable. Veuillez créer votre communauté.', 'error');
+        // toast n'est peut-être pas encore défini, on utilise alert en fallback
+        if (typeof toast === 'function') {
+            toast('Profil introuvable. Veuillez créer votre communauté.', 'error');
+        } else {
+            alert('Profil introuvable. Veuillez créer votre communauté.');
+        }
         window.location.href = 'feed-setup.html';
         return false;
     }
     return true;
 }
+
+// 🔥 INITIALISATION AUTOMATIQUE AU CHARGEMENT DU SCRIPT
+(async () => {
+    await initSession();
+})();
 // ========== FIN : FONCTIONS D'AUTHENTIFICATION ==========
 
 // ========== DEBUT : EXPOSITION GLOBALE (POUR CONVERSATION.JS) ==========

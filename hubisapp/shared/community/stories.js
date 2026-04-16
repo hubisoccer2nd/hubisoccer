@@ -964,6 +964,7 @@ window.closeViewersPanel = closeViewersPanel;
 
 // ========== DEBUT : OPTIONS DE SA PROPRE STORY ==========
 function openSvOptions() {
+    console.log('openSvOptions appelée');
     const group = storyGroups[activeGroupIdx];
     const story = group?.stories[activeStoryIdx];
     if (!story) return;

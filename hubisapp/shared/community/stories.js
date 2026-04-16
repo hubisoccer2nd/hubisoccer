@@ -1,6 +1,9 @@
 // ============================================================
-//  HUBISOCCER — STORIES.JS (LISTE) – PARTIE 1/2
-//  Page de liste des stories (My HubIS Mood + HubIS Enjoy)
+//  HUBISOCCER — STORIES.JS (PAGE DE LISTE) – VERSION FINALE
+//  - Affiche My HubIS Mood et HubIS Enjoy
+//  - Permet d'ajouter une story (photo, vidéo, texte)
+//  - Options : voir les vues, télécharger, supprimer
+//  - Redirige vers stories-view.html pour la lecture
 // ============================================================
 
 'use strict';
@@ -8,11 +11,11 @@
 // sb, currentUser, currentProfile sont déjà définis dans session.js
 
 // ========== DEBUT : VARIABLES GLOBALES ==========
-let myStories = []; // Toutes mes stories actives
-let storyGroups = []; // Groupes de stories des abonnements
-let currentOptionsStory = null; // Story sélectionnée pour les options
-let storyUploadFile = null;
-let storyTextBg = 'linear-gradient(135deg,#551B8C,#3d1266)';
+let myStories = [];                // Toutes mes stories actives
+let storyGroups = [];             // Groupes de stories des abonnements
+let currentOptionsStory = null;   // Story sélectionnée pour les options
+let storyUploadFile = null;       // Fichier à uploader
+let storyTextBg = 'linear-gradient(135deg,#551B8C,#3d1266)'; // Fond par défaut
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DEBUT : SESSION ET AVATAR ==========
@@ -20,13 +23,13 @@ async function initSessionAndProfile() {
     try {
         const auth = await requireAuth();
         if (!auth) return false;
-        
+
         if (!currentProfile || !currentProfile.hubisoccer_id) {
             toast('Erreur de profil. Veuillez vous reconnecter.', 'error');
             window.location.href = 'feed-setup.html';
             return false;
         }
-        
+
         const { data: comm } = await sb
             .from('supabaseAuthPrive_communities')
             .select('id')
@@ -37,11 +40,11 @@ async function initSessionAndProfile() {
             window.location.href = 'feed-setup.html';
             return false;
         }
-        
+
         document.getElementById('navUserName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
         updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'navUserAvatar', 'navUserAvatarInitials');
         updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'myStoryAvatar', 'myStoryAvatarInitials');
-        
+
         return true;
     } catch (err) {
         toast('Erreur de session : ' + err.message, 'error');
@@ -77,14 +80,14 @@ async function loadAllStories() {
             .gt('expires_at', new Date().toISOString())
             .order('created_at', { ascending: false });
         myStories = mine || [];
-        
+
         // 2. Récupérer les abonnements
         const { data: follows } = await sb
             .from('supabaseAuthPrive_follows')
             .select('following_hubisoccer_id')
             .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
         const followIds = (follows || []).map(f => f.following_hubisoccer_id).filter(id => id !== currentProfile.hubisoccer_id);
-        
+
         let allStories = [];
         if (followIds.length > 0) {
             const { data } = await sb
@@ -95,7 +98,7 @@ async function loadAllStories() {
                 .order('created_at', { ascending: false });
             allStories = data || [];
         }
-        
+
         // Regrouper par auteur
         const groups = {};
         allStories.forEach(s => {
@@ -106,7 +109,7 @@ async function loadAllStories() {
             groups[s.user_hubisoccer_id].stories.push(s);
         });
         storyGroups = Object.values(groups);
-        
+
         renderMyStories();
         renderFollowingStories();
     } catch (err) {
@@ -120,15 +123,14 @@ function renderMyStories() {
     const addEl = document.getElementById('myStoryAdd');
     const existingEl = document.getElementById('myStoryExisting');
     const thumbsContainer = document.getElementById('myStoriesList');
-    
+
     if (myStories.length === 0) {
         addEl.style.display = 'flex';
         existingEl.style.display = 'none';
     } else {
         addEl.style.display = 'none';
         existingEl.style.display = 'flex';
-        
-        // Afficher toutes les miniatures (max 5 visibles, mais on peut scroller)
+
         thumbsContainer.innerHTML = myStories.map(story => {
             const thumbUrl = story.media_url || '';
             const isVideo = story.media_type === 'video';
@@ -146,7 +148,6 @@ function renderMyStories() {
 }
 
 function viewMyStories(storyId) {
-    // Redirige vers la visionneuse avec toutes mes stories
     window.location.href = `stories-view.html?user=${currentProfile.hubisoccer_id}&story=${storyId}`;
 }
 window.viewMyStories = viewMyStories;
@@ -155,13 +156,13 @@ window.viewMyStories = viewMyStories;
 // ========== DEBUT : RENDU DES STORIES DES ABONNÉS ==========
 function renderFollowingStories() {
     const followList = document.getElementById('followingStoriesList');
-    
+
     if (storyGroups.length === 0) {
         followList.innerHTML = '<p style="color:var(--gray);font-size:0.82rem;padding:10px 0">Aucune nouvelle story.</p>';
     } else {
         followList.innerHTML = storyGroups.map((g, i) => makeStoryListItem(g, i)).join('');
     }
-    
+
     document.querySelectorAll('.story-list-item').forEach(el => {
         el.addEventListener('click', () => openStoryGroup(parseInt(el.dataset.groupIdx)));
     });
@@ -193,16 +194,12 @@ function makeStoryListItem(g, idx) {
 function openStoryGroup(groupIdx) {
     const group = storyGroups[groupIdx];
     if (!group) return;
-    // Redirige vers la visionneuse avec la première story du groupe
     window.location.href = `stories-view.html?user=${group.userId}&story=${group.stories[0].id}`;
 }
 // ========== FIN : RENDU DES STORIES DES ABONNÉS ==========
 
 // ========== DEBUT : OPTIONS (DEPUIS LA LISTE) ==========
-let currentOptionsStoryId = null;
-
 function openMyStoryOptions() {
-    // On utilise la première story pour les options (ou on pourrait choisir)
     if (myStories.length === 0) return;
     currentOptionsStory = myStories[0];
     openModal('modalMyStoryOptions');
@@ -271,10 +268,6 @@ async function deleteMyStory() {
 }
 window.deleteMyStory = deleteMyStory;
 // ========== FIN : OPTIONS ==========
-// ============================================================
-//  HUBISOCCER — STORIES.JS (LISTE) – PARTIE 2/2
-//  Upload de story, initialisation, fin du fichier
-// ============================================================
 
 // ========== DEBUT : UPLOAD DE STORY ==========
 function handleStoryFileSelect(file) {

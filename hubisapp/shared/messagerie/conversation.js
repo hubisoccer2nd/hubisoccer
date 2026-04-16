@@ -26,7 +26,7 @@ function toast(message, type = 'info') {
     toastEl.className = `toast ${type}`;
     toastEl.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i><span>${escapeHtml(message)}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
     container.appendChild(toastEl);
-    setTimeout(() => toastEl.remove(), 5000);
+    setTimeout(() => toastEl.remove(), 30000); // 🔥 30 secondes
 }
 
 function setLoader(show, message = 'Chargement...') {
@@ -76,18 +76,6 @@ function timeSince(date) {
     interval = Math.floor(seconds / 60);
     if (interval >= 1) return `${interval} min`;
     return `À l'instant`;
-}
-
-async function requireAuth() {
-    if (typeof window.requireAuth === 'function') {
-        return await window.requireAuth();
-    }
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
-        window.location.href = '../index.html';
-        return null;
-    }
-    return user;
 }
 
 async function logout() {

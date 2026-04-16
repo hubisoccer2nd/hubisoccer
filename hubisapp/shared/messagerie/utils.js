@@ -12,11 +12,11 @@ function toast(message, type = 'info') {
     const toastEl = document.createElement('div');
     toastEl.className = `toast ${type}`;
     const icon = type === 'success' ? 'check-circle' :
-                 type === 'error' ? 'exclamation-circle' :
-                 type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+        type === 'error' ? 'exclamation-circle' :
+        type === 'warning' ? 'exclamation-triangle' : 'info-circle';
     toastEl.innerHTML = `<i class="fas fa-${icon}"></i><span>${escapeHtml(message)}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
     container.appendChild(toastEl);
-    setTimeout(() => toastEl.remove(), 30000);  // 🔥 30 secondes
+    setTimeout(() => toastEl.remove(), 30000); // 🔥 30 secondes
 }
 
 function setLoader(show, message = 'Chargement...') {

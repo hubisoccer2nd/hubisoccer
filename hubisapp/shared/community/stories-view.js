@@ -1,9 +1,10 @@
 // ============================================================
 //  HUBISOCCER — STORIES-VIEW.JS (VISIONNEUSE) – VERSION FINALE
-//  - Tous les boutons fonctionnent
+//  - Tous les boutons fonctionnent (y compris sur vidéo)
 //  - Navigation par flèches, swipe, appui long
 //  - Réponses texte, audio, média, HubiCoins, réactions
 //  - Options (vues, télécharger, supprimer, masquer, signaler)
+//  - Démarrage sur la story demandée
 // ============================================================
 
 'use strict';
@@ -15,7 +16,7 @@ let storyGroups = [];
 let activeGroupIdx = 0;
 let activeStoryIdx = 0;
 let isPaused = false;
-let isMuted = false;
+let isMuted = true;                     // 🔥 Son coupé par défaut (meilleure UX mobile)
 let storyTimer = null;
 let storyStartTime = null;
 let groupStartTime = null;
@@ -123,6 +124,7 @@ async function loadTargetStories(userId, storyId) {
         };
         storyGroups = [group];
 
+        // 🔥 CORRECTION : démarrer sur la story demandée (C2/C3)
         const startIdx = stories.findIndex(s => s.id === storyId);
         activeStoryIdx = startIdx >= 0 ? startIdx : 0;
         activeGroupIdx = 0;
@@ -194,6 +196,8 @@ function renderCurrentStory() {
         vid.playsInline = true;
         vid.muted = isMuted;
         vid.loop = false;
+        vid.setAttribute('playsinline', '');
+        vid.setAttribute('webkit-playsinline', '');
         vid.onloadeddata = () => {
             mediaLoader.style.display = 'none';
             const videoDuration = vid.duration * 1000;
@@ -205,6 +209,7 @@ function renderCurrentStory() {
         };
         mediaArea.appendChild(vid);
         document.getElementById('svMuteBtn').style.display = 'flex';
+        updateMuteIcon();
     } else if (story.media_type === 'text') {
         const div = document.createElement('div');
         div.className = 'sv-story-text-card';
@@ -347,16 +352,16 @@ function togglePause() {
 }
 // ========== FIN : PAUSE/REPRISE ==========
 
-// ========== DEBUT : GESTES TACTILES ==========
+// ========== DEBUT : GESTES TACTILES (IGNORE LES BOUTONS) ==========
+function shouldIgnoreTouchTarget(element) {
+    return element.closest('button, a, input, select, textarea, .sv-prog-bar, .sv-option-btn, .sv-close-btn, .sv-mute-btn, .sv-quick-btn, .sv-reply-send-btn, .sv-rec-cancel, .sv-rec-stop, .coins-preset, .c-modal-close, .btn-primary, .btn-ghost, .btn-danger, .btn-gold, .story-option-item, .story-react-grid span') !== null;
+}
+
 function setupSwipeGestures() {
     const viewer = document.getElementById('storyViewerPage');
     viewer.addEventListener('touchstart', onTouchStart, { passive: false });
     viewer.addEventListener('touchmove', onTouchMove, { passive: false });
     viewer.addEventListener('touchend', onTouchEnd, { passive: false });
-}
-
-function shouldIgnoreTouchTarget(element) {
-    return element.closest('button, a, input, select, textarea, .sv-prog-bar, .sv-option-btn, .sv-close-btn, .sv-mute-btn, .sv-quick-btn, .sv-reply-send-btn, .sv-rec-cancel, .sv-rec-stop, .coins-preset, .c-modal-close, .btn-primary, .btn-ghost, .btn-danger, .btn-gold, .story-option-item, .story-react-grid span') !== null;
 }
 
 function onTouchStart(e) {
@@ -387,17 +392,17 @@ function onTouchEnd(e) {
     showPauseOverlay(false);
     document.getElementById('storyViewerPage').style.transform = '';
     document.getElementById('storyViewerPage').style.opacity = '';
-    
+
     const dx = e.changedTouches[0].clientX - touchStartX;
     const dy = e.changedTouches[0].clientY - touchStartY;
     const dt = Date.now() - touchStartTime;
-    
+
     if (Math.abs(dx) > 60 && Math.abs(dy) < 40 && dt < 400) {
         if (dx < 0) goToNextStory();
         else goToPrevStory();
         return;
     }
-    
+
     if (dy > 100 && Math.abs(dx) < 60) {
         closeViewer();
         return;
@@ -421,45 +426,25 @@ function toggleMute() {
     isMuted = !isMuted;
     const vid = document.querySelector('.sv-story-video');
     if (vid) vid.muted = isMuted;
+    updateMuteIcon();
+}
+
+function updateMuteIcon() {
     document.getElementById('svMuteIcon').className = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
 }
 // ========== FIN : MUTE ==========
 
 // ========== DEBUT : MARQUAGE DES VUES ==========
 async function markStoryViewed(storyId) {
-    if (!currentProfile || !currentProfile.hubisoccer_id) {
-        console.warn('markStoryViewed: profil non chargé');
-        return;
-    }
-    
+    if (!currentProfile || !currentProfile.hubisoccer_id) return;
     try {
-        const { error } = await sb
-            .from('supabaseAuthPrive_story_views')
-            .upsert({
-                story_id: storyId,
-                viewer_hubisoccer_id: currentProfile.hubisoccer_id,
-                viewed_at: new Date().toISOString()
-            }, {
-                onConflict: 'story_id, viewer_hubisoccer_id',
-                ignoreDuplicates: false // force la mise à jour du timestamp
-            });
-        
-        if (error) {
-            console.error('Erreur upsert story_views:', error.message, error.details);
-            // Essayer une insertion simple si l'upsert échoue (table sans contrainte)
-            const { error: insertError } = await sb
-                .from('supabaseAuthPrive_story_views')
-                .insert({
-                    story_id: storyId,
-                    viewer_hubisoccer_id: currentProfile.hubisoccer_id,
-                    viewed_at: new Date().toISOString()
-                });
-            if (insertError) {
-                console.error('Erreur insertion simple story_views:', insertError.message);
-            }
-        }
+        await sb.from('supabaseAuthPrive_story_views').upsert({
+            story_id: storyId,
+            viewer_hubisoccer_id: currentProfile.hubisoccer_id,
+            viewed_at: new Date().toISOString()
+        }, { onConflict: 'story_id, viewer_hubisoccer_id' });
     } catch (err) {
-        console.error('Exception markStoryViewed:', err);
+        // silencieux
     }
 }
 // ========== FIN : MARQUAGE ==========
@@ -688,7 +673,7 @@ async function sendStoryReplyMessage(recipientId, content, mediaUrl, mediaType) 
             .update({ updated_at: new Date().toISOString() })
             .eq('id', convId);
     } catch (err) {
-        /* silencieux */
+        // silencieux
     }
 }
 // ========== FIN : MESSAGERIE ==========
@@ -823,17 +808,15 @@ async function sendStoryReaction(emoji) {
 // ========== FIN : RÉACTIONS ==========
 
 // ========== DEBUT : OPTIONS ==========
-    function openSvOptions() {
+function openSvOptions() {
     const story = storyGroups[activeGroupIdx]?.stories[activeStoryIdx];
     if (!story) return;
-    
-    // 🔥 Correction : mettre à jour currentOptionsStory
+
     currentOptionsStory = story;
-    
+
     const isOwn = story.user_hubisoccer_id === currentProfile.hubisoccer_id;
     document.getElementById('optionsModalTitle').textContent = isOwn ? 'Options de ma story' : 'Options';
 
-    // On génère le HTML des options
     document.getElementById('optionsModalBody').innerHTML = isOwn
         ? `
             <button class="story-option-item" id="viewStoryViewsBtn"><i class="fas fa-eye"></i> Voir les vues</button>
@@ -846,11 +829,10 @@ async function sendStoryReaction(emoji) {
             <button class="story-option-item danger" id="reportStoryBtn"><i class="fas fa-flag"></i> Signaler</button>
         `;
 
-    // Attacher les écouteurs (une seule fois, car la modale est regénérée à chaque ouverture)
     if (isOwn) {
         document.getElementById('viewStoryViewsBtn').addEventListener('click', showStoryViewers);
         document.getElementById('downloadStoryBtn').addEventListener('click', downloadCurrentStory);
-        document.getElementById('hideStoryBtn').addEventListener('click', () => toast('À venir', 'info'));
+        document.getElementById('hideStoryBtn').addEventListener('click', hideCurrentStory);
         document.getElementById('deleteStoryBtn').addEventListener('click', () => {
             closeModal('modalStoryOptions');
             showConfirmModal('Supprimer ?', 'Définitif.', deleteCurrentStory);
@@ -860,7 +842,6 @@ async function sendStoryReaction(emoji) {
         document.getElementById('reportStoryBtn').addEventListener('click', reportCurrentStory);
     }
 
-    // Ouvrir la modale
     openModal('modalStoryOptions');
 }
 
@@ -869,29 +850,25 @@ async function showStoryViewers() {
     const story = currentOptionsStory;
     if (!story) return;
 
-    try {
-        const { data } = await sb
-            .from('supabaseAuthPrive_story_views')
-            .select('*, viewer:supabaseAuthPrive_profiles!viewer_hubisoccer_id(full_name, display_name, avatar_url)')
-            .eq('story_id', story.id)
-            .order('viewed_at', { ascending: false });
+    const { data } = await sb
+        .from('supabaseAuthPrive_story_views')
+        .select('*, viewer:supabaseAuthPrive_profiles!viewer_hubisoccer_id(full_name, display_name, avatar_url)')
+        .eq('story_id', story.id)
+        .order('viewed_at', { ascending: false });
 
-        document.getElementById('svViewersCount').textContent = data?.length || 0;
-        const list = document.getElementById('svViewersList');
-        list.innerHTML = (data || []).map(v => {
-            const viewer = v.viewer || {};
-            const name = viewer.full_name || viewer.display_name || 'Utilisateur';
-            return `<div class="sv-viewer-item">
-                ${viewer.avatar_url ? `<img src="${viewer.avatar_url}">` : `<div class="sv-viewer-avatar-initials">${getInitials(name)}</div>`}
-                <span class="sv-viewer-name">${escapeHtml(name)}</span>
-                <span class="sv-viewer-time">${timeSince(v.viewed_at)}</span>
-            </div>`;
-        }).join('') || '<p style="padding:20px;text-align:center">Aucune vue</p>';
+    document.getElementById('svViewersCount').textContent = data?.length || 0;
+    const list = document.getElementById('svViewersList');
+    list.innerHTML = (data || []).map(v => {
+        const viewer = v.viewer || {};
+        const name = viewer.full_name || viewer.display_name || 'Utilisateur';
+        return `<div class="sv-viewer-item">
+            ${viewer.avatar_url ? `<img src="${viewer.avatar_url}">` : `<div class="sv-viewer-avatar-initials">${getInitials(name)}</div>`}
+            <span class="sv-viewer-name">${escapeHtml(name)}</span>
+            <span class="sv-viewer-time">${timeSince(v.viewed_at)}</span>
+        </div>`;
+    }).join('') || '<p style="padding:20px;text-align:center">Aucune vue</p>';
 
-        document.getElementById('svViewersPanel').style.display = 'flex';
-    } catch (err) {
-        toast('Erreur chargement vues', 'error');
-    }
+    document.getElementById('svViewersPanel').style.display = 'flex';
 }
 
 function closeViewersPanel() {
@@ -910,6 +887,32 @@ async function downloadCurrentStory() {
     a.download = `story_${Date.now()}.${story.media_type === 'video' ? 'mp4' : 'jpg'}`;
     a.click();
     toast('Téléchargement démarré', 'success');
+}
+
+async function hideCurrentStory() {
+    closeModal('modalStoryOptions');
+    const story = currentOptionsStory;
+    if (!story) return;
+
+    if (!confirm('Masquer cette story à tous les autres utilisateurs ?')) return;
+
+    try {
+        const { data: allUsers } = await sb
+            .from('supabaseAuthPrive_profiles')
+            .select('hubisoccer_id')
+            .neq('hubisoccer_id', currentProfile.hubisoccer_id);
+
+        const hiddenFor = [...new Set([...(story.hidden_for || []), ...allUsers.map(u => u.hubisoccer_id)])];
+
+        await sb.from('supabaseAuthPrive_stories')
+            .update({ hidden_for: hiddenFor })
+            .eq('id', story.id);
+
+        toast('Story masquée', 'success');
+        window.location.href = 'stories.html';
+    } catch (err) {
+        toast('Erreur masquage', 'error');
+    }
 }
 
 async function deleteCurrentStory() {
@@ -946,10 +949,11 @@ async function reportCurrentStory() {
     const story = currentOptionsStory;
     if (!story) return;
 
+    const reason = prompt('Raison du signalement (optionnel)');
     await sb.from('supabaseAuthPrive_reports').insert({
         story_id: story.id,
         reporter_hubisoccer_id: currentProfile.hubisoccer_id,
-        reason: 'Signalement story'
+        reason: reason || 'Signalement story'
     });
 
     toast('Signalé', 'success');
@@ -989,7 +993,6 @@ async function init() {
     renderCurrentStory();
     setupSwipeGestures();
 
-    // Attachement robuste des écouteurs
     document.getElementById('svNavPrev').addEventListener('click', goToPrevStory);
     document.getElementById('svNavNext').addEventListener('click', goToNextStory);
     document.getElementById('svTapPrev').addEventListener('click', goToPrevStory);

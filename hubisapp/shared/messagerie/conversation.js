@@ -588,10 +588,10 @@ function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
         img.style.display = 'block';
         initials.style.display = 'none';
     } else {
-        img.style.display = 'none';
-        initials.style.display = 'flex';
-        initials.textContent = text;
-    }
+    img.style.display = 'none';
+    initials.style.display = 'flex';
+    initials.textContent = text;
+}
 }
 // ========== FIN : SESSION & PROFIL ==========
 
@@ -646,11 +646,12 @@ async function loadConversations() {
             .order('updated_at', { ascending: false });
         if (cErr) throw cErr;
         
+        // ✅ CORRECTION FINALE : gère NULL et absence dans le tableau
         const { data: lastMsgs } = await sb
             .from('supabaseAuthPrive_messages')
             .select('id, conversation_id, content, media_type, created_at, user_hubisoccer_id')
             .in('conversation_id', convIds)
-            .not('deleted_for', 'cs', `{${currentProfile.hubisoccer_id}}`)
+            .or(`deleted_for.is.null, deleted_for.not.cs.{${currentProfile.hubisoccer_id}}`)
             .order('created_at', { ascending: false });
         
         const lastMsgMap = {};
@@ -670,9 +671,8 @@ async function loadConversations() {
                 .select('id', { count: 'exact', head: true })
                 .eq('conversation_id', cid)
                 .neq('user_hubisoccer_id', currentProfile.hubisoccer_id)
-                .not('deleted_for', 'cs', `{${currentProfile.hubisoccer_id}}`);
+                .or(`deleted_for.is.null, deleted_for.not.cs.{${currentProfile.hubisoccer_id}}`);
             if (lastRead) {
-                // 🔥 CORRECTION : convertir en chaîne ISO pour éviter l'erreur 400
                 const isoLastRead = new Date(lastRead).toISOString();
                 query = query.gt('created_at', isoLastRead);
             }

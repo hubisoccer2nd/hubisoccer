@@ -604,35 +604,35 @@ async function loadConversations() {
             .select('conversation_id, last_read_at')
             .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
         if (pErr) throw pErr;
-
+        
         if (!participations || participations.length === 0) {
             conversations = [];
             renderConversations();
             return;
         }
-
+        
         const allConvIds = participations.map(p => p.conversation_id);
         const readMap = Object.fromEntries(participations.map(p => [p.conversation_id, p.last_read_at]));
-
+        
         let convIds = allConvIds;
         const { data: archived } = await sb
             .from('supabaseAuthPrive_archived_conversations')
             .select('conversation_id')
             .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
         const archivedIds = new Set((archived || []).map(a => a.conversation_id));
-
+        
         if (showArchives) {
             convIds = allConvIds.filter(id => archivedIds.has(id));
         } else {
             convIds = allConvIds.filter(id => !archivedIds.has(id));
         }
-
+        
         if (convIds.length === 0) {
             conversations = [];
             renderConversations();
             return;
         }
-
+        
         const { data: convData, error: cErr } = await sb
             .from('supabaseAuthPrive_conversations')
             .select(`
@@ -645,14 +645,14 @@ async function loadConversations() {
             .in('id', convIds)
             .order('updated_at', { ascending: false });
         if (cErr) throw cErr;
-
+        
         const { data: lastMsgs } = await sb
             .from('supabaseAuthPrive_messages')
             .select('id, conversation_id, content, media_type, created_at, user_hubisoccer_id')
             .in('conversation_id', convIds)
             .not('deleted_for', 'cs', `{${currentProfile.hubisoccer_id}}`)
             .order('created_at', { ascending: false });
-
+        
         const lastMsgMap = {};
         if (lastMsgs) {
             for (const msg of lastMsgs) {
@@ -661,7 +661,7 @@ async function loadConversations() {
                 }
             }
         }
-
+        
         const unreadCounts = {};
         for (const cid of convIds) {
             const lastRead = readMap[cid];
@@ -672,16 +672,18 @@ async function loadConversations() {
                 .neq('user_hubisoccer_id', currentProfile.hubisoccer_id)
                 .not('deleted_for', 'cs', `{${currentProfile.hubisoccer_id}}`);
             if (lastRead) {
-                query = query.gt('created_at', lastRead);
+                // 🔥 CORRECTION : convertir en chaîne ISO pour éviter l'erreur 400
+                const isoLastRead = new Date(lastRead).toISOString();
+                query = query.gt('created_at', isoLastRead);
             }
             const { count } = await query;
             unreadCounts[cid] = count || 0;
         }
-
+        
         conversations = (convData || []).map(conv => {
             const participants = conv.participants || [];
             let name, avatarUrl, otherUserId = null;
-
+            
             if (conv.is_group) {
                 name = conv.group_name || 'Groupe';
                 avatarUrl = conv.group_avatar || null;
@@ -692,7 +694,7 @@ async function loadConversations() {
                 avatarUrl = prof.avatar_url || null;
                 otherUserId = other?.user_hubisoccer_id || null;
             }
-
+            
             const lastMsg = lastMsgMap[conv.id];
             return {
                 id: conv.id,
@@ -708,7 +710,7 @@ async function loadConversations() {
                 archived: archivedIds.has(conv.id)
             };
         });
-
+        
         renderConversations();
     } catch (err) {
         console.error('Erreur chargement conversations:', err);
@@ -723,10 +725,10 @@ function renderConversations() {
     const skeleton = document.getElementById('skeletonList');
     const emptyEl = document.getElementById('emptyState');
     const totalBadge = document.getElementById('totalConvBadge');
-
+    
     skeleton.style.display = 'none';
     list.style.display = 'flex';
-
+    
     let filtered = conversations.filter(conv => {
         if (searchQuery && !conv.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
         if (activeFilter === 'unread' && conv.unreadCount === 0) return false;
@@ -734,10 +736,10 @@ function renderConversations() {
         if (activeFilter === 'direct' && conv.is_group) return false;
         return true;
     });
-
+    
     const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
     totalBadge.textContent = `${filtered.length} conversation${filtered.length !== 1 ? 's' : ''}`;
-
+    
     const notifBadge = document.getElementById('notifBadge');
     if (totalUnread > 0) {
         notifBadge.textContent = totalUnread > 99 ? '99+' : totalUnread;
@@ -747,7 +749,7 @@ function renderConversations() {
         notifBadge.style.display = 'none';
         document.title = 'Messages | HubISoccer';
     }
-
+    
     if (filtered.length === 0) {
         list.style.display = 'none';
         emptyEl.style.display = 'block';
@@ -755,10 +757,10 @@ function renderConversations() {
         document.getElementById('emptyDesc').textContent = showArchives ? 'Vous n\'avez pas encore archivé de conversations.' : 'Sélectionnez un abonné ci‑dessus ou créez un groupe !';
         return;
     }
-
+    
     emptyEl.style.display = 'none';
     list.style.display = 'flex';
-
+    
     list.innerHTML = filtered.map(conv => {
         const isOnline = conv.otherUserId && onlineUsers.has(conv.otherUserId);
         const lastMsgText = getLastMsgPreview(conv.lastMsg);
@@ -766,7 +768,7 @@ function renderConversations() {
         const hasUnread = conv.unreadCount > 0;
         const initials = getInitials(conv.name);
         const avatarUrl = conv.avatarUrl;
-
+        
         return `
         <div class="conv-item ${hasUnread ? 'unread' : ''}" data-conv-id="${conv.id}">
             <div class="conv-avatar-wrap">

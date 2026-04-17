@@ -1,7 +1,8 @@
 // ============================================================
-//  HUBISOCCER — SETTINGS-MSG.JS (VERSION COMPLÈTE)
+//  HUBISOCCER — SETTINGS-MSG.JS (VERSION SYNCHRONISÉE SUPABASE)
 //  Paramètres de la messagerie — Tous rôles
-//  Gère les préférences utilisateur (localStorage + Supabase)
+//  Stockage prioritaire : Supabase (table user_msg_settings)
+//  Fallback : localStorage
 // ============================================================
 
 'use strict';
@@ -125,16 +126,42 @@ function buildSidebar() {
 }
 // ========== FIN : SIDEBAR ==========
 
-// ========== DEBUT : CHARGEMENT / SAUVEGARDE DES PARAMÈTRES ==========
-function loadSettings() {
-    const saved = localStorage.getItem('hubisoccer_msg_settings');
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            currentSettings = { ...currentSettings, ...parsed };
-        } catch (e) {}
+// ========== DEBUT : CHARGEMENT / SAUVEGARDE DES PARAMÈTRES (SUPABASE PRIORITAIRE) ==========
+async function loadSettings() {
+    try {
+        // 1. Essayer de charger depuis Supabase
+        const { data, error } = await sb
+            .from('supabaseAuthPrive_user_msg_settings')
+            .select('settings')
+            .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
+            .maybeSingle();
+
+        if (!error && data && data.settings) {
+            currentSettings = { ...currentSettings, ...data.settings };
+        } else {
+            // 2. Fallback : charger depuis localStorage
+            const saved = localStorage.getItem('hubisoccer_msg_settings');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    currentSettings = { ...currentSettings, ...parsed };
+                } catch (e) {}
+            }
+            // 3. Si rien, sauvegarder les valeurs par défaut dans Supabase
+            await saveSettingsToSupabase();
+        }
+    } catch (err) {
+        console.warn('Erreur chargement paramètres Supabase, utilisation localStorage', err);
+        const saved = localStorage.getItem('hubisoccer_msg_settings');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                currentSettings = { ...currentSettings, ...parsed };
+            } catch (e) {}
+        }
     }
-    // Appliquer aux champs
+
+    // Appliquer aux champs du formulaire
     document.getElementById('pushNotifications').checked = currentSettings.pushNotifications;
     document.getElementById('notificationSound').checked = currentSettings.notificationSound;
     document.getElementById('messagePreview').checked = currentSettings.messagePreview;
@@ -145,10 +172,29 @@ function loadSettings() {
     document.getElementById('fontSize').value = currentSettings.fontSize;
     document.getElementById('bubbleStyle').value = currentSettings.bubbleStyle;
     document.getElementById('currentLangCode').textContent = currentSettings.language.toUpperCase();
+
     applyTheme();
 }
 
-function saveSettings() {
+async function saveSettingsToSupabase() {
+    try {
+        const { error } = await sb
+            .from('supabaseAuthPrive_user_msg_settings')
+            .upsert({
+                user_hubisoccer_id: currentProfile.hubisoccer_id,
+                settings: currentSettings,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_hubisoccer_id' });
+
+        if (error) throw error;
+    } catch (err) {
+        console.warn('Sauvegarde Supabase échouée, fallback localStorage', err);
+        localStorage.setItem('hubisoccer_msg_settings', JSON.stringify(currentSettings));
+    }
+}
+
+async function saveSettings() {
+    // Récupérer les valeurs du formulaire
     currentSettings.pushNotifications = document.getElementById('pushNotifications').checked;
     currentSettings.notificationSound = document.getElementById('notificationSound').checked;
     currentSettings.messagePreview = document.getElementById('messagePreview').checked;
@@ -158,12 +204,13 @@ function saveSettings() {
     currentSettings.theme = document.getElementById('themeSelect').value;
     currentSettings.fontSize = document.getElementById('fontSize').value;
     currentSettings.bubbleStyle = document.getElementById('bubbleStyle').value;
-    localStorage.setItem('hubisoccer_msg_settings', JSON.stringify(currentSettings));
+
+    await saveSettingsToSupabase();
     applyTheme();
     toast('Paramètres enregistrés', 'success');
 }
 
-function resetSettings() {
+async function resetSettings() {
     currentSettings = {
         pushNotifications: true,
         notificationSound: true,
@@ -174,10 +221,21 @@ function resetSettings() {
         theme: 'system',
         fontSize: 'medium',
         bubbleStyle: 'rounded',
-        language: currentSettings.language
+        language: currentSettings.language // conserve la langue
     };
-    loadSettings(); // recharge l'UI
-    saveSettings();
+    // Mettre à jour l'UI
+    document.getElementById('pushNotifications').checked = currentSettings.pushNotifications;
+    document.getElementById('notificationSound').checked = currentSettings.notificationSound;
+    document.getElementById('messagePreview').checked = currentSettings.messagePreview;
+    document.getElementById('whoCanMessage').value = currentSettings.whoCanMessage;
+    document.getElementById('readReceipts').checked = currentSettings.readReceipts;
+    document.getElementById('blockGroupInvites').checked = currentSettings.blockGroupInvites;
+    document.getElementById('themeSelect').value = currentSettings.theme;
+    document.getElementById('fontSize').value = currentSettings.fontSize;
+    document.getElementById('bubbleStyle').value = currentSettings.bubbleStyle;
+
+    await saveSettingsToSupabase();
+    applyTheme();
     toast('Paramètres réinitialisés', 'info');
 }
 
@@ -190,9 +248,8 @@ function applyTheme() {
         document.body.classList.remove('dark-mode');
     }
     document.body.style.fontSize = { small: '14px', medium: '16px', large: '18px' }[currentSettings.fontSize] || '16px';
-    // Bulles (sera appliqué via variable CSS ou classes dans discuss.css)
-    document.documentElement.style.setProperty('--bubble-radius', 
-        currentSettings.bubbleStyle === 'rounded' ? '18px' : 
+    document.documentElement.style.setProperty('--bubble-radius',
+        currentSettings.bubbleStyle === 'rounded' ? '18px' :
         currentSettings.bubbleStyle === 'slightly' ? '8px' : '2px');
 }
 // ========== FIN : CHARGEMENT / SAUVEGARDE ==========
@@ -206,12 +263,12 @@ function renderLanguageGrid() {
         </div>
     `).join('');
     grid.querySelectorAll('.language-card').forEach(card => {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', async () => {
             const lang = card.dataset.lang;
             currentSettings.language = lang;
             document.getElementById('currentLangCode').textContent = lang.toUpperCase();
             renderLanguageGrid();
-            saveSettings();
+            await saveSettingsToSupabase();
             // Appliquer les traductions si disponibles
         });
     });
@@ -299,7 +356,9 @@ async function exportConversations() {
                 id, is_group, group_name, created_at,
                 participants:supabaseAuthPrive_conversation_participants(user_hubisoccer_id)
             `)
-            .in('id', function() { /* sous-requête */ return sb.from('supabaseAuthPrive_conversation_participants').select('conversation_id').eq('user_hubisoccer_id', currentProfile.hubisoccer_id); });
+            .in('id', function() {
+                return sb.from('supabaseAuthPrive_conversation_participants').select('conversation_id').eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
+            });
         const exportData = [];
         for (const conv of (convs || [])) {
             const { data: messages } = await sb
@@ -331,7 +390,7 @@ async function init() {
         setLoader(false);
         return;
     }
-    loadSettings();
+    await loadSettings();
     renderLanguageGrid();
     calculateStorageUsage();
 

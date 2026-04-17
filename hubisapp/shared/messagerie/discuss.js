@@ -1,7 +1,8 @@
 // ============================================================
-//  HUBISOCCER — DISCUSS.JS (VERSION CORRIGÉE & COMPLÈTE)
+//  HUBISOCCER — DISCUSS.JS (VERSION FINALE COMPLÈTE)
 //  Chat intérieur — Tous rôles
-//  Autonome : dépend de session.js et utils.js locaux
+//  Inclut : réécoute audio, aperçu longs messages, mode sombre,
+//  notifications push, recherche avancée, transfert, etc.
 // ============================================================
 
 'use strict';
@@ -25,7 +26,7 @@ let hasMoreMsgs = false;
 let pendingReply = null;
 let editingMsgId = null;
 let pendingFile = null;
-let pendingAudio = null;
+let pendingAudioBlob = null;
 
 // Contexte menu
 let ctxMsgId = null;
@@ -44,8 +45,11 @@ let audioChunks = [];
 let recInterval = null;
 let recSeconds = 0;
 
+// Mode sombre
+let darkMode = localStorage.getItem('hubisoccer_dark_mode') === 'true';
+
 // Émojis (liste simplifiée)
-const EMOJI_LIST = ['😊','😂','❤️','👍','😢','😮','🔥','⚽','👏','🎉','🙏','😡'];
+const EMOJI_LIST = ['😊','😂','❤️','👍','😢','😮','🔥','⚽','👏','🎉','🙏','😡','🥳','🌟','💪','🏆'];
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DEBUT : INITIALISATION SESSION & PROFIL ==========
@@ -55,8 +59,8 @@ async function initSessionAndProfile() {
         if (!auth) return false;
 
         if (!currentProfile || !currentProfile.hubisoccer_id) {
-            toast('Erreur de profil. Veuillez vous reconnecter.', 'error');
-            window.location.href = 'feed-setup.html';
+            toast('Profil non chargé. Redirection...', 'error');
+            window.location.href = '../community/feed-setup.html';
             return false;
         }
         return true;
@@ -65,9 +69,25 @@ async function initSessionAndProfile() {
         return false;
     }
 }
-// ========== FIN : INITIALISATION SESSION & PROFIL ==========
 
-// ========== DEBUT : INITIALISATION DE LA CONVERSATION ==========
+function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
+    const img = document.getElementById(imgId);
+    const initials = document.getElementById(initialsId);
+    if (!img || !initials) return;
+    const text = getInitials(fullName);
+    if (avatarUrl && avatarUrl !== '') {
+        img.src = avatarUrl;
+        img.style.display = 'block';
+        initials.style.display = 'none';
+    } else {
+        img.style.display = 'none';
+        initials.style.display = 'flex';
+        initials.textContent = text;
+    }
+}
+// ========== FIN : SESSION & PROFIL ==========
+
+// ========== DEBUT : CHARGEMENT DE LA CONVERSATION ==========
 async function loadConversation(convId) {
     const { data, error } = await sb
         .from('supabaseAuthPrive_conversations')
@@ -114,22 +134,10 @@ async function loadConversation(convId) {
     }
 }
 
-function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
-    const img = document.getElementById(imgId);
-    const initials = document.getElementById(initialsId);
-    if (!img || !initials) return;
-    const text = getInitials(fullName);
-    if (avatarUrl && avatarUrl !== '') {
-        img.src = avatarUrl;
-        img.style.display = 'block';
-        initials.style.display = 'none';
-    } else {
-        img.style.display = 'none';
-        initials.style.display = 'flex';
-        initials.textContent = text;
-    }
+function goBack() {
+    window.location.href = 'conversation.html';
 }
-// ========== FIN : INITIALISATION DE LA CONVERSATION ==========
+// ========== FIN : CHARGEMENT DE LA CONVERSATION ==========
 
 // ========== DEBUT : CHARGEMENT DES MESSAGES ==========
 async function loadMessages(before = null) {
@@ -253,7 +261,7 @@ function makeMessageRow(msg, hideAvatar = false) {
     bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); showContextMenu(e, msg); });
 
     if (msg.reply_to_id) {
-        const replyEl = makeReplyQuote(msg.reply_to_id, isOwn);
+        const replyEl = makeReplyQuote(msg.reply_to_id);
         bubble.appendChild(replyEl);
     }
 
@@ -267,6 +275,27 @@ function makeMessageRow(msg, hideAvatar = false) {
             textEl.innerHTML += ` <i class="fas fa-thumbtack pin-icon"></i>`;
         }
         bubble.appendChild(textEl);
+
+        // Bouton "Voir plus / Voir moins" pour les longs messages
+        const plainText = stripFormatting(msg.content);
+        if (plainText.length > 500) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'msg-expand-btn';
+            toggleBtn.textContent = 'Voir plus';
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const span = bubble.querySelector('span');
+                if (span.classList.contains('expanded')) {
+                    span.classList.remove('expanded');
+                    toggleBtn.textContent = 'Voir plus';
+                } else {
+                    span.classList.add('expanded');
+                    toggleBtn.textContent = 'Voir moins';
+                }
+            });
+            bubble.appendChild(toggleBtn);
+            bubble.querySelector('span').classList.add('collapsed');
+        }
     }
 
     if (msg.media_url) {
@@ -298,7 +327,7 @@ function getMsgStatusIcon(msg) {
     return `<i class="fas fa-check sent" title="Envoyé"></i>`;
 }
 
-function makeReplyQuote(replyToId, isOwn) {
+function makeReplyQuote(replyToId) {
     const div = document.createElement('div');
     div.className = 'reply-quote';
     const original = messages.find(m => m.id === replyToId);
@@ -367,6 +396,10 @@ function formatMsgText(text) {
         .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" style="text-decoration:underline;opacity:0.85">$1</a>')
         .replace(/\n/g, '<br>');
 }
+
+function stripFormatting(text) {
+    return text.replace(/[*_]/g, '');
+}
 // ========== FIN : RENDU DES MESSAGES ==========
 
 // ========== DEBUT : ENVOI DE MESSAGE ==========
@@ -375,7 +408,7 @@ async function sendMessage() {
     const content = input.value.trim();
     const btn = document.getElementById('sendBtn');
 
-    if (!content && !pendingFile && !pendingAudio) return;
+    if (!content && !pendingFile && !pendingAudioBlob) return;
 
     btn.disabled = true;
 
@@ -397,15 +430,15 @@ async function sendMessage() {
             clearAttachmentPreview();
         }
 
-        if (pendingAudio) {
+        if (pendingAudioBlob) {
             const fileName = `${currentProfile.hubisoccer_id}_audio_${Date.now()}.webm`;
-            const { error: upErr } = await sb.storage.from('message_attachments').upload(fileName, pendingAudio);
+            const { error: upErr } = await sb.storage.from('message_attachments').upload(fileName, pendingAudioBlob);
             if (upErr) throw upErr;
             const { data: urlData } = sb.storage.from('message_attachments').getPublicUrl(fileName);
             mediaUrl = urlData.publicUrl;
             mediaType = 'audio';
-            pendingAudio = null;
-            stopAudioRecorder();
+            pendingAudioBlob = null;
+            document.getElementById('audioPreviewBar').style.display = 'none';
         }
 
         if (editingMsgId) {
@@ -456,9 +489,7 @@ async function sendMessage() {
         btn.disabled = false;
     }
 }
-// ========== FIN : ENVOI DE MESSAGE ==========
 
-// ========== DEBUT : ACTIONS SUR MESSAGES ==========
 function appendMessage(msg) {
     const container = document.getElementById('messagesContainer');
     const lastMsg = messages[messages.length - 1];
@@ -488,8 +519,7 @@ function removeMessageFromDOM(msgId) {
     document.querySelector(`.msg-row[data-msg-id="${msgId}"]`)?.remove();
     messages = messages.filter(m => m.id !== msgId);
 }
-
-// ========== FIN : ACTIONS SUR MESSAGES ==========
+// ========== FIN : ENVOI DE MESSAGE ==========
 
 // ========== DEBUT : RÉPONSE & ÉDITION ==========
 function startReply(msg) {
@@ -588,7 +618,65 @@ async function toggleReaction(msgId, emoji) {
 }
 // ========== FIN : RÉACTIONS ==========
 
-// ========== DEBUT : CONTEXT MENU ==========
+// ========== DEBUT : TRANSFERT ==========
+async function showForwardModal(msgId) {
+    const msg = messages.find(m => m.id === msgId);
+    if (!msg) return;
+    ctxMsgId = msgId;
+    const { data: participations } = await sb
+        .from('supabaseAuthPrive_conversation_participants')
+        .select('conversation_id')
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
+    const convIds = (participations || []).map(p => p.conversation_id).filter(id => id !== currentConvId);
+
+    const { data: convs } = await sb
+        .from('supabaseAuthPrive_conversations')
+        .select('id, is_group, group_name, participants:supabaseAuthPrive_conversation_participants(user_hubisoccer_id, profile:supabaseAuthPrive_profiles!user_hubisoccer_id(full_name, display_name, avatar_url))')
+        .in('id', convIds);
+
+    const list = document.getElementById('forwardList');
+    list.innerHTML = (convs || []).map(conv => {
+        let name;
+        if (conv.is_group) name = conv.group_name || 'Groupe';
+        else {
+            const other = conv.participants?.find(p => p.user_hubisoccer_id !== currentProfile.hubisoccer_id);
+            name = other?.profile?.full_name || other?.profile?.display_name || 'Utilisateur';
+        }
+        return `<div class="forward-item" data-conv-id="${conv.id}">
+            <span>${escapeHtml(name)}</span>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.forward-item').forEach(el => {
+        el.addEventListener('click', () => forwardToConversation(el.dataset.convId, msg));
+    });
+
+    openModal('modalForward');
+}
+
+async function forwardToConversation(convId, msg) {
+    const { error } = await sb.from('supabaseAuthPrive_messages').insert({
+        conversation_id: convId,
+        user_hubisoccer_id: currentProfile.hubisoccer_id,
+        content: msg.content,
+        media_url: msg.media_url,
+        media_type: msg.media_type,
+        deleted_for: [],
+        reactions: {},
+        edited: false,
+        pinned: false,
+        read_by: []
+    });
+    if (error) {
+        toast('Erreur transfert', 'error');
+    } else {
+        toast('Message transféré', 'success');
+        closeModal('modalForward');
+    }
+}
+// ========== FIN : TRANSFERT ==========
+
+// ========== DEBUT : MENU CONTEXTUEL ==========
 function showContextMenu(e, msg) {
     e.preventDefault();
     const menu = document.getElementById('contextMenu');
@@ -608,7 +696,7 @@ function hideContextMenu() {
     document.getElementById('contextMenu').style.display = 'none';
     ctxMsgId = null;
 }
-// ========== FIN : CONTEXT MENU ==========
+// ========== FIN : MENU CONTEXTUEL ==========
 
 // ========== DEBUT : SCROLL ==========
 function scrollToBottom(smooth = true) {
@@ -638,6 +726,11 @@ function autoResizeInput() {
     const el = document.getElementById('msgInput');
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    // Afficher le bouton aperçu si > 1500 caractères
+    const previewBtn = document.getElementById('previewMsgBtn');
+    if (previewBtn) {
+        previewBtn.style.display = el.value.length > 1500 ? 'flex' : 'none';
+    }
 }
 
 function startTyping() {
@@ -786,10 +879,10 @@ async function startAudioRecorder() {
         recSeconds = 0;
         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
         mediaRecorder.onstop = () => {
-            pendingAudio = new Blob(audioChunks, { type: 'audio/webm' });
+            pendingAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             stream.getTracks().forEach(t => t.stop());
             document.getElementById('audioRecorderBar').style.display = 'none';
-            sendMessage();
+            showAudioPreview(pendingAudioBlob);
         };
         mediaRecorder.start();
         document.getElementById('audioRecorderBar').style.display = 'flex';
@@ -813,7 +906,7 @@ function stopAudioRecorder() {
 }
 
 function cancelAudioRecorder() {
-    pendingAudio = null;
+    pendingAudioBlob = null;
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.ondataavailable = null;
         mediaRecorder.onstop = null;
@@ -822,7 +915,110 @@ function cancelAudioRecorder() {
     clearInterval(recInterval);
     document.getElementById('audioRecorderBar').style.display = 'none';
 }
+
+function showAudioPreview(blob) {
+    const bar = document.getElementById('audioPreviewBar');
+    const player = document.getElementById('audioPreviewPlayer');
+    player.src = URL.createObjectURL(blob);
+    bar.style.display = 'flex';
+}
+
+function discardRecordedAudio() {
+    pendingAudioBlob = null;
+    document.getElementById('audioPreviewBar').style.display = 'none';
+    document.getElementById('audioPreviewPlayer').src = '';
+}
+
+function sendRecordedAudio() {
+    if (pendingAudioBlob) {
+        sendMessage(); // pendingAudioBlob sera traité dans sendMessage
+    }
+}
 // ========== FIN : AUDIO RECORDER ==========
+
+// ========== DEBUT : FORMATAGE ==========
+function applyFormatting(tag) {
+    const input = document.getElementById('msgInput');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const text = input.value;
+    let formatted = '';
+    if (tag === 'bold') formatted = `*${text.substring(start, end)}*`;
+    else if (tag === 'italic') formatted = `_${text.substring(start, end)}_`;
+    else if (tag === 'link') {
+        const url = prompt('Entrez l\'URL :', 'https://');
+        if (url) formatted = `[${text.substring(start, end)}](${url})`;
+    }
+    if (formatted) {
+        input.value = text.substring(0, start) + formatted + text.substring(end);
+        input.focus();
+        input.setSelectionRange(start + formatted.length, start + formatted.length);
+    }
+    autoResizeInput();
+}
+// ========== FIN : FORMATAGE ==========
+
+// ========== DEBUT : APERÇU MESSAGE ==========
+function showMessagePreview() {
+    const content = document.getElementById('msgInput').value;
+    const previewDiv = document.getElementById('previewContent');
+    previewDiv.innerHTML = formatMsgText(content);
+    openModal('modalMessagePreview');
+}
+
+function confirmPreviewAndSend() {
+    closeModal('modalMessagePreview');
+    sendMessage();
+}
+// ========== FIN : APERÇU MESSAGE ==========
+
+// ========== DEBUT : MODE SOMBRE ==========
+function applyTheme() {
+    if (darkMode) {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    localStorage.setItem('hubisoccer_dark_mode', darkMode);
+}
+
+function toggleDarkMode() {
+    darkMode = !darkMode;
+    applyTheme();
+    toast(darkMode ? 'Mode sombre activé' : 'Mode clair activé', 'info');
+}
+
+// Détection préférence système
+const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+systemDark.addEventListener('change', (e) => {
+    if (localStorage.getItem('hubisoccer_dark_mode') === null) {
+        darkMode = e.matches;
+        applyTheme();
+    }
+});
+if (localStorage.getItem('hubisoccer_dark_mode') === null) {
+    darkMode = systemDark.matches;
+}
+// ========== FIN : MODE SOMBRE ==========
+
+// ========== DEBUT : NOTIFICATIONS PUSH ==========
+async function requestNotificationPermission() {
+    if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            // Enregistrer le service worker
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('Service worker enregistré', registration);
+                } catch (err) {
+                    console.warn('Service worker non enregistré', err);
+                }
+            }
+        }
+    }
+}
+// ========== FIN : NOTIFICATIONS PUSH ==========
 
 // ========== DEBUT : MODALES & NAVIGATION ==========
 function openMediaZoom(url, type) {
@@ -832,10 +1028,6 @@ function openMediaZoom(url, type) {
     openModal('modalMedia');
 }
 window.openMediaZoom = openMediaZoom;
-
-function goBack() {
-    window.location.href = 'conversation.html';
-}
 
 async function markAsRead() {
     await sb.from('supabaseAuthPrive_conversation_participants')
@@ -860,6 +1052,8 @@ async function init() {
     initPresence();
     subscribeMessages();
     subscribeTyping();
+    applyTheme();
+    requestNotificationPermission();
 
     // Écouteurs
     document.getElementById('backBtn').addEventListener('click', goBack);
@@ -873,14 +1067,26 @@ async function init() {
     document.getElementById('audioBtn').addEventListener('click', startAudioRecorder);
     document.getElementById('recStopBtn').addEventListener('click', stopAudioRecorder);
     document.getElementById('recCancelBtn').addEventListener('click', cancelAudioRecorder);
+    document.getElementById('discardAudioBtn').addEventListener('click', discardRecordedAudio);
+    document.getElementById('sendAudioBtn').addEventListener('click', sendRecordedAudio);
     document.getElementById('replyBarClose').addEventListener('click', cancelReply);
     document.getElementById('editBarClose').addEventListener('click', cancelEdit);
+    document.getElementById('previewMsgBtn').addEventListener('click', showMessagePreview);
+    document.getElementById('confirmPreviewBtn').addEventListener('click', confirmPreviewAndSend);
+    document.getElementById('formatBtn').addEventListener('click', () => {
+        const toolbar = document.getElementById('formatToolbar');
+        toolbar.style.display = toolbar.style.display === 'none' ? 'flex' : 'none';
+    });
+    document.querySelectorAll('[data-format]').forEach(btn => {
+        btn.addEventListener('click', () => applyFormatting(btn.dataset.format));
+    });
 
     // Menu contextuel
     document.getElementById('ctxReply').addEventListener('click', () => { const msg = messages.find(m => m.id === ctxMsgId); if (msg) startReply(msg); });
     document.getElementById('ctxCopy').addEventListener('click', () => { const msg = messages.find(m => m.id === ctxMsgId); if (msg?.content) { navigator.clipboard.writeText(msg.content); toast('Copié !', 'success'); } });
     document.getElementById('ctxEdit').addEventListener('click', () => { const msg = messages.find(m => m.id === ctxMsgId); if (msg) startEdit(msg); });
     document.getElementById('ctxPin').addEventListener('click', () => { if (ctxMsgId) togglePin(ctxMsgId); });
+    document.getElementById('ctxForward').addEventListener('click', () => { if (ctxMsgId) showForwardModal(ctxMsgId); });
     document.getElementById('ctxDeleteMe').addEventListener('click', () => { if (ctxMsgId) deleteMessage(ctxMsgId, false); });
     document.getElementById('ctxDeleteAll').addEventListener('click', () => { if (ctxMsgId) deleteMessage(ctxMsgId, true); });
 
@@ -905,8 +1111,9 @@ async function init() {
     document.getElementById('optViewProfile').addEventListener('click', () => {
         if (!currentConv || currentConv.is_group) return;
         const other = currentConv.participants?.find(p => p.user_hubisoccer_id !== currentProfile.hubisoccer_id);
-        if (other) window.location.href = `profil-feed.html?id=${other.user_hubisoccer_id}`;
+        if (other) window.location.href = `../community/profil-feed.html?id=${other.user_hubisoccer_id}`;
     });
+    document.getElementById('optToggleDarkMode').addEventListener('click', toggleDarkMode);
     document.getElementById('optBlockUser').addEventListener('click', async () => {
         if (!currentConv || currentConv.is_group) return;
         const other = currentConv.participants?.find(p => p.user_hubisoccer_id !== currentProfile.hubisoccer_id);

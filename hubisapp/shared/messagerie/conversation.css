@@ -1,7 +1,7 @@
 /* ===================================================
    HUBISOCCER — CONVERSATION.CSS
    Liste des conversations — Tous rôles — Responsive
-   Compatible mobile / tablette / desktop
+   Compatible mobile / tablette / desktop / TV
    =================================================== */
 
 /* ===== VARIABLES ===== */
@@ -109,9 +109,7 @@ textarea {
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
 /* ===== NAVBAR ===== */
@@ -158,6 +156,69 @@ textarea {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+/* Sélecteur de langue */
+.lang-selector {
+    position: relative;
+}
+
+.lang-current {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 30px;
+    background: var(--gray-xlight);
+    border: 1.5px solid var(--gray-light);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--dark);
+    transition: var(--transition);
+}
+
+.lang-current:hover {
+    border-color: var(--primary);
+    background: var(--white);
+}
+
+.lang-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-light);
+    min-width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 300;
+    display: none;
+}
+
+.lang-dropdown.show {
+    display: block;
+}
+
+.lang-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.lang-option:hover {
+    background: var(--primary-xlight);
+    color: var(--primary);
+}
+
+.lang-option i {
+    color: var(--primary);
+    font-size: 0.8rem;
 }
 
 .notif-btn {
@@ -399,17 +460,11 @@ textarea {
     text-align: center;
 }
 
-.sidebar-nav hr {
-    border: none;
-    border-top: 1px solid var(--gray-light);
-    margin: 8px 16px;
-}
-
 /* ===== CONTENU PRINCIPAL ===== */
 .main-content {
     min-height: calc(100vh - var(--nav-height));
     padding: 24px;
-    max-width: 860px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
@@ -564,6 +619,135 @@ textarea {
     color: white;
     border-color: var(--primary);
     box-shadow: var(--shadow-sm);
+}
+
+/* ===== SECTION ABONNÉS ===== */
+.followers-section {
+    margin-bottom: 24px;
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.section-header h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.followers-count {
+    font-size: 0.8rem;
+    color: var(--gray);
+    background: var(--gray-xlight);
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+
+.followers-list-wrapper {
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.followers-list-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+.followers-list {
+    display: flex;
+    gap: 16px;
+    padding: 4px 0;
+}
+
+.follower-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    width: 70px;
+}
+
+.follower-item:hover {
+    transform: translateY(-2px);
+}
+
+.follower-avatar-wrap {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--gold));
+    padding: 3px;
+}
+
+.follower-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    display: block;
+}
+
+.follower-avatar-initials {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 3px solid white;
+}
+
+.follower-online-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gray-light);
+    border: 2px solid white;
+}
+
+.follower-online-dot.online {
+    background: var(--online);
+}
+
+.follower-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.3;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.followers-empty {
+    text-align: center;
+    padding: 16px;
+    color: var(--gray);
+    font-size: 0.85rem;
 }
 
 /* ===== CONVERSATIONS LIST ===== */
@@ -802,12 +986,8 @@ textarea {
 }
 
 @keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
 
 /* ===== EMPTY STATE ===== */
@@ -892,6 +1072,10 @@ textarea {
     animation: slideUp 0.3s ease;
 }
 
+.modal-box-sm {
+    max-width: 380px;
+}
+
 .modal-head {
     display: flex;
     align-items: center;
@@ -938,6 +1122,7 @@ textarea {
     border-top: 1px solid var(--gray-light);
 }
 
+/* Formulaires dans modales */
 .form-field {
     margin-bottom: 16px;
 }
@@ -1097,6 +1282,7 @@ textarea {
     opacity: 1;
 }
 
+/* Modale utilisateurs bloqués */
 .blocked-list {
     min-height: 60px;
 }
@@ -1161,6 +1347,54 @@ textarea {
     font-size: 0.85rem;
 }
 
+/* Modale nouvelle discussion directe */
+.direct-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.direct-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.direct-item:hover {
+    background: var(--primary-xlight);
+}
+
+.direct-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.direct-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.forward-search {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.forward-search:focus {
+    border-color: var(--primary);
+}
+
+/* ===== BOUTONS MODALES ===== */
 .btn-cancel {
     padding: 9px 20px;
     border-radius: 30px;
@@ -1304,34 +1538,18 @@ textarea {
 
 /* ===== ANIMATIONS ===== */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 @keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(40px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
 /* ===== RESPONSIVE ===== */
@@ -1368,6 +1586,15 @@ textarea {
     .conv-actions {
         opacity: 1;
     }
+
+    .lang-current span:last-child,
+    .lang-current i.fa-chevron-down {
+        display: none;
+    }
+    
+    .lang-current {
+        padding: 6px 10px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1397,5 +1624,29 @@ textarea {
     .toast {
         min-width: 0;
         max-width: 100%;
+    }
+
+    .followers-list {
+        gap: 12px;
+    }
+    
+    .follower-item {
+        width: 60px;
+    }
+    
+    .follower-avatar-wrap {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+/* Support des écrans tactiles */
+@media (pointer: coarse) {
+    button, .option-item, .follower-item, .direct-item, .conv-item {
+        min-height: 44px;
+    }
+    
+    .btn-action, .btn-primary, .btn-cancel, .btn-confirm {
+        min-height: 44px;
     }
 }

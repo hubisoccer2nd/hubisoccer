@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Discussion | HubISoccer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -58,6 +58,9 @@
             </button>
             <button class="option-item" id="optBlockUser">
                 <i class="fas fa-ban"></i> Bloquer
+            </button>
+            <button class="option-item" id="optToggleDarkMode">
+                <i class="fas fa-moon"></i> Mode sombre
             </button>
             <hr>
             <button class="option-item danger" id="optDeleteConv">
@@ -156,6 +159,24 @@
         </div>
     </div>
 
+    <!-- Lecteur de réécoute audio -->
+    <div class="audio-preview-bar" id="audioPreviewBar" style="display:none">
+        <audio id="audioPreviewPlayer" controls></audio>
+        <div class="audio-preview-actions">
+            <button class="btn-cancel" id="discardAudioBtn"><i class="fas fa-trash-alt"></i></button>
+            <button class="btn-confirm" id="sendAudioBtn"><i class="fas fa-paper-plane"></i> Envoyer</button>
+        </div>
+    </div>
+
+    <!-- Barre d'outils de formatage -->
+    <div class="format-toolbar" id="formatToolbar" style="display:none">
+        <button data-format="bold" title="Gras"><i class="fas fa-bold"></i></button>
+        <button data-format="italic" title="Italique"><i class="fas fa-italic"></i></button>
+        <button data-format="link" title="Insérer un lien"><i class="fas fa-link"></i></button>
+        <button data-format="list" title="Liste à puces"><i class="fas fa-list-ul"></i></button>
+        <button data-format="code" title="Code"><i class="fas fa-code"></i></button>
+    </div>
+
     <!-- Barre de saisie principale -->
     <div class="input-row">
         <button class="input-btn attach-btn" id="attachBtn" title="Joindre un fichier">
@@ -164,18 +185,23 @@
         <div class="textarea-wrap">
             <textarea id="msgInput" rows="1" placeholder="Écrire un message..."></textarea>
         </div>
+        <button class="input-btn format-btn" id="formatBtn" title="Options de formatage">
+            <i class="fas fa-font"></i>
+        </button>
         <button class="input-btn emoji-btn" id="emojiBtn" title="Émojis">
             <i class="fas fa-smile"></i>
         </button>
         <button class="input-btn audio-btn" id="audioBtn" title="Message vocal">
             <i class="fas fa-microphone"></i>
         </button>
+        <button class="input-btn preview-btn" id="previewMsgBtn" title="Aperçu du message" style="display:none;">
+            <i class="fas fa-eye"></i>
+        </button>
         <button class="send-btn" id="sendBtn" title="Envoyer">
             <i class="fas fa-paper-plane"></i>
         </button>
     </div>
-    <input type="file" id="fileInput" style="display:none"
-        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+    <input type="file" id="fileInput" style="display:none" accept="*/*">
 </div>
 
 <!-- ===== MENU CONTEXTUEL MESSAGES ===== -->
@@ -259,6 +285,23 @@
         <div class="modal-foot">
             <button class="btn-cancel" onclick="closeModal('modalConfirm')">Annuler</button>
             <button class="btn-confirm" id="confirmActionBtn"></button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL : APERÇU MESSAGE ===== -->
+<div id="modalMessagePreview" class="modal">
+    <div class="modal-box modal-box-sm">
+        <div class="modal-head">
+            <h2><i class="fas fa-eye"></i> Aperçu du message</h2>
+            <button class="modal-close" onclick="closeModal('modalMessagePreview')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div id="previewContent" class="preview-content"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn-cancel" onclick="closeModal('modalMessagePreview')">Modifier</button>
+            <button class="btn-confirm" id="confirmPreviewBtn">Envoyer</button>
         </div>
     </div>
 </div>

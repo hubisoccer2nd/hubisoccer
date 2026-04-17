@@ -38,13 +38,20 @@ async function initSessionAndProfile() {
     try {
         const auth = await window.requireAuth();
         if (!auth) return false;
-
+        
+        // 🔥 Attendre que currentProfile soit chargé par session.js
+        let attempts = 0;
+        while ((!currentProfile || !currentProfile.hubisoccer_id) && attempts < 20) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
         if (!currentProfile || !currentProfile.hubisoccer_id) {
             toast('Profil non chargé. Redirection...', 'error');
             window.location.href = '../community/feed-setup.html';
             return false;
         }
-
+        
         document.getElementById('userName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
         updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'userAvatar', 'userAvatarInitials');
         buildSidebar();

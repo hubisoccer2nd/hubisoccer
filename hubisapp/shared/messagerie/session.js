@@ -1,6 +1,7 @@
 // ============================================================
 //  HUBISOCCER — MESSAGERIE / SESSION.JS (LOCAL & AUTONOME)
 //  Gère la session Supabase et le profil courant
+//  Chemins corrigés pour la structure réelle du projet
 // ============================================================
 
 'use strict';
@@ -10,16 +11,19 @@ const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ========== FIN : INITIALISATION SUPABASE ==========
+
 // ========== DEBUT : VARIABLES GLOBALES DE SESSION ==========
 let currentUser = null;
 let currentProfile = null;
 // ========== FIN : VARIABLES GLOBALES DE SESSION ==========
+
 // ========== DEBUT : FONCTIONS D'AUTHENTIFICATION ==========
 async function requireAuth() {
     const { data: { user }, error } = await sb.auth.getUser();
     if (error || !user) {
         console.warn('Utilisateur non connecté, redirection...');
-        window.location.href = '../index.html';
+        // 🔥 Chemin corrigé : depuis messagerie/, index.html est deux niveaux au-dessus
+        window.location.href = '../../index.html';
         return null;
     }
     currentUser = user;
@@ -52,7 +56,8 @@ async function initSession() {
         } else {
             alert('Profil introuvable. Veuillez créer votre communauté.');
         }
-        window.location.href = 'feed-setup.html';
+        // 🔥 Chemin corrigé : on remonte d'un niveau puis on entre dans community/
+        window.location.href = '../community/feed-setup.html';
         return false;
     }
     return true;
@@ -64,7 +69,7 @@ async function initSession() {
 })();
 // ========== FIN : FONCTIONS D'AUTHENTIFICATION ==========
 
-// ========== DEBUT : EXPOSITION GLOBALE (POUR CONVERSATION.JS) ==========
+// ========== DEBUT : EXPOSITION GLOBALE (POUR LES AUTRES SCRIPTS) ==========
 window.sb = sb;
 window.currentUser = currentUser;
 window.currentProfile = currentProfile;

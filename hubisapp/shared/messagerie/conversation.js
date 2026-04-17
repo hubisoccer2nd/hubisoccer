@@ -1,8 +1,8 @@
 // ============================================================
-//  HUBISOCCER — CONVERSATION.JS (VERSION CORRIGÉE & COMPLÈTE)
+//  HUBISOCCER — CONVERSATION.JS (VERSION FINALE COMPLÈTE)
 //  Liste des conversations — Tous rôles
-//  Dépendances internes : sb, currentUser, currentProfile
-//  Utilitaires inclus (toast, modales, etc.)
+//  Inclut : sidebar 28 rôles, liste d'abonnés, nouvelle conv complète,
+//  renommage de groupe, sélecteur 24 langues, présence, etc.
 // ============================================================
 
 'use strict';
@@ -13,76 +13,538 @@ let onlineUsers = new Set();
 let showArchives = false;
 let activeFilter = 'all';
 let searchQuery = '';
-let convSubscription = null;
 let presenceChannel = null;
 let selectedGroupMembers = [];
+
+// Langues
+const LANGUAGES = [
+    { code: 'fr', name: 'Français' }, { code: 'en', name: 'English' }, { code: 'es', name: 'Español' },
+    { code: 'de', name: 'Deutsch' }, { code: 'it', name: 'Italiano' }, { code: 'pt', name: 'Português' },
+    { code: 'ar', name: 'العربية' }, { code: 'zh', name: '中文' }, { code: 'ja', name: '日本語' },
+    { code: 'ko', name: '한국어' }, { code: 'ru', name: 'Русский' }, { code: 'hi', name: 'हिन्दी' },
+    { code: 'nl', name: 'Nederlands' }, { code: 'sv', name: 'Svenska' }, { code: 'no', name: 'Norsk' },
+    { code: 'da', name: 'Dansk' }, { code: 'fi', name: 'Suomi' }, { code: 'pl', name: 'Polski' },
+    { code: 'tr', name: 'Türkçe' }, { code: 'el', name: 'Ελληνικά' }, { code: 'he', name: 'עברית' },
+    { code: 'id', name: 'Bahasa Indonesia' }, { code: 'ms', name: 'Bahasa Melayu' }, { code: 'th', name: 'ไทย' }
+];
+let currentLang = localStorage.getItem('hubisoccer_lang') || 'fr';
 // ========== FIN : VARIABLES GLOBALES ==========
 
-// ========== DEBUT : UTILITAIRES INTERNES (SI NON FOURNIS PAR ../community/) ==========
-function toast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    const toastEl = document.createElement('div');
-    toastEl.className = `toast ${type}`;
-    toastEl.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i><span>${escapeHtml(message)}</span><button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
-    container.appendChild(toastEl);
-    setTimeout(() => toastEl.remove(), 30000); // 🔥 30 secondes
-}
+// ========== DEBUT : CONSTANTES ROLES ET DASHBOARDS ==========
+const ROLE_DASHBOARD_MAP = {
+    'FOOT': '../../footballeur/dashboard/foot-dash.html',
+    'BASK': '../../basketteur/dashboard/basketteur-dash.html',
+    'TENN': '../../tennisman/dashboard/tennisman-dash.html',
+    'ATHL': '../../athlete/dashboard/athlete-dash.html',
+    'HANDB': '../../handballeur/dashboard/handballeur-dash.html',
+    'VOLL': '../../volleyeur/dashboard/volleyeur-dash.html',
+    'RUGBY': '../../rugbyman/dashboard/rugbyman-dash.html',
+    'NATA': '../../nageur/dashboard/nageur-dash.html',
+    'ARTSM': '../../arts_martiaux/dashboard/arts_martiaux-dash.html',
+    'CYCL': '../../cycliste/dashboard/cycliste-dash.html',
+    'CHAN': '../../chanteur/dashboard/chanteur-dash.html',
+    'DANS': '../../danseur/dashboard/danseur-dash.html',
+    'COMP': '../../compositeur/dashboard/compositeur-dash.html',
+    'ACIN': '../../acteur_cinema/dashboard/acteur_cinema-dash.html',
+    'ATHE': '../../acteur_theatre/dashboard/acteur_theatre-dash.html',
+    'HUMO': '../../humoriste/dashboard/humoriste-dash.html',
+    'SLAM': '../../slameur/dashboard/slameur-dash.html',
+    'DJ': '../../dj/dashboard/dj-dash.html',
+    'CIRQ': '../../cirque/dashboard/cirque-dash.html',
+    'VISU': '../../artiste_visuel/dashboard/artiste_visuel-dash.html',
+    'PARRAIN': '../../parrain/dashboard/parrain-dash.html',
+    'AGENT': '../../agent_fifa/dashboard/agent_fifa-dash.html',
+    'COACH': '../../coach/dashboard/coach-dash.html',
+    'MEDIC': '../../staff_medical/dashboard/staff_medical-dash.html',
+    'ARBIT': '../../corps_arbitral/dashboard/corps_arbitral-dash.html',
+    'ACAD': '../../academie_sportive/dashboard/academie_sportive-dash.html',
+    'FORM': '../../formateur/dashboard/formateur-dash.html',
+    'TOURN': '../../gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html',
+    'ADMIN': '../../authprive/admin/admin-dashboard.html'
+};
 
-function setLoader(show, message = 'Chargement...') {
-    const loader = document.getElementById('globalLoader');
-    const text = document.getElementById('loaderText');
-    if (loader) {
-        loader.style.display = show ? 'flex' : 'none';
-        if (text) text.textContent = message;
+const ALL_ROLES = [
+    { code: 'FOOT', label: 'Footballeur', icon: '⚽' },
+    { code: 'BASK', label: 'Basketteur', icon: '🏀' },
+    { code: 'TENN', label: 'Tennisman', icon: '🎾' },
+    { code: 'ATHL', label: 'Athlète', icon: '🏃' },
+    { code: 'HANDB', label: 'Handballeur', icon: '🤾' },
+    { code: 'VOLL', label: 'Volleyeur', icon: '🏐' },
+    { code: 'RUGBY', label: 'Rugbyman', icon: '🏉' },
+    { code: 'NATA', label: 'Nageur', icon: '🏊' },
+    { code: 'ARTSM', label: 'Arts martiaux', icon: '🥋' },
+    { code: 'CYCL', label: 'Cycliste', icon: '🚴' },
+    { code: 'CHAN', label: 'Chanteur', icon: '🎤' },
+    { code: 'DANS', label: 'Danseur', icon: '💃' },
+    { code: 'COMP', label: 'Compositeur', icon: '🎼' },
+    { code: 'ACIN', label: 'Acteur cinéma', icon: '🎬' },
+    { code: 'ATHE', label: 'Acteur théâtre', icon: '🎭' },
+    { code: 'HUMO', label: 'Humoriste', icon: '🎙️' },
+    { code: 'SLAM', label: 'Slameur', icon: '🗣️' },
+    { code: 'DJ', label: 'DJ / Producteur', icon: '🎧' },
+    { code: 'CIRQ', label: 'Artiste de cirque', icon: '🤹' },
+    { code: 'VISU', label: 'Artiste visuel', icon: '🎨' },
+    { code: 'PARRAIN', label: 'Parrain', icon: '🤝' },
+    { code: 'AGENT', label: 'Agent FIFA', icon: '💼' },
+    { code: 'COACH', label: 'Coach', icon: '📋' },
+    { code: 'MEDIC', label: 'Staff médical', icon: '⚕️' },
+    { code: 'ARBIT', label: 'Corps arbitral', icon: '🏁' },
+    { code: 'ACAD', label: 'Académie sportive', icon: '🏫' },
+    { code: 'FORM', label: 'Formateur', icon: '🎓' },
+    { code: 'TOURN', label: 'Gestionnaire tournoi', icon: '🏆' }
+];
+
+// ========== DEBUT : MENU LATERAL (28 ROLES COMPLET) ==========
+function buildSidebarMenu(roleCode) {
+    const nav = document.getElementById('sidebarNav');
+    const titleEl = document.getElementById('sidebarRoleTitle');
+
+    const menuConfig = {
+        'FOOT': {
+            title: 'Menu Footballeur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../footballeur/dashboard/foot-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../footballeur/verification/foot-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../footballeur/edit-cv/foot-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../footballeur/certifications/foot-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../footballeur/videos/foot-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../footballeur/revenus/foot-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../footballeur/support/foot-supp.html' }
+            ]
+        },
+        'BASK': {
+            title: 'Menu Basketteur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../basketteur/dashboard/basketteur-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../basketteur/verification/basketteur-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../basketteur/edit-cv/basketteur-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../basketteur/certifications/basketteur-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../basketteur/videos/basketteur-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../basketteur/revenus/basketteur-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../basketteur/support/basketteur-supp.html' }
+            ]
+        },
+        'TENN': {
+            title: 'Menu Tennisman',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../tennisman/dashboard/tennisman-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../tennisman/verification/tennisman-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../tennisman/edit-cv/tennisman-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../tennisman/certifications/tennisman-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../tennisman/videos/tennisman-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../tennisman/revenus/tennisman-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../tennisman/support/tennisman-supp.html' }
+            ]
+        },
+        'ATHL': {
+            title: 'Menu Athlète',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../athlete/dashboard/athlete-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../athlete/verification/athlete-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../athlete/edit-cv/athlete-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../athlete/certifications/athlete-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../athlete/videos/athlete-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../athlete/revenus/athlete-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../athlete/support/athlete-supp.html' }
+            ]
+        },
+        'HANDB': {
+            title: 'Menu Handballeur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../handballeur/dashboard/handballeur-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../handballeur/verification/handballeur-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../handballeur/edit-cv/handballeur-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../handballeur/certifications/handballeur-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../handballeur/videos/handballeur-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../handballeur/revenus/handballeur-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../handballeur/support/handballeur-supp.html' }
+            ]
+        },
+        'VOLL': {
+            title: 'Menu Volleyeur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../volleyeur/dashboard/volleyeur-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../volleyeur/verification/volleyeur-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../volleyeur/edit-cv/volleyeur-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../volleyeur/certifications/volleyeur-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../volleyeur/videos/volleyeur-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../volleyeur/revenus/volleyeur-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../volleyeur/support/volleyeur-supp.html' }
+            ]
+        },
+        'RUGBY': {
+            title: 'Menu Rugbyman',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../rugbyman/dashboard/rugbyman-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../rugbyman/verification/rugbyman-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../rugbyman/edit-cv/rugbyman-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../rugbyman/certifications/rugbyman-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../rugbyman/videos/rugbyman-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../rugbyman/revenus/rugbyman-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../rugbyman/support/rugbyman-supp.html' }
+            ]
+        },
+        'NATA': {
+            title: 'Menu Nageur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../nageur/dashboard/nageur-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../nageur/verification/nageur-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../nageur/edit-cv/nageur-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../nageur/certifications/nageur-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../nageur/videos/nageur-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../nageur/revenus/nageur-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../nageur/support/nageur-supp.html' }
+            ]
+        },
+        'ARTSM': {
+            title: 'Menu Arts Martiaux',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../arts_martiaux/dashboard/arts_martiaux-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../arts_martiaux/verification/arts_martiaux-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../arts_martiaux/edit-cv/arts_martiaux-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../arts_martiaux/certifications/arts_martiaux-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../arts_martiaux/videos/arts_martiaux-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../arts_martiaux/revenus/arts_martiaux-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../arts_martiaux/support/arts_martiaux-supp.html' }
+            ]
+        },
+        'CYCL': {
+            title: 'Menu Cycliste',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../cycliste/dashboard/cycliste-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../cycliste/verification/cycliste-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../cycliste/edit-cv/cycliste-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../cycliste/certifications/cycliste-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../cycliste/videos/cycliste-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../cycliste/revenus/cycliste-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../cycliste/support/cycliste-supp.html' }
+            ]
+        },
+        'CHAN': {
+            title: 'Menu Chanteur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../chanteur/dashboard/chanteur-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../chanteur/verification/chanteur-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../chanteur/edit-cv/chanteur-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../chanteur/certifications/chanteur-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../chanteur/videos/chanteur-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../chanteur/revenus/chanteur-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../chanteur/support/chanteur-supp.html' }
+            ]
+        },
+        'DANS': {
+            title: 'Menu Danseur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../danseur/dashboard/danseur-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../danseur/verification/danseur-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../danseur/edit-cv/danseur-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../danseur/certifications/danseur-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../danseur/videos/danseur-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../danseur/revenus/danseur-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../danseur/support/danseur-supp.html' }
+            ]
+        },
+        'COMP': {
+            title: 'Menu Compositeur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../compositeur/dashboard/compositeur-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../compositeur/verification/compositeur-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../compositeur/edit-cv/compositeur-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../compositeur/certifications/compositeur-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../compositeur/videos/compositeur-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../compositeur/revenus/compositeur-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../compositeur/support/compositeur-supp.html' }
+            ]
+        },
+        'ACIN': {
+            title: 'Menu Acteur Cinéma',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../acteur_cinema/dashboard/acteur_cinema-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../acteur_cinema/verification/acteur_cinema-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../acteur_cinema/edit-cv/acteur_cinema-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../acteur_cinema/certifications/acteur_cinema-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../acteur_cinema/videos/acteur_cinema-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../acteur_cinema/revenus/acteur_cinema-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../acteur_cinema/support/acteur_cinema-supp.html' }
+            ]
+        },
+        'ATHE': {
+            title: 'Menu Acteur Théâtre',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../acteur_theatre/dashboard/acteur_theatre-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../acteur_theatre/verification/acteur_theatre-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../acteur_theatre/edit-cv/acteur_theatre-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../acteur_theatre/certifications/acteur_theatre-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../acteur_theatre/videos/acteur_theatre-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../acteur_theatre/revenus/acteur_theatre-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../acteur_theatre/support/acteur_theatre-supp.html' }
+            ]
+        },
+        'HUMO': {
+            title: 'Menu Humoriste',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../humoriste/dashboard/humoriste-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../humoriste/verification/humoriste-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../humoriste/edit-cv/humoriste-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../humoriste/certifications/humoriste-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../humoriste/videos/humoriste-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../humoriste/revenus/humoriste-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../humoriste/support/humoriste-supp.html' }
+            ]
+        },
+        'SLAM': {
+            title: 'Menu Slameur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../slameur/dashboard/slameur-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../slameur/verification/slameur-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../slameur/edit-cv/slameur-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../slameur/certifications/slameur-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../slameur/videos/slameur-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../slameur/revenus/slameur-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../slameur/support/slameur-supp.html' }
+            ]
+        },
+        'DJ': {
+            title: 'Menu DJ',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../dj/dashboard/dj-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../dj/verification/dj-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../dj/edit-cv/dj-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../dj/certifications/dj-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../dj/videos/dj-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../dj/revenus/dj-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../dj/support/dj-supp.html' }
+            ]
+        },
+        'CIRQ': {
+            title: 'Menu Artiste de cirque',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../cirque/dashboard/cirque-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../cirque/verification/cirque-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../cirque/edit-cv/cirque-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../cirque/certifications/cirque-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../cirque/videos/cirque-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../cirque/revenus/cirque-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../cirque/support/cirque-supp.html' }
+            ]
+        },
+        'VISU': {
+            title: 'Menu Artiste visuel',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../artiste_visuel/dashboard/artiste_visuel-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../artiste_visuel/verification/artiste_visuel-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../artiste_visuel/edit-cv/artiste_visuel-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../artiste_visuel/certifications/artiste_visuel-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../artiste_visuel/videos/artiste_visuel-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../artiste_visuel/revenus/artiste_visuel-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../artiste_visuel/support/artiste_visuel-supp.html' }
+            ]
+        },
+        'PARRAIN': {
+            title: 'Menu Parrain',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../parrain/dashboard/parrain-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../parrain/verification/parrain-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../parrain/edit-cv/parrain-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../parrain/certifications/parrain-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../parrain/videos/parrain-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../parrain/revenus/parrain-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../parrain/support/parrain-supp.html' }
+            ]
+        },
+        'AGENT': {
+            title: 'Menu Agent FIFA',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../agent_fifa/dashboard/agent_fifa-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../agent_fifa/verification/agent_fifa-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../agent_fifa/edit-cv/agent_fifa-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../agent_fifa/certifications/agent_fifa-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../agent_fifa/videos/agent_fifa-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../agent_fifa/revenus/agent_fifa-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../agent_fifa/support/agent_fifa-supp.html' }
+            ]
+        },
+        'COACH': {
+            title: 'Menu Coach',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../coach/dashboard/coach-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../coach/verification/coach-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../coach/edit-cv/coach-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../coach/certifications/coach-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../coach/videos/coach-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../coach/revenus/coach-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../coach/support/coach-supp.html' }
+            ]
+        },
+        'MEDIC': {
+            title: 'Menu Staff médical',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../staff_medical/dashboard/staff_medical-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../staff_medical/verification/staff_medical-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../staff_medical/edit-cv/staff_medical-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../staff_medical/certifications/staff_medical-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../staff_medical/videos/staff_medical-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../staff_medical/revenus/staff_medical-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../staff_medical/support/staff_medical-supp.html' }
+            ]
+        },
+        'ARBIT': {
+            title: 'Menu Corps arbitral',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../corps_arbitral/dashboard/corps_arbitral-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../corps_arbitral/verification/corps_arbitral-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../corps_arbitral/edit-cv/corps_arbitral-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../corps_arbitral/certifications/corps_arbitral-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../corps_arbitral/videos/corps_arbitral-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../corps_arbitral/revenus/corps_arbitral-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../corps_arbitral/support/corps_arbitral-supp.html' }
+            ]
+        },
+        'ACAD': {
+            title: 'Menu Académie sportive',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../academie_sportive/dashboard/academie_sportive-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../academie_sportive/verification/academie_sportive-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../academie_sportive/edit-cv/academie_sportive-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../academie_sportive/certifications/academie_sportive-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../academie_sportive/videos/academie_sportive-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../academie_sportive/revenus/academie_sportive-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../academie_sportive/support/academie_sportive-supp.html' }
+            ]
+        },
+        'FORM': {
+            title: 'Menu Formateur',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../formateur/dashboard/formateur-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../formateur/verification/formateur-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../formateur/edit-cv/formateur-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../formateur/certifications/formateur-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../formateur/videos/formateur-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../formateur/revenus/formateur-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../formateur/support/formateur-supp.html' }
+            ]
+        },
+        'TOURN': {
+            title: 'Menu Gestionnaire tournoi',
+            items: [
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html' },
+                { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-shield-alt', label: 'Vérification', href: '../../gestionnaire_tournoi/verification/gestionnaire_tournoi-verif.html' },
+                { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../gestionnaire_tournoi/edit-cv/gestionnaire_tournoi-cv.html' },
+                { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../gestionnaire_tournoi/certifications/gestionnaire_tournoi-certif.html' },
+                { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
+                { icon: 'fa-video', label: 'Mes Vidéos', href: '../../gestionnaire_tournoi/videos/gestionnaire_tournoi-videos.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../gestionnaire_tournoi/revenus/gestionnaire_tournoi-revenus.html' },
+                { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
+                { icon: 'fa-headset', label: 'Support', href: '../../gestionnaire_tournoi/support/gestionnaire_tournoi-supp.html' }
+            ]
+        },
+        'ADMIN': {
+            title: 'Menu Admin',
+            items: [
+                { icon: 'fa-chart-pie', label: 'Dashboard', href: '../../authprive/admin/admin-dashboard.html' },
+                { icon: 'fa-users', label: 'Communauté', href: 'feed.html', active: true },
+                { icon: 'fa-id-card', label: 'Gestion IDs', href: '../../authprive/admin/admin-ids.html' },
+                { icon: 'fa-users-cog', label: 'Utilisateurs', href: '../../authprive/admin/admin-users.html' },
+                { icon: 'fa-history', label: 'Logs', href: '../../authprive/admin/admin-logs.html' }
+            ]
+        }
+    };
+
+    const config = menuConfig[roleCode] || menuConfig['FOOT'];
+    if (titleEl) titleEl.textContent = config.title;
+
+    if (nav) {
+        nav.innerHTML = config.items.map(item => `
+            <a href="${item.href}" class="${item.active ? 'active' : ''}">
+                <i class="fas ${item.icon}"></i>
+                <span>${item.label}</span>
+            </a>
+        `).join('');
     }
 }
-
-function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.add('show');
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove('show');
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function getInitials(fullName) {
-    if (!fullName) return '?';
-    return fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-}
-
-function timeSince(date) {
-    if (!date) return '';
-    const now = new Date();
-    const past = new Date(date);
-    const seconds = Math.floor((now - past) / 1000);
-    let interval = Math.floor(seconds / 31536000);
-    if (interval >= 1) return `${interval} an${interval > 1 ? 's' : ''}`;
-    interval = Math.floor(seconds / 2592000);
-    if (interval >= 1) return `${interval} mois`;
-    interval = Math.floor(seconds / 86400);
-    if (interval >= 1) return `${interval} j`;
-    interval = Math.floor(seconds / 3600);
-    if (interval >= 1) return `${interval} h`;
-    interval = Math.floor(seconds / 60);
-    if (interval >= 1) return `${interval} min`;
-    return `À l'instant`;
-}
-
-async function logout() {
-    await sb.auth.signOut();
-    window.location.href = '../index.html';
-}
-// ========== FIN : UTILITAIRES INTERNES ==========
+// ========== FIN : MENU LATERAL ==========
 
 // ========== DEBUT : INITIALISATION SESSION & PROFIL ==========
 async function initSessionAndProfile() {
@@ -90,30 +552,17 @@ async function initSessionAndProfile() {
         const auth = await requireAuth();
         if (!auth) return false;
 
-        if (typeof currentProfile === 'undefined' || !currentProfile?.hubisoccer_id) {
-            const { data: profiles } = await sb
-                .from('supabaseAuthPrive_profiles')
-                .select('*')
-                .eq('email', auth.email)
-                .single();
-            if (profiles) {
-                window.currentProfile = profiles;
-                window.currentUser = auth;
-            } else {
-                toast('Profil introuvable', 'error');
-                window.location.href = 'feed-setup.html';
-                return false;
-            }
-        }
-
         if (!currentProfile || !currentProfile.hubisoccer_id) {
-            toast('Erreur de profil. Veuillez vous reconnecter.', 'error');
-            window.location.href = 'feed-setup.html';
+            toast('Profil non chargé. Redirection...', 'error');
+            window.location.href = '../community/feed-setup.html';
             return false;
         }
 
         document.getElementById('userName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
         updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'userAvatar', 'userAvatarInitials');
+
+        // Construction du menu latéral avec le rôle de l'utilisateur
+        buildSidebarMenu(currentProfile.role_code || 'FOOT');
 
         return true;
     } catch (err) {
@@ -296,7 +745,7 @@ function renderConversations() {
         list.style.display = 'none';
         emptyEl.style.display = 'block';
         document.getElementById('emptyTitle').textContent = showArchives ? 'Aucune conversation archivée' : 'Aucune conversation';
-        document.getElementById('emptyDesc').textContent = showArchives ? 'Vous n\'avez pas encore archivé de conversations.' : 'Allez sur la communauté et envoyez un message à quelqu\'un !';
+        document.getElementById('emptyDesc').textContent = showArchives ? 'Vous n\'avez pas encore archivé de conversations.' : 'Sélectionnez un abonné ci‑dessus ou créez un groupe !';
         return;
     }
 
@@ -360,6 +809,66 @@ function showSkeleton(show) {
 }
 // ========== FIN : CHARGEMENT DES CONVERSATIONS ==========
 
+// ========== DEBUT : GESTION DES ABONNÉS ==========
+async function loadFollowers() {
+    try {
+        const { data: follows, error } = await sb
+            .from('supabaseAuthPrive_follows')
+            .select('following_hubisoccer_id, profile:supabaseAuthPrive_profiles!following_hubisoccer_id(full_name, display_name, avatar_url)')
+            .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id)
+            .limit(20);
+
+        if (error) throw error;
+
+        const followers = (follows || []).map(f => ({
+            id: f.following_hubisoccer_id,
+            name: f.profile?.full_name || f.profile?.display_name || 'Utilisateur',
+            avatar: f.profile?.avatar_url || null
+        }));
+
+        renderFollowers(followers);
+        document.getElementById('followersCount').textContent = followers.length;
+    } catch (err) {
+        console.error('Erreur chargement abonnés:', err);
+    }
+}
+
+function renderFollowers(followers) {
+    const container = document.getElementById('followersList');
+    if (!container) return;
+
+    if (followers.length === 0) {
+        container.innerHTML = '<div class="followers-empty">Aucun abonné pour le moment</div>';
+        return;
+    }
+
+    container.innerHTML = followers.map(f => {
+        const initials = getInitials(f.name);
+        return `
+            <div class="follower-item" data-follower-id="${f.id}">
+                <div class="follower-avatar-wrap">
+                    ${f.avatar ? `<img src="${f.avatar}" alt="${f.name}" class="follower-avatar">` : ''}
+                    <div class="follower-avatar-initials" style="display:${f.avatar ? 'none' : 'flex'};">${initials}</div>
+                    <div class="follower-online-dot ${onlineUsers.has(f.id) ? 'online' : ''}"></div>
+                </div>
+                <span class="follower-name">${escapeHtml(f.name)}</span>
+            </div>
+        `;
+    }).join('');
+
+    container.querySelectorAll('.follower-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const followerId = el.dataset.followerId;
+            openDirectFromFollower(followerId);
+        });
+    });
+}
+
+async function openDirectFromFollower(followerId) {
+    await openOrCreateDirectConversation(followerId);
+}
+// ========== FIN : GESTION DES ABONNÉS ==========
+
 // ========== DEBUT : ACTIONS SUR CONVERSATIONS ==========
 async function toggleArchive(convId) {
     const conv = conversations.find(c => c.id === convId);
@@ -384,7 +893,6 @@ function promptDeleteConv(convId) {
     if (!conv) return;
 
     if (!confirm(`Supprimer la conversation avec ${conv.name} ?`)) return;
-
     deleteConversation(convId);
 }
 
@@ -408,26 +916,110 @@ async function deleteConversation(convId) {
 function openConversation(convId) {
     window.location.href = `discuss.html?conv=${convId}`;
 }
+
+async function renameGroup(convId) {
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv || !conv.is_group) return;
+
+    const newName = prompt('Entrez le nouveau nom du groupe :', conv.group_name);
+    if (!newName || newName.trim() === '') return;
+
+    const { error } = await sb.from('supabaseAuthPrive_conversations')
+        .update({ group_name: newName.trim() })
+        .eq('id', convId);
+
+    if (error) {
+        toast('Erreur lors du renommage', 'error');
+    } else {
+        conv.group_name = newName.trim();
+        conv.name = newName.trim();
+        renderConversations();
+        toast('Groupe renommé', 'success');
+    }
+}
 // ========== FIN : ACTIONS SUR CONVERSATIONS ==========
 
-// ========== DEBUT : PRÉSENCE ==========
-function initPresence() {
-    presenceChannel = sb.channel('hubisoccer_presence');
-    presenceChannel
-        .on('presence', { event: 'sync' }, () => {
-            const state = presenceChannel.presenceState();
-            onlineUsers = new Set(Object.values(state).flat().map(p => p.user_id));
-            renderConversations();
-        })
-        .subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-                await presenceChannel.track({ user_id: currentProfile.hubisoccer_id, online_at: new Date().toISOString() });
-            }
-        });
-}
-// ========== FIN : PRÉSENCE ==========
+// ========== DEBUT : CRÉATION DE CONVERSATIONS ==========
+async function openOrCreateDirectConversation(targetId) {
+    const targetHubisoccerId = targetId;
 
-// ========== DEBUT : GESTION DES GROUPES ==========
+    const { data: myParts } = await sb.from('supabaseAuthPrive_conversation_participants')
+        .select('conversation_id').eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
+    const myIds = (myParts || []).map(p => p.conversation_id);
+
+    for (const cid of myIds) {
+        const { data: parts } = await sb.from('supabaseAuthPrive_conversation_participants')
+            .select('user_hubisoccer_id').eq('conversation_id', cid);
+        if (parts?.length === 2 && parts.some(p => p.user_hubisoccer_id === targetHubisoccerId)) {
+            window.location.href = `discuss.html?conv=${cid}`;
+            return;
+        }
+    }
+
+    const { data: newConv } = await sb.from('supabaseAuthPrive_conversations')
+        .insert({ is_group: false }).select().single();
+    if (!newConv) return;
+
+    await sb.from('supabaseAuthPrive_conversation_participants').insert([
+        { conversation_id: newConv.id, user_hubisoccer_id: currentProfile.hubisoccer_id },
+        { conversation_id: newConv.id, user_hubisoccer_id: targetHubisoccerId }
+    ]);
+
+    window.location.href = `discuss.html?conv=${newConv.id}`;
+}
+
+function openNewConversationFull() {
+    openModal('modalNewDirect');
+    loadFollowersForDirectModal();
+}
+
+async function loadFollowersForDirectModal() {
+    const { data: follows } = await sb
+        .from('supabaseAuthPrive_follows')
+        .select('following_hubisoccer_id, profile:supabaseAuthPrive_profiles!following_hubisoccer_id(full_name, display_name, avatar_url)')
+        .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
+
+    const followers = (follows || []).map(f => ({
+        id: f.following_hubisoccer_id,
+        name: f.profile?.full_name || f.profile?.display_name || 'Utilisateur',
+        avatar: f.profile?.avatar_url || null
+    }));
+
+    renderDirectModalList(followers);
+}
+
+function renderDirectModalList(followers, query = '') {
+    const container = document.getElementById('directList');
+    if (!container) return;
+
+    const filtered = query ? followers.filter(f => f.name.toLowerCase().includes(query.toLowerCase())) : followers;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="members-loading">Aucun résultat</div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(f => {
+        const initials = getInitials(f.name);
+        return `
+            <div class="direct-item" data-follower-id="${f.id}">
+                ${f.avatar ? `<img src="${f.avatar}" alt="">` : `<div class="member-avatar-initials">${initials}</div>`}
+                <span class="direct-name">${escapeHtml(f.name)}</span>
+            </div>
+        `;
+    }).join('');
+
+    container.querySelectorAll('.direct-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const followerId = el.dataset.followerId;
+            closeModal('modalNewDirect');
+            openDirectFromFollower(followerId);
+        });
+    });
+}
+// ========== FIN : CRÉATION DE CONVERSATIONS ==========
+
+// ========== DEBUT : CRÉATION DE GROUPE ==========
 async function loadFollowersForGroup() {
     const { data: follows } = await sb
         .from('supabaseAuthPrive_follows')
@@ -454,10 +1046,7 @@ async function loadFollowersForGroup() {
 }
 
 function renderMembersList(followers, query) {
-    const filtered = query
-        ? followers.filter(f => f.name.toLowerCase().includes(query))
-        : followers;
-
+    const filtered = query ? followers.filter(f => f.name.toLowerCase().includes(query)) : followers;
     const listEl = document.getElementById('membersList');
     if (filtered.length === 0) {
         listEl.innerHTML = `<div class="members-loading">Aucun résultat</div>`;
@@ -507,7 +1096,7 @@ function renderSelectedChips() {
             <i class="fas fa-times chip-remove"></i>
         </div>
     `}).join('');
-    container.querySelectorAll('.chip-remove').forEach((btn, i) => {
+    container.querySelectorAll('.chip-remove').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const uid = btn.parentElement.dataset.uid;
@@ -555,9 +1144,9 @@ async function createGroup() {
         btn.innerHTML = '<i class="fas fa-check"></i> Créer le groupe';
     }
 }
-// ========== FIN : GESTION DES GROUPES ==========
+// ========== FIN : CRÉATION DE GROUPE ==========
 
-// ========== DEBUT : BLOCAGE ==========
+// ========== DEBUT : UTILISATEURS BLOQUÉS ==========
 async function loadBlockedUsers() {
     const { data } = await sb
         .from('supabaseAuthPrive_blocked_users')
@@ -593,48 +1182,68 @@ async function loadBlockedUsers() {
         });
     });
 }
-// ========== FIN : BLOCAGE ==========
+// ========== FIN : UTILISATEURS BLOQUÉS ==========
 
-// ========== DEBUT : OUVERTURE / CRÉATION CONVERSATION DIRECTE ==========
-async function openOrCreateDirectConversation(targetMsgId) {
-    const { data: community } = await sb
-        .from('supabaseAuthPrive_communities')
-        .select('hubisoccer_id')
-        .or(`msg_id.eq.${targetMsgId},feed_id.eq.${targetMsgId}`)
-        .maybeSingle();
-
-    if (!community) {
-        toast('Utilisateur introuvable', 'error');
-        return;
-    }
-
-    const targetHubisoccerId = community.hubisoccer_id;
-
-    const { data: myParts } = await sb.from('supabaseAuthPrive_conversation_participants')
-        .select('conversation_id').eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
-    const myIds = (myParts || []).map(p => p.conversation_id);
-
-    for (const cid of myIds) {
-        const { data: parts } = await sb.from('supabaseAuthPrive_conversation_participants')
-            .select('user_hubisoccer_id').eq('conversation_id', cid);
-        if (parts?.length === 2 && parts.some(p => p.user_hubisoccer_id === targetHubisoccerId)) {
-            window.location.href = `discuss.html?conv=${cid}`;
-            return;
-        }
-    }
-
-    const { data: newConv } = await sb.from('supabaseAuthPrive_conversations')
-        .insert({ is_group: false }).select().single();
-    if (!newConv) return;
-
-    await sb.from('supabaseAuthPrive_conversation_participants').insert([
-        { conversation_id: newConv.id, user_hubisoccer_id: currentProfile.hubisoccer_id },
-        { conversation_id: newConv.id, user_hubisoccer_id: targetHubisoccerId }
-    ]);
-
-    window.location.href = `discuss.html?conv=${newConv.id}`;
+// ========== DEBUT : PRÉSENCE ==========
+function initPresence() {
+    presenceChannel = sb.channel('hubisoccer_presence');
+    presenceChannel
+        .on('presence', { event: 'sync' }, () => {
+            const state = presenceChannel.presenceState();
+            onlineUsers = new Set(Object.values(state).flat().map(p => p.user_id));
+            renderConversations();
+            loadFollowers(); // Recharge les abonnés pour mettre à jour le statut en ligne
+        })
+        .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await presenceChannel.track({ user_id: currentProfile.hubisoccer_id, online_at: new Date().toISOString() });
+            }
+        });
 }
-// ========== FIN : OUVERTURE / CRÉATION CONVERSATION DIRECTE ==========
+// ========== FIN : PRÉSENCE ==========
+
+// ========== DEBUT : GESTION DES LANGUES ==========
+function initLanguageSelector() {
+    const dropdown = document.getElementById('langDropdown');
+    const currentBtn = document.getElementById('langCurrentBtn');
+    const currentLangSpan = document.getElementById('currentLangCode');
+
+    const currentLangObj = LANGUAGES.find(l => l.code === currentLang) || LANGUAGES[0];
+    currentLangSpan.textContent = currentLangObj.code.toUpperCase();
+
+    dropdown.innerHTML = LANGUAGES.map(lang => `
+        <div class="lang-option" data-lang="${lang.code}">
+            <span>${lang.name}</span>
+            ${lang.code === currentLang ? '<i class="fas fa-check"></i>' : ''}
+        </div>
+    `).join('');
+
+    dropdown.querySelectorAll('.lang-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const langCode = opt.dataset.lang;
+            setLanguage(langCode);
+            closeModal('modalLanguage');
+        });
+    });
+
+    currentBtn.addEventListener('click', () => {
+        openModal('modalLanguage');
+    });
+}
+
+function setLanguage(langCode) {
+    currentLang = langCode;
+    localStorage.setItem('hubisoccer_lang', langCode);
+    document.getElementById('currentLangCode').textContent = langCode.toUpperCase();
+    applyTranslations();
+    toast(`Langue changée pour ${LANGUAGES.find(l => l.code === langCode)?.name}`, 'success');
+}
+
+function applyTranslations() {
+    // Traductions statiques à implémenter selon les besoins
+    // Pour l'instant, les textes sont en français par défaut
+}
+// ========== FIN : GESTION DES LANGUES ==========
 
 // ========== DEBUT : INITIALISATION ==========
 async function init() {
@@ -646,10 +1255,12 @@ async function init() {
     }
 
     await loadConversations();
+    await loadFollowers();
     initPresence();
+    initLanguageSelector();
     setLoader(false);
 
-    // Écouteurs d'événements
+    // Écouteurs
     document.getElementById('conversationsList').addEventListener('click', (e) => {
         const archiveBtn = e.target.closest('.archive-btn');
         if (archiveBtn) {
@@ -705,11 +1316,38 @@ async function init() {
         loadFollowersForGroup();
     });
 
+    document.getElementById('emptyNewGroupBtn').addEventListener('click', () => {
+        selectedGroupMembers = [];
+        document.getElementById('groupName').value = '';
+        document.getElementById('selectedMembers').innerHTML = '';
+        openModal('modalGroup');
+        loadFollowersForGroup();
+    });
+
     document.getElementById('createGroupBtn').addEventListener('click', createGroup);
 
     document.getElementById('blockedBtn').addEventListener('click', () => {
         loadBlockedUsers();
         openModal('modalBlocked');
+    });
+
+    // Nouveau bouton "Nouvelle discussion"
+    const newConvBtn = document.createElement('button');
+    newConvBtn.className = 'btn-action btn-secondary';
+    newConvBtn.id = 'newConversationBtn';
+    newConvBtn.innerHTML = '<i class="fas fa-plus-circle"></i><span>Nouvelle discussion</span>';
+    const pageHeaderActions = document.querySelector('.page-header-actions');
+    if (pageHeaderActions) {
+        pageHeaderActions.insertBefore(newConvBtn, document.getElementById('newGroupBtn'));
+    }
+    document.getElementById('newConversationBtn').addEventListener('click', openNewConversationFull);
+
+    // Recherche dans la modale de discussion directe
+    document.getElementById('directSearch').addEventListener('input', (e) => {
+        const query = e.target.value;
+        loadFollowersForDirectModal().then(() => {
+            // La fonction de rendu est déjà appelée dans loadFollowersForDirectModal
+        });
     });
 
     // Dropdown utilisateur
@@ -719,32 +1357,38 @@ async function init() {
     });
     document.addEventListener('click', () => document.getElementById('userDropdown')?.classList.remove('show'));
 
-    // Liens dropdown
     document.getElementById('dropProfile').addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.href = `profil-feed.html?id=${currentProfile.hubisoccer_id}`;
+        window.location.href = `../community/profil-feed.html?id=${currentProfile.hubisoccer_id}`;
     });
     document.getElementById('dropDashboard').addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.href = 'dashboard.html';
+        const role = currentProfile?.role_code || 'FOOT';
+        const dashboardUrl = ROLE_DASHBOARD_MAP[role] || ROLE_DASHBOARD_MAP['FOOT'];
+        window.location.href = dashboardUrl;
     });
     document.getElementById('dropSettings').addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.href = 'settings-feed.html';
+        window.location.href = 'settings-msg.html';
     });
     document.getElementById('dropLogout').addEventListener('click', (e) => {
         e.preventDefault();
         logout();
     });
 
-    // Lien communauté vide
-    document.getElementById('emptyCommunityLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        window.location.href = 'feed.html';
+    // Sidebar toggle
+    document.getElementById('menuToggle').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebarOverlay').classList.add('show');
     });
-
-    // Sidebar dynamique simple (selon rôle)
-    buildSidebar();
+    document.getElementById('sidebarClose').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('show');
+    });
+    document.getElementById('sidebarOverlay').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('show');
+    });
 
     document.querySelectorAll('.modal').forEach(m => {
         m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id); });
@@ -756,27 +1400,6 @@ async function init() {
     if (toMsgId) {
         openOrCreateDirectConversation(toMsgId);
     }
-}
-
-function buildSidebar() {
-    const sidebarNav = document.getElementById('sidebarNav');
-    if (!sidebarNav) return;
-    const role = currentProfile?.role_code || 'member';
-    let links = [
-        { href: 'feed.html', icon: 'fa-newspaper', text: 'Fil d\'actualité' },
-        { href: 'conversation.html', icon: 'fa-comments', text: 'Messages' },
-        { href: 'stories.html', icon: 'fa-clock', text: 'Stories' },
-        { href: `profil-feed.html?id=${currentProfile?.hubisoccer_id}`, icon: 'fa-user', text: 'Mon Profil' },
-    ];
-    if (role === 'admin' || role === 'staff') {
-        links.push({ href: 'admin.html', icon: 'fa-cog', text: 'Administration' });
-    }
-    sidebarNav.innerHTML = links.map(link => `
-        <a href="${link.href}">
-            <i class="fas ${link.icon}"></i>
-            <span>${link.text}</span>
-        </a>
-    `).join('');
 }
 // ========== FIN : INITIALISATION ==========
 

@@ -155,6 +155,7 @@ function goBack() {
 
 // ========== DEBUT : CHARGEMENT DES MESSAGES ==========
 async function loadMessages(before = null) {
+    // 🔥 Correction : on récupère tous les messages SANS le filtre deleted_for
     let query = sb
         .from('supabaseAuthPrive_messages')
         .select(`
@@ -163,7 +164,6 @@ async function loadMessages(before = null) {
             author:supabaseAuthPrive_profiles!user_hubisoccer_id ( hubisoccer_id, full_name, display_name, avatar_url )
         `)
         .eq('conversation_id', currentConvId)
-        .not('deleted_for', 'cs', `{${currentProfile.hubisoccer_id}}`)
         .order('created_at', { ascending: false })
         .limit(PAGE_SIZE + 1);
 
@@ -175,8 +175,14 @@ async function loadMessages(before = null) {
         return [];
     }
 
-    hasMoreMsgs = data.length > PAGE_SIZE;
-    const msgs = hasMoreMsgs ? data.slice(1) : data;
+    // Filtrage JavaScript : exclure les messages supprimés pour l'utilisateur courant
+    const visibleMsgs = (data || []).filter(msg => {
+        const deleted = msg.deleted_for || [];
+        return !deleted.includes(currentProfile.hubisoccer_id);
+    });
+
+    hasMoreMsgs = visibleMsgs.length > PAGE_SIZE;
+    const msgs = hasMoreMsgs ? visibleMsgs.slice(1) : visibleMsgs;
     return msgs.reverse();
 }
 

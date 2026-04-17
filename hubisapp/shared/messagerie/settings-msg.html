@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Paramètres | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="settings-msg.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== LOADER GLOBAL ===== -->
+<div class="c-loader" id="globalLoader" style="display:flex;">
+    <div class="c-spinner"></div>
+    <span class="c-loader-text" id="loaderText">Chargement des paramètres...</span>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="top-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="nav-logo" onclick="window.location.href='../community/feed.html'">
+        <span class="nav-title">Paramètres Messagerie</span>
+    </div>
+    <div class="nav-right">
+        <!-- Sélecteur de langue -->
+        <div class="lang-selector" id="langSelector">
+            <button class="lang-current" id="langCurrentBtn">
+                <i class="fas fa-globe"></i>
+                <span id="currentLangCode">FR</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="lang-dropdown" id="langDropdown"></div>
+        </div>
+
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-wrap">
+                <div class="user-avatar-initials" id="userAvatarInitials"></div>
+                <img id="userAvatar" alt="" class="user-avatar" style="display:none;">
+            </div>
+            <span class="user-name" id="userName">...</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="#" id="dropProfile"><i class="fas fa-user"></i> Mon profil</a>
+                <a href="#" id="dropDashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="conversation.html"><i class="fas fa-comments"></i> Messages</a>
+                <hr>
+                <a href="#" id="dropLogout" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+        <h3>Menu</h3>
+        <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+</aside>
+
+<!-- ===== CONTENU PRINCIPAL ===== -->
+<main class="main-content">
+    <div class="settings-container">
+        <h1><i class="fas fa-cog"></i> Paramètres de la messagerie</h1>
+
+        <!-- Onglets -->
+        <div class="settings-tabs">
+            <button class="settings-tab active" data-tab="notifications">Notifications</button>
+            <button class="settings-tab" data-tab="privacy">Confidentialité</button>
+            <button class="settings-tab" data-tab="appearance">Apparence</button>
+            <button class="settings-tab" data-tab="language">Langue</button>
+            <button class="settings-tab" data-tab="storage">Stockage</button>
+            <button class="settings-tab" data-tab="blocked">Bloqués</button>
+            <button class="settings-tab" data-tab="backup">Sauvegarde</button>
+        </div>
+
+        <!-- Panneau Notifications -->
+        <div class="settings-panel active" id="panel-notifications">
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Notifications push</h3>
+                    <p>Recevoir des notifications même lorsque l'application est fermée.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="pushNotifications">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Sons de notification</h3>
+                    <p>Jouer un son lorsqu'un nouveau message arrive.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="notificationSound">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Aperçu des messages</h3>
+                    <p>Afficher le contenu du message dans la notification.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="messagePreview">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Panneau Confidentialité -->
+        <div class="settings-panel" id="panel-privacy">
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Qui peut m'envoyer des messages ?</h3>
+                </div>
+                <select id="whoCanMessage" class="settings-select">
+                    <option value="everyone">Tout le monde</option>
+                    <option value="followers">Abonnés uniquement</option>
+                    <option value="nobody">Personne</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Accusé de lecture</h3>
+                    <p>Afficher les confirmations "Vu" aux autres.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="readReceipts">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Bloquer les invitations aux groupes</h3>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="blockGroupInvites">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Panneau Apparence -->
+        <div class="settings-panel" id="panel-appearance">
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Thème</h3>
+                </div>
+                <select id="themeSelect" class="settings-select">
+                    <option value="system">Système (par défaut)</option>
+                    <option value="light">Clair</option>
+                    <option value="dark">Sombre</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Taille de police</h3>
+                </div>
+                <select id="fontSize" class="settings-select">
+                    <option value="small">Petite</option>
+                    <option value="medium" selected>Moyenne</option>
+                    <option value="large">Grande</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Forme des bulles</h3>
+                </div>
+                <select id="bubbleStyle" class="settings-select">
+                    <option value="rounded">Arrondies</option>
+                    <option value="slightly">Légèrement arrondies</option>
+                    <option value="square">Carrées</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Panneau Langue -->
+        <div class="settings-panel" id="panel-language">
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Langue de l'interface</h3>
+                    <p>Choisissez votre langue préférée.</p>
+                </div>
+            </div>
+            <div class="language-grid" id="languageGrid"></div>
+        </div>
+
+        <!-- Panneau Stockage -->
+        <div class="settings-panel" id="panel-storage">
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Espace utilisé</h3>
+                    <p id="storageUsage">Calcul en cours...</p>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Vider le cache</h3>
+                    <p>Supprimer les fichiers temporaires.</p>
+                </div>
+                <button class="btn-outline" id="clearCacheBtn">Vider</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Supprimer tous les médias</h3>
+                    <p>Effacer définitivement toutes les photos, vidéos et fichiers échangés.</p>
+                </div>
+                <button class="btn-danger" id="deleteAllMediaBtn">Tout supprimer</button>
+            </div>
+        </div>
+
+        <!-- Panneau Utilisateurs bloqués -->
+        <div class="settings-panel" id="panel-blocked">
+            <div class="blocked-list-container" id="blockedListContainer">
+                <div class="members-loading"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>
+            </div>
+        </div>
+
+        <!-- Panneau Sauvegarde -->
+        <div class="settings-panel" id="panel-backup">
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h3>Exporter l'historique</h3>
+                    <p>Téléchargez toutes vos conversations au format JSON.</p>
+                </div>
+                <button class="btn-primary" id="exportDataBtn"><i class="fas fa-download"></i> Exporter</button>
+            </div>
+        </div>
+
+        <!-- Boutons d'action globaux -->
+        <div class="settings-actions">
+            <button class="btn-cancel" id="resetSettingsBtn">Réinitialiser</button>
+            <button class="btn-confirm" id="saveSettingsBtn">Enregistrer les modifications</button>
+        </div>
+    </div>
+</main>
+
+<!-- ===== TOASTS ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="session.js"></script>
+<script src="utils.js"></script>
+<script src="settings-msg.js"></script>
+</body>
+</html>

@@ -646,38 +646,39 @@ async function loadConversations() {
             .order('updated_at', { ascending: false });
         if (cErr) throw cErr;
         
-        // ✅ CORRECTION FINALE : gère NULL et absence dans le tableau
-        const { data: lastMsgs } = await sb
+        // ✅ Récupération de TOUS les messages sans filtre deleted_for
+        const { data: allMsgs } = await sb
             .from('supabaseAuthPrive_messages')
-            .select('id, conversation_id, content, media_type, created_at, user_hubisoccer_id')
+            .select('id, conversation_id, content, media_type, created_at, user_hubisoccer_id, deleted_for')
             .in('conversation_id', convIds)
-            .or(`deleted_for.is.null, deleted_for.not.cs.{${currentProfile.hubisoccer_id}}`)
             .order('created_at', { ascending: false });
         
+        // Filtrage JavaScript : exclure les messages supprimés pour l'utilisateur courant
+        const visibleMsgs = (allMsgs || []).filter(msg => {
+            const deleted = msg.deleted_for || [];
+            return !deleted.includes(currentProfile.hubisoccer_id);
+        });
+        
+        // Construction de lastMsgMap (dernier message visible par conversation)
         const lastMsgMap = {};
-        if (lastMsgs) {
-            for (const msg of lastMsgs) {
-                if (!lastMsgMap[msg.conversation_id]) {
-                    lastMsgMap[msg.conversation_id] = msg;
-                }
+        for (const msg of visibleMsgs) {
+            if (!lastMsgMap[msg.conversation_id]) {
+                lastMsgMap[msg.conversation_id] = msg;
             }
         }
         
+        // Compteurs de messages non lus (filtrage idem)
         const unreadCounts = {};
         for (const cid of convIds) {
             const lastRead = readMap[cid];
-            let query = sb
-                .from('supabaseAuthPrive_messages')
-                .select('id', { count: 'exact', head: true })
-                .eq('conversation_id', cid)
-                .neq('user_hubisoccer_id', currentProfile.hubisoccer_id)
-                .or(`deleted_for.is.null, deleted_for.not.cs.{${currentProfile.hubisoccer_id}}`);
-            if (lastRead) {
-                const isoLastRead = new Date(lastRead).toISOString();
-                query = query.gt('created_at', isoLastRead);
+            const convMsgs = visibleMsgs.filter(m => m.conversation_id === cid);
+            let unread = 0;
+            for (const msg of convMsgs) {
+                if (msg.user_hubisoccer_id === currentProfile.hubisoccer_id) continue;
+                if (lastRead && new Date(msg.created_at) <= new Date(lastRead)) continue;
+                unread++;
             }
-            const { count } = await query;
-            unreadCounts[cid] = count || 0;
+            unreadCounts[cid] = unread;
         }
         
         conversations = (convData || []).map(conv => {

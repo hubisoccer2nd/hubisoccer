@@ -19,7 +19,7 @@ let allFootballeurs = [];
 // Fin état global
 
 // Début fonctions utilitaires
-function showToast(message, type = 'info', duration = 6000) {
+function showToast(message, type = 'info', duration = 30000) {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -31,12 +31,9 @@ function showToast(message, type = 'info', duration = 6000) {
     container.appendChild(toast);
     setTimeout(() => toast.remove(), duration);
 }
-
-function showLoader() { /* Optionnel */ }
-function hideLoader() { /* Optionnel */ }
 // Fin fonctions utilitaires
 
-// Début vérification admin
+// Début vérification admin (accepte ADMIN ou FOOT_ADMIN)
 async function checkAdmin() {
     const { data: { user }, error } = await supabaseClient.auth.getUser();
     if (error || !user) { window.location.href = '../../../authprive/users/login.html'; return false; }
@@ -46,9 +43,13 @@ async function checkAdmin() {
         .eq('auth_uuid', user.id)
         .single();
     if (profileError || !profile) { window.location.href = '../../../authprive/users/login.html'; return false; }
-    if (profile.role_code !== 'ADMIN') { showToast('Accès réservé aux administrateurs', 'error'); setTimeout(() => window.location.href = '../../../authprive/users/login.html', 2000); return false; }
+    if (profile.role_code !== 'ADMIN' && profile.role_code !== 'FOOT_ADMIN') {
+        showToast('Accès réservé aux administrateurs footballeurs', 'error', 30000);
+        setTimeout(() => window.location.href = '../../../authprive/users/login.html', 3000);
+        return false;
+    }
     currentAdmin = profile;
-    document.getElementById('userName').textContent = profile.full_name || profile.display_name || 'Admin';
+    document.getElementById('userName').textContent = profile.full_name || profile.display_name || 'Admin Foot';
     return true;
 }
 // Fin vérification admin
@@ -72,7 +73,7 @@ async function loadFootballeurs() {
     }
 
     const { data, error } = await query;
-    if (error) { showToast('Erreur chargement footballeurs', 'error'); return; }
+    if (error) { showToast('Erreur chargement footballeurs', 'error', 30000); return; }
     allFootballeurs = data || [];
     renderFootballeursList(allFootballeurs);
     updateClubsFilter(allFootballeurs);
@@ -119,7 +120,7 @@ async function selectFootballeur(hubisoccerId) {
         supabaseClient.from('supabaseAuthPrive_footballeur_scouting').select('*').eq('footballeur_hubisoccer_id', hubisoccerId).maybeSingle()
     ]);
 
-    if (profileRes.error) { showToast('Erreur chargement profil', 'error'); return; }
+    if (profileRes.error) { showToast('Erreur chargement profil', 'error', 30000); return; }
     const profile = profileRes.data;
     let scouting = scoutingRes.data;
     if (!scouting) {
@@ -127,7 +128,7 @@ async function selectFootballeur(hubisoccerId) {
             .from('supabaseAuthPrive_footballeur_scouting')
             .insert([{ footballeur_hubisoccer_id: hubisoccerId }])
             .select().single();
-        if (insertError) { showToast('Erreur création scouting', 'error'); return; }
+        if (insertError) { showToast('Erreur création scouting', 'error', 30000); return; }
         scouting = newScouting;
     }
 
@@ -215,7 +216,7 @@ document.getElementById('footballeurForm').addEventListener('submit', async (e) 
         .from('supabaseAuthPrive_profiles')
         .update(profileUpdates)
         .eq('hubisoccer_id', hubisoccerId);
-    if (profileError) { showToast('Erreur profil: ' + profileError.message, 'error'); return; }
+    if (profileError) { showToast('Erreur profil: ' + profileError.message, 'error', 30000); return; }
 
     const scoutingUpdates = {
         niveau_actuel: parseInt(document.getElementById('niveauActuel').value) || 0,
@@ -236,9 +237,9 @@ document.getElementById('footballeurForm').addEventListener('submit', async (e) 
         .from('supabaseAuthPrive_footballeur_scouting')
         .update(scoutingUpdates)
         .eq('footballeur_hubisoccer_id', hubisoccerId);
-    if (scoutingError) { showToast('Erreur scouting: ' + scoutingError.message, 'error'); return; }
+    if (scoutingError) { showToast('Erreur scouting: ' + scoutingError.message, 'error', 30000); return; }
 
-    showToast('Données mises à jour avec succès', 'success');
+    showToast('Données mises à jour avec succès', 'success', 30000);
     loadFootballeurs();
 });
 // Fin sauvegarde
@@ -247,14 +248,13 @@ document.getElementById('footballeurForm').addEventListener('submit', async (e) 
 document.getElementById('deleteBtn').addEventListener('click', async () => {
     if (!currentFootballeurId) return;
     if (!confirm('Supprimer définitivement ce footballeur ?')) return;
-    // La suppression du profil entraîne la suppression en cascade du scouting (ON DELETE CASCADE)
     const { error } = await supabaseClient
         .from('supabaseAuthPrive_profiles')
         .delete()
         .eq('hubisoccer_id', currentFootballeurId);
-    if (error) { showToast('Erreur suppression: ' + error.message, 'error'); }
+    if (error) { showToast('Erreur suppression: ' + error.message, 'error', 30000); }
     else {
-        showToast('Footballeur supprimé', 'success');
+        showToast('Footballeur supprimé', 'success', 30000);
         currentFootballeurId = null;
         document.getElementById('footballeurForm').style.display = 'none';
         document.getElementById('noSelectionMessage').style.display = 'block';

@@ -378,7 +378,7 @@ function updateRadar(skills) {
                     skills.mental,   skills.vision,  skills.defense,
                     skills.technique, skills.attaque
                 ],
-                backgroundColor: 'rgba(85,27,140,0.25)',
+                backgroundColor: 'rgba(85,27,140,0.15)',
                 borderColor:     '#7e3db0',
                 borderWidth:     2,
                 pointBackgroundColor: ['#e74c3c','#e74c3c','#e74c3c',
@@ -397,10 +397,18 @@ function updateRadar(skills) {
                 r: {
                     beginAtZero: true,
                     max: 100,
-                    ticks: { stepSize: 20, color: '#8888aa', backdropColor: 'transparent', font: { size: 10 } },
-                    grid:        { color: 'rgba(255,255,255,0.07)' },
-                    angleLines:  { color: 'rgba(255,255,255,0.07)' },
-                    pointLabels: { color: '#e8e8f0', font: { size: 10, family: 'Poppins' } }
+                    ticks: { 
+                        stepSize: 20, 
+                        color: '#4a4a6a',        // couleur sombre pour les graduations
+                        backdropColor: 'transparent', 
+                        font: { size: 10 } 
+                    },
+                    grid: { color: '#d0ccd8' },   // grille plus sombre et visible
+                    angleLines: { color: '#d0ccd8' },
+                    pointLabels: { 
+                        color: '#1a1a2e',         // labels sombres
+                        font: { size: 10, family: 'Poppins', weight: '500' } 
+                    }
                 }
             },
             plugins: {

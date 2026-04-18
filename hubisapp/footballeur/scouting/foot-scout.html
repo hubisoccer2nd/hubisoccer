@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Scouting Footballeur | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="foot-scout.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-futbol"></i> Espace Footballeur</span>
+    </div>
+    <div class="nav-right">
+        <!-- Sélecteur de langue (24 langues) -->
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <!-- Notifications -->
+        <div class="notif-icon" id="notifIcon" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <!-- Menu utilisateur -->
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../dashboard/foot-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="../profile-edit/foot-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <!-- Bouton hamburger -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-futbol"></i><h3>Menu Footballeur</h3></div>
+        <button class="close-sidebar" id="closeSidebar" aria-label="Fermer"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="../dashboard/foot-dash.html"><i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span></a>
+        <a href="../verification/foot-verif.html"><i class="fas fa-shield-alt"></i><span>Vérification du Statut</span></a>
+        <a href="../edit-cv/foot-cv.html"><i class="fas fa-file-alt"></i><span>Mon CV Pro</span></a>
+        <a href="../certifications/foot-certif.html"><i class="fas fa-certificate"></i><span>Diplômes & Certifs</span></a>
+        <a href="../transferts/foot-transfert.html"><i class="fas fa-exchange-alt"></i><span>Historique Transferts</span></a>
+        <a href="../videos/foot-videos.html"><i class="fas fa-video"></i><span>Mes Vidéos</span></a>
+        <a href="../revenus/foot-revenus.html"><i class="fas fa-coins"></i><span>Mes Revenus</span></a>
+        <a href="foot-scout.html" class="active"><i class="fas fa-eye"></i><span>Scouting & Analyse</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/foot-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="scouting-main">
+<div class="scouting-container">
+    <h1 class="page-title"><i class="fas fa-chart-pie"></i> Scouting & Analyse — Footballeur</h1>
+    <!-- Bandeau profil rapide -->
+    <div class="scout-profile-banner glass-card">
+        <div class="scout-avatar-wrap">
+            <img src="" id="scoutAvatar" alt="Avatar" style="display:none;">
+            <div class="scout-avatar-initials" id="scoutAvatarInitials"></div>
+        </div>
+        <div class="scout-profile-info">
+            <h2 id="scoutName">—</h2>
+            <p id="scoutMeta">— | — | —</p>
+        </div>
+        <div class="scout-badge-wrap">
+            <span class="scout-rating-badge" id="scoutGlobalRating">—</span>
+            <span class="scout-rating-label">Note globale</span>
+        </div>
+    </div>
+    <!-- Stats rapides scouting -->
+    <div class="scouting-stats-grid">
+        <div class="scout-stat-card corps"><i class="fas fa-futbol"></i><span class="scout-stat-label">Matchs joués</span><span class="scout-stat-value" id="statMatchs">—</span></div>
+        <div class="scout-stat-card corps"><i class="fas fa-bullseye"></i><span class="scout-stat-label">Buts</span><span class="scout-stat-value" id="statButs">—</span></div>
+        <div class="scout-stat-card ame"><i class="fas fa-running"></i><span class="scout-stat-label">Passes décisives</span><span class="scout-stat-value" id="statPasses">—</span></div>
+        <div class="scout-stat-card ame"><i class="fas fa-coins"></i><span class="scout-stat-label">Valeur marchande</span><span class="scout-stat-value" id="statValeur">—</span></div>
+        <div class="scout-stat-card esprit"><i class="fas fa-eye"></i><span class="scout-stat-label">Vues scouting</span><span class="scout-stat-value" id="statVues">—</span></div>
+        <div class="scout-stat-card esprit"><i class="fas fa-star"></i><span class="scout-stat-label">Favoris recruteurs</span><span class="scout-stat-value" id="statFavoris">—</span></div>
+    </div>
+    <!-- Synthèse du footballeur -->
+    <div class="player-synthesis glass-card">
+        <h3 class="section-title"><i class="fas fa-id-badge"></i> Synthèse du footballeur</h3>
+        <div class="synthesis-body">
+            <div class="positions-wrap">
+                <span class="position-badge primary" id="primaryPosition">Poste principal</span>
+                <span class="position-badge secondary" id="secondaryPositions">Poste secondaire</span>
+            </div>
+            <div class="foot-stats">
+                <div class="foot-item"><span class="foot-label">Pied gauche</span><div class="foot-bar"><div class="foot-fill left" id="leftFootFill" style="width:0%"></div></div><span class="foot-value" id="leftFootLabel">—</span></div>
+                <div class="foot-item"><span class="foot-label">Pied droit</span><div class="foot-bar"><div class="foot-fill right" id="rightFootFill" style="width:0%"></div></div><span class="foot-value" id="rightFootLabel">—</span></div>
+            </div>
+        </div>
+    </div>
+    <!-- Radar Corps · Âme · Esprit -->
+    <div class="radar-section glass-card">
+        <h3 class="section-title"><i class="fas fa-chart-line"></i> Profil Corps · Âme · Esprit</h3>
+        <div class="radar-layout">
+            <div class="radar-container"><canvas id="skillsRadar" width="380" height="380"></canvas></div>
+            <div class="radar-values">
+                <div class="radar-val-group corps-group"><h4><i class="fas fa-dumbbell"></i> Corps — Physique</h4>
+                    <div class="radar-val-item"><span class="value-label">Physique général</span><div class="val-bar"><div class="val-fill corps" id="bar_physique"></div></div><span class="val-num" id="val_physique">0</span></div>
+                    <div class="radar-val-item"><span class="value-label">Vitesse</span><div class="val-bar"><div class="val-fill corps" id="bar_vitesse"></div></div><span class="val-num" id="val_vitesse">0</span></div>
+                    <div class="radar-val-item"><span class="value-label">Jeu aérien</span><div class="val-bar"><div class="val-fill corps" id="bar_aerien"></div></div><span class="val-num" id="val_aerien">0</span></div>
+                </div>
+                <div class="radar-val-group ame-group"><h4><i class="fas fa-brain"></i> Âme — Mental</h4>
+                    <div class="radar-val-item"><span class="value-label">Mental</span><div class="val-bar"><div class="val-fill ame" id="bar_mental"></div></div><span class="val-num" id="val_mental">0</span></div>
+                    <div class="radar-val-item"><span class="value-label">Vision du jeu</span><div class="val-bar"><div class="val-fill ame" id="bar_vision"></div></div><span class="val-num" id="val_vision">0</span></div>
+                    <div class="radar-val-item"><span class="value-label">Défense</span><div class="val-bar"><div class="val-fill ame" id="bar_defense"></div></div><span class="val-num" id="val_defense">0</span></div>
+                </div>
+                <div class="radar-val-group esprit-group"><h4><i class="fas fa-futbol"></i> Esprit — Technique</h4>
+                    <div class="radar-val-item"><span class="value-label">Technique</span><div class="val-bar"><div class="val-fill esprit" id="bar_technique"></div></div><span class="val-num" id="val_technique">0</span></div>
+                    <div class="radar-val-item"><span class="value-label">Attaque</span><div class="val-bar"><div class="val-fill esprit" id="bar_attaque"></div></div><span class="val-num" id="val_attaque">0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Détails par dimension -->
+    <div class="attributes-detail glass-card">
+        <h3 class="section-title"><i class="fas fa-list-ul"></i> Détails des attributs</h3>
+        <div class="attr-tabs-btns">
+            <button class="attr-tab active" data-cat="corps"><i class="fas fa-dumbbell"></i> Corps — Physique</button>
+            <button class="attr-tab" data-cat="ame"><i class="fas fa-brain"></i> Âme — Mental</button>
+            <button class="attr-tab" data-cat="esprit"><i class="fas fa-futbol"></i> Esprit — Technique</button>
+        </div>
+        <!-- Corps -->
+        <div id="corps-detail" class="attr-detail-panel active">
+            <div class="attr-detail-grid">
+                <div class="attr-detail-item"><span>Vitesse</span><div class="mini-bar"><div class="mini-fill corps" id="d_physique_vitesse"></div></div><span id="n_physique_vitesse">0</span></div>
+                <div class="attr-detail-item"><span>Accélération</span><div class="mini-bar"><div class="mini-fill corps" id="d_physique_acceleration"></div></div><span id="n_physique_acceleration">0</span></div>
+                <div class="attr-detail-item"><span>Endurance</span><div class="mini-bar"><div class="mini-fill corps" id="d_physique_endurance"></div></div><span id="n_physique_endurance">0</span></div>
+                <div class="attr-detail-item"><span>Puissance</span><div class="mini-bar"><div class="mini-fill corps" id="d_physique_puissance"></div></div><span id="n_physique_puissance">0</span></div>
+                <div class="attr-detail-item"><span>Agilité</span><div class="mini-bar"><div class="mini-fill corps" id="d_physique_agilite"></div></div><span id="n_physique_agilite">0</span></div>
+                <div class="attr-detail-item"><span>Équilibre</span><div class="mini-bar"><div class="mini-fill corps" id="d_physique_equilibre"></div></div><span id="n_physique_equilibre">0</span></div>
+                <div class="attr-detail-item"><span>Détente verticale</span><div class="mini-bar"><div class="mini-fill corps" id="d_physique_detente_verticale"></div></div><span id="n_physique_detente_verticale">0</span></div>
+                <div class="attr-detail-item"><span>Qualités phys. nat.</span><div class="mini-bar"><div class="mini-fill corps" id="d_physique_qualites_physiques_nat"></div></div><span id="n_physique_qualites_physiques_nat">0</span></div>
+            </div>
+        </div>
+        <!-- Âme -->
+        <div id="ame-detail" class="attr-detail-panel">
+            <div class="attr-detail-grid">
+                <div class="attr-detail-item"><span>Agressivité</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_agressivite"></div></div><span id="n_mental_agressivite">0</span></div>
+                <div class="attr-detail-item"><span>Anticipation</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_anticipation"></div></div><span id="n_mental_anticipation">0</span></div>
+                <div class="attr-detail-item"><span>Appels de balle</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_appels_de_balle"></div></div><span id="n_mental_appels_de_balle">0</span></div>
+                <div class="attr-detail-item"><span>Concentration</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_concentration"></div></div><span id="n_mental_concentration">0</span></div>
+                <div class="attr-detail-item"><span>Courage</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_courage"></div></div><span id="n_mental_courage">0</span></div>
+                <div class="attr-detail-item"><span>Décisions</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_decisions"></div></div><span id="n_mental_decisions">0</span></div>
+                <div class="attr-detail-item"><span>Détermination</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_determination"></div></div><span id="n_mental_determination">0</span></div>
+                <div class="attr-detail-item"><span>Inspiration</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_inspiration"></div></div><span id="n_mental_inspiration">0</span></div>
+                <div class="attr-detail-item"><span>Jeu collectif</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_jeu_collectif"></div></div><span id="n_mental_jeu_collectif">0</span></div>
+                <div class="attr-detail-item"><span>Leadership</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_leadership"></div></div><span id="n_mental_leadership">0</span></div>
+                <div class="attr-detail-item"><span>Placement</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_placement"></div></div><span id="n_mental_placement">0</span></div>
+                <div class="attr-detail-item"><span>Sang-froid</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_sang_froid"></div></div><span id="n_mental_sang_froid">0</span></div>
+                <div class="attr-detail-item"><span>Vision du jeu</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_vision_du_jeu"></div></div><span id="n_mental_vision_du_jeu">0</span></div>
+                <div class="attr-detail-item"><span>Volume de jeu</span><div class="mini-bar"><div class="mini-fill ame" id="d_mental_volume_de_jeu"></div></div><span id="n_mental_volume_de_jeu">0</span></div>
+            </div>
+        </div>
+        <!-- Esprit -->
+        <div id="esprit-detail" class="attr-detail-panel">
+            <div class="attr-detail-grid">
+                <div class="attr-detail-item"><span>Centres</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_centres"></div></div><span id="n_technique_centres">0</span></div>
+                <div class="attr-detail-item"><span>Contrôle balle</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_controle_balle"></div></div><span id="n_technique_controle_balle">0</span></div>
+                <div class="attr-detail-item"><span>Corners</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_corners"></div></div><span id="n_technique_corners">0</span></div>
+                <div class="attr-detail-item"><span>Coups francs</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_coups_francs"></div></div><span id="n_technique_coups_francs">0</span></div>
+                <div class="attr-detail-item"><span>Dribbles</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_dribbles"></div></div><span id="n_technique_dribbles">0</span></div>
+                <div class="attr-detail-item"><span>Finition</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_finition"></div></div><span id="n_technique_finition">0</span></div>
+                <div class="attr-detail-item"><span>Jeu de tête</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_jeu_de_tete"></div></div><span id="n_technique_jeu_de_tete">0</span></div>
+                <div class="attr-detail-item"><span>Marquage</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_marquage"></div></div><span id="n_technique_marquage">0</span></div>
+                <div class="attr-detail-item"><span>Passes</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_passes"></div></div><span id="n_technique_passes">0</span></div>
+                <div class="attr-detail-item"><span>Penalty</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_penalty"></div></div><span id="n_technique_penalty">0</span></div>
+                <div class="attr-detail-item"><span>Tactique</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_tactics"></div></div><span id="n_technique_tactics">0</span></div>
+                <div class="attr-detail-item"><span>Technique générale</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_technique"></div></div><span id="n_technique_technique">0</span></div>
+                <div class="attr-detail-item"><span>Tirs de loin</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_tirs_de_loin"></div></div><span id="n_technique_tirs_de_loin">0</span></div>
+                <div class="attr-detail-item"><span>Touches longues</span><div class="mini-bar"><div class="mini-fill esprit" id="d_technique_touches_longues"></div></div><span id="n_technique_touches_longues">0</span></div>
+            </div>
+        </div>
+    </div>
+    <!-- Dates clés & Contrat -->
+    <div class="key-info glass-card">
+        <h3 class="section-title"><i class="fas fa-calendar-alt"></i> Dates clés & Situation contractuelle</h3>
+        <div class="key-info-grid">
+            <div class="key-info-item"><i class="fas fa-file-contract"></i><span class="ki-label">Expiration contrat</span><span class="ki-value" id="dateContrat">—</span></div>
+            <div class="key-info-item"><i class="fas fa-clipboard-check"></i><span class="ki-label">Prochaine évaluation</span><span class="ki-value" id="dateEvaluation">—</span></div>
+            <div class="key-info-item"><i class="fas fa-coins"></i><span class="ki-label">Valeur marché</span><span class="ki-value" id="valeurMarche">—</span></div>
+            <div class="key-info-item"><i class="fas fa-shield-alt"></i><span class="ki-label">Club actuel</span><span class="ki-value" id="clubActuel">—</span></div>
+        </div>
+    </div>
+    <!-- Points forts / faibles -->
+    <div class="strengths-weaknesses glass-card">
+        <div class="strengths"><h4><i class="fas fa-thumbs-up"></i> Points forts</h4><p id="strengthsText">Aucun atout exceptionnel renseigné.</p></div>
+        <div class="weaknesses"><h4><i class="fas fa-thumbs-down"></i> Points faibles</h4><p id="weaknessesText">Aucune faiblesse renseignée.</p></div>
+    </div>
+    <!-- Rapport recruteur -->
+    <div class="scout-report glass-card">
+        <h3 class="section-title"><i class="fas fa-file-signature"></i> Rapport du recruteur</h3>
+        <div class="report-body" id="scoutReport"><p class="empty-state"><i class="fas fa-search"></i> Aucun rapport disponible pour le moment.</p></div>
+    </div>
+    <!-- Filtres demandes/offres (désactivés temporairement) -->
+    <div class="filter-tabs" id="filterTabs" style="display:none;">
+        <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> Toutes</button>
+        <button class="filter-btn" data-filter="pending"><i class="fas fa-clock"></i> En attente</button>
+        <button class="filter-btn" data-filter="approved"><i class="fas fa-check-circle"></i> Approuvées</button>
+        <button class="filter-btn" data-filter="rejected"><i class="fas fa-times-circle"></i> Rejetées</button>
+    </div>
+    <!-- Demandes de scouting (désactivées temporairement) -->
+    <div class="scouting-requests glass-card" style="display:none;">
+        <h3 class="section-title"><i class="fas fa-file-alt"></i> Demandes de scouting reçues</h3>
+        <div id="requestsList" class="requests-grid"><p class="empty-state"><i class="fas fa-inbox"></i> Aucune demande pour l'instant.</p></div>
+    </div>
+    <!-- Offres de scouting (désactivées temporairement) -->
+    <div class="scouting-offers glass-card" style="display:none;">
+        <h3 class="section-title"><i class="fas fa-handshake"></i> Offres de scouting reçues</h3>
+        <div id="offersList" class="offers-grid"><p class="empty-state"><i class="fas fa-inbox"></i> Aucune offre pour l'instant.</p></div>
+    </div>
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== DEBUT TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+<!-- ===== FIN TOAST CONTAINER ===== -->
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<!-- ===== DEBUT SCRIPT ===== -->
+<script src="foot-scout.js"></script>
+<!-- ===== FIN SCRIPT ===== -->
+</body>
+</html>

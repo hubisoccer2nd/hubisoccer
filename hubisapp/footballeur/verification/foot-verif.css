@@ -273,10 +273,22 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 /* Aperçu carte */
 .license-preview { }
 .license-preview h3 { font-size: 1rem; color: var(--text); margin-bottom: 16px; }
-.card-flip-container { position: relative; min-height: 380px; }
-.card-flip-container .card-front, .card-flip-container .card-back {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    backface-visibility: hidden; transition: transform 0.6s ease;
+
+.card-flip-container {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    perspective: 1000px;
+}
+.card-flip-container .card-front,
+.card-flip-container .card-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    transition: transform 0.6s ease;
 }
 .card-flip-container .card-back { transform: rotateY(180deg); }
 .card-flip-container.flipped .card-front { transform: rotateY(180deg); }
@@ -312,12 +324,31 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
     text-align: right; font-size: 0.7rem; color: var(--text-muted);
     font-weight: 600; letter-spacing: 1px;
 }
+
 .flip-btn {
-    margin-top: 16px; background: var(--bg-card2); border: 1px solid var(--border);
-    padding: 8px 16px; border-radius: var(--radius-pill); font-size: 0.8rem;
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
     transition: var(--transition);
+    z-index: 10;
 }
-.flip-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.flip-btn:hover {
+    background: var(--primary-light);
+    transform: translateX(-50%) translateY(-2px);
+}
 
 /* Section statut */
 .status-section { }
@@ -398,6 +429,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); outlin
 @media (max-width: 768px) {
     .menu-toggle { display: flex; }
     .lang-picker { max-width: 90px; font-size: 0.72rem; }
+    .card-flip-container { min-height: 450px; }
+    .flip-btn { bottom: -60px; }
 }
 @media (max-width: 600px) {
     .form-row { grid-template-columns: 1fr; }

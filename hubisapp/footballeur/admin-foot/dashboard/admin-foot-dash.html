@@ -1,1 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard Footballeur | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="admin-foot-dash.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT NAVBAR ADMIN ===== -->
+<nav class="admin-nav">
+    <div class="nav-left" onclick="window.location.href='../../../authprive/admin/admin-dashboard.html'" style="cursor: pointer;">
+        <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        <span class="admin-title">Administration - Dashboard Footballeur</span>
+    </div>
+    <div class="nav-right">
+        <span class="user-name" id="userName">Admin</span>
+        <button class="logout-link" id="logoutBtn">Déconnexion</button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ADMIN ===== -->
 
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="admin-main">
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-tachometer-alt"></i> Gestion des dashboards footballeurs</h1>
+            <button class="btn-refresh" id="refreshBtn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+        </div>
+
+        <!-- Panneau de recherche et filtre -->
+        <div class="search-panel">
+            <input type="text" id="searchInput" placeholder="Rechercher par nom, email ou ID HubISoccer..." />
+            <select id="filterClub">
+                <option value="">Tous les clubs</option>
+            </select>
+        </div>
+
+        <!-- Grille principale -->
+        <div class="dashboard-admin-grid">
+            <!-- Colonne gauche : liste des footballeurs -->
+            <div class="footballeurs-list">
+                <h2>Liste des footballeurs</h2>
+                <div id="footballeursListContainer">
+                    <!-- Chargée dynamiquement -->
+                </div>
+            </div>
+
+            <!-- Colonne droite : formulaire d'édition -->
+            <div class="edit-panel">
+                <h2 id="editTitle">Sélectionnez un footballeur</h2>
+                <form id="footballeurForm" style="display: none;">
+                    <!-- Section informations personnelles -->
+                    <fieldset>
+                        <legend><i class="fas fa-user"></i> Informations personnelles</legend>
+                        <input type="hidden" id="footballeurHubisoccerId">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nom complet</label>
+                                <input type="text" id="fullName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Pseudo</label>
+                                <input type="text" id="pseudo">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Poste</label>
+                                <input type="text" id="position">
+                            </div>
+                            <div class="form-group">
+                                <label>Taille (cm)</label>
+                                <input type="number" id="height">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Poids (kg)</label>
+                                <input type="number" id="weight">
+                            </div>
+                            <div class="form-group">
+                                <label>Nationalité</label>
+                                <input type="text" id="nationality">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Pied fort</label>
+                                <input type="text" id="preferredFoot">
+                            </div>
+                            <div class="form-group">
+                                <label>Club</label>
+                                <input type="text" id="club">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Âge</label>
+                                <input type="number" id="age" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Avatar URL</label>
+                                <input type="url" id="avatarUrl">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Section statistiques profil -->
+                    <fieldset>
+                        <legend><i class="fas fa-chart-simple"></i> Statistiques profil</legend>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Profil complété (%)</label>
+                                <input type="number" id="profileCompletion">
+                            </div>
+                            <div class="form-group">
+                                <label>Vues scouting</label>
+                                <input type="number" id="scoutingViews">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Favoris recruteurs</label>
+                                <input type="number" id="recruiterFavs">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Section stats globales (scouting) -->
+                    <fieldset>
+                        <legend><i class="fas fa-chart-line"></i> Statistiques globales (scouting)</legend>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Niveau actuel</label>
+                                <input type="number" id="niveauActuel">
+                            </div>
+                            <div class="form-group">
+                                <label>Potentiel</label>
+                                <input type="number" id="potentiel">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Personnalité</label>
+                                <input type="number" id="personnalite">
+                            </div>
+                            <div class="form-group">
+                                <label>Valeur marchande</label>
+                                <input type="number" id="valeurMarche">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Prêté par</label>
+                                <input type="text" id="pretInfo">
+                            </div>
+                            <div class="form-group">
+                                <label>Salaire</label>
+                                <input type="number" id="salaire">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Expire le</label>
+                                <input type="date" id="expireLe">
+                            </div>
+                            <div class="form-group">
+                                <label>Sélections jeunes</label>
+                                <input type="text" id="selectionJeunes">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Section attributs techniques -->
+                    <fieldset>
+                        <legend><i class="fas fa-futbol"></i> Attributs techniques</legend>
+                        <div class="attr-grid" id="techniqueGrid"></div>
+                    </fieldset>
+
+                    <!-- Section attributs mentaux -->
+                    <fieldset>
+                        <legend><i class="fas fa-brain"></i> Attributs mentaux</legend>
+                        <div class="attr-grid" id="mentalGrid"></div>
+                    </fieldset>
+
+                    <!-- Section attributs physiques -->
+                    <fieldset>
+                        <legend><i class="fas fa-person-running"></i> Attributs physiques</legend>
+                        <div class="attr-grid" id="physiqueGrid"></div>
+                    </fieldset>
+
+                    <!-- Section rapports -->
+                    <fieldset>
+                        <legend><i class="fas fa-file-alt"></i> Rapports recruteurs</legend>
+                        <textarea id="rapportsRecruteurs" rows="4"></textarea>
+                    </fieldset>
+
+                    <!-- Boutons d'action -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">Enregistrer les modifications</button>
+                        <button type="button" class="btn-delete" id="deleteBtn">Supprimer ce footballeur</button>
+                    </div>
+                </form>
+                <div id="noSelectionMessage">Cliquez sur un footballeur dans la liste pour modifier ses données.</div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Script principal -->
+<script src="admin-foot-dash.js"></script>
+</body>
+</html>

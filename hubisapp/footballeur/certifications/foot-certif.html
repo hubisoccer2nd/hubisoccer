@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Diplômes & Certifications | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="foot-certif.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-futbol"></i> Espace Footballeur</span>
+    </div>
+    <div class="nav-right">
+        <!-- Sélecteur de langue (24 langues) -->
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <!-- Notifications -->
+        <div class="notif-icon" id="notifIcon" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <!-- Menu utilisateur -->
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../dashboard/foot-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="../profile-edit/foot-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <!-- Bouton hamburger -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-futbol"></i><h3>Menu Footballeur</h3></div>
+        <button class="close-sidebar" id="closeSidebar" aria-label="Fermer"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="../dashboard/foot-dash.html"><i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span></a>
+        <a href="../verification/foot-verif.html"><i class="fas fa-shield-alt"></i><span>Vérification du Statut</span></a>
+        <a href="../edit-cv/foot-cv.html"><i class="fas fa-file-alt"></i><span>Mon CV Pro</span></a>
+        <a href="foot-certif.html" class="active"><i class="fas fa-certificate"></i><span>Diplômes &amp; Certifs</span></a>
+        <a href="../transferts/foot-transfert.html"><i class="fas fa-exchange-alt"></i><span>Historique Transferts</span></a>
+        <a href="../videos/foot-videos.html"><i class="fas fa-video"></i><span>Mes Vidéos</span></a>
+        <a href="../revenus/foot-revenus.html"><i class="fas fa-coins"></i><span>Mes Revenus</span></a>
+        <a href="../scouting/foot-scout.html"><i class="fas fa-eye"></i><span>Scouting &amp; Analyse</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/foot-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="certifications-main">
+    <div class="certifications-container">
+        <div class="page-header">
+            <h1><i class="fas fa-certificate"></i> Diplômes & Certifications</h1>
+            <p>Gérez vos preuves de réussite scolaire et sportive.</p>
+        </div>
+
+        <div class="cert-grid">
+            <!-- Liste des documents soumis -->
+            <div class="cert-list">
+                <div class="section-title">
+                    <h3><i class="fas fa-history"></i> Documents soumis</h3>
+                </div>
+                <div id="certificatesList" class="certificates-list">
+                    <!-- Les certificats seront chargés ici -->
+                </div>
+            </div>
+
+            <!-- Formulaire d'upload -->
+            <div class="cert-upload">
+                <div class="upload-card glass-card">
+                    <h3><i class="fas fa-cloud-upload-alt"></i> Ajouter un nouveau document</h3>
+                    <form id="certForm">
+                        <div class="form-group">
+                            <label>Intitulé du diplôme / certificat *</label>
+                            <input type="text" id="certTitle" placeholder="Ex: BAC, Licence UEFA, Attestation..." required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Année d'obtention *</label>
+                                <input type="number" id="certYear" placeholder="2026" min="1900" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Type de document</label>
+                                <select id="certType">
+                                    <option value="scolaire">Scolaire</option>
+                                    <option value="sportif">Sportif</option>
+                                    <option value="autre">Autre</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Fichier (PDF ou image) *</label>
+                            <div class="file-drop-area" id="fileDropArea">
+                                <i class="fas fa-file-upload"></i>
+                                <span id="fileLabel">Cliquez ou glissez votre document ici</span>
+                            </div>
+                            <input type="file" id="certFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" required>
+                        </div>
+                        <button type="submit" class="btn-submit" id="submitCertBtn">Soumettre pour vérification</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== DEBUT TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+<!-- ===== FIN TOAST CONTAINER ===== -->
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<!-- ===== SCRIPT ===== -->
+<script src="foot-certif.js"></script>
+<!-- ===== FIN SCRIPT ===== -->
+</body>
+</html>

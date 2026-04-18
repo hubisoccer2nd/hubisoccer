@@ -24,7 +24,6 @@ let signatureLocked   = false;
 let signatureDataURL  = null;
 
 const ROLE_NAME      = 'Footballeur';
-const ROLE_PREFIX    = 'foot';
 const SCOUTING_TABLE = 'supabaseAuthPrive_footballeur_scouting';
 const DOC_BUCKET     = 'documents';
 // Fin état global
@@ -107,7 +106,7 @@ async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
         .from('supabaseAuthPrive_profiles')
-        .select('hubisoccer_id, full_name, email, phone, birth_date, country, avatar_url, height, weight, club, position, pseudo, nationality')
+        .select('hubisoccer_id, full_name, email, phone, birth_date, country, avatar_url, height, weight, club, position, pseudo, nationality, role_code')
         .eq('auth_uuid', currentUser.id)
         .single();
     hideLoader();
@@ -146,10 +145,12 @@ function populateFormFromProfile() {
     set('nom', nom);
     set('prenom', prenom);
     set('dateNaissance', userProfile.birth_date);
-    set('nationalite', userProfile.nationality || userProfile.country);
+    set('nationalite', userProfile.nationality || userProfile.country || '');
     set('telephone', userProfile.phone);
     set('taille', userProfile.height);
     set('poids', userProfile.weight);
+    set('pays', userProfile.country || '');
+    set('adresse', ''); // à remplir manuellement
     if (scoutingData?.pied_fort) set('pied_fort', scoutingData.pied_fort);
     set('structure', scoutingData?.club_actuel || userProfile.club || '');
     updateCardPreview();
@@ -527,6 +528,7 @@ function restoreFormFromSession() {
     try {
         const data = JSON.parse(saved);
         for (const k in data) { const el = document.getElementById(k); if (el) el.value = data[k]; }
+        updateCardPreview();
     } catch (e) { console.warn('Session restore error', e); }
 }
 // Fin fonctions sessionStorage

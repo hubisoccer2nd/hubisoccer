@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Vérification Licence Footballeur | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="foot-verif.css">
+    <!-- Signature Pad -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-futbol"></i> Espace Footballeur</span>
+    </div>
+    <div class="nav-right">
+        <!-- Sélecteur de langue (24 langues) -->
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <!-- Notifications -->
+        <div class="notif-icon" id="notifIcon" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <!-- Menu utilisateur -->
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../dashboard/foot-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="../profile-edit/foot-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <!-- Bouton hamburger -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-futbol"></i><h3>Menu Footballeur</h3></div>
+        <button class="close-sidebar" id="closeSidebar" aria-label="Fermer"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="../dashboard/foot-dash.html"><i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span></a>
+        <a href="foot-verif.html" class="active"><i class="fas fa-shield-alt"></i><span>Vérification du Statut</span></a>
+        <a href="../edit-cv/foot-cv.html"><i class="fas fa-file-alt"></i><span>Mon CV Pro</span></a>
+        <a href="../certifications/foot-certif.html"><i class="fas fa-certificate"></i><span>Diplômes &amp; Certifs</span></a>
+        <a href="../transferts/foot-transfert.html"><i class="fas fa-exchange-alt"></i><span>Historique Transferts</span></a>
+        <a href="../videos/foot-videos.html"><i class="fas fa-video"></i><span>Mes Vidéos</span></a>
+        <a href="../revenus/foot-revenus.html"><i class="fas fa-coins"></i><span>Mes Revenus</span></a>
+        <a href="../scouting/foot-scout.html"><i class="fas fa-eye"></i><span>Scouting &amp; Analyse</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/foot-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="verification-main">
+<div class="verification-container">
+    <h1 class="page-title"><i class="fas fa-shield-alt"></i> Hub de vérification et licence - Footballeur</h1>
+
+    <!-- Section documents -->
+    <section class="documents-section glass-card">
+        <h2><i class="fas fa-file-alt"></i> Documents requis</h2>
+        <p class="section-subtitle">Téléversez les documents demandés. Le statut change après vérification par notre équipe.</p>
+        <div class="documents-grid" id="documentsGrid"></div>
+    </section>
+
+    <!-- Section licence -->
+    <section class="license-section glass-card">
+        <h2><i class="fas fa-id-card"></i> Demande de licence HubISoccer - Footballeur</h2>
+        <p class="section-subtitle">Remplissez ces informations pour obtenir votre carte de licence officielle.</p>
+        <div class="license-layout">
+            <div class="license-form">
+                <form id="licenseForm">
+                    <div class="form-row">
+                        <div class="form-group"><label>Nom *</label><input type="text" id="nom" required placeholder="Nom de famille"></div>
+                        <div class="form-group"><label>Prénom *</label><input type="text" id="prenom" required placeholder="Prénom"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Date de naissance *</label><input type="date" id="dateNaissance" required></div>
+                        <div class="form-group"><label>Lieu de naissance *</label><input type="text" id="lieuNaissance" required placeholder="Ville, Pays"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Adresse actuelle *</label><input type="text" id="adresse" required placeholder="Adresse complète"></div>
+                        <div class="form-group"><label>Nationalité *</label><input type="text" id="nationalite" required placeholder="Ex: Béninoise"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Pays de résidence *</label><input type="text" id="pays" required placeholder="Ex: Bénin"></div>
+                        <div class="form-group"><label>Langue principale</label>
+                            <select id="langue">
+                                <option value="">Sélectionnez</option>
+                                <option>Français</option><option>Anglais</option><option>Yoruba</option>
+                                <option>Fon</option><option>Hausa</option><option>Kiswahili</option>
+                                <option>Espagnol</option><option>Portugais</option><option>Arabe</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Téléphone *</label><input type="tel" id="telephone" required placeholder="+229 XX XX XX XX"></div>
+                        <div class="form-group"><label>Taille (cm)</label><input type="number" id="taille" min="100" max="250" placeholder="Ex: 180"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Poids (kg)</label><input type="number" id="poids" min="30" max="200" placeholder="Ex: 75"></div>
+                        <div class="form-group"><label>Pied fort</label>
+                            <select id="pied_fort">
+                                <option value="">Sélectionnez</option>
+                                <option value="Droitier">Droitier</option>
+                                <option value="Gaucher">Gaucher</option>
+                                <option value="Ambidextre">Ambidextre</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Structure / Club / Organisme actuel</label><input type="text" id="structure" placeholder="ou Libre / Indépendant"></div>
+                    </div>
+                    <div class="signature-group">
+                        <label>Signature * <span class="field-info">(obligatoire)</span></label>
+                        <div class="signature-preview" id="signaturePreview" onclick="openSignatureModal()">
+                            <div class="signature-placeholder"><i class="fas fa-pen"></i><span>Cliquez pour signer</span></div>
+                            <img id="signatureImage" style="display:none; max-width:100%; max-height:100px;" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit-license" id="submitLicense">
+                        <i class="fas fa-paper-plane"></i> Soumettre ma demande
+                    </button>
+                </form>
+            </div>
+
+            <div class="license-preview">
+                <h3>Aperçu de votre carte de licence</h3>
+                <div class="card-flip-container" id="cardPreview">
+                    <div class="card-front">
+                        <div class="card-template">
+                            <div class="card-header"><h4>LICENCE HUBISOCCER</h4><p><i class="fas fa-futbol"></i> FOOTBALLEUR</p></div>
+                            <div class="card-body">
+                                <div class="card-photo"><i class="fas fa-futbol"></i></div>
+                                <div class="card-info" id="cardFrontInfo"></div>
+                            </div>
+                            <div class="card-footer" id="cardFrontFooter"></div>
+                        </div>
+                    </div>
+                    <div class="card-back">
+                        <div class="card-template">
+                            <div class="card-header"><h4>INFORMATIONS COMPLÉMENTAIRES</h4></div>
+                            <div class="card-body"><div class="card-info" id="cardBackInfo"></div></div>
+                            <div class="card-footer">
+                                <div class="stamp"><i class="fas fa-stamp"></i> Cachet officiel HubISoccer</div>
+                                <div class="trinity-badge">Corps - Âme - Esprit</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="flip-btn" id="flipCardBtn"><i class="fas fa-sync-alt"></i> Retourner</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section statut -->
+    <section class="status-section glass-card" id="statusSection" style="display:none;">
+        <h2><i class="fas fa-clock"></i> Statut de votre demande de licence</h2>
+        <div class="status-card" id="statusCard"></div>
+    </section>
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== DEBUT MODALE SIGNATURE ===== -->
+<div id="signatureModal" class="signature-modal" style="display:none;">
+    <div class="signature-modal-content">
+        <div class="signature-modal-header">
+            <h3><i class="fas fa-pen-nib"></i> Signez dans le cadre</h3>
+            <span class="close-modal" onclick="closeSignatureModal()">&times;</span>
+        </div>
+        <div class="signature-modal-body">
+            <canvas id="signatureCanvasModal" width="800" height="300" style="touch-action:none; width:100%; height:auto; border:1px solid #ccc; border-radius:8px;"></canvas>
+            <div class="signature-modal-actions">
+                <button type="button" class="btn-clear" id="clearSignatureModal"><i class="fas fa-eraser"></i> Effacer</button>
+                <button type="button" class="btn-lock" id="lockSignatureModal"><i class="fas fa-lock"></i> Verrouiller</button>
+                <button type="button" class="btn-save" id="saveSignatureModal"><i class="fas fa-check"></i> Valider la signature</button>
+            </div>
+            <p class="signature-status" id="signatureStatus"></p>
+        </div>
+    </div>
+</div>
+<!-- ===== FIN MODALE SIGNATURE ===== -->
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- ===== SCRIPT ===== -->
+<script src="foot-verif.js"></script>
+</body>
+</html>

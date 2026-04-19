@@ -116,6 +116,7 @@ function renderTransfers() {
                 </div>
                 <div class="transfer-status ${t.status}">${statusLabels[t.status]||t.status}</div>
                 <div class="transfer-actions">
+                    <button class="btn-action view" onclick="viewTransfer('${t.id}')"><i class="fas fa-eye"></i></button>
                     <button class="btn-action edit" onclick="editTransfer('${t.id}')"><i class="fas fa-edit"></i></button>
                     <button class="btn-action delete" onclick="confirmDeleteTransfer('${t.id}')"><i class="fas fa-trash"></i></button>
                 </div>
@@ -166,6 +167,7 @@ function renderOffers() {
                 </div>
                 <div class="offer-status ${o.status}">${statusLabels[o.status]||o.status}</div>
                 <div class="offer-actions">
+                    <button class="btn-action view" onclick="viewOffer('${o.id}')"><i class="fas fa-eye"></i></button>
                     <button class="btn-action edit" onclick="editOffer('${o.id}')"><i class="fas fa-edit"></i></button>
                     <button class="btn-action delete" onclick="confirmDeleteOffer('${o.id}')"><i class="fas fa-trash"></i></button>
                 </div>
@@ -188,12 +190,58 @@ function updateStats() {
 }
 // Fin stats
 
+// Début fonctions de visualisation (modale lecture seule)
+function viewTransfer(id) {
+    const transfer = transfersData.find(t => t.id === id);
+    if (!transfer) return;
+    const amount = transfer.montant ? formatMoney(transfer.montant) : '—';
+    const typeLabel = { transfert: 'Transfert', pret: 'Prêt', fin_contrat: 'Fin de contrat' }[transfer.type_transfert] || 'Transfert';
+    const statusLabels = { pending: 'En attente', approved: 'Validé', rejected: 'Rejeté' };
+    document.getElementById('transferModalTitle').textContent = 'Détail du transfert';
+    document.getElementById('transferId').value = transfer.id;
+    document.getElementById('transferFootballeurId').value = transfer.user_hubisoccer_id;
+    document.getElementById('transferFromClub').value = transfer.club_depart || '';
+    document.getElementById('transferToClub').value = transfer.club_arrivee || '';
+    document.getElementById('transferDate').value = transfer.date_transfert || '';
+    document.getElementById('transferType').value = transfer.type_transfert || 'transfert';
+    document.getElementById('transferAmount').value = transfer.montant || 0;
+    document.getElementById('transferStatus').value = transfer.status || 'pending';
+    // Désactiver tous les champs et le bouton submit
+    document.querySelectorAll('#transferForm input, #transferForm select').forEach(el => el.disabled = true);
+    document.querySelector('#transferForm .btn-save').style.display = 'none';
+    document.getElementById('transferModal').style.display = 'flex';
+}
+
+function viewOffer(id) {
+    const offer = offersData.find(o => o.id === id);
+    if (!offer) return;
+    const amount = offer.amount ? formatMoney(offer.amount) : '—';
+    const statusLabels = { pending: 'En attente', accepted: 'Acceptée', rejected: 'Rejetée' };
+    document.getElementById('offerModalTitle').textContent = 'Détail de l\'offre';
+    document.getElementById('offerId').value = offer.id;
+    document.getElementById('offerFootballeurId').value = offer.user_hubisoccer_id;
+    document.getElementById('offerTitle').value = offer.title || '';
+    document.getElementById('offerFromEntity').value = offer.from_entity || '';
+    document.getElementById('offerType').value = offer.type || 'transfert';
+    document.getElementById('offerAmount').value = offer.amount || 0;
+    document.getElementById('offerDescription').value = offer.description || '';
+    document.getElementById('offerStatusSelect').value = offer.status || 'pending';
+    // Désactiver tous les champs et le bouton submit
+    document.querySelectorAll('#offerForm input, #offerForm select, #offerForm textarea').forEach(el => el.disabled = true);
+    document.querySelector('#offerForm .btn-save').style.display = 'none';
+    document.getElementById('offerModal').style.display = 'flex';
+}
+// Fin fonctions de visualisation
+
 // Début gestion transferts (modal)
 async function openTransferModal(transfer = null) {
     if (!allFootballeurs.length) await loadFootballeurs();
     const select = document.getElementById('transferFootballeurId');
     select.innerHTML = '<option value="">Sélectionner un footballeur</option>' + allFootballeurs.map(f => `<option value="${f.hubisoccer_id}">${f.full_name}</option>`).join('');
     document.getElementById('transferModalTitle').textContent = transfer ? 'Modifier le transfert' : 'Ajouter un transfert';
+    // Réactiver les champs
+    document.querySelectorAll('#transferForm input, #transferForm select').forEach(el => el.disabled = false);
+    document.querySelector('#transferForm .btn-save').style.display = 'block';
     if (transfer) {
         document.getElementById('transferId').value = transfer.id;
         document.getElementById('transferFootballeurId').value = transfer.user_hubisoccer_id;
@@ -215,7 +263,10 @@ async function openTransferModal(transfer = null) {
     }
     document.getElementById('transferModal').style.display = 'flex';
 }
-function closeTransferModal() { document.getElementById('transferModal').style.display = 'none'; }
+function closeTransferModal() { 
+    document.getElementById('transferModal').style.display = 'none';
+    // Réactiver les champs pour la prochaine ouverture (sera fait dans openTransferModal)
+}
 
 document.getElementById('transferForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -274,6 +325,9 @@ async function openOfferModal(offer = null) {
     const select = document.getElementById('offerFootballeurId');
     select.innerHTML = '<option value="">Sélectionner un footballeur</option>' + allFootballeurs.map(f => `<option value="${f.hubisoccer_id}">${f.full_name}</option>`).join('');
     document.getElementById('offerModalTitle').textContent = offer ? 'Modifier l\'offre' : 'Ajouter une offre';
+    // Réactiver les champs
+    document.querySelectorAll('#offerForm input, #offerForm select, #offerForm textarea').forEach(el => el.disabled = false);
+    document.querySelector('#offerForm .btn-save').style.display = 'block';
     if (offer) {
         document.getElementById('offerId').value = offer.id;
         document.getElementById('offerFootballeurId').value = offer.user_hubisoccer_id;
@@ -444,8 +498,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTabs();
     await loadTransfers();
     await loadOffers();
+    // Exposer les fonctions globalement
+    window.viewTransfer = viewTransfer;
     window.editTransfer = editTransfer;
     window.confirmDeleteTransfer = confirmDeleteTransfer;
+    window.viewOffer = viewOffer;
     window.editOffer = editOffer;
     window.confirmDeleteOffer = confirmDeleteOffer;
     window.closeConfirmModal = closeConfirmModal;

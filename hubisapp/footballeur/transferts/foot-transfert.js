@@ -1,6 +1,6 @@
 /* ============================================================
-   HubISoccer — foot-transfert.js
-   Espace Footballeur · Transferts & Offres
+   HubISoccer — admin-foot-transferts.js
+   Administration Footballeur · Transferts & Offres
    ============================================================ */
 
 'use strict';
@@ -13,393 +13,813 @@ window.__SUPABASE_CLIENT = supabaseClient;
 // Fin configuration Supabase
 
 // Début état global
-let currentUser = null;
-let userProfile = null;
-let transfers = [];
-let offers = [];
-let currentFilters = { year: '', club: '', type: '' };
-let currentOffer = null;
+let currentAdmin = null;
+let allFootballeurs = [];
+let transfersData = [];
+let offersData = [];
+let currentTransferId = null;
+let currentOfferId = null;
+let currentAction = null;
+let currentTab = 'transfers';
 // Fin état global
 
 // Début fonctions utilitaires
-function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
-function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
+function showLoader(show) {
+    const loader = document.getElementById('globalLoader');
+    if (loader) loader.style.display = show ? 'flex' : 'none';
+}
 
 function showToast(message, type = 'info', duration = 30000) {
-    let c = document.getElementById('toastContainer');
-    if (!c) {
-        c = document.createElement('div');
-        c.id = 'toastContainer';
-        c.className = 'toast-container';
-        document.body.appendChild(c);
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
     }
     const icons = {
         success: 'fa-check-circle',
-        error:   'fa-exclamation-circle',
+        error: 'fa-exclamation-circle',
         warning: 'fa-exclamation-triangle',
-        info:    'fa-info-circle'
+        info: 'fa-info-circle'
     };
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.innerHTML = `
-        <div class="toast-icon"><i class="fas ${icons[type] || icons.info}"></i></div>
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i class="fas ${icons[type] || icons.info}"></i>
+        </div>
         <div class="toast-content">${message}</div>
         <button class="toast-close"><i class="fas fa-times"></i></button>
     `;
-    c.appendChild(t);
-    t.querySelector('.toast-close').addEventListener('click', () => {
-        t.style.animation = 'fadeOut 0.3s forwards';
-        setTimeout(() => t.remove(), 300);
+    container.appendChild(toast);
+    const closeBtn = toast.querySelector('.toast-close');
+    closeBtn.addEventListener('click', () => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
     });
     setTimeout(() => {
-        if (t.parentNode) {
-            t.style.animation = 'fadeOut 0.3s forwards';
-            setTimeout(() => t.remove(), 300);
+        if (toast.parentNode) {
+            toast.style.animation = 'fadeOut 0.3s forwards';
+            setTimeout(() => toast.remove(), 300);
         }
     }, duration);
 }
 
 function getInitials(name) {
-    if (!name) return '?';
+    if (!name) return 'A';
     const parts = name.trim().split(/\s+/);
     return (parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : name[0]).toUpperCase();
 }
 
 function updateAvatarUI() {
-    const navImg  = document.getElementById('userAvatar');
-    const navInit = document.getElementById('userAvatarInitials');
-    const url = userProfile?.avatar_url;
-    if (url && url !== '') {
-        if (navImg)  { navImg.src = url; navImg.style.display = 'block'; }
-        if (navInit) navInit.style.display = 'none';
+    const img = document.getElementById('userAvatar');
+    const init = document.getElementById('userAvatarInitials');
+    const url = currentAdmin?.avatar_url;
+    if (url) {
+        if (img) { img.src = url; img.style.display = 'block'; }
+        if (init) init.style.display = 'none';
     } else {
-        const init = getInitials(userProfile?.full_name || userProfile?.display_name || 'F');
-        if (navInit) { navInit.textContent = init; navInit.style.display = 'flex'; }
-        if (navImg)  navImg.style.display = 'none';
+        const initials = getInitials(currentAdmin?.full_name || currentAdmin?.display_name || 'A');
+        if (init) { init.textContent = initials; init.style.display = 'flex'; }
+        if (img) img.style.display = 'none';
     }
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
-}
-
-function formatMoney(value, countryCode = 'BJ') {
+function formatMoney(value) {
     if (!value || isNaN(value)) return '—';
-    const num = Number(value);
-    const currency = getCurrencyFromCountry(countryCode);
-    return new Intl.NumberFormat(currency.locale, {
+    return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
-        currency: currency.code,
+        currency: 'XOF',
         maximumFractionDigits: 0
-    }).format(num);
-}
-
-function getCurrencyFromCountry(countryCode) {
-    const map = {
-        'BJ': { code: 'XOF', locale: 'fr-BJ' }, 'FR': { code: 'EUR', locale: 'fr-FR' },
-        'US': { code: 'USD', locale: 'en-US' }, 'GB': { code: 'GBP', locale: 'en-GB' }
-    };
-    return map[countryCode] || { code: 'XOF', locale: 'fr-FR' };
+    }).format(value);
 }
 // Fin fonctions utilitaires
 
-// Début vérification session et rôle
-async function checkSession() {
-    showLoader();
-    const { data: { session }, error } = await supabaseClient.auth.getSession();
-    hideLoader();
-    if (error || !session) {
-        window.location.href = '../../authprive/users/login.html';
-        return null;
+// Début vérification admin
+async function checkAdmin() {
+    showLoader(true);
+    try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error || !user) {
+            window.location.href = '../../../authprive/users/login.html';
+            return false;
+        }
+        const { data: profile, error: profileError } = await supabaseClient
+            .from('supabaseAuthPrive_profiles')
+            .select('role_code, full_name, display_name, avatar_url')
+            .eq('auth_uuid', user.id)
+            .single();
+        if (profileError || !profile) {
+            window.location.href = '../../../authprive/users/login.html';
+            return false;
+        }
+        if (profile.role_code !== 'ADMIN' && profile.role_code !== 'FOOT_ADMIN') {
+            showToast('Accès réservé aux administrateurs', 'error');
+            setTimeout(() => window.location.href = '../../../authprive/users/login.html', 2000);
+            return false;
+        }
+        currentAdmin = profile;
+        document.getElementById('userName').textContent = profile.full_name || profile.display_name || 'Admin Foot';
+        updateAvatarUI();
+        return true;
+    } catch (err) {
+        console.error(err);
+        showToast('Erreur de vérification', 'error');
+        return false;
+    } finally {
+        showLoader(false);
     }
-    currentUser = session.user;
-    return currentUser;
 }
+// Fin vérification admin
 
-async function loadProfile() {
-    if (!currentUser) return null;
-    showLoader();
-    const { data, error } = await supabaseClient
-        .from('supabaseAuthPrive_profiles')
-        .select('hubisoccer_id, full_name, display_name, avatar_url, role_code, country')
-        .eq('auth_uuid', currentUser.id)
-        .single();
-    hideLoader();
-    if (error) {
-        showToast('Erreur chargement profil', 'error');
-        return null;
+// Début chargement footballeurs
+async function loadFootballeurs() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('supabaseAuthPrive_profiles')
+            .select('hubisoccer_id, full_name')
+            .eq('role_code', 'FOOT')
+            .order('full_name');
+        if (error) throw error;
+        allFootballeurs = data || [];
+        return allFootballeurs;
+    } catch (err) {
+        console.error('Erreur chargement footballeurs:', err);
+        return [];
     }
-    if (data.role_code !== 'FOOT') {
-        showToast('Accès réservé aux footballeurs', 'error');
-        setTimeout(() => window.location.href = '../../authprive/users/login.html', 2000);
-        return null;
-    }
-    userProfile = data;
-    document.getElementById('userName').textContent = userProfile.full_name || userProfile.display_name || 'Footballeur';
-    updateAvatarUI();
-    return userProfile;
 }
-// Fin vérification
+// Fin chargement footballeurs
 
 // Début chargement transferts
 async function loadTransfers() {
-    if (!userProfile) return;
-    showLoader();
+    showLoader(true);
     try {
         const { data, error } = await supabaseClient
             .from('supabaseAuthPrive_transfers')
-            .select('*')
-            .eq('user_hubisoccer_id', userProfile.hubisoccer_id)
+            .select(`*, footballeur:user_hubisoccer_id ( hubisoccer_id, full_name )`)
             .order('date_transfert', { ascending: false });
         if (error) throw error;
-        transfers = data || [];
-
-        const years = [...new Set(transfers.map(t => t.date_transfert ? new Date(t.date_transfert).getFullYear() : null).filter(y => y))];
-        const clubs = [...new Set(transfers.flatMap(t => [t.club_depart, t.club_arrivee]).filter(c => c))];
-        const yearSelect = document.getElementById('filterYear');
-        const clubSelect = document.getElementById('filterClub');
-        if (yearSelect) yearSelect.innerHTML = '<option value="">Toutes</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
-        if (clubSelect) clubSelect.innerHTML = '<option value="">Tous</option>' + clubs.map(c => `<option value="${c}">${c}</option>`).join('');
-        applyTransfersFilters();
+        transfersData = (data || []).map(t => ({
+            ...t,
+            footballeur_name: t.footballeur?.full_name || 'Inconnu'
+        }));
+        renderTransfers();
+        updateStats();
     } catch (err) {
         console.error(err);
         showToast('Erreur chargement transferts', 'error');
     } finally {
-        hideLoader();
+        showLoader(false);
     }
 }
 
-function applyTransfersFilters() {
-    let filtered = transfers;
-    if (currentFilters.year) {
-        filtered = filtered.filter(t => t.date_transfert && new Date(t.date_transfert).getFullYear() == currentFilters.year);
-    }
-    if (currentFilters.club) {
-        filtered = filtered.filter(t => t.club_depart === currentFilters.club || t.club_arrivee === currentFilters.club);
-    }
-    if (currentFilters.type) {
-        filtered = filtered.filter(t => t.type_transfert === currentFilters.type);
-    }
-    renderTransfers(filtered);
-}
+// Construction manuelle du DOM pour les transferts
+function renderTransfers() {
+    const search = document.getElementById('transferSearch')?.value.toLowerCase() || '';
+    const typeFilter = document.getElementById('transferTypeFilter')?.value || '';
+    const statusFilter = document.getElementById('transferStatusFilter')?.value || '';
 
-function renderTransfers(transfersList) {
+    const filtered = transfersData.filter(t => {
+        const matchesSearch = (t.footballeur_name || '').toLowerCase().includes(search) ||
+                              (t.club_depart || '').toLowerCase().includes(search) ||
+                              (t.club_arrivee || '').toLowerCase().includes(search);
+        const matchesType = !typeFilter || t.type_transfert === typeFilter;
+        const matchesStatus = !statusFilter || t.status === statusFilter;
+        return matchesSearch && matchesType && matchesStatus;
+    });
+
     const container = document.getElementById('transfersList');
     if (!container) return;
-    if (!transfersList.length) {
-        container.innerHTML = '<p class="empty-message">Aucun transfert correspondant.</p>';
+    container.innerHTML = '';
+
+    if (!filtered.length) {
+        const emptyMsg = document.createElement('p');
+        emptyMsg.style.textAlign = 'center';
+        emptyMsg.style.color = 'var(--text-muted)';
+        emptyMsg.style.padding = '40px';
+        emptyMsg.textContent = 'Aucun transfert trouvé.';
+        container.appendChild(emptyMsg);
         return;
     }
-    const statusLabels = { approved: 'Validé', pending: 'En attente', rejected: 'Rejeté' };
-    container.innerHTML = transfersList.map(transfer => {
-        const statusText = statusLabels[transfer.status] || 'En attente';
-        const amount = transfer.montant ? formatMoney(transfer.montant, userProfile?.country || 'BJ') : '—';
-        let clubText = '';
-        if (transfer.club_depart && transfer.club_arrivee) clubText = `${transfer.club_depart} → ${transfer.club_arrivee}`;
-        else if (transfer.club_arrivee) clubText = transfer.club_arrivee;
-        else clubText = 'Club non spécifié';
-        const year = transfer.date_transfert ? new Date(transfer.date_transfert).getFullYear() : 'Année inconnue';
-        const typeIcon = transfer.type_transfert === 'transfert' ? 'fa-exchange-alt' : (transfer.type_transfert === 'pret' ? 'fa-handshake' : 'fa-file-signature');
-        return `
-            <div class="transfer-card">
-                <div class="transfer-icon"><i class="fas ${typeIcon}"></i></div>
-                <div class="transfer-info">
-                    <h4>${escapeHtml(clubText)}</h4>
-                    <p>${transfer.type_transfert === 'transfert' ? 'Transfert' : transfer.type_transfert === 'pret' ? 'Prêt' : 'Fin de contrat'} – ${year}</p>
-                </div>
-                <div class="transfer-amount">${amount}</div>
-                <span class="transfer-status ${transfer.status}">${statusText}</span>
+
+    const statusLabels = { pending: 'En attente', approved: 'Validé', rejected: 'Rejeté' };
+    const typeLabels = { transfert: 'Transfert', pret: 'Prêt', fin_contrat: 'Fin de contrat' };
+
+    filtered.forEach(t => {
+        const amount = t.montant ? formatMoney(t.montant) : '—';
+        const typeLabel = typeLabels[t.type_transfert] || 'Transfert';
+        const statusText = statusLabels[t.status] || t.status;
+
+        // Création de la carte
+        const card = document.createElement('div');
+        card.className = `transfer-card ${t.status}`;
+        card.dataset.id = t.id;
+
+        // Info
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'transfer-info';
+        infoDiv.innerHTML = `
+            <div class="transfer-player">${t.footballeur_name}</div>
+            <div class="transfer-clubs">${t.club_depart || '—'} → ${t.club_arrivee || '—'}</div>
+            <div class="transfer-meta">
+                ${new Date(t.date_transfert).toLocaleDateString('fr-FR')} · ${typeLabel} · ${amount}
             </div>
         `;
-    }).join('');
+
+        // Statut
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `transfer-status ${t.status}`;
+        statusDiv.textContent = statusText;
+
+        // Actions
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'transfer-actions';
+
+        // Bouton Voir
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn-action view';
+        viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        viewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            viewTransfer(t.id);
+        });
+
+        // Bouton Modifier
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-action edit';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editTransfer(t.id);
+        });
+
+        // Bouton Supprimer
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-action delete';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            confirmDeleteTransfer(t.id);
+        });
+
+        actionsDiv.appendChild(viewBtn);
+        actionsDiv.appendChild(editBtn);
+        actionsDiv.appendChild(deleteBtn);
+
+        card.appendChild(infoDiv);
+        card.appendChild(statusDiv);
+        card.appendChild(actionsDiv);
+        container.appendChild(card);
+    });
 }
-// Fin transferts
+// Fin chargement transferts
 
 // Début chargement offres
 async function loadOffers() {
-    if (!userProfile) return;
-    showLoader();
+    showLoader(true);
     try {
         const { data, error } = await supabaseClient
             .from('supabaseAuthPrive_offers')
-            .select('*')
-            .eq('user_hubisoccer_id', userProfile.hubisoccer_id)
+            .select(`*, footballeur:user_hubisoccer_id ( hubisoccer_id, full_name )`)
             .order('created_at', { ascending: false });
         if (error) throw error;
-        offers = data || [];
+        offersData = (data || []).map(o => ({
+            ...o,
+            footballeur_name: o.footballeur?.full_name || 'Inconnu'
+        }));
         renderOffers();
+        updateStats();
     } catch (err) {
         console.error(err);
         showToast('Erreur chargement offres', 'error');
     } finally {
-        hideLoader();
+        showLoader(false);
     }
 }
 
+// Construction manuelle du DOM pour les offres
 function renderOffers() {
+    const search = document.getElementById('offerSearch')?.value.toLowerCase() || '';
+    const typeFilter = document.getElementById('offerTypeFilter')?.value || '';
+    const statusFilter = document.getElementById('offerStatusFilter')?.value || '';
+
+    const filtered = offersData.filter(o => {
+        const matchesSearch = (o.footballeur_name || '').toLowerCase().includes(search) ||
+                              (o.from_entity || '').toLowerCase().includes(search) ||
+                              (o.title || '').toLowerCase().includes(search);
+        const matchesType = !typeFilter || o.type === typeFilter;
+        const matchesStatus = !statusFilter || o.status === statusFilter;
+        return matchesSearch && matchesType && matchesStatus;
+    });
+
     const container = document.getElementById('offersList');
     if (!container) return;
-    if (!offers.length) {
-        container.innerHTML = '<p class="empty-message">Aucune offre reçue pour le moment.</p>';
+    container.innerHTML = '';
+
+    if (!filtered.length) {
+        const emptyMsg = document.createElement('p');
+        emptyMsg.style.textAlign = 'center';
+        emptyMsg.style.color = 'var(--text-muted)';
+        emptyMsg.style.padding = '40px';
+        emptyMsg.textContent = 'Aucune offre trouvée.';
+        container.appendChild(emptyMsg);
         return;
     }
-    const statusLabels = { accepted: 'Acceptée', rejected: 'Refusée', pending: 'En attente' };
-    container.innerHTML = offers.map(offer => {
-        const statusText = statusLabels[offer.status] || 'En attente';
-        let icon = 'fa-file-contract';
-        if (offer.type === 'transfert') icon = 'fa-exchange-alt';
-        else if (offer.type === 'tournoi') icon = 'fa-trophy';
-        else if (offer.type === 'recrutement') icon = 'fa-user-plus';
-        return `
-            <div class="offer-card" data-offer-id="${offer.id}">
-                <div class="offer-icon"><i class="fas ${icon}"></i></div>
-                <div class="offer-info">
-                    <h4>${escapeHtml(offer.title || `${offer.from_entity} – ${offer.type}`)}</h4>
-                    <p>${escapeHtml(offer.from_entity || 'HubISoccer')} – ${new Date(offer.created_at).toLocaleDateString('fr-FR')}</p>
-                </div>
-                <span class="offer-status ${offer.status}">${statusText}</span>
+
+    const statusLabels = { pending: 'En attente', accepted: 'Acceptée', rejected: 'Rejetée' };
+
+    filtered.forEach(o => {
+        const amount = o.amount ? formatMoney(o.amount) : '—';
+        const statusText = statusLabels[o.status] || o.status;
+
+        // Création de la carte
+        const card = document.createElement('div');
+        card.className = `offer-card ${o.status}`;
+        card.dataset.id = o.id;
+
+        // Info
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'offer-info';
+        infoDiv.innerHTML = `
+            <div class="offer-player">${o.footballeur_name}</div>
+            <div class="offer-title">${o.title || 'Sans titre'}</div>
+            <div class="offer-meta">
+                ${o.from_entity || '—'} · ${new Date(o.created_at).toLocaleDateString('fr-FR')} · ${amount}
             </div>
         `;
-    }).join('');
-    document.querySelectorAll('.offer-card').forEach(card => {
-        card.addEventListener('click', e => {
-            const id = card.dataset.offerId;
-            const offer = offers.find(o => o.id == id);
-            if (offer) openOfferModal(offer);
+
+        // Statut
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `offer-status ${o.status}`;
+        statusDiv.textContent = statusText;
+
+        // Actions
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'offer-actions';
+
+        // Bouton Voir
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn-action view';
+        viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        viewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            viewOffer(o.id);
         });
+
+        // Bouton Modifier
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-action edit';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editOffer(o.id);
+        });
+
+        // Bouton Supprimer
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-action delete';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            confirmDeleteOffer(o.id);
+        });
+
+        actionsDiv.appendChild(viewBtn);
+        actionsDiv.appendChild(editBtn);
+        actionsDiv.appendChild(deleteBtn);
+
+        card.appendChild(infoDiv);
+        card.appendChild(statusDiv);
+        card.appendChild(actionsDiv);
+        container.appendChild(card);
     });
 }
+// Fin chargement offres
 
-function openOfferModal(offer) {
-    currentOffer = offer;
-    const modal = document.getElementById('offerModal');
-    const detailsDiv = document.getElementById('modalOfferDetails');
-    const desc = offer.description || 'Aucun détail fourni.';
-    const formattedDesc = desc.replace(/\n/g, '<br>').replace(/•/g, '&bull;');
-    detailsDiv.innerHTML = `
-        <p><strong>${escapeHtml(offer.title || 'Offre')}</strong></p>
-        <p><strong>Type :</strong> ${offer.type === 'transfert' ? 'Transfert' : offer.type === 'tournoi' ? 'Participation à un tournoi' : 'Recrutement'}</p>
-        <p><strong>De :</strong> ${escapeHtml(offer.from_entity || '-')}</p>
-        <p><strong>Date :</strong> ${new Date(offer.created_at).toLocaleString('fr-FR')}</p>
-        <p><strong>Description :</strong></p>
-        <div class="offer-description">${formattedDesc}</div>
-        ${offer.amount ? `<p><strong>Montant :</strong> ${formatMoney(offer.amount, userProfile?.country || 'BJ')}</p>` : ''}
-    `;
-    modal.style.display = 'flex';
+// Début stats
+function updateStats() {
+    const data = currentTab === 'transfers' ? transfersData : offersData;
+    const pending = data.filter(d => d.status === 'pending').length;
+    const approved = data.filter(d => d.status === 'approved' || d.status === 'accepted').length;
+    const rejected = data.filter(d => d.status === 'rejected').length;
+
+    document.getElementById('pendingCount').textContent = pending;
+    document.getElementById('approvedCount').textContent = approved;
+    document.getElementById('rejectedCount').textContent = rejected;
+    document.getElementById('totalCount').textContent = data.length;
+}
+// Fin stats
+
+// Début fonctions de visualisation (modale lecture seule)
+function viewTransfer(id) {
+    const transfer = transfersData.find(t => t.id === id);
+    if (!transfer) return;
+
+    document.getElementById('transferModalTitle').textContent = 'Détail du transfert';
+    document.getElementById('transferId').value = transfer.id;
+    document.getElementById('transferFootballeurId').value = transfer.user_hubisoccer_id;
+    document.getElementById('transferFromClub').value = transfer.club_depart || '';
+    document.getElementById('transferToClub').value = transfer.club_arrivee || '';
+    document.getElementById('transferDate').value = transfer.date_transfert || '';
+    document.getElementById('transferType').value = transfer.type_transfert || 'transfert';
+    document.getElementById('transferAmount').value = transfer.montant || 0;
+    document.getElementById('transferStatus').value = transfer.status || 'pending';
+
+    document.querySelectorAll('#transferForm input, #transferForm select').forEach(el => el.disabled = true);
+    document.querySelector('#transferForm .btn-save').style.display = 'none';
+    document.getElementById('transferModal').style.display = 'flex';
 }
 
-function closeModal() {
+function viewOffer(id) {
+    const offer = offersData.find(o => o.id === id);
+    if (!offer) return;
+
+    document.getElementById('offerModalTitle').textContent = 'Détail de l\'offre';
+    document.getElementById('offerId').value = offer.id;
+    document.getElementById('offerFootballeurId').value = offer.user_hubisoccer_id;
+    document.getElementById('offerTitle').value = offer.title || '';
+    document.getElementById('offerFromEntity').value = offer.from_entity || '';
+    document.getElementById('offerType').value = offer.type || 'transfert';
+    document.getElementById('offerAmount').value = offer.amount || 0;
+    document.getElementById('offerDescription').value = offer.description || '';
+    document.getElementById('offerStatusSelect').value = offer.status || 'pending';
+
+    document.querySelectorAll('#offerForm input, #offerForm select, #offerForm textarea').forEach(el => el.disabled = true);
+    document.querySelector('#offerForm .btn-save').style.display = 'none';
+    document.getElementById('offerModal').style.display = 'flex';
+}
+// Fin fonctions de visualisation
+
+// Début gestion transferts (modal)
+async function openTransferModal(transfer = null) {
+    if (!allFootballeurs.length) await loadFootballeurs();
+
+    const select = document.getElementById('transferFootballeurId');
+    select.innerHTML = '<option value="">Sélectionner un footballeur</option>' +
+        allFootballeurs.map(f => `<option value="${f.hubisoccer_id}">${f.full_name}</option>`).join('');
+
+    document.getElementById('transferModalTitle').textContent = transfer ? 'Modifier le transfert' : 'Ajouter un transfert';
+
+    document.querySelectorAll('#transferForm input, #transferForm select').forEach(el => el.disabled = false);
+    document.querySelector('#transferForm .btn-save').style.display = 'block';
+
+    if (transfer) {
+        document.getElementById('transferId').value = transfer.id;
+        document.getElementById('transferFootballeurId').value = transfer.user_hubisoccer_id;
+        document.getElementById('transferFromClub').value = transfer.club_depart || '';
+        document.getElementById('transferToClub').value = transfer.club_arrivee || '';
+        document.getElementById('transferDate').value = transfer.date_transfert || '';
+        document.getElementById('transferType').value = transfer.type_transfert || 'transfert';
+        document.getElementById('transferAmount').value = transfer.montant || 0;
+        document.getElementById('transferStatus').value = transfer.status || 'pending';
+    } else {
+        document.getElementById('transferId').value = '';
+        document.getElementById('transferFootballeurId').value = '';
+        document.getElementById('transferFromClub').value = '';
+        document.getElementById('transferToClub').value = '';
+        document.getElementById('transferDate').value = '';
+        document.getElementById('transferType').value = 'transfert';
+        document.getElementById('transferAmount').value = '0';
+        document.getElementById('transferStatus').value = 'pending';
+    }
+
+    document.getElementById('transferModal').style.display = 'flex';
+}
+
+function closeTransferModal() {
+    document.getElementById('transferModal').style.display = 'none';
+}
+
+document.getElementById('transferForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('transferId').value;
+    const user_hubisoccer_id = document.getElementById('transferFootballeurId').value;
+    const club_depart = document.getElementById('transferFromClub').value.trim();
+    const club_arrivee = document.getElementById('transferToClub').value.trim();
+    const date_transfert = document.getElementById('transferDate').value;
+    const type_transfert = document.getElementById('transferType').value;
+    const montant = parseInt(document.getElementById('transferAmount').value) || 0;
+    const status = document.getElementById('transferStatus').value;
+
+    if (!user_hubisoccer_id || !date_transfert) {
+        showToast('Footballeur et date requis', 'warning');
+        return;
+    }
+
+    showLoader(true);
+    try {
+        const payload = {
+            user_hubisoccer_id,
+            club_depart,
+            club_arrivee,
+            date_transfert,
+            type_transfert,
+            montant,
+            status
+        };
+        if (id) {
+            const { error } = await supabaseClient
+                .from('supabaseAuthPrive_transfers')
+                .update(payload)
+                .eq('id', id);
+            if (error) throw error;
+            showToast('Transfert mis à jour', 'success');
+        } else {
+            const { error } = await supabaseClient
+                .from('supabaseAuthPrive_transfers')
+                .insert([payload]);
+            if (error) throw error;
+            showToast('Transfert ajouté', 'success');
+        }
+        closeTransferModal();
+        loadTransfers();
+    } catch (err) {
+        showToast('Erreur : ' + err.message, 'error');
+    } finally {
+        showLoader(false);
+    }
+});
+
+function editTransfer(id) {
+    const transfer = transfersData.find(t => t.id === id);
+    if (transfer) openTransferModal(transfer);
+}
+
+async function deleteTransfer(id) {
+    showLoader(true);
+    try {
+        const { error } = await supabaseClient
+            .from('supabaseAuthPrive_transfers')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+        showToast('Transfert supprimé', 'success');
+        closeConfirmModal();
+        loadTransfers();
+    } catch (err) {
+        showToast('Erreur : ' + err.message, 'error');
+    } finally {
+        showLoader(false);
+    }
+}
+
+function confirmDeleteTransfer(id) {
+    currentAction = { type: 'deleteTransfer', id };
+    document.getElementById('confirmModalMessage').textContent = 'Supprimer définitivement ce transfert ?';
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+// Fin gestion transferts
+
+// Début gestion offres (modal)
+async function openOfferModal(offer = null) {
+    if (!allFootballeurs.length) await loadFootballeurs();
+
+    const select = document.getElementById('offerFootballeurId');
+    select.innerHTML = '<option value="">Sélectionner un footballeur</option>' +
+        allFootballeurs.map(f => `<option value="${f.hubisoccer_id}">${f.full_name}</option>`).join('');
+
+    document.getElementById('offerModalTitle').textContent = offer ? 'Modifier l\'offre' : 'Ajouter une offre';
+
+    document.querySelectorAll('#offerForm input, #offerForm select, #offerForm textarea').forEach(el => el.disabled = false);
+    document.querySelector('#offerForm .btn-save').style.display = 'block';
+
+    if (offer) {
+        document.getElementById('offerId').value = offer.id;
+        document.getElementById('offerFootballeurId').value = offer.user_hubisoccer_id;
+        document.getElementById('offerTitle').value = offer.title || '';
+        document.getElementById('offerFromEntity').value = offer.from_entity || '';
+        document.getElementById('offerType').value = offer.type || 'transfert';
+        document.getElementById('offerAmount').value = offer.amount || 0;
+        document.getElementById('offerDescription').value = offer.description || '';
+        document.getElementById('offerStatusSelect').value = offer.status || 'pending';
+    } else {
+        document.getElementById('offerId').value = '';
+        document.getElementById('offerFootballeurId').value = '';
+        document.getElementById('offerTitle').value = '';
+        document.getElementById('offerFromEntity').value = '';
+        document.getElementById('offerType').value = 'transfert';
+        document.getElementById('offerAmount').value = '0';
+        document.getElementById('offerDescription').value = '';
+        document.getElementById('offerStatusSelect').value = 'pending';
+    }
+
+    document.getElementById('offerModal').style.display = 'flex';
+}
+
+function closeOfferModal() {
     document.getElementById('offerModal').style.display = 'none';
-    currentOffer = null;
 }
 
-async function acceptOffer() {
-    if (!currentOffer) return;
-    showLoader();
+document.getElementById('offerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('offerId').value;
+    const user_hubisoccer_id = document.getElementById('offerFootballeurId').value;
+    const title = document.getElementById('offerTitle').value.trim();
+    const from_entity = document.getElementById('offerFromEntity').value.trim();
+    const type = document.getElementById('offerType').value;
+    const amount = parseInt(document.getElementById('offerAmount').value) || 0;
+    const description = document.getElementById('offerDescription').value.trim();
+    const status = document.getElementById('offerStatusSelect').value;
+
+    if (!user_hubisoccer_id) {
+        showToast('Footballeur requis', 'warning');
+        return;
+    }
+
+    showLoader(true);
     try {
-        const { error } = await supabaseClient
-            .from('supabaseAuthPrive_offers')
-            .update({ status: 'accepted', responded_at: new Date() })
-            .eq('id', currentOffer.id);
-        if (error) throw error;
-        await supabaseClient.from('supabaseAuthPrive_notifications').insert([{
-            recipent_hubisoccer_id: userProfile.hubisoccer_id,
-            title: 'Offre acceptée',
-            message: `Vous avez accepté l'offre "${currentOffer.title || currentOffer.from_entity}".`,
-            type: 'success'
-        }]);
-        showToast('Offre acceptée !', 'success');
-        await loadOffers();
-        closeModal();
+        const payload = {
+            user_hubisoccer_id,
+            title,
+            from_entity,
+            type,
+            amount,
+            description,
+            status
+        };
+        if (id) {
+            const { error } = await supabaseClient
+                .from('supabaseAuthPrive_offers')
+                .update(payload)
+                .eq('id', id);
+            if (error) throw error;
+            showToast('Offre mise à jour', 'success');
+        } else {
+            const { error } = await supabaseClient
+                .from('supabaseAuthPrive_offers')
+                .insert([payload]);
+            if (error) throw error;
+            showToast('Offre ajoutée', 'success');
+        }
+        closeOfferModal();
+        loadOffers();
     } catch (err) {
         showToast('Erreur : ' + err.message, 'error');
     } finally {
-        hideLoader();
+        showLoader(false);
     }
+});
+
+function editOffer(id) {
+    const offer = offersData.find(o => o.id === id);
+    if (offer) openOfferModal(offer);
 }
 
-async function ignoreOffer() {
-    if (!currentOffer) return;
-    showLoader();
+async function deleteOffer(id) {
+    showLoader(true);
     try {
         const { error } = await supabaseClient
             .from('supabaseAuthPrive_offers')
-            .update({ status: 'rejected', responded_at: new Date() })
-            .eq('id', currentOffer.id);
+            .delete()
+            .eq('id', id);
         if (error) throw error;
-        showToast('Offre ignorée.', 'info');
-        await loadOffers();
-        closeModal();
+        showToast('Offre supprimée', 'success');
+        closeConfirmModal();
+        loadOffers();
     } catch (err) {
         showToast('Erreur : ' + err.message, 'error');
     } finally {
-        hideLoader();
+        showLoader(false);
     }
 }
-// Fin offres
 
-// Début UI (filtres, onglets, sidebar, menu)
-function initFilters() {
-    const yearSelect = document.getElementById('filterYear');
-    const clubSelect = document.getElementById('filterClub');
-    const typeSelect = document.getElementById('filterType');
-    const resetBtn = document.getElementById('resetFilters');
-    if (!yearSelect || !clubSelect || !typeSelect || !resetBtn) return;
-    const apply = () => {
-        currentFilters = { year: yearSelect.value, club: clubSelect.value, type: typeSelect.value };
-        applyTransfersFilters();
-    };
-    yearSelect.addEventListener('change', apply);
-    clubSelect.addEventListener('change', apply);
-    typeSelect.addEventListener('change', apply);
-    resetBtn.addEventListener('click', () => {
-        yearSelect.value = '';
-        clubSelect.value = '';
-        typeSelect.value = '';
-        currentFilters = { year: '', club: '', type: '' };
-        applyTransfersFilters();
+function confirmDeleteOffer(id) {
+    currentAction = { type: 'deleteOffer', id };
+    document.getElementById('confirmModalMessage').textContent = 'Supprimer définitivement cette offre ?';
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+// Fin gestion offres
+
+// Début confirm modal
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+    currentAction = null;
+}
+
+function executeAction() {
+    if (!currentAction) return;
+    if (currentAction.type === 'deleteTransfer') {
+        deleteTransfer(currentAction.id);
+    } else if (currentAction.type === 'deleteOffer') {
+        deleteOffer(currentAction.id);
+    }
+}
+// Fin confirm modal
+
+// Début export
+function exportData(format) {
+    const data = currentTab === 'transfers' ? transfersData : offersData;
+    const rows = data.map(d => {
+        if (currentTab === 'transfers') {
+            return {
+                Footballeur: d.footballeur_name,
+                Départ: d.club_depart || '',
+                Arrivée: d.club_arrivee || '',
+                Date: d.date_transfert,
+                Type: d.type_transfert,
+                Montant: d.montant,
+                Statut: d.status
+            };
+        } else {
+            return {
+                Footballeur: d.footballeur_name,
+                Titre: d.title || '',
+                Entité: d.from_entity || '',
+                Type: d.type,
+                Montant: d.amount,
+                Statut: d.status
+            };
+        }
     });
-}
 
+    if (format === 'csv') {
+        const headers = Object.keys(rows[0] || {}).join(',');
+        const csvRows = rows.map(r => Object.values(r).map(v => `"${v}"`).join(','));
+        const csv = [headers, ...csvRows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${currentTab}.csv`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    } else if (format === 'xlsx') {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, currentTab);
+        XLSX.writeFile(wb, `${currentTab}.xlsx`);
+    }
+}
+// Fin export
+
+// Début UI Tabs
 function initTabs() {
-    const tabs = document.querySelectorAll('.tab-btn');
-    const contents = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const target = tab.dataset.tab;
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            contents.forEach(c => c.classList.remove('active'));
-            document.getElementById(`${target}Tab`).classList.add('active');
-            if (target === 'offers') loadOffers();
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            const tab = btn.dataset.tab;
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            currentTab = tab;
+            updateStats();
         });
     });
 }
+// Fin UI Tabs
 
+// Début UI Sidebar, Menu, Logout
 function initSidebar() {
-    const sb = document.getElementById('leftSidebar'), ov = document.getElementById('sidebarOverlay');
-    const mb = document.getElementById('menuToggle'), cb = document.getElementById('closeSidebar');
-    const open = () => { sb?.classList.add('active'); ov?.classList.add('active'); document.body.style.overflow = 'hidden'; };
-    const close = () => { sb?.classList.remove('active'); ov?.classList.remove('active'); document.body.style.overflow = ''; };
+    const sb = document.getElementById('leftSidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    const mb = document.getElementById('menuToggle');
+    const cb = document.getElementById('closeSidebar');
+
+    function open() {
+        if (sb) sb.classList.add('active');
+        if (ov) ov.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function close() {
+        if (sb) sb.classList.remove('active');
+        if (ov) ov.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
     if (mb) mb.addEventListener('click', open);
     if (cb) cb.addEventListener('click', close);
     if (ov) ov.addEventListener('click', close);
+
     let sx = 0, sy = 0;
-    document.addEventListener('touchstart', e => { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY; }, { passive: true });
+    document.addEventListener('touchstart', e => {
+        sx = e.changedTouches[0].screenX;
+        sy = e.changedTouches[0].screenY;
+    }, { passive: true });
     document.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].screenX - sx, dy = e.changedTouches[0].screenY - sy;
+        const dx = e.changedTouches[0].screenX - sx;
+        const dy = e.changedTouches[0].screenY - sy;
         if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) return;
         if (e.cancelable) e.preventDefault();
-        if (dx > 0 && sx < 50) open(); else if (dx < 0) close();
+        if (dx > 0 && sx < 50) open();
+        else if (dx < 0) close();
     }, { passive: false });
 }
 
 function initUserMenu() {
-    const m = document.getElementById('userMenu'), d = document.getElementById('userDropdown');
-    if (!m || !d) return;
-    m.addEventListener('click', e => { e.stopPropagation(); d.classList.toggle('show'); });
-    document.addEventListener('click', () => d.classList.remove('show'));
+    const menu = document.getElementById('userMenu');
+    const dropdown = document.getElementById('userDropdown');
+    if (!menu || !dropdown) return;
+    menu.addEventListener('click', e => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+    document.addEventListener('click', () => dropdown.classList.remove('show'));
 }
 
 function initLogout() {
@@ -407,29 +827,58 @@ function initLogout() {
         link.addEventListener('click', async e => {
             e.preventDefault();
             await supabaseClient.auth.signOut();
-            window.location.href = '../../authprive/users/login.html';
+            window.location.href = '../../../authprive/users/login.html';
         });
     });
 }
-// Fin UI
+// Fin UI Sidebar, Menu, Logout
+
+// Début événements filtres
+document.getElementById('transferSearch')?.addEventListener('input', renderTransfers);
+document.getElementById('transferTypeFilter')?.addEventListener('change', renderTransfers);
+document.getElementById('transferStatusFilter')?.addEventListener('change', renderTransfers);
+document.getElementById('offerSearch')?.addEventListener('input', renderOffers);
+document.getElementById('offerTypeFilter')?.addEventListener('change', renderOffers);
+document.getElementById('offerStatusFilter')?.addEventListener('change', renderOffers);
+document.getElementById('refreshBtn')?.addEventListener('click', () => {
+    if (currentTab === 'transfers') loadTransfers();
+    else loadOffers();
+});
+document.getElementById('addTransferBtn')?.addEventListener('click', () => openTransferModal());
+document.getElementById('addOfferBtn')?.addEventListener('click', () => openOfferModal());
+document.getElementById('exportBtn')?.addEventListener('click', () => {
+    document.getElementById('exportMenu').classList.toggle('show');
+});
+document.querySelectorAll('.export-menu button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        exportData(btn.dataset.format);
+        document.getElementById('exportMenu').classList.remove('show');
+    });
+});
+// Fin événements filtres
 
 // Début initialisation
 document.addEventListener('DOMContentLoaded', async () => {
-    const user = await checkSession(); if (!user) return;
-    await loadProfile(); if (!userProfile) return;
-    await loadTransfers();
-    initFilters();
-    initTabs();
+    if (!await checkAdmin()) return;
+    await loadFootballeurs();
     initSidebar();
     initUserMenu();
     initLogout();
+    initTabs();
+    await loadTransfers();
+    await loadOffers();
 
-    const modal = document.getElementById('offerModal');
-    const closeBtn = modal?.querySelector('.modal-close');
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    window.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-    document.getElementById('acceptOfferBtn')?.addEventListener('click', acceptOffer);
-    document.getElementById('ignoreOfferBtn')?.addEventListener('click', ignoreOffer);
+    window.viewTransfer = viewTransfer;
+    window.editTransfer = editTransfer;
+    window.confirmDeleteTransfer = confirmDeleteTransfer;
+    window.viewOffer = viewOffer;
+    window.editOffer = editOffer;
+    window.confirmDeleteOffer = confirmDeleteOffer;
+    window.closeConfirmModal = closeConfirmModal;
+    window.executeAction = executeAction;
+    window.closeTransferModal = closeTransferModal;
+    window.closeOfferModal = closeOfferModal;
+
     document.getElementById('langSelect')?.addEventListener('change', e => {
         showToast(`Langue : ${e.target.options[e.target.selectedIndex].text}`, 'info');
     });

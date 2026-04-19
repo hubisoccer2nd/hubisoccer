@@ -1054,6 +1054,29 @@ textarea:focus {
     margin-bottom: 3px;
 }
 
+/* Garantie que les boutons d'action sont cliquables sur mobile */
+.btn-action {
+    position: relative;
+    z-index: 10;
+    touch-action: manipulation;
+}
+
+/* Empêche les conteneurs parents d'intercepter les clics */
+.transfer-card,
+.offer-card,
+.items-list,
+.tab-content,
+.admin-container {
+    pointer-events: auto;
+}
+
+/* Désactive le surlignage bleu sur mobile */
+.btn-action:active,
+.btn-action:focus {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .stats-cards {

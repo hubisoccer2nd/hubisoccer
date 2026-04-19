@@ -781,8 +781,8 @@ document.querySelectorAll('.export-menu button').forEach(btn => {
 });
 // Fin événements filtres
 
-// Début délégation d'événements pour les boutons d'action (compatible mobile)
-document.addEventListener('click', function(e) {
+// Début délégation d'événements POUR MOBILE (capture + touchstart)
+function handleActionButton(e) {
     const btn = e.target.closest('.btn-action');
     if (!btn) return;
     const action = btn.dataset.action;
@@ -790,14 +790,19 @@ document.addEventListener('click', function(e) {
     if (!action || !id) return;
     e.preventDefault();
     e.stopPropagation();
-
+    e.stopImmediatePropagation();
+    
     if (action === 'viewTransfer') viewTransfer(id);
     else if (action === 'editTransfer') editTransfer(id);
     else if (action === 'confirmDeleteTransfer') confirmDeleteTransfer(id);
     else if (action === 'viewOffer') viewOffer(id);
     else if (action === 'editOffer') editOffer(id);
     else if (action === 'confirmDeleteOffer') confirmDeleteOffer(id);
-});
+}
+
+// Écouteurs avec capture pour être sûr de les attraper avant tout le monde
+document.addEventListener('touchstart', handleActionButton, { capture: true, passive: false });
+document.addEventListener('click', handleActionButton, { capture: true });
 // Fin délégation d'événements
 
 // Début initialisation

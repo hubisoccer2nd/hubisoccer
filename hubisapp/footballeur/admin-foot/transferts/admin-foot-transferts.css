@@ -1093,4 +1093,17 @@ textarea:focus {
         grid-template-columns: 1fr;
     }
 }
+
+/* Place les boutons d'action au‑dessus de tout et garantit qu'ils reçoivent les clics */
+.btn-action {
+    position: relative;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+}
+
+/* Supprime tout recouvrement accidentel */
+.transfer-actions,
+.offer-actions {
+    pointer-events: auto !important;
+}
 /* ===== FIN CONTENU PRINCIPAL ===== */

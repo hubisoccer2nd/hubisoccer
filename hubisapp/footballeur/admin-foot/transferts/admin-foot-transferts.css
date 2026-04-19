@@ -310,12 +310,18 @@ img { max-width: 100%; display: block; }
 .transfer-status.rejected, .offer-status.rejected { background: rgba(220,53,69,0.1); color: var(--danger); }
 
 .transfer-actions, .offer-actions { display: flex; gap: 8px; }
-
 .btn-action {
-    padding: 8px 14px; border-radius: var(--radius-pill);
-    font-size: 0.8rem; font-weight: 500; transition: var(--transition);
-    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     border: 1px solid transparent;
+    cursor: pointer;       /* ← AJOUTEZ CECI */
+    pointer-events: auto;  /* ← AJOUTEZ CECI */
 }
 .btn-action.edit { background: var(--bg-card2); border-color: var(--border); color: var(--text); }
 .btn-action.edit:hover { background: var(--primary); color: white; border-color: var(--primary); }

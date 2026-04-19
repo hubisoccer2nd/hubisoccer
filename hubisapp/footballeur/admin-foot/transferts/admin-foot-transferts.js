@@ -69,7 +69,10 @@ function showToast(message, type = 'info', duration = 30000) {
 function getInitials(name) {
     if (!name) return 'A';
     const parts = name.trim().split(/\s+/);
-    return (parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : name[0]).toUpperCase();
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
 }
 
 function updateAvatarUI() {
@@ -116,7 +119,9 @@ async function checkAdmin() {
         }
         if (profile.role_code !== 'ADMIN' && profile.role_code !== 'FOOT_ADMIN') {
             showToast('Accès réservé aux administrateurs', 'error');
-            setTimeout(() => window.location.href = '../../../authprive/users/login.html', 2000);
+            setTimeout(() => {
+                window.location.href = '../../../authprive/users/login.html';
+            }, 2000);
             return false;
         }
         currentAdmin = profile;
@@ -178,32 +183,32 @@ function renderTransfers() {
     const search = document.getElementById('transferSearch')?.value.toLowerCase() || '';
     const typeFilter = document.getElementById('transferTypeFilter')?.value || '';
     const statusFilter = document.getElementById('transferStatusFilter')?.value || '';
-    
+
     const filtered = transfersData.filter(t => {
         const matchesSearch = (t.footballeur_name || '').toLowerCase().includes(search) ||
-            (t.club_depart || '').toLowerCase().includes(search) ||
-            (t.club_arrivee || '').toLowerCase().includes(search);
+                              (t.club_depart || '').toLowerCase().includes(search) ||
+                              (t.club_arrivee || '').toLowerCase().includes(search);
         const matchesType = !typeFilter || t.type_transfert === typeFilter;
         const matchesStatus = !statusFilter || t.status === statusFilter;
         return matchesSearch && matchesType && matchesStatus;
     });
-    
+
     const container = document.getElementById('transfersList');
     if (!container) return;
-    
+
     if (!filtered.length) {
         container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">Aucun transfert trouvé.</p>';
         return;
     }
-    
+
     const statusLabels = { pending: 'En attente', approved: 'Validé', rejected: 'Rejeté' };
     const typeLabels = { transfert: 'Transfert', pret: 'Prêt', fin_contrat: 'Fin de contrat' };
-    
+
     container.innerHTML = filtered.map(t => {
         const amount = t.montant ? formatMoney(t.montant) : '—';
         const typeLabel = typeLabels[t.type_transfert] || 'Transfert';
         const statusText = statusLabels[t.status] || t.status;
-        
+
         return `
             <div class="transfer-card ${t.status}" data-id="${t.id}">
                 <div class="transfer-info">
@@ -215,13 +220,13 @@ function renderTransfers() {
                 </div>
                 <div class="transfer-status ${t.status}">${statusText}</div>
                 <div class="transfer-actions">
-                    <button class="btn-action view" onclick="viewTransfer('${t.id}')">
+                    <button class="btn-action view" ontouchstart="event.preventDefault(); viewTransfer('${t.id}')" onclick="viewTransfer('${t.id}')">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn-action edit" onclick="editTransfer('${t.id}')">
+                    <button class="btn-action edit" ontouchstart="event.preventDefault(); editTransfer('${t.id}')" onclick="editTransfer('${t.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-action delete" onclick="confirmDeleteTransfer('${t.id}')">
+                    <button class="btn-action delete" ontouchstart="event.preventDefault(); confirmDeleteTransfer('${t.id}')" onclick="confirmDeleteTransfer('${t.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -229,7 +234,6 @@ function renderTransfers() {
         `;
     }).join('');
 }
-
 // Fin chargement transferts
 
 // Début chargement offres
@@ -259,30 +263,30 @@ function renderOffers() {
     const search = document.getElementById('offerSearch')?.value.toLowerCase() || '';
     const typeFilter = document.getElementById('offerTypeFilter')?.value || '';
     const statusFilter = document.getElementById('offerStatusFilter')?.value || '';
-    
+
     const filtered = offersData.filter(o => {
         const matchesSearch = (o.footballeur_name || '').toLowerCase().includes(search) ||
-            (o.from_entity || '').toLowerCase().includes(search) ||
-            (o.title || '').toLowerCase().includes(search);
+                              (o.from_entity || '').toLowerCase().includes(search) ||
+                              (o.title || '').toLowerCase().includes(search);
         const matchesType = !typeFilter || o.type === typeFilter;
         const matchesStatus = !statusFilter || o.status === statusFilter;
         return matchesSearch && matchesType && matchesStatus;
     });
-    
+
     const container = document.getElementById('offersList');
     if (!container) return;
-    
+
     if (!filtered.length) {
         container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">Aucune offre trouvée.</p>';
         return;
     }
-    
+
     const statusLabels = { pending: 'En attente', accepted: 'Acceptée', rejected: 'Rejetée' };
-    
+
     container.innerHTML = filtered.map(o => {
         const amount = o.amount ? formatMoney(o.amount) : '—';
         const statusText = statusLabels[o.status] || o.status;
-        
+
         return `
             <div class="offer-card ${o.status}" data-id="${o.id}">
                 <div class="offer-info">
@@ -294,13 +298,13 @@ function renderOffers() {
                 </div>
                 <div class="offer-status ${o.status}">${statusText}</div>
                 <div class="offer-actions">
-                    <button class="btn-action view" onclick="viewOffer('${o.id}')">
+                    <button class="btn-action view" ontouchstart="event.preventDefault(); viewOffer('${o.id}')" onclick="viewOffer('${o.id}')">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn-action edit" onclick="editOffer('${o.id}')">
+                    <button class="btn-action edit" ontouchstart="event.preventDefault(); editOffer('${o.id}')" onclick="editOffer('${o.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-action delete" onclick="confirmDeleteOffer('${o.id}')">
+                    <button class="btn-action delete" ontouchstart="event.preventDefault(); confirmDeleteOffer('${o.id}')" onclick="confirmDeleteOffer('${o.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -775,7 +779,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadTransfers();
     await loadOffers();
 
-    // Exposer les fonctions globalement
+    // Exposer les fonctions globalement (redondant avec inline, mais gardé par sécurité)
     window.viewTransfer = viewTransfer;
     window.editTransfer = editTransfer;
     window.confirmDeleteTransfer = confirmDeleteTransfer;

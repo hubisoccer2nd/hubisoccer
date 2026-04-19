@@ -8,7 +8,6 @@
 // Début configuration Supabase
 const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
-
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.__SUPABASE_CLIENT = supabaseClient;
 // Fin configuration Supabase
@@ -27,9 +26,7 @@ let currentTab = 'transfers';
 // Début fonctions utilitaires
 function showLoader(show) {
     const loader = document.getElementById('globalLoader');
-    if (loader) {
-        loader.style.display = show ? 'flex' : 'none';
-    }
+    if (loader) loader.style.display = show ? 'flex' : 'none';
 }
 
 function showToast(message, type = 'info', duration = 30000) {
@@ -72,10 +69,7 @@ function showToast(message, type = 'info', duration = 30000) {
 function getInitials(name) {
     if (!name) return 'A';
     const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name[0].toUpperCase();
+    return (parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : name[0]).toUpperCase();
 }
 
 function updateAvatarUI() {
@@ -83,17 +77,11 @@ function updateAvatarUI() {
     const init = document.getElementById('userAvatarInitials');
     const url = currentAdmin?.avatar_url;
     if (url) {
-        if (img) {
-            img.src = url;
-            img.style.display = 'block';
-        }
+        if (img) { img.src = url; img.style.display = 'block'; }
         if (init) init.style.display = 'none';
     } else {
         const initials = getInitials(currentAdmin?.full_name || currentAdmin?.display_name || 'A');
-        if (init) {
-            init.textContent = initials;
-            init.style.display = 'flex';
-        }
+        if (init) { init.textContent = initials; init.style.display = 'flex'; }
         if (img) img.style.display = 'none';
     }
 }
@@ -128,9 +116,7 @@ async function checkAdmin() {
         }
         if (profile.role_code !== 'ADMIN' && profile.role_code !== 'FOOT_ADMIN') {
             showToast('Accès réservé aux administrateurs', 'error');
-            setTimeout(() => {
-                window.location.href = '../../../authprive/users/login.html';
-            }, 2000);
+            setTimeout(() => window.location.href = '../../../authprive/users/login.html', 2000);
             return false;
         }
         currentAdmin = profile;
@@ -242,6 +228,28 @@ function renderTransfers() {
             </div>
         `;
     }).join('');
+
+    // Attacher les écouteurs DIRECTEMENT après avoir injecté le HTML
+    container.querySelectorAll('.btn-action').forEach(btn => {
+        btn.removeEventListener('click', handleActionClick);
+        btn.addEventListener('click', handleActionClick);
+    });
+}
+
+function handleActionClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+    if (!action || !id) return;
+
+    if (action === 'viewTransfer') viewTransfer(id);
+    else if (action === 'editTransfer') editTransfer(id);
+    else if (action === 'confirmDeleteTransfer') confirmDeleteTransfer(id);
+    else if (action === 'viewOffer') viewOffer(id);
+    else if (action === 'editOffer') editOffer(id);
+    else if (action === 'confirmDeleteOffer') confirmDeleteOffer(id);
 }
 // Fin chargement transferts
 
@@ -320,6 +328,12 @@ function renderOffers() {
             </div>
         `;
     }).join('');
+
+    // Attacher les écouteurs DIRECTEMENT après avoir injecté le HTML
+    container.querySelectorAll('.btn-action').forEach(btn => {
+        btn.removeEventListener('click', handleActionClick);
+        btn.addEventListener('click', handleActionClick);
+    });
 }
 // Fin chargement offres
 
@@ -352,7 +366,6 @@ function viewTransfer(id) {
     document.getElementById('transferAmount').value = transfer.montant || 0;
     document.getElementById('transferStatus').value = transfer.status || 'pending';
 
-    // Désactiver les champs et cacher le bouton Enregistrer
     document.querySelectorAll('#transferForm input, #transferForm select').forEach(el => el.disabled = true);
     document.querySelector('#transferForm .btn-save').style.display = 'none';
     document.getElementById('transferModal').style.display = 'flex';
@@ -372,7 +385,6 @@ function viewOffer(id) {
     document.getElementById('offerDescription').value = offer.description || '';
     document.getElementById('offerStatusSelect').value = offer.status || 'pending';
 
-    // Désactiver les champs et cacher le bouton Enregistrer
     document.querySelectorAll('#offerForm input, #offerForm select, #offerForm textarea').forEach(el => el.disabled = true);
     document.querySelector('#offerForm .btn-save').style.display = 'none';
     document.getElementById('offerModal').style.display = 'flex';
@@ -389,7 +401,6 @@ async function openTransferModal(transfer = null) {
 
     document.getElementById('transferModalTitle').textContent = transfer ? 'Modifier le transfert' : 'Ajouter un transfert';
 
-    // Réactiver les champs et afficher le bouton Enregistrer
     document.querySelectorAll('#transferForm input, #transferForm select').forEach(el => el.disabled = false);
     document.querySelector('#transferForm .btn-save').style.display = 'block';
 
@@ -510,7 +521,6 @@ async function openOfferModal(offer = null) {
 
     document.getElementById('offerModalTitle').textContent = offer ? 'Modifier l\'offre' : 'Ajouter une offre';
 
-    // Réactiver les champs et afficher le bouton Enregistrer
     document.querySelectorAll('#offerForm input, #offerForm select, #offerForm textarea').forEach(el => el.disabled = false);
     document.querySelector('#offerForm .btn-save').style.display = 'block';
 
@@ -781,30 +791,6 @@ document.querySelectorAll('.export-menu button').forEach(btn => {
 });
 // Fin événements filtres
 
-// Début délégation d'événements POUR MOBILE (capture + touchstart)
-function handleActionButton(e) {
-    const btn = e.target.closest('.btn-action');
-    if (!btn) return;
-    const action = btn.dataset.action;
-    const id = btn.dataset.id;
-    if (!action || !id) return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    
-    if (action === 'viewTransfer') viewTransfer(id);
-    else if (action === 'editTransfer') editTransfer(id);
-    else if (action === 'confirmDeleteTransfer') confirmDeleteTransfer(id);
-    else if (action === 'viewOffer') viewOffer(id);
-    else if (action === 'editOffer') editOffer(id);
-    else if (action === 'confirmDeleteOffer') confirmDeleteOffer(id);
-}
-
-// Écouteurs avec capture pour être sûr de les attraper avant tout le monde
-document.addEventListener('touchstart', handleActionButton, { capture: true, passive: false });
-document.addEventListener('click', handleActionButton, { capture: true });
-// Fin délégation d'événements
-
 // Début initialisation
 document.addEventListener('DOMContentLoaded', async () => {
     if (!await checkAdmin()) return;
@@ -816,7 +802,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadTransfers();
     await loadOffers();
 
-    // Exposer les fonctions globalement (utile pour les appels directs éventuels)
+    // Exposer les fonctions globalement
     window.viewTransfer = viewTransfer;
     window.editTransfer = editTransfer;
     window.confirmDeleteTransfer = confirmDeleteTransfer;

@@ -178,32 +178,32 @@ function renderTransfers() {
     const search = document.getElementById('transferSearch')?.value.toLowerCase() || '';
     const typeFilter = document.getElementById('transferTypeFilter')?.value || '';
     const statusFilter = document.getElementById('transferStatusFilter')?.value || '';
-
+    
     const filtered = transfersData.filter(t => {
         const matchesSearch = (t.footballeur_name || '').toLowerCase().includes(search) ||
-                              (t.club_depart || '').toLowerCase().includes(search) ||
-                              (t.club_arrivee || '').toLowerCase().includes(search);
+            (t.club_depart || '').toLowerCase().includes(search) ||
+            (t.club_arrivee || '').toLowerCase().includes(search);
         const matchesType = !typeFilter || t.type_transfert === typeFilter;
         const matchesStatus = !statusFilter || t.status === statusFilter;
         return matchesSearch && matchesType && matchesStatus;
     });
-
+    
     const container = document.getElementById('transfersList');
     if (!container) return;
-
+    
     if (!filtered.length) {
         container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">Aucun transfert trouvé.</p>';
         return;
     }
-
+    
     const statusLabels = { pending: 'En attente', approved: 'Validé', rejected: 'Rejeté' };
     const typeLabels = { transfert: 'Transfert', pret: 'Prêt', fin_contrat: 'Fin de contrat' };
-
+    
     container.innerHTML = filtered.map(t => {
         const amount = t.montant ? formatMoney(t.montant) : '—';
         const typeLabel = typeLabels[t.type_transfert] || 'Transfert';
         const statusText = statusLabels[t.status] || t.status;
-
+        
         return `
             <div class="transfer-card ${t.status}" data-id="${t.id}">
                 <div class="transfer-info">
@@ -215,42 +215,21 @@ function renderTransfers() {
                 </div>
                 <div class="transfer-status ${t.status}">${statusText}</div>
                 <div class="transfer-actions">
-                    <button class="btn-action view" data-action="viewTransfer" data-id="${t.id}">
+                    <button class="btn-action view" onclick="viewTransfer('${t.id}')">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn-action edit" data-action="editTransfer" data-id="${t.id}">
+                    <button class="btn-action edit" onclick="editTransfer('${t.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-action delete" data-action="confirmDeleteTransfer" data-id="${t.id}">
+                    <button class="btn-action delete" onclick="confirmDeleteTransfer('${t.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
         `;
     }).join('');
-
-    // Attacher les écouteurs DIRECTEMENT après avoir injecté le HTML
-    container.querySelectorAll('.btn-action').forEach(btn => {
-        btn.removeEventListener('click', handleActionClick);
-        btn.addEventListener('click', handleActionClick);
-    });
 }
 
-function handleActionClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const btn = e.currentTarget;
-    const action = btn.dataset.action;
-    const id = btn.dataset.id;
-    if (!action || !id) return;
-
-    if (action === 'viewTransfer') viewTransfer(id);
-    else if (action === 'editTransfer') editTransfer(id);
-    else if (action === 'confirmDeleteTransfer') confirmDeleteTransfer(id);
-    else if (action === 'viewOffer') viewOffer(id);
-    else if (action === 'editOffer') editOffer(id);
-    else if (action === 'confirmDeleteOffer') confirmDeleteOffer(id);
-}
 // Fin chargement transferts
 
 // Début chargement offres
@@ -280,30 +259,30 @@ function renderOffers() {
     const search = document.getElementById('offerSearch')?.value.toLowerCase() || '';
     const typeFilter = document.getElementById('offerTypeFilter')?.value || '';
     const statusFilter = document.getElementById('offerStatusFilter')?.value || '';
-
+    
     const filtered = offersData.filter(o => {
         const matchesSearch = (o.footballeur_name || '').toLowerCase().includes(search) ||
-                              (o.from_entity || '').toLowerCase().includes(search) ||
-                              (o.title || '').toLowerCase().includes(search);
+            (o.from_entity || '').toLowerCase().includes(search) ||
+            (o.title || '').toLowerCase().includes(search);
         const matchesType = !typeFilter || o.type === typeFilter;
         const matchesStatus = !statusFilter || o.status === statusFilter;
         return matchesSearch && matchesType && matchesStatus;
     });
-
+    
     const container = document.getElementById('offersList');
     if (!container) return;
-
+    
     if (!filtered.length) {
         container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">Aucune offre trouvée.</p>';
         return;
     }
-
+    
     const statusLabels = { pending: 'En attente', accepted: 'Acceptée', rejected: 'Rejetée' };
-
+    
     container.innerHTML = filtered.map(o => {
         const amount = o.amount ? formatMoney(o.amount) : '—';
         const statusText = statusLabels[o.status] || o.status;
-
+        
         return `
             <div class="offer-card ${o.status}" data-id="${o.id}">
                 <div class="offer-info">
@@ -315,25 +294,19 @@ function renderOffers() {
                 </div>
                 <div class="offer-status ${o.status}">${statusText}</div>
                 <div class="offer-actions">
-                    <button class="btn-action view" data-action="viewOffer" data-id="${o.id}">
+                    <button class="btn-action view" onclick="viewOffer('${o.id}')">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn-action edit" data-action="editOffer" data-id="${o.id}">
+                    <button class="btn-action edit" onclick="editOffer('${o.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-action delete" data-action="confirmDeleteOffer" data-id="${o.id}">
+                    <button class="btn-action delete" onclick="confirmDeleteOffer('${o.id}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
         `;
     }).join('');
-
-    // Attacher les écouteurs DIRECTEMENT après avoir injecté le HTML
-    container.querySelectorAll('.btn-action').forEach(btn => {
-        btn.removeEventListener('click', handleActionClick);
-        btn.addEventListener('click', handleActionClick);
-    });
 }
 // Fin chargement offres
 

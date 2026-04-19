@@ -1054,6 +1054,27 @@ textarea:focus {
     margin-bottom: 3px;
 }
 
+/* ===== CORRECTIF TACTILE ABSOLU ===== */
+.btn-action {
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    user-select: none !important;
+    pointer-events: auto !important;
+}
+
+.btn-action:active {
+    opacity: 0.7;
+    transition: opacity 0.05s;
+}
+
+.transfer-actions,
+.offer-actions,
+.transfer-card,
+.offer-card,
+.items-list {
+    pointer-events: auto !important;
+}
 
 /* Responsive */
 @media (max-width: 900px) {
@@ -1092,18 +1113,5 @@ textarea:focus {
     .stats-cards {
         grid-template-columns: 1fr;
     }
-}
-
-/* Place les boutons d'action au‑dessus de tout et garantit qu'ils reçoivent les clics */
-.btn-action {
-    position: relative;
-    z-index: 9999 !important;
-    pointer-events: auto !important;
-}
-
-/* Supprime tout recouvrement accidentel */
-.transfer-actions,
-.offer-actions {
-    pointer-events: auto !important;
 }
 /* ===== FIN CONTENU PRINCIPAL ===== */

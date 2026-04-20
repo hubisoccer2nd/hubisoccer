@@ -1,5 +1,5 @@
 /* ============================================================
-   HubISoccer — revenue-setup.js
+   HubISoccer — foot-revenus-setup.js
    Configuration du HubIS Wallet
    ============================================================ */
 
@@ -200,7 +200,7 @@ async function checkExistingWallet() {
         .maybeSingle();
     if (data && data.status === 'active') {
         showToast('Wallet déjà configuré. Redirection…', 'success');
-        setTimeout(() => window.location.href = 'revenue.html', 1500);
+        setTimeout(() => window.location.href = 'foot-revenus.html', 1500);
         return true;
     }
     return false;
@@ -469,7 +469,7 @@ async function activateWallet() {
 
 // Début fonction goToDashboard
 function goToDashboard() {
-    window.location.href = 'revenue.html';
+    window.location.href = 'foot-revenus.html';
 }
 // Fin fonction goToDashboard
 

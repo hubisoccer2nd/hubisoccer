@@ -19,8 +19,9 @@ let currentStep = 1;
 let generatedWalletId = null;
 
 const PROGRESS_MAP = { 1: 0, 2: 50, 3: 85 };
+// Fin état global
 
-// Début mapping des rôles pour affichage
+// Début mapping des rôles
 const ROLE_LABEL = {
     FOOT:'⚽ Footballeur', BASK:'🏀 Basketteur', TENN:'🎾 Tennisman',
     ATHL:'🏃 Athlète', HANDB:'🤾 Handballeur', VOLL:'🏐 Volleyeur',
@@ -43,7 +44,7 @@ const ROLE_EMOJI = {
 };
 // Fin mapping des rôles
 
-// Début liste des 24 langues (identique à la navbar du dashboard)
+// Début liste des langues
 const LANGUAGES = [
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
     { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -72,7 +73,7 @@ const LANGUAGES = [
 ];
 // Fin liste des langues
 
-// Début liste complète des devises du monde (ISO 4217)
+// Début liste des devises
 const CURRENCIES = [
     { code: 'EUR', name: 'Euro', symbol: '€' },
     { code: 'USD', name: 'Dollar américain', symbol: '$' },
@@ -128,32 +129,17 @@ const CURRENCIES = [
 ];
 // Fin liste des devises
 
-// Début fonctions utilitaires (loader, toast)
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+// Début fonctions utilitaires
+function showLoader() { const l = document.getElementById('globalLoader'); if(l) l.style.display = 'flex'; }
+function hideLoader() { const l = document.getElementById('globalLoader'); if(l) l.style.display = 'none'; }
 
 function showToast(message, type = 'info', duration = 8000) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
+    const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <div class="toast-icon"><i class="fas ${icons[type] || icons.info}"></i></div>
-        <div class="toast-content">${message}</div>
-        <div class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></div>
-    `;
+    toast.innerHTML = `<div class="toast-icon"><i class="fas ${icons[type]||icons.info}"></i></div><div class="toast-content">${message}</div><div class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></div>`;
     container.appendChild(toast);
     setTimeout(() => toast.remove(), duration);
 }
@@ -164,10 +150,7 @@ async function checkSession() {
     showLoader();
     const { data: { session }, error } = await supabaseClient.auth.getSession();
     hideLoader();
-    if (error || !session) {
-        window.location.href = '../../authprive/users/login.html';
-        return null;
-    }
+    if (error || !session) { window.location.href = '../../authprive/users/login.html'; return null; }
     currentUser = session.user;
     return currentUser;
 }
@@ -182,10 +165,7 @@ async function loadProfile() {
         .eq('auth_uuid', currentUser.id)
         .single();
     hideLoader();
-    if (error || !data) {
-        showToast('Impossible de charger le profil', 'error');
-        return null;
-    }
+    if (error || !data) { showToast('Impossible de charger le profil', 'error'); return null; }
     userProfile = data;
     return userProfile;
 }
@@ -193,7 +173,7 @@ async function loadProfile() {
 
 // Début fonction checkExistingWallet
 async function checkExistingWallet() {
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
         .from('supabaseAuthPrive_hubis_wallets')
         .select('wallet_ref, status')
         .eq('auth_uuid', currentUser.id)
@@ -209,14 +189,16 @@ async function checkExistingWallet() {
 
 // Début fonction displayUserInfo
 function displayUserInfo() {
-    document.getElementById('idName').textContent = userProfile.full_name || 'Utilisateur';
-    document.getElementById('idRole').textContent = ROLE_LABEL[userProfile.role_code] || userProfile.role_code;
-    document.getElementById('idBadge').textContent = ROLE_EMOJI[userProfile.role_code] || '👤';
+    const nameEl = document.getElementById('idName');
+    const roleEl = document.getElementById('idRole');
+    const badgeEl = document.getElementById('idBadge');
     const avatarEl = document.getElementById('idAvatar');
-    if (userProfile.avatar_url) {
-        avatarEl.innerHTML = `<img src="${userProfile.avatar_url}" alt="Avatar">`;
-    } else {
-        avatarEl.innerHTML = `<i class="fas fa-user"></i>`;
+    if (nameEl) nameEl.textContent = userProfile.full_name || 'Utilisateur';
+    if (roleEl) roleEl.textContent = ROLE_LABEL[userProfile.role_code] || userProfile.role_code;
+    if (badgeEl) badgeEl.textContent = ROLE_EMOJI[userProfile.role_code] || '👤';
+    if (avatarEl) {
+        if (userProfile.avatar_url) avatarEl.innerHTML = `<img src="${userProfile.avatar_url}" alt="Avatar">`;
+        else avatarEl.innerHTML = `<i class="fas fa-user"></i>`;
     }
 }
 // Fin fonction displayUserInfo
@@ -225,13 +207,13 @@ function displayUserInfo() {
 function populateLanguageSelect() {
     const select = document.getElementById('languageSelect');
     if (!select) return;
+    select.innerHTML = '';
     LANGUAGES.forEach(lang => {
         const option = document.createElement('option');
         option.value = lang.code;
         option.textContent = `${lang.flag} ${lang.name}`;
         select.appendChild(option);
     });
-    // Définir la langue par défaut depuis le profil ou 'fr'
     const savedLang = userProfile?.interface_language || 'fr';
     select.value = savedLang;
 }
@@ -246,49 +228,30 @@ function populateCurrencySelect() {
         const card = document.createElement('label');
         card.className = 'currency-card';
         card.setAttribute('data-code', curr.code);
-        card.innerHTML = `
-            <input type="radio" name="currency" value="${curr.code}">
-            <span class="cc-symbol">${curr.symbol}</span>
-            <span class="cc-code">${curr.code}</span>
-            <span class="cc-name">${curr.name}</span>
-            <div class="cc-check"><i class="fas fa-check"></i></div>
-        `;
+        card.innerHTML = `<input type="radio" name="currency" value="${curr.code}"><span class="cc-symbol">${curr.symbol}</span><span class="cc-code">${curr.code}</span><span class="cc-name">${curr.name}</span><div class="cc-check"><i class="fas fa-check"></i></div>`;
         container.appendChild(card);
     });
-    // Présélectionner EUR
     const eurCard = container.querySelector('[data-code="EUR"]');
-    if (eurCard) {
-        eurCard.classList.add('selected');
-        eurCard.querySelector('input').checked = true;
-    }
+    if (eurCard) { eurCard.classList.add('selected'); eurCard.querySelector('input').checked = true; }
 }
 // Fin fonction populateCurrencySelect
 
 // Début fonction goToStep
 function goToStep(step) {
-    // Masquer toutes les étapes
     document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
-    // Afficher l'étape demandée
-    const target = document.getElementById(`step${step}`);
+    const target = document.getElementById(step === 'success' ? 'stepSuccess' : `step${step}`);
     if (target) target.classList.add('active');
-
-    // Mettre à jour les nœuds de progression
-    for (let i = 1; i <= 3; i++) {
+    for (let i=1; i<=3; i++) {
         const node = document.getElementById(`pnode${i}`);
         if (!node) continue;
-        node.classList.remove('active', 'done');
+        node.classList.remove('active','done');
         if (i < step) node.classList.add('done');
         if (i === step) node.classList.add('active');
     }
-
-    // Mettre à jour la barre de progression
     const fill = document.getElementById('progressFill');
     if (fill) fill.style.width = PROGRESS_MAP[step] + '%';
-
-    // Mettre à jour le compteur
     const counter = document.getElementById('stepCounterText');
-    if (counter) counter.textContent = `Étape ${step} sur 3`;
-
+    if (counter) counter.textContent = (typeof step === 'number') ? `Étape ${step} sur 3` : '✓ Terminé';
     currentStep = step;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -296,22 +259,26 @@ function goToStep(step) {
 
 // Début fonction initRadioCards
 function initRadioCards() {
-    // Cartes de type de compte
     document.querySelectorAll('.radio-card').forEach(card => {
         card.addEventListener('click', function() {
             const group = this.closest('.radio-cards');
-            group.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
-            this.classList.add('selected');
-            this.querySelector('input[type="radio"]').checked = true;
+            if (group) {
+                group.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+            }
         });
     });
-    // Cartes de devise
     document.querySelectorAll('.currency-card').forEach(card => {
         card.addEventListener('click', function() {
             const grid = document.getElementById('currencyGrid');
-            grid.querySelectorAll('.currency-card').forEach(c => c.classList.remove('selected'));
-            this.classList.add('selected');
-            this.querySelector('input[type="radio"]').checked = true;
+            if (grid) {
+                grid.querySelectorAll('.currency-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+            }
         });
     });
 }
@@ -325,51 +292,37 @@ function initPinInputs() {
         input.addEventListener('paste', handlePinPaste);
     });
 }
-
 function handlePinInput(e) {
     const input = e.target;
-    const val = input.value.replace(/\D/g, '');
+    const val = input.value.replace(/\D/g,'');
     input.value = val ? val[0] : '';
     input.classList.toggle('filled', !!input.value);
     if (input.value) {
         const group = input.dataset.group;
         const idx = parseInt(input.dataset.idx);
-        const next = document.querySelector(`.pin-box[data-group="${group}"][data-idx="${idx + 1}"]`);
+        const next = document.querySelector(`.pin-box[data-group="${group}"][data-idx="${idx+1}"]`);
         if (next) next.focus();
     }
 }
-
 function handlePinKeydown(e) {
     const input = e.target;
     const group = input.dataset.group;
     const idx = parseInt(input.dataset.idx);
     if (e.key === 'Backspace' && !input.value && idx > 0) {
-        const prev = document.querySelector(`.pin-box[data-group="${group}"][data-idx="${idx - 1}"]`);
-        if (prev) {
-            prev.focus();
-            prev.value = '';
-            prev.classList.remove('filled');
-        }
+        const prev = document.querySelector(`.pin-box[data-group="${group}"][data-idx="${idx-1}"]`);
+        if (prev) { prev.focus(); prev.value = ''; prev.classList.remove('filled'); }
     }
 }
-
 function handlePinPaste(e) {
     e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
     const group = e.target.dataset.group;
     const inputs = document.querySelectorAll(`.pin-box[data-group="${group}"]`);
-    [...text.slice(0, 6)].forEach((char, i) => {
-        if (inputs[i]) {
-            inputs[i].value = char;
-            inputs[i].classList.add('filled');
-        }
-    });
+    [...text.slice(0,6)].forEach((char, i) => { if(inputs[i]) { inputs[i].value = char; inputs[i].classList.add('filled'); } });
 }
-
 function getPinValue(group) {
     return [...document.querySelectorAll(`.pin-box[data-group="${group}"]`)].map(i => i.value).join('');
 }
-
 function setPinError(group) {
     document.querySelectorAll(`.pin-box[data-group="${group}"]`).forEach(i => {
         i.classList.add('error');
@@ -383,15 +336,15 @@ async function hashPin(pin) {
     const salt = `hubisoccer_${userProfile.hubisoccer_id}_wallet`;
     const data = new TextEncoder().encode(pin + salt);
     const hash = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 // Fin fonction hashPin
 
 // Début fonction generateWalletRef
-function generateWalletRef(roleCode, hubisoccerId) {
+function generateWalletRef(roleCode) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    const seg = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    const roleTag = (roleCode || 'USR').slice(0, 4).toUpperCase().padEnd(4, 'X');
+    const seg = () => Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+    const roleTag = (roleCode || 'USR').slice(0,4).toUpperCase().padEnd(4,'X');
     return `HIS-${roleTag}-${seg()}-${seg()}`;
 }
 // Fin fonction generateWalletRef
@@ -405,21 +358,20 @@ async function activateWallet() {
 
     if (pin.length < 6) { showToast('Veuillez saisir un PIN de 6 chiffres', 'warning'); setPinError('create'); return; }
     if (pinConf.length < 6) { showToast('Veuillez confirmer votre PIN', 'warning'); setPinError('confirm'); return; }
-    if (pin !== pinConf) { pinHint.textContent = 'Les deux PIN ne correspondent pas.'; setPinError('create'); setPinError('confirm'); showToast('Les PIN ne correspondent pas', 'error'); return; }
-    if (!cgu?.checked) { showToast('Veuillez accepter les CGU pour continuer', 'warning'); return; }
+    if (pin !== pinConf) { if(pinHint) pinHint.textContent = 'Les deux PIN ne correspondent pas.'; setPinError('create'); setPinError('confirm'); showToast('Les PIN ne correspondent pas', 'error'); return; }
+    if (!cgu?.checked) { showToast('Veuillez accepter les CGU', 'warning'); return; }
     if (!userProfile) { showToast('Session expirée', 'error'); return; }
 
-    pinHint.textContent = '';
+    if(pinHint) pinHint.textContent = '';
     const btn = document.querySelector('.btn-activate');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activation…';
+    if(btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activation…'; }
     showLoader();
 
     try {
         const pinHash = await hashPin(pin);
         const accountType = document.querySelector('input[name="accountType"]:checked')?.value || 'personnel';
         const currency = document.querySelector('input[name="currency"]:checked')?.value || 'EUR';
-        const walletRef = generateWalletRef(userProfile.role_code, userProfile.hubisoccer_id);
+        const walletRef = generateWalletRef(userProfile.role_code);
         generatedWalletId = walletRef;
 
         const expiryDate = new Date();
@@ -443,7 +395,6 @@ async function activateWallet() {
 
         if (insertError) throw insertError;
 
-        // Notification de bienvenue
         await supabaseClient.from('supabaseAuthPrive_notifications').insert([{
             recipient_hubisoccer_id: userProfile.hubisoccer_id,
             type: 'wallet_created',
@@ -454,23 +405,21 @@ async function activateWallet() {
         }]);
 
         hideLoader();
-        document.getElementById('walletIdDisplay').textContent = walletRef;
+        const walletDisplay = document.getElementById('walletIdDisplay');
+        if(walletDisplay) walletDisplay.textContent = walletRef;
         goToStep('success');
 
     } catch (err) {
         console.error(err);
         showToast('Erreur lors de l\'activation: ' + err.message, 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-rocket"></i> Activer mon wallet';
+        if(btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-rocket"></i> Activer mon wallet'; }
         hideLoader();
     }
 }
 // Fin fonction activateWallet
 
 // Début fonction goToDashboard
-function goToDashboard() {
-    window.location.href = 'foot-revenus.html';
-}
+function goToDashboard() { window.location.href = 'foot-revenus.html'; }
 // Fin fonction goToDashboard
 
 // Début fonction copyWalletId
@@ -481,28 +430,16 @@ function copyWalletId() {
 }
 // Fin fonction copyWalletId
 
-// Début fonction openCGU
-function openCGU(e) {
-    e.preventDefault();
-    document.getElementById('cguModal').classList.add('open');
-}
-// Fin fonction openCGU
-
-// Début fonction closeCGU
-function closeCGU(e) {
-    if (e.target === document.getElementById('cguModal')) {
-        document.getElementById('cguModal').classList.remove('open');
-    }
-}
-// Fin fonction closeCGU
-
-// Début fonction acceptCGUFromModal
+// Début fonctions CGU
+function openCGU(e) { e.preventDefault(); document.getElementById('cguModal')?.classList.add('open'); }
+function closeCGU(e) { if (e.target === document.getElementById('cguModal')) document.getElementById('cguModal')?.classList.remove('open'); }
 function acceptCGUFromModal() {
-    document.getElementById('acceptCGU').checked = true;
-    document.getElementById('cguModal').classList.remove('open');
+    const cguCheck = document.getElementById('acceptCGU');
+    if(cguCheck) cguCheck.checked = true;
+    document.getElementById('cguModal')?.classList.remove('open');
     showToast('CGU acceptées', 'success');
 }
-// Fin fonction acceptCGUFromModal
+// Fin fonctions CGU
 
 // Début initialisation
 document.addEventListener('DOMContentLoaded', async () => {
@@ -521,7 +458,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initPinInputs();
     initRadioCards();
 
-    // Exposer les fonctions globales
     window.goToStep = goToStep;
     window.activateWallet = activateWallet;
     window.goToDashboard = goToDashboard;

@@ -441,6 +441,77 @@ function acceptCGUFromModal() {
 }
 // Fin fonctions CGU
 
+// ============================================================
+// NOUVELLES FONCTIONS AJOUTÉES POUR LA NAVBAR ET LA SIDEBAR
+// ============================================================
+
+// Début fonction initSidebar
+function initSidebar() {
+    const sidebar  = document.getElementById('leftSidebar');
+    const overlay  = document.getElementById('sidebarOverlay');
+    const menuBtn  = document.getElementById('menuToggle');
+    const closeBtn = document.getElementById('closeLeftSidebar');
+
+    function openSidebar() {
+        if (sidebar) sidebar.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+        if (sidebar) sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (menuBtn)  menuBtn.addEventListener('click', openSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (overlay)  overlay.addEventListener('click', closeSidebar);
+
+    let touchStartX = 0, touchStartY = 0;
+    const SWIPE_THRESHOLD = 55;
+
+    document.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].screenX - touchStartX;
+        const dy = e.changedTouches[0].screenY - touchStartY;
+
+        if (Math.abs(dx) <= Math.abs(dy)) return;
+        if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+
+        if (e.cancelable) e.preventDefault();
+
+        if (dx > 0 && touchStartX < 40) openSidebar();
+        else if (dx < 0) closeSidebar();
+    }, { passive: false });
+}
+// Fin fonction initSidebar
+
+// Début fonction initUserMenu
+function initUserMenu() {
+    const userMenu = document.getElementById('userMenu');
+    const dropdown = document.getElementById('userDropdown');
+    if (!userMenu || !dropdown) return;
+
+    userMenu.addEventListener('click', e => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', () => {
+        dropdown.classList.remove('show');
+    });
+}
+// Fin fonction initUserMenu
+
+// ============================================================
+// INITIALISATION
+// ============================================================
+
 // Début initialisation
 document.addEventListener('DOMContentLoaded', async () => {
     const user = await checkSession();
@@ -457,6 +528,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateCurrencySelect();
     initPinInputs();
     initRadioCards();
+    
+    // NOUVEAUX APPELS AJOUTÉS
+    initSidebar();
+    initUserMenu();
 
     window.goToStep = goToStep;
     window.activateWallet = activateWallet;

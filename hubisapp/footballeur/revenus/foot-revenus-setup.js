@@ -231,8 +231,8 @@ function populateCurrencySelect() {
         card.innerHTML = `<input type="radio" name="currency" value="${curr.code}"><span class="cc-symbol">${curr.symbol}</span><span class="cc-code">${curr.code}</span><span class="cc-name">${curr.name}</span><div class="cc-check"><i class="fas fa-check"></i></div>`;
         container.appendChild(card);
     });
-    const eurCard = container.querySelector('[data-code="EUR"]');
-    if (eurCard) { eurCard.classList.add('selected'); eurCard.querySelector('input').checked = true; }
+    const defaultCard = container.querySelector('[data-code="XOF"]') || container.querySelector('[data-code="EUR"]');
+if (defaultCard) { defaultCard.classList.add('selected'); defaultCard.querySelector('input').checked = true; }
 }
 // Fin fonction populateCurrencySelect
 

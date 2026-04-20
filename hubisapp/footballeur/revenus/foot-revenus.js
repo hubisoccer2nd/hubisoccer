@@ -1,5 +1,5 @@
 /* ============================================================
-   HubISoccer — revenue.js
+   HubISoccer — foot-revenus.js
    Dashboard principal du HubIS Wallet
    ============================================================ */
 
@@ -47,7 +47,7 @@ const ROLE_EMOJI = {
 };
 // Fin mapping des rôles
 
-// Début liste des devises (identique à revenue-setup.js)
+// Début liste des devises
 const CURRENCIES = [
     { code: 'EUR', name: 'Euro', symbol: '€' },
     { code: 'USD', name: 'Dollar américain', symbol: '$' },
@@ -186,7 +186,7 @@ async function loadWallet() {
     hideLoader();
     if (!data || error) {
         showToast('Wallet non configuré. Redirection…', 'warning');
-        setTimeout(() => window.location.href = 'revenue-setup.html', 1500);
+        setTimeout(() => window.location.href = 'foot-revenus-setup.html', 1500);
         return null;
     }
     if (data.status === 'suspended') {

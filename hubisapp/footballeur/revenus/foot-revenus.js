@@ -1,6 +1,6 @@
 /* ============================================================
    HubISoccer — foot-revenus.js
-   Dashboard principal du HubIS Wallet – Version complète
+   Dashboard principal du HubIS Wallet – Version corrigée finale
    ============================================================ */
 
 'use strict';
@@ -185,8 +185,8 @@ function showToast(message, type = 'info', duration = 30000) {
 
 function formatAmount(amount) {
     return Number(amount).toLocaleString('fr-FR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
     });
 }
 
@@ -383,7 +383,13 @@ async function loadWallet() {
     if (data.status === 'suspended') {
         showToast('Votre wallet est suspendu. Contactez le support.', 'error');
     }
-    walletData = data;
+    // Normaliser les valeurs null
+    walletData = {
+        ...data,
+        balance: data.balance || 0,
+        card_balance: data.card_balance || 0,
+        pending_balance: data.pending_balance || 0
+    };
     return walletData;
 }
 // Fin fonction loadWallet
@@ -477,7 +483,6 @@ async function checkFollowerBonus() {
         bonusData.followers_bonus_available = (bonusData.followers_bonus_available || 0) + newBonus;
         updateBonusUI();
 
-        // Notification
         await supabaseClient.from('supabaseAuthPrive_notifications').insert([{
             recipient_hubisoccer_id: userProfile.hubisoccer_id,
             type: 'bonus_followers',
@@ -602,9 +607,9 @@ function renderCard() {
 
     document.getElementById('receiveWalletId').textContent = ref;
     document.getElementById('settingsWalletId').textContent = ref;
-    document.getElementById('settingsCurrency').textContent = walletData.currency || 'EUR';
+    document.getElementById('settingsCurrency').textContent = walletData.currency || 'XOF';
 
-    ['sendCurrencyLabel', 'depositCurrencyLabel', 'withdrawCurrencyLabel'].forEach(id => {
+    ['sendCurrencyLabel', 'depositCurrencyLabel', 'withdrawCurrencyLabel', 'transferCardCurrencyLabel'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = sym;
     });
@@ -670,6 +675,11 @@ function renderBalance() {
     if (avail) {
         avail.textContent = `${formatAmount(walletData.balance || 0)} ${sym}`;
     }
+
+    const transferAvail = document.getElementById('transferAvail');
+    if (transferAvail) {
+        transferAvail.textContent = `${formatAmount(walletData.balance || 0)} ${sym}`;
+    }
 }
 // Fin fonction renderBalance
 
@@ -705,10 +715,18 @@ async function computeMonthStats() {
 // Fin fonction computeMonthStats
 
 // Début fonction transferToCard
-async function transferToCard(amount) {
+async function transferToCard() {
     if (!walletData) return;
-    if (amount <= 0 || amount > walletData.balance) {
-        showToast('Montant invalide ou solde insuffisant', 'error');
+
+    const amountInput = document.getElementById('transferCardAmount');
+    const amount = amountInput ? parseFloat(amountInput.value) : NaN;
+
+    if (isNaN(amount) || amount < 100) {
+        showToast('Montant minimum : 100 CFA', 'warning');
+        return;
+    }
+    if (amount > (walletData.balance || 0)) {
+        showToast('Solde principal insuffisant', 'error');
         return;
     }
 
@@ -1020,7 +1038,7 @@ async function executeTransfer() {
     const pin = getPinValue('sendpin');
 
     if (!recipientId) { showToast('Veuillez saisir un Wallet ID destinataire', 'warning'); return; }
-    if (!amountVal || amountVal <= 0) { showToast('Montant invalide', 'warning'); return; }
+    if (!amountVal || amountVal < 100) { showToast('Montant minimum : 100 CFA', 'warning'); return; }
     if (amountVal > (walletData?.balance || 0)) { showToast('Solde insuffisant', 'error'); return; }
     if (pin.length < 6) { showToast('Saisissez votre PIN (6 chiffres)', 'warning'); return; }
     if (recipientId === walletData?.wallet_ref) { showToast('Vous ne pouvez pas vous envoyer de fonds', 'warning'); return; }
@@ -1112,7 +1130,7 @@ async function executeDeposit() {
     const amount = parseFloat(document.getElementById('depositAmount')?.value);
     const method = document.querySelector('input[name="payMethod"]:checked')?.value || 'card';
 
-    if (!amount || amount < 1) { showToast('Montant invalide (min 1 €)', 'warning'); return; }
+    if (!amount || amount < 100) { showToast('Montant minimum : 100 CFA', 'warning'); return; }
 
     showLoader();
     try {
@@ -1145,7 +1163,7 @@ async function executeDeposit() {
         renderBalance();
         hideLoader();
         closeModal('depositModal');
-        showToast(`Demande de rechargement de ${formatAmount(amount)} enregistrée.`, 'success', 30000);
+        showToast(`Demande de rechargement de ${formatAmount(amount)} CFA enregistrée.`, 'success', 30000);
         await loadTransactions();
 
     } catch (err) {
@@ -1163,7 +1181,7 @@ async function executeWithdraw() {
     const pin = getPinValue('wdpin');
     const sym = getCurrencySymbol(walletData?.currency);
 
-    if (!amount || amount < 5) { showToast('Montant minimum : 5 €', 'warning'); return; }
+    if (!amount || amount < 500) { showToast('Montant minimum : 500 CFA', 'warning'); return; }
     if (amount > (walletData?.balance || 0)) { showToast('Solde insuffisant', 'error'); return; }
     if (pin.length < 6) { showToast('Saisissez votre PIN', 'warning'); return; }
 

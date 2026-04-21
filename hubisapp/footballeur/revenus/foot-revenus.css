@@ -1,6 +1,6 @@
 /* ============================================================
-   HubISoccer — revenue.css
-   Styles du dashboard principal HubIS Wallet
+   HubISoccer — foot-revenus.css
+   Styles du dashboard principal HubIS Wallet – Version complète
    ============================================================ */
 
 /* ===== DEBUT VARIABLES RACINES ===== */
@@ -606,7 +606,7 @@ img {
 .hubis-card {
     width: 100%;
     height: 200px;
-    border-radius: var(--radius-card);
+    border-radius: 18px;
     position: relative;
     transform-style: preserve-3d;
     transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
@@ -682,26 +682,11 @@ img {
     color: rgba(255, 255, 255, 0.9);
 }
 
-.card-network {
-    display: flex;
-    gap: -8px;
-}
-
-.cn-circle {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    opacity: 0.8;
-}
-
-.c1 {
-    background: #FF6B00;
-    margin-right: -10px;
-}
-
-.c2 {
-    background: #FFD700;
-    opacity: 0.6;
+.card-logo {
+    height: 24px;
+    width: auto;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
 }
 
 .card-chip-row {
@@ -1017,6 +1002,28 @@ img {
     color: var(--corps-color);
 }
 
+/* Bouton recharger la carte */
+.btn-transfer-card {
+    margin-top: 12px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.btn-transfer-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
 /* Actions rapides */
 .quick-actions {
     display: grid;
@@ -1081,6 +1088,105 @@ img {
     color: var(--gray-dark);
 }
 
+/* ===== DEBUT SECTION BONUS ===== */
+.bonus-stats {
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.bonus-stats h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bonus-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gray-light);
+}
+
+.bonus-item:last-of-type {
+    border-bottom: none;
+}
+
+.bonus-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--primary-xlight);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.bonus-label {
+    flex: 1;
+    font-weight: 500;
+    color: var(--gray-dark);
+}
+
+.bonus-value {
+    font-weight: 700;
+    color: var(--dark);
+    font-size: 18px;
+}
+
+.bonus-withdraw {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-light);
+    text-align: center;
+}
+
+.bonus-inscription-label {
+    font-size: 14px;
+    color: var(--gray-dark);
+    margin-bottom: 12px;
+}
+
+.bonus-inscription-label i {
+    color: var(--gold-dark);
+}
+
+.btn-withdraw-bonus {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--dark);
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-gold);
+    transition: var(--transition);
+}
+
+.btn-withdraw-bonus:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(255, 204, 0, 0.4);
+}
+
+.btn-withdraw-bonus:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+/* ===== FIN SECTION BONUS ===== */
+
 /* Historique des transactions */
 .transactions-section {
     margin-top: 8px;
@@ -1091,12 +1197,39 @@ img {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .ts-title {
     font-size: 18px;
     font-weight: 700;
     color: var(--dark);
+}
+
+.ts-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-export-pdf {
+    padding: 8px 16px;
+    background: var(--primary-xlight);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-pill);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition-fast);
+}
+
+.btn-export-pdf:hover {
+    background: var(--primary);
+    color: white;
 }
 
 .ts-filters {
@@ -2167,6 +2300,16 @@ img {
     .toast {
         min-width: unset;
         max-width: 100%;
+    }
+    
+    .ts-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .ts-actions {
+        width: 100%;
+        justify-content: space-between;
     }
 }
 

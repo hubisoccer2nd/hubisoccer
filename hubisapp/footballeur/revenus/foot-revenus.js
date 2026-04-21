@@ -1594,23 +1594,21 @@ function initWithdrawMethodListeners() {
 }
 // Fin fonction initWithdrawMethodListeners
 
-// Début fonctions modales
+// Début fonction openModal
 function openModal(id) {
-    const m = document.getElementById(id);
-    if (m) m.classList.add('open');
-    document.body.style.overflow = 'hidden';
+  const m = document.getElementById(id);
+  if (m) m.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  
+  // Si on ouvre la modale de retrait, forcer la mise à jour des champs
+  if (id === 'withdrawModal') {
+    // Attendre que la modale soit rendue, puis exécuter
+    setTimeout(() => {
+      toggleWithdrawFields();
+    }, 50);
+  }
 }
-
-function closeModal(id) {
-    const m = document.getElementById(id);
-    if (m) m.classList.remove('open');
-    document.body.style.overflow = '';
-}
-
-function closeModalOutside(e, id) {
-    if (e.target === document.getElementById(id)) closeModal(id);
-}
-// Fin fonctions modales
+// Fin fonction openModal
 
 // Début fonction copyField
 function copyField(id) {

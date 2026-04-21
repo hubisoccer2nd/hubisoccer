@@ -1610,12 +1610,26 @@ function openModal(id) {
 }
 // Fin fonction openModal
 
+// Début fonction closeModal
+function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.remove('open');
+    document.body.style.overflow = '';
+}
+// Fin fonction closeModal
+
+// Début fonction closeModalOutside
+function closeModalOutside(e, id) {
+    if (e.target === document.getElementById(id)) closeModal(id);
+}
+// Fin fonction closeModalOutside
+
 // Début fonction copyField
 function copyField(id) {
     const el = document.getElementById(id);
     if (!el) return;
     navigator.clipboard.writeText(el.textContent.trim()).then(() => showToast('Copié !', 'success'));
-}
+} 
 // Fin fonction copyField
 
 // Début fonction refreshData

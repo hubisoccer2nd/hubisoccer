@@ -336,9 +336,9 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label"><i class="fas fa-euro-sign"></i> Montant</label>
+                <label class="form-label"><i class="fas fa-money-bill"></i> Montant (CFA)</label>
                 <div class="amount-input-wrap">
-                    <input type="number" class="form-input amount-input" id="sendAmount" placeholder="0,00" min="0.01" step="0.01">
+                    <input type="number" class="form-input amount-input" id="sendAmount" placeholder="0" min="100" step="100">
                     <span class="ai-currency" id="sendCurrencyLabel">CFA</span>
                 </div>
             </div>
@@ -405,17 +405,17 @@
         </div>
         <div class="modal-body">
             <div class="deposit-amounts">
-                <button class="da-btn" onclick="setDepositAmount(10)">10 €</button>
-                <button class="da-btn" onclick="setDepositAmount(25)">25 €</button>
-                <button class="da-btn" onclick="setDepositAmount(50)">50 €</button>
-                <button class="da-btn" onclick="setDepositAmount(100)">100 €</button>
-                <button class="da-btn" onclick="setDepositAmount(200)">200 €</button>
-                <button class="da-btn" onclick="setDepositAmount(500)">500 €</button>
+                <button class="da-btn" onclick="setDepositAmount(1000)">1 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(5000)">5 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(10000)">10 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(25000)">25 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(50000)">50 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(100000)">100 000 CFA</button>
             </div>
             <div class="form-group">
-                <label class="form-label"><i class="fas fa-euro-sign"></i> Montant personnalisé</label>
+                <label class="form-label"><i class="fas fa-money-bill"></i> Montant personnalisé (CFA)</label>
                 <div class="amount-input-wrap">
-                    <input type="number" class="form-input amount-input" id="depositAmount" placeholder="0,00" min="1" step="0.01">
+                    <input type="number" class="form-input amount-input" id="depositAmount" placeholder="0" min="100" step="100">
                     <span class="ai-currency" id="depositCurrencyLabel">CFA</span>
                 </div>
             </div>
@@ -448,12 +448,12 @@
         <div class="modal-body">
             <!-- Montant -->
             <div class="form-group">
-                <label class="form-label"><i class="fas fa-euro-sign"></i> Montant à retirer</label>
+                <label class="form-label"><i class="fas fa-money-bill"></i> Montant à retirer (CFA)</label>
                 <div class="amount-input-wrap">
-                    <input type="number" class="form-input amount-input" id="withdrawAmount" placeholder="0,00" min="5" step="0.01">
+                    <input type="number" class="form-input amount-input" id="withdrawAmount" placeholder="0" min="500" step="100">
                     <span class="ai-currency" id="withdrawCurrencyLabel">CFA</span>
                 </div>
-                <p class="field-hint">Minimum : 5,00 € | Solde disponible : <strong id="withdrawAvail">0,00 CFA</strong></p>
+                <p class="field-hint">Minimum : 500 CFA | Solde disponible : <strong id="withdrawAvail">0,00 CFA</strong></p>
             </div>
 
             <!-- Méthode de retrait -->
@@ -565,9 +565,9 @@
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label class="form-label"><i class="fas fa-euro-sign"></i> Montant à transférer</label>
+                <label class="form-label"><i class="fas fa-money-bill"></i> Montant à transférer (CFA)</label>
                 <div class="amount-input-wrap">
-                    <input type="number" class="form-input amount-input" id="transferCardAmount" placeholder="0,00" min="1" step="0.01">
+                    <input type="number" class="form-input amount-input" id="transferCardAmount" placeholder="0" min="100" step="100">
                     <span class="ai-currency" id="transferCardCurrencyLabel">CFA</span>
                 </div>
                 <p class="field-hint">Solde principal disponible : <strong id="transferAvail">0,00 CFA</strong></p>

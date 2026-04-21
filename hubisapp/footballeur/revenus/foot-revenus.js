@@ -464,13 +464,25 @@ function updateBonusUI() {
 // Début fonction checkFollowerBonus
 async function checkFollowerBonus() {
     if (!userProfile || !walletData || !bonusData) return;
-
-    const followers = userProfile.recruiter_favs || 0;
+    
+    // 1. Obtenir le nombre réel de followers depuis la vue
+    const { data: followerData, error: followerError } = await supabaseClient
+        .from('supabaseAuthPrive_followers_count')
+        .select('total_followers')
+        .eq('hubisoccer_id', userProfile.hubisoccer_id)
+        .maybeSingle();
+    
+    if (followerError) {
+        console.warn('Erreur lecture followers:', followerError);
+        return;
+    }
+    
+    const followers = followerData?.total_followers || 0;
     const threshold = 50;
     const eligibleBonus = Math.floor(followers / threshold) * 5000;
     const alreadyCredited = bonusData.followers_bonus_credited || 0;
     const newBonus = eligibleBonus - alreadyCredited;
-
+    
     if (newBonus > 0) {
         await supabaseClient
             .from('supabaseAuthPrive_bonus')
@@ -479,10 +491,10 @@ async function checkFollowerBonus() {
                 followers_bonus_credited: eligibleBonus
             })
             .eq('hubisoccer_id', userProfile.hubisoccer_id);
-
+        
         bonusData.followers_bonus_available = (bonusData.followers_bonus_available || 0) + newBonus;
         updateBonusUI();
-
+        
         await supabaseClient.from('supabaseAuthPrive_notifications').insert([{
             recipient_hubisoccer_id: userProfile.hubisoccer_id,
             type: 'bonus_followers',

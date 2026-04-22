@@ -152,7 +152,6 @@ async function loadFootballeurProfile() {
     return footballeurProfile;
 }
 // Fin fonction loadFootballeurProfile
-
 // Début fonction updateAvatarNav
 function updateAvatarNav() {
     const avatarImg = document.getElementById('userAvatar');
@@ -993,7 +992,6 @@ function initLogout() {
     });
 }
 // Fin fonction initLogout
-
 // Début fonction copyHubId
 async function copyHubId() {
     const id = footballeurProfile?.hubisoccer_id;
@@ -1004,4 +1002,4 @@ async function copyHubId() {
     } catch { showToast('Erreur copie', 'error'); }
 }
 // Fin fonction copyHubId
-window.copyHubId = copyHubId;,
+window.copyHubId = copyHubId;

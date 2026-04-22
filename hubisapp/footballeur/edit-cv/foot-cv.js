@@ -6,7 +6,7 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════════
-// 1. CONFIGURATION SUPABASE & ÉTAT GLOBAL
+// SECTION 1 : CONFIGURATION SUPABASE & ÉTAT GLOBAL
 // ═══════════════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://niewavngipvowwxxguqu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
@@ -16,27 +16,44 @@ window.__SUPABASE_CLIENT = supabaseClient;
 let currentUser        = null;
 let footballeurProfile = null;
 let cvData             = null;       // enregistrement dans supabaseAuthPrive_cv_profiles
-let scoutingData       = null;       // données de scouting (pour récupérer les skills)
 const ROLE_CODE        = 'FOOT';
-const ROLE_LABEL       = 'Footballeur';
 const CV_TABLE         = 'supabaseAuthPrive_cv_profiles';
-const SCOUTING_TABLE   = 'supabaseAuthPrive_footballeur_scouting';
 const DOCUMENTS_BUCKET = 'documents';
 const SIGNATURE_PATH   = 'footballeur/edit-cv/signatures';
 
+// Variables globales pour les listes dynamiques
+let cvEducation    = [];
+let cvExperience   = [];
+let cvPalmares     = [];
+let cvTechSkills   = [];
+let cvMentalSkills = [];
+let cvLanguages    = [];
+let cvReferences   = [];
+
+// Signature
+let signaturePad;
+let signatureDataURL = null;
+let signatureLocked = false;
+
 // ═══════════════════════════════════════════════════════════
-// 2. UTILITAIRES : LOADER & TOAST (durée 30s)
+// SECTION 2 : UTILITAIRES (LOADER, TOAST, ÉCHAPPEMENT)
 // ═══════════════════════════════════════════════════════════
+// Début fonction showLoader
 function showLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'flex';
 }
+// Fin fonction showLoader
+
+// Début fonction hideLoader
 function hideLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'none';
 }
+// Fin fonction hideLoader
 
-function showToast(message, type = 'info', duration = 30000) {
+// Début fonction showToast
+function showToast(message, type = 'info', duration = 10000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -69,10 +86,31 @@ function showToast(message, type = 'info', duration = 30000) {
         }
     }, duration);
 }
+// Fin fonction showToast
+
+// Début fonction escapeHtml
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+}
+// Fin fonction escapeHtml
+
+// Début fonction calculateAge
+function calculateAge(dateString) {
+    if (!dateString) return '—';
+    const today = new Date();
+    const birth = new Date(dateString);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+}
+// Fin fonction calculateAge
 
 // ═══════════════════════════════════════════════════════════
-// 3. SESSION & PROFIL
+// SECTION 3 : SESSION ET PROFIL
 // ═══════════════════════════════════════════════════════════
+// Début fonction checkSession
 async function checkSession() {
     showLoader();
     const { data: { session }, error } = await supabaseClient.auth.getSession();
@@ -84,7 +122,9 @@ async function checkSession() {
     currentUser = session.user;
     return currentUser;
 }
+// Fin fonction checkSession
 
+// Début fonction loadFootballeurProfile
 async function loadFootballeurProfile() {
     showLoader();
     const { data, error } = await supabaseClient
@@ -103,12 +143,14 @@ async function loadFootballeurProfile() {
         setTimeout(() => window.location.href = '../../authprive/users/login.html', 2000);
         return null;
     }
-    document.getElementById('userName').textContent = footballeurProfile.full_name || footballeurProfile.display_name || ROLE_LABEL;
+    document.getElementById('userName').textContent = footballeurProfile.full_name || footballeurProfile.display_name || 'Footballeur';
     updateAvatarNav();
     populateHeaderCV();
     return footballeurProfile;
 }
+// Fin fonction loadFootballeurProfile
 
+// Début fonction updateAvatarNav
 function updateAvatarNav() {
     const avatarImg = document.getElementById('userAvatar');
     const initialsDiv = document.getElementById('userAvatarInitials');
@@ -122,7 +164,9 @@ function updateAvatarNav() {
         if (avatarImg) avatarImg.style.display = 'none';
     }
 }
+// Fin fonction updateAvatarNav
 
+// Début fonction populateHeaderCV
 function populateHeaderCV() {
     if (!footballeurProfile) return;
     const p = footballeurProfile;
@@ -144,20 +188,12 @@ function populateHeaderCV() {
         if (avatarImg) avatarImg.style.display = 'none';
     }
 }
-
-function calculateAge(dateString) {
-    if (!dateString) return '—';
-    const today = new Date();
-    const birth = new Date(dateString);
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-    return age;
-}
+// Fin fonction populateHeaderCV
 
 // ═══════════════════════════════════════════════════════════
-// 4. CHARGEMENT DU CV (TABLE supabaseAuthPrive_cv_profiles)
+// SECTION 4 : CHARGEMENT DU CV ET PRÉ-REMPLISSAGE
 // ═══════════════════════════════════════════════════════════
+// Début fonction loadCVData
 async function loadCVData() {
     const { data, error } = await supabaseClient
         .from(CV_TABLE)
@@ -174,24 +210,14 @@ async function loadCVData() {
         restoreFormData(data.cv_json);
         updateStatusBadge(data.status);
     } else {
-        // Pré-remplir avec les infos du profil
         prepopulateFromProfile();
     }
-    // Charger également le scouting pour récupérer les skills si déjà saisis
-    await loadScoutingData();
     renderAllEntries();
     updateCompletionBar();
 }
+// Fin fonction loadCVData
 
-async function loadScoutingData() {
-    const { data } = await supabaseClient
-        .from(SCOUTING_TABLE)
-        .select('*')
-        .eq('footballeur_hubisoccer_id', footballeurProfile.hubisoccer_id)
-        .maybeSingle();
-    if (data) scoutingData = data;
-}
-
+// Début fonction prepopulateFromProfile
 function prepopulateFromProfile() {
     const p = footballeurProfile;
     if (!p) return;
@@ -206,32 +232,28 @@ function prepopulateFromProfile() {
     document.getElementById('cv_pays').value = p.country || '';
     document.getElementById('cv_taille').value = p.height || '';
     document.getElementById('cv_poids').value = p.weight || '';
-    document.getElementById('cv_piedFort').value = p.preferred_foot || '';
-    document.getElementById('cv_club').value = p.club || '';
     if (p.birth_date) document.getElementById('cv_dob').value = p.birth_date;
 }
+// Fin fonction prepopulateFromProfile
 
+// Début fonction restoreFormData
 function restoreFormData(json) {
     try {
         const d = JSON.parse(json);
         // Champs simples
-        const fields = ['nom','prenom','telephone','email','ville','social','taille','poids','piedFort','club','matchs','buts','passes','valeur','skillsTech','skillsSoft','dateSignature','lieuSignature','dob','lieu_naissance','nationalite','pays','adresse','website','linkedin','instagram'];
+        const fields = ['nom','prenom','telephone','email','ville','social','taille','poids','club','matchs','buts','passes','valeur','skillsTech','skillsSoft','dateSignature','lieuSignature','dob','lieu_naissance','nationalite','pays','adresse','website','linkedin','instagram'];
         fields.forEach(f => {
             const el = document.getElementById(`cv_${f}`);
             if (el && d[f] !== undefined) el.value = d[f];
         });
-        // Éditeurs Quill
-        if (quillProfil && d.profil) quillProfil.root.innerHTML = d.profil;
-        if (quillBio && d.bio) quillBio.root.innerHTML = d.bio;
-        if (quillInterets && d.interets) quillInterets.root.innerHTML = d.interets;
         // Listes
-        window.__cvEducation    = d._education    || [];
-        window.__cvExperience   = d._experience   || [];
-        window.__cvPalmares     = d._palmares     || [];
-        window.__cvTechSkills   = d._techSkills   || [];
-        window.__cvMentalSkills = d._mentalSkills || [];
-        window.__cvLanguages    = d._languages    || [];
-        window.__cvReferences   = d._references   || [];
+        cvEducation    = d._education    || [];
+        cvExperience   = d._experience   || [];
+        cvPalmares     = d._palmares     || [];
+        cvTechSkills   = d._techSkills   || [];
+        cvMentalSkills = d._mentalSkills || [];
+        cvLanguages    = d._languages    || [];
+        cvReferences   = d._references   || [];
         // Signature
         if (d.signature_url) {
             signatureDataURL = d.signature_url;
@@ -243,10 +265,12 @@ function restoreFormData(json) {
         console.warn('Erreur restauration CV JSON', e);
     }
 }
+// Fin fonction restoreFormData
 
 // ═══════════════════════════════════════════════════════════
-// 5. RENDU DES LISTES DYNAMIQUES (expériences, formations...)
+// SECTION 5 : RENDU DES LISTES DYNAMIQUES
 // ═══════════════════════════════════════════════════════════
+// Début fonction renderAllEntries
 function renderAllEntries() {
     renderEducationList();
     renderExperienceList();
@@ -256,17 +280,18 @@ function renderAllEntries() {
     renderLanguages();
     renderReferencesList();
 }
+// Fin fonction renderAllEntries
 
+// Début fonction renderEducationList
 function renderEducationList() {
     const container = document.getElementById('educationList');
     if (!container) return;
-    const arr = window.__cvEducation || [];
     container.innerHTML = '';
-    if (!arr.length) {
+    if (!cvEducation.length) {
         container.innerHTML = '<p class="empty-msg">Aucune formation</p>';
         return;
     }
-    arr.forEach((item, idx) => {
+    cvEducation.forEach((item, idx) => {
         const card = document.createElement('div');
         card.className = 'entry-card';
         card.innerHTML = `
@@ -285,17 +310,18 @@ function renderEducationList() {
     });
     attachEntryButtons(container);
 }
+// Fin fonction renderEducationList
 
+// Début fonction renderExperienceList
 function renderExperienceList() {
     const container = document.getElementById('experienceList');
     if (!container) return;
-    const arr = window.__cvExperience || [];
     container.innerHTML = '';
-    if (!arr.length) {
+    if (!cvExperience.length) {
         container.innerHTML = '<p class="empty-msg">Aucune expérience</p>';
         return;
     }
-    arr.forEach((item, idx) => {
+    cvExperience.forEach((item, idx) => {
         const card = document.createElement('div');
         card.className = 'entry-card';
         card.innerHTML = `
@@ -314,17 +340,18 @@ function renderExperienceList() {
     });
     attachEntryButtons(container);
 }
+// Fin fonction renderExperienceList
 
+// Début fonction renderPalmaresGrid
 function renderPalmaresGrid() {
     const container = document.getElementById('palmaresGrid');
     if (!container) return;
-    const arr = window.__cvPalmares || [];
     container.innerHTML = '';
-    if (!arr.length) {
+    if (!cvPalmares.length) {
         container.innerHTML = '<p class="empty-msg">Aucun trophée</p>';
         return;
     }
-    arr.forEach((item, idx) => {
+    cvPalmares.forEach((item, idx) => {
         const card = document.createElement('div');
         card.className = 'trophy-card';
         card.innerHTML = `
@@ -340,17 +367,18 @@ function renderPalmaresGrid() {
     });
     attachEntryButtons(container);
 }
+// Fin fonction renderPalmaresGrid
 
+// Début fonction renderTechSkills
 function renderTechSkills() {
     const container = document.getElementById('techSkillsList');
     if (!container) return;
-    const arr = window.__cvTechSkills || [];
     container.innerHTML = '';
-    if (!arr.length) {
+    if (!cvTechSkills.length) {
         container.innerHTML = '<p class="empty-msg">Aucune compétence technique</p>';
         return;
     }
-    arr.forEach((item, idx) => {
+    cvTechSkills.forEach((item, idx) => {
         const skillItem = document.createElement('div');
         skillItem.className = 'skill-item';
         skillItem.innerHTML = `
@@ -363,17 +391,18 @@ function renderTechSkills() {
     });
     attachEntryButtons(container);
 }
+// Fin fonction renderTechSkills
 
+// Début fonction renderMentalSkills
 function renderMentalSkills() {
     const container = document.getElementById('mentalSkillsList');
     if (!container) return;
-    const arr = window.__cvMentalSkills || [];
     container.innerHTML = '';
-    if (!arr.length) {
+    if (!cvMentalSkills.length) {
         container.innerHTML = '<p class="empty-msg">Aucune compétence mentale</p>';
         return;
     }
-    arr.forEach((item, idx) => {
+    cvMentalSkills.forEach((item, idx) => {
         const skillItem = document.createElement('div');
         skillItem.className = 'skill-item';
         skillItem.innerHTML = `
@@ -386,13 +415,14 @@ function renderMentalSkills() {
     });
     attachEntryButtons(container);
 }
+// Fin fonction renderMentalSkills
 
+// Début fonction renderLanguages
 function renderLanguages() {
     const container = document.getElementById('langChips');
     if (!container) return;
-    const arr = window.__cvLanguages || [];
     container.innerHTML = '';
-    arr.forEach((lang, idx) => {
+    cvLanguages.forEach((lang, idx) => {
         const chip = document.createElement('span');
         chip.className = 'lang-chip';
         chip.innerHTML = `${escapeHtml(lang.name)} (${escapeHtml(lang.level)}) <i class="fas fa-times del-lang" data-index="${idx}"></i>`;
@@ -402,24 +432,25 @@ function renderLanguages() {
         el.addEventListener('click', (e) => {
             const idx = e.target.dataset.index;
             if (idx !== undefined) {
-                window.__cvLanguages.splice(idx, 1);
+                cvLanguages.splice(idx, 1);
                 renderLanguages();
                 updateCompletionBar();
             }
         });
     });
 }
+// Fin fonction renderLanguages
 
+// Début fonction renderReferencesList
 function renderReferencesList() {
     const container = document.getElementById('referencesList');
     if (!container) return;
-    const arr = window.__cvReferences || [];
     container.innerHTML = '';
-    if (!arr.length) {
+    if (!cvReferences.length) {
         container.innerHTML = '<p class="empty-msg">Aucune référence</p>';
         return;
     }
-    arr.forEach((item, idx) => {
+    cvReferences.forEach((item, idx) => {
         const card = document.createElement('div');
         card.className = 'entry-card';
         card.innerHTML = `
@@ -434,7 +465,9 @@ function renderReferencesList() {
     });
     attachEntryButtons(container);
 }
+// Fin fonction renderReferencesList
 
+// Début fonction attachEntryButtons
 function attachEntryButtons(container) {
     container.querySelectorAll('.btn-entry-edit').forEach(btn => {
         btn.addEventListener('click', () => openEntryModal(btn.dataset.type, parseInt(btn.dataset.index)));
@@ -443,13 +476,15 @@ function attachEntryButtons(container) {
         btn.addEventListener('click', () => deleteEntry(btn.dataset.type, parseInt(btn.dataset.index)));
     });
 }
+// Fin fonction attachEntryButtons
 
 // ═══════════════════════════════════════════════════════════
-// 6. GESTION DES ENTRÉES (MODALE)
+// SECTION 6 : MODALE D'AJOUT/MODIFICATION D'ENTRÉE
 // ═══════════════════════════════════════════════════════════
 let currentEntryType = '';
 let currentEntryIndex = -1;
 
+// Début fonction openEntryModal
 function openEntryModal(type, index = -1) {
     currentEntryType = type;
     currentEntryIndex = index;
@@ -465,26 +500,29 @@ function openEntryModal(type, index = -1) {
     body.innerHTML = buildEntryForm(type, item);
     modal.classList.add('show');
 }
+// Fin fonction openEntryModal
 
+// Début fonction closeEntryModal
 function closeEntryModal() {
     document.getElementById('entryModal').classList.remove('show');
 }
+// Fin fonction closeEntryModal
 
+// Début fonction getArrayByType
 function getArrayByType(type) {
     const map = {
-        'education': '_cvEducation',
-        'experience': '_cvExperience',
-        'palmares': '_cvPalmares',
-        'tech_skill': '_cvTechSkills',
-        'mental_skill': '_cvMentalSkills',
-        'reference': '_cvReferences'
+        'education': cvEducation,
+        'experience': cvExperience,
+        'palmares': cvPalmares,
+        'tech_skill': cvTechSkills,
+        'mental_skill': cvMentalSkills,
+        'reference': cvReferences
     };
-    const key = map[type];
-    if (!key) return [];
-    if (!window[key]) window[key] = [];
-    return window[key];
+    return map[type] || [];
 }
+// Fin fonction getArrayByType
 
+// Début fonction buildEntryForm
 function buildEntryForm(type, item = {}) {
     if (type === 'education') {
         return `
@@ -527,7 +565,9 @@ function buildEntryForm(type, item = {}) {
     }
     return '';
 }
+// Fin fonction buildEntryForm
 
+// Début fonction saveEntry
 function saveEntry() {
     const type = currentEntryType;
     const arr = getArrayByType(type);
@@ -578,7 +618,9 @@ function saveEntry() {
     updateCompletionBar();
     showToast('Entrée enregistrée', 'success');
 }
+// Fin fonction saveEntry
 
+// Début fonction deleteEntry
 function deleteEntry(type, index) {
     if (!confirm('Supprimer cette entrée ?')) return;
     const arr = getArrayByType(type);
@@ -587,35 +629,32 @@ function deleteEntry(type, index) {
     updateCompletionBar();
     showToast('Entrée supprimée', 'info');
 }
+// Fin fonction deleteEntry
 
 // ═══════════════════════════════════════════════════════════
-// 7. SAUVEGARDE & SOUMISSION DU CV
+// SECTION 7 : SAUVEGARDE ET SOUMISSION DU CV
 // ═══════════════════════════════════════════════════════════
+// Début fonction collectCVData
 function collectCVData() {
     const data = {};
-    // Champs texte
-    const fields = ['nom','prenom','telephone','email','ville','social','taille','poids','piedFort','club','matchs','buts','passes','valeur','skillsTech','skillsSoft','dateSignature','lieuSignature','dob','lieu_naissance','nationalite','pays','adresse','website','linkedin','instagram'];
+    const fields = ['nom','prenom','telephone','email','ville','social','taille','poids','club','matchs','buts','passes','valeur','skillsTech','skillsSoft','dateSignature','lieuSignature','dob','lieu_naissance','nationalite','pays','adresse','website','linkedin','instagram'];
     fields.forEach(f => {
         const el = document.getElementById(`cv_${f}`);
         if (el) data[f] = el.value;
     });
-    // Quill
-    data.profil = quillProfil ? quillProfil.root.innerHTML : '';
-    data.bio = quillBio ? quillBio.root.innerHTML : '';
-    data.interets = quillInterets ? quillInterets.root.innerHTML : '';
-    // Listes
-    data._education    = window.__cvEducation    || [];
-    data._experience   = window.__cvExperience   || [];
-    data._palmares     = window.__cvPalmares     || [];
-    data._techSkills   = window.__cvTechSkills   || [];
-    data._mentalSkills = window.__cvMentalSkills || [];
-    data._languages    = window.__cvLanguages    || [];
-    data._references   = window.__cvReferences   || [];
-    // Signature
+    data._education    = cvEducation;
+    data._experience   = cvExperience;
+    data._palmares     = cvPalmares;
+    data._techSkills   = cvTechSkills;
+    data._mentalSkills = cvMentalSkills;
+    data._languages    = cvLanguages;
+    data._references   = cvReferences;
     data.signature_url = signatureDataURL || null;
     return data;
 }
+// Fin fonction collectCVData
 
+// Début fonction saveDraft
 async function saveDraft() {
     if (!currentUser || !footballeurProfile) return;
     showLoader();
@@ -644,10 +683,12 @@ async function saveDraft() {
         updateCompletionBar();
     }
 }
+// Fin fonction saveDraft
 
+// Début fonction submitForValidation
 async function submitForValidation() {
     if (!cvData?.id) {
-        await saveDraft(); // s'assurer qu'un enregistrement existe
+        await saveDraft();
     }
     showLoader();
     const { error } = await supabaseClient
@@ -663,7 +704,9 @@ async function submitForValidation() {
         showToast('CV soumis pour validation !', 'success', 6000);
     }
 }
+// Fin fonction submitForValidation
 
+// Début fonction updateStatusBadge
 function updateStatusBadge(status) {
     const badge = document.getElementById('cvStatusBadge');
     if (!badge) return;
@@ -674,33 +717,37 @@ function updateStatusBadge(status) {
     const exportBtn = document.getElementById('btnDownloadPDF');
     if (exportBtn) exportBtn.disabled = (status !== 'approved');
 }
+// Fin fonction updateStatusBadge
 
+// Début fonction updateCompletionBar
 function updateCompletionBar() {
     const data = collectCVData();
     const requiredFields = ['nom', 'prenom', 'email', 'telephone', 'nationalite', 'pays'];
     let filled = requiredFields.filter(f => data[f] && data[f].trim() !== '').length;
-    if (window.__cvEducation?.length) filled++;
-    if (window.__cvExperience?.length) filled++;
-    if (window.__cvLanguages?.length) filled++;
-    if (window.__cvTechSkills?.length) filled++;
+    if (cvEducation.length) filled++;
+    if (cvExperience.length) filled++;
+    if (cvLanguages.length) filled++;
+    if (cvTechSkills.length) filled++;
     const total = requiredFields.length + 4;
     const pct = Math.round((filled / total) * 100);
     document.getElementById('completionFill').style.width = pct + '%';
     document.getElementById('completionPct').textContent = pct + '%';
 }
+// Fin fonction updateCompletionBar
 
 // ═══════════════════════════════════════════════════════════
-// 8. APERÇU & PDF
+// SECTION 8 : APERÇU ET PDF
 // ═══════════════════════════════════════════════════════════
+// Début fonction previewCV
 function previewCV() {
     const data = collectCVData();
     const fullName = `${data.prenom} ${data.nom}`.trim();
     const contactLine = [data.email, data.telephone, data.pays].filter(Boolean).join(' · ');
     const age = calculateAge(data.dob);
-    const formationsHtml = (window.__cvEducation || []).map(f => `<div><strong>${escapeHtml(f.diplome)}</strong><br>${escapeHtml(f.etablissement)} (${escapeHtml(f.annee)})</div>`).join('');
-    const experiencesHtml = (window.__cvExperience || []).map(e => `<div><strong>${escapeHtml(e.poste)}</strong> - ${escapeHtml(e.club)}<br><em>${escapeHtml(e.periode)}</em><br>${e.description || ''}</div>`).join('');
-    const skillsHtml = (window.__cvTechSkills || []).map(s => `<div>${escapeHtml(s.name)} : ${s.level}%</div>`).join('');
-    const languagesHtml = (window.__cvLanguages || []).map(l => `<span>${escapeHtml(l.name)} (${escapeHtml(l.level)})</span>`).join(', ');
+    const formationsHtml = cvEducation.map(f => `<div><strong>${escapeHtml(f.diplome)}</strong><br>${escapeHtml(f.etablissement)} (${escapeHtml(f.annee)})</div>`).join('');
+    const experiencesHtml = cvExperience.map(e => `<div><strong>${escapeHtml(e.poste)}</strong> - ${escapeHtml(e.club)}<br><em>${escapeHtml(e.periode)}</em><br>${e.description || ''}</div>`).join('');
+    const skillsHtml = cvTechSkills.map(s => `<div>${escapeHtml(s.name)} : ${s.level}%</div>`).join('');
+    const languagesHtml = cvLanguages.map(l => `<span>${escapeHtml(l.name)} (${escapeHtml(l.level)})</span>`).join(', ');
     const signatureImg = signatureDataURL ? `<img src="${signatureDataURL}" style="max-height:60px;">` : '';
 
     const previewHTML = `
@@ -720,7 +767,6 @@ function previewCV() {
                     <div class="cv-section-head">Langues</div> ${languagesHtml || '<p>—</p>'}
                 </div>
                 <div class="cv-col-right">
-                    <div class="cv-section-head">Profil</div> ${data.profil || '<p>—</p>'}
                     <div class="cv-section-head">Expériences</div> ${experiencesHtml || '<p>—</p>'}
                 </div>
             </div>
@@ -733,11 +779,15 @@ function previewCV() {
     document.getElementById('cvPreviewBody').innerHTML = previewHTML;
     document.getElementById('cvPreviewModal').classList.add('show');
 }
+// Fin fonction previewCV
 
+// Début fonction closePreview
 function closePreview() {
     document.getElementById('cvPreviewModal').classList.remove('show');
 }
+// Fin fonction closePreview
 
+// Début fonction downloadPDF
 async function downloadPDF() {
     if (cvData?.status !== 'approved') {
         showToast('CV non encore validé', 'warning');
@@ -754,21 +804,19 @@ async function downloadPDF() {
     };
     await html2pdf().set(opt).from(element).save();
 }
+// Fin fonction downloadPDF
 
 // ═══════════════════════════════════════════════════════════
-// 9. SIGNATURE ÉLECTRONIQUE
+// SECTION 9 : SIGNATURE ÉLECTRONIQUE
 // ═══════════════════════════════════════════════════════════
-let signaturePad;
-let signatureDataURL = null;
-let signatureLocked = false;
-
+// Début fonction openSignatureModal
 function openSignatureModal() {
     const modal = document.getElementById('signatureModal');
     modal.classList.add('show');
     if (!signaturePad) {
         const canvas = document.getElementById('signatureCanvas');
         signaturePad = new SignaturePad(canvas, { backgroundColor: 'white', penColor: '#551B8C' });
-        window.addEventListener('resize', () => { /* resize géré si nécessaire */ });
+        window.addEventListener('resize', () => { /* géré automatiquement */ });
         document.getElementById('clearSignature').addEventListener('click', () => signaturePad.clear());
         document.getElementById('lockSignature').addEventListener('click', function() {
             signatureLocked = !signatureLocked;
@@ -798,23 +846,27 @@ function openSignatureModal() {
         document.getElementById('penWidth').addEventListener('input', e => signaturePad.minWidth = signaturePad.maxWidth = parseFloat(e.target.value));
     }
 }
+// Fin fonction openSignatureModal
 
+// Début fonction closeSignatureModal
 function closeSignatureModal() {
     document.getElementById('signatureModal').classList.remove('show');
 }
+// Fin fonction closeSignatureModal
 
+// Début fonction dataURLtoFile
 function dataURLtoFile(dataurl, filename) {
     let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1];
     let bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
     while(n--) u8arr[n] = bstr.charCodeAt(n);
     return new File([u8arr], filename, {type:mime});
 }
+// Fin fonction dataURLtoFile
 
 // ═══════════════════════════════════════════════════════════
-// 10. INITIALISATION GÉNÉRALE (DOMContentLoaded)
+// SECTION 10 : INITIALISATION GÉNÉRALE (DOMContentLoaded)
 // ═══════════════════════════════════════════════════════════
-let quillProfil, quillBio, quillInterets;
-
+// Début initialisation DOM
 document.addEventListener('DOMContentLoaded', async () => {
     // Session
     const user = await checkSession();
@@ -822,21 +874,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadFootballeurProfile();
     if (!footballeurProfile) return;
 
-    // Quill
-    quillProfil = new Quill('#profilEditor', { theme: 'snow', placeholder: 'Rédigez votre profil...' });
-    quillBio = new Quill('#bioEditor', { theme: 'snow', placeholder: 'Votre biographie...' });
-    quillInterets = new Quill('#interetsEditor', { theme: 'snow', placeholder: 'Vos centres d\'intérêt...' });
-    // Récupération des valeurs existantes après restauration
+    // Charger le CV
     await loadCVData();
-
-    // Initialiser les tableaux vides s'ils n'existent pas
-    window.__cvEducation = window.__cvEducation || [];
-    window.__cvExperience = window.__cvExperience || [];
-    window.__cvPalmares = window.__cvPalmares || [];
-    window.__cvTechSkills = window.__cvTechSkills || [];
-    window.__cvMentalSkills = window.__cvMentalSkills || [];
-    window.__cvLanguages = window.__cvLanguages || [];
-    window.__cvReferences = window.__cvReferences || [];
 
     // Boutons
     document.getElementById('btnSaveDraft').addEventListener('click', saveDraft);
@@ -853,17 +892,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         const name = document.getElementById('newLangName')?.value.trim();
         const level = document.getElementById('newLangLevel')?.value;
         if (name) {
-            window.__cvLanguages.push({ name, level });
+            cvLanguages.push({ name, level });
             renderLanguages();
             updateCompletionBar();
             document.getElementById('newLangName').value = '';
         }
     });
-    document.getElementById('signaturePreview').addEventListener('click', openSignatureModal);
+    document.querySelector('.signature-placeholder')?.addEventListener('click', openSignatureModal);
     document.getElementById('closePreviewModal').addEventListener('click', closePreview);
     document.getElementById('saveEntryBtn').addEventListener('click', saveEntry);
     document.getElementById('closeEntryModalBtn').addEventListener('click', closeEntryModal);
     document.getElementById('closeSignatureModalBtn').addEventListener('click', closeSignatureModal);
+    document.getElementById('cancelEntryBtn')?.addEventListener('click', closeEntryModal);
+    document.getElementById('closePreviewBtn')?.addEventListener('click', closePreview);
+    document.getElementById('downloadFromPreviewBtn')?.addEventListener('click', downloadPDF);
+
+    // Avatar upload
+    document.getElementById('avatarInput')?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 800 * 1024) { showToast('Image trop volumineuse (max 800 Ko)', 'warning'); return; }
+        showLoader();
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${footballeurProfile.hubisoccer_id}_${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabaseClient.storage.from('avatars-footballeur').upload(fileName, file, { upsert: true });
+        if (uploadError) { hideLoader(); showToast('Erreur upload avatar', 'error'); return; }
+        const { data: { publicUrl } } = supabaseClient.storage.from('avatars-footballeur').getPublicUrl(fileName);
+        await supabaseClient.from('supabaseAuthPrive_profiles').update({ avatar_url: publicUrl }).eq('hubisoccer_id', footballeurProfile.hubisoccer_id);
+        footballeurProfile.avatar_url = publicUrl;
+        populateHeaderCV();
+        updateAvatarNav();
+        hideLoader();
+        showToast('Avatar mis à jour', 'success');
+    });
 
     // Tabs
     initTabs();
@@ -874,7 +935,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Langue
     document.getElementById('langSelect')?.addEventListener('change', e => showToast(`Langue : ${e.target.options[e.target.selectedIndex].text}`, 'info'));
 });
+// Fin initialisation DOM
 
+// ═══════════════════════════════════════════════════════════
+// SECTION 11 : FONCTIONS UI (TABS, SIDEBAR, MENU)
+// ═══════════════════════════════════════════════════════════
+// Début fonction initTabs
 function initTabs() {
     document.querySelectorAll('.cv-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -885,16 +951,53 @@ function initTabs() {
         });
     });
 }
-function initSidebar() { /* identique à foot-dash.js */ }
-function initUserMenu() { /* identique */ }
+// Fin fonction initTabs
+
+// Début fonction initSidebar
+function initSidebar() {
+    const sidebar = document.getElementById('leftSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const menuBtn = document.getElementById('menuToggle');
+    const closeBtn = document.getElementById('closeSidebar');
+    if (!sidebar) return;
+    function open() { sidebar.classList.add('active'); if (overlay) overlay.classList.add('active'); }
+    function close() { sidebar.classList.remove('active'); if (overlay) overlay.classList.remove('active'); }
+    menuBtn?.addEventListener('click', open);
+    closeBtn?.addEventListener('click', close);
+    overlay?.addEventListener('click', close);
+}
+// Fin fonction initSidebar
+
+// Début fonction initUserMenu
+function initUserMenu() {
+    const menu = document.getElementById('userMenu');
+    const dropdown = document.getElementById('userDropdown');
+    if (!menu || !dropdown) return;
+    menu.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('show'); });
+    document.addEventListener('click', () => dropdown.classList.remove('show'));
+}
+// Fin fonction initUserMenu
+
+// Début fonction initLogout
 function initLogout() {
-    document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(l => l.addEventListener('click', async (e) => {
-        e.preventDefault();
-        await supabaseClient.auth.signOut();
-        window.location.href = '../../authprive/users/login.html';
-    }));
+    document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(link => {
+        link.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await supabaseClient.auth.signOut();
+            window.location.href = '../../authprive/users/login.html';
+        });
+    });
 }
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+// Fin fonction initLogout
+
+// Début fonction copyHubId
+async function copyHubId() {
+    const id = footballeurProfile?.hubisoccer_id;
+    if (!id) return;
+    try {
+        await navigator.clipboard.writeText(id);
+        showToast('ID copié !', 'success', 2000);
+    } catch { showToast('Erreur copie', 'error'); }
 }
+// Fin fonction copyHubId
+window.copyHubId = copyHubId;

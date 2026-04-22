@@ -4,19 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Mon CV Pro · Footballeur | HubISoccer</title>
-    
     <!-- Polices & Icônes -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- Librairies externes -->
+    <!-- Librairies -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Styles -->
+    <!-- CSS -->
     <link rel="stylesheet" href="foot-cv.css">
 </head>
 <body>
@@ -198,7 +195,7 @@
                     <div class="form-group"><label>Taille (cm)</label><input type="number" id="cv_taille" placeholder="Ex: 180" min="100" max="250"></div>
                     <div class="form-group"><label>Poids (kg)</label><input type="number" id="cv_poids" placeholder="Ex: 75" min="30" max="200"></div>
                     <div class="form-group full"><label>Adresse actuelle</label><input type="text" id="cv_adresse" placeholder="Adresse complète"></div>
-                    <div class="form-group full"><label>Biographie / Présentation professionnelle</label><textarea id="cv_bio" placeholder="Décrivez votre parcours, votre philosophie, vos ambitions..."></textarea></div>
+                    <div class="form-group full"><label>Biographie / Présentation professionnelle</label><div id="cv_bio_editor" style="height:150px;"></div></div>
                     <div class="form-group full"><label>Site web / Portfolio</label><input type="url" id="cv_website" placeholder="https://..."></div>
                     <div class="form-group"><label>LinkedIn</label><input type="url" id="cv_linkedin" placeholder="https://linkedin.com/in/..."></div>
                     <div class="form-group"><label>Instagram / Réseaux</label><input type="text" id="cv_instagram" placeholder="@pseudo"></div>
@@ -251,7 +248,7 @@
             </div>
         </div>
 
-        <!-- Onglet 6 : Compétences Langues -->
+        <!-- Onglet 6 : Langues -->
         <div id="tab6" class="cv-tab-panel">
             <div class="glass-card">
                 <h3 class="section-title"><i class="fas fa-globe-africa"></i> Langues</h3>
@@ -287,6 +284,18 @@
                 <h3 class="section-title"><i class="fas fa-handshake"></i> Références</h3>
                 <div id="referencesList" style="margin-bottom:16px;"></div>
                 <button class="btn-add-entry" id="addReference"><i class="fas fa-plus"></i> Ajouter une référence</button>
+            </div>
+        </div>
+
+        <!-- Section Signature -->
+        <div class="glass-card signature-section-card">
+            <h3 class="section-title"><i class="fas fa-pen"></i> Signature électronique</h3>
+            <div class="signature-preview" id="signaturePreview" onclick="openSignatureModal()">
+                <div class="signature-placeholder">
+                    <i class="fas fa-pen"></i>
+                    <span>Cliquez pour signer</span>
+                </div>
+                <img id="signatureImage" style="display: none; max-width: 200px; max-height: 80px;" />
             </div>
         </div>
     </div>

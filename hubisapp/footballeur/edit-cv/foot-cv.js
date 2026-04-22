@@ -6,7 +6,7 @@
 'use strict';
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 1 : CONFIGURATION SUPABASE & ÉTAT GLOBAL
+// 1. CONFIGURATION SUPABASE & ÉTAT GLOBAL
 // ═══════════════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://niewavngipvowwxxguqu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
@@ -21,7 +21,7 @@ const CV_TABLE         = 'supabaseAuthPrive_cv_profiles';
 const DOCUMENTS_BUCKET = 'documents';
 const SIGNATURE_PATH   = 'footballeur/edit-cv/signatures';
 
-// Variables globales pour les listes dynamiques
+// Listes dynamiques
 let cvEducation    = [];
 let cvExperience   = [];
 let cvPalmares     = [];
@@ -30,13 +30,16 @@ let cvMentalSkills = [];
 let cvLanguages    = [];
 let cvReferences   = [];
 
+// Éditeurs Quill
+let quillBio = null;
+
 // Signature
-let signaturePad;
+let signaturePad = null;
 let signatureDataURL = null;
 let signatureLocked = false;
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 2 : UTILITAIRES (LOADER, TOAST, ÉCHAPPEMENT)
+// 2. UTILITAIRES (LOADER, TOAST, ÉCHAPPEMENT)
 // ═══════════════════════════════════════════════════════════
 // Début fonction showLoader
 function showLoader() {
@@ -108,7 +111,7 @@ function calculateAge(dateString) {
 // Fin fonction calculateAge
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 3 : SESSION ET PROFIL
+// 3. SESSION ET PROFIL
 // ═══════════════════════════════════════════════════════════
 // Début fonction checkSession
 async function checkSession() {
@@ -191,7 +194,7 @@ function populateHeaderCV() {
 // Fin fonction populateHeaderCV
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 4 : CHARGEMENT DU CV ET PRÉ-REMPLISSAGE
+// 4. CHARGEMENT DU CV ET PRÉ-REMPLISSAGE
 // ═══════════════════════════════════════════════════════════
 // Début fonction loadCVData
 async function loadCVData() {
@@ -240,13 +243,12 @@ function prepopulateFromProfile() {
 function restoreFormData(json) {
     try {
         const d = JSON.parse(json);
-        // Champs simples
         const fields = ['nom','prenom','telephone','email','ville','social','taille','poids','club','matchs','buts','passes','valeur','skillsTech','skillsSoft','dateSignature','lieuSignature','dob','lieu_naissance','nationalite','pays','adresse','website','linkedin','instagram'];
         fields.forEach(f => {
             const el = document.getElementById(`cv_${f}`);
             if (el && d[f] !== undefined) el.value = d[f];
         });
-        // Listes
+        if (quillBio && d.bio) quillBio.root.innerHTML = d.bio;
         cvEducation    = d._education    || [];
         cvExperience   = d._experience   || [];
         cvPalmares     = d._palmares     || [];
@@ -254,7 +256,6 @@ function restoreFormData(json) {
         cvMentalSkills = d._mentalSkills || [];
         cvLanguages    = d._languages    || [];
         cvReferences   = d._references   || [];
-        // Signature
         if (d.signature_url) {
             signatureDataURL = d.signature_url;
             document.getElementById('signatureImage').src = signatureDataURL;
@@ -268,7 +269,7 @@ function restoreFormData(json) {
 // Fin fonction restoreFormData
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 5 : RENDU DES LISTES DYNAMIQUES
+// 5. RENDU DES LISTES DYNAMIQUES
 // ═══════════════════════════════════════════════════════════
 // Début fonction renderAllEntries
 function renderAllEntries() {
@@ -479,7 +480,7 @@ function attachEntryButtons(container) {
 // Fin fonction attachEntryButtons
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 6 : MODALE D'AJOUT/MODIFICATION D'ENTRÉE
+// 6. MODALE D'AJOUT/MODIFICATION D'ENTRÉE
 // ═══════════════════════════════════════════════════════════
 let currentEntryType = '';
 let currentEntryIndex = -1;
@@ -632,7 +633,7 @@ function deleteEntry(type, index) {
 // Fin fonction deleteEntry
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 7 : SAUVEGARDE ET SOUMISSION DU CV
+// 7. SAUVEGARDE ET SOUMISSION DU CV
 // ═══════════════════════════════════════════════════════════
 // Début fonction collectCVData
 function collectCVData() {
@@ -642,6 +643,7 @@ function collectCVData() {
         const el = document.getElementById(`cv_${f}`);
         if (el) data[f] = el.value;
     });
+    if (quillBio) data.bio = quillBio.root.innerHTML;
     data._education    = cvEducation;
     data._experience   = cvExperience;
     data._palmares     = cvPalmares;
@@ -736,7 +738,7 @@ function updateCompletionBar() {
 // Fin fonction updateCompletionBar
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 8 : APERÇU ET PDF
+// 8. APERÇU ET PDF
 // ═══════════════════════════════════════════════════════════
 // Début fonction previewCV
 function previewCV() {
@@ -807,7 +809,7 @@ async function downloadPDF() {
 // Fin fonction downloadPDF
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 9 : SIGNATURE ÉLECTRONIQUE
+// 9. SIGNATURE ÉLECTRONIQUE
 // ═══════════════════════════════════════════════════════════
 // Début fonction openSignatureModal
 function openSignatureModal() {
@@ -826,7 +828,6 @@ function openSignatureModal() {
         document.getElementById('saveSignature').addEventListener('click', async () => {
             if (signaturePad.isEmpty()) { showToast('Signez avant de valider', 'warning'); return; }
             signatureDataURL = signaturePad.toDataURL('image/png');
-            // Uploader dans le bucket documents
             const file = dataURLtoFile(signatureDataURL, `signature_${Date.now()}.png`);
             const filePath = `${SIGNATURE_PATH}/${footballeurProfile.hubisoccer_id}_${Date.now()}.png`;
             const { error: uploadError } = await supabaseClient.storage.from(DOCUMENTS_BUCKET).upload(filePath, file, { upsert: true });
@@ -864,7 +865,7 @@ function dataURLtoFile(dataurl, filename) {
 // Fin fonction dataURLtoFile
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 10 : INITIALISATION GÉNÉRALE (DOMContentLoaded)
+// 10. INITIALISATION GÉNÉRALE (DOMContentLoaded)
 // ═══════════════════════════════════════════════════════════
 // Début initialisation DOM
 document.addEventListener('DOMContentLoaded', async () => {
@@ -873,6 +874,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!user) return;
     await loadFootballeurProfile();
     if (!footballeurProfile) return;
+
+    // Initialiser Quill pour la biographie
+    quillBio = new Quill('#cv_bio_editor', { theme: 'snow', placeholder: 'Décrivez votre parcours, votre philosophie, vos ambitions...' });
 
     // Charger le CV
     await loadCVData();
@@ -938,7 +942,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Fin initialisation DOM
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 11 : FONCTIONS UI (TABS, SIDEBAR, MENU)
+// 11. FONCTIONS UI (TABS, SIDEBAR, MENU)
 // ═══════════════════════════════════════════════════════════
 // Début fonction initTabs
 function initTabs() {
@@ -1000,4 +1004,4 @@ async function copyHubId() {
     } catch { showToast('Erreur copie', 'error'); }
 }
 // Fin fonction copyHubId
-window.copyHubId = copyHubId;
+window.copyHubId = copyHubId;,

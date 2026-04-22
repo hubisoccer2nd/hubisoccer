@@ -1,1 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Mon CV Pro · Footballeur | HubISoccer</title>
+    
+    <!-- Polices & Icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Librairies externes -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="foot-cv.css">
+</head>
+<body>
 
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-futbol"></i> Espace Footballeur</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../dashboard/foot-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="../verification/foot-verif.html"><i class="fas fa-shield-alt"></i> Vérification</a>
+                <a href="foot-cv.html"><i class="fas fa-file-alt"></i> Mon CV Pro</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-futbol"></i><h3>Menu Footballeur</h3></div>
+        <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="../dashboard/foot-dash.html"><i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span></a>
+        <a href="../verification/foot-verif.html"><i class="fas fa-shield-alt"></i><span>Vérification du Statut</span></a>
+        <a href="foot-cv.html" class="active"><i class="fas fa-file-alt"></i><span>Mon CV Pro</span></a>
+        <a href="../certifications/foot-certif.html"><i class="fas fa-certificate"></i><span>Diplômes & Certifs</span></a>
+        <a href="../transferts/foot-transfert.html"><i class="fas fa-exchange-alt"></i><span>Historique Transferts</span></a>
+        <a href="../videos/foot-videos.html"><i class="fas fa-video"></i><span>Mes Vidéos</span></a>
+        <a href="../revenus/foot-revenus.html"><i class="fas fa-coins"></i><span>Mes Revenus</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/foot-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="cv-main">
+    <div class="cv-container">
+        <h1 class="page-title"><i class="fas fa-file-alt"></i> Mon CV Professionnel — Footballeur</h1>
+        <p class="page-subtitle">Construisez, personnalisez et exportez votre CV officiel HubISoccer. Corps · Âme · Esprit.</p>
+
+        <!-- Barre de complétion -->
+        <div class="completion-bar-wrap glass-card">
+            <div style="flex:1">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-size:.85rem;font-weight:600;">Complétion du CV</span>
+                    <span id="cvStatusBadge" class="cv-status draft"><i class="fas fa-circle"></i> Brouillon</span>
+                </div>
+                <div class="completion-bar-track"><div class="completion-bar-fill" id="completionFill" style="width:0%"></div></div>
+            </div>
+            <span class="completion-pct" id="completionPct">0%</span>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-bar">
+            <button class="btn-primary" id="btnSaveDraft"><i class="fas fa-save"></i> Enregistrer le brouillon</button>
+            <button class="btn-success" id="btnSubmitCV"><i class="fas fa-paper-plane"></i> Soumettre pour validation</button>
+            <button class="btn-secondary" id="btnPreviewCV"><i class="fas fa-eye"></i> Aperçu du CV</button>
+            <button class="btn-secondary" id="btnDownloadPDF" disabled><i class="fas fa-file-pdf"></i> Télécharger PDF</button>
+            <div style="margin-left:auto;font-size:.78rem;color:var(--text-muted)" id="lastSaved"></div>
+        </div>
+
+        <!-- Header CV -->
+        <div class="cv-header-card glass-card">
+            <div class="cv-avatar-section">
+                <div class="cv-avatar-wrap" id="cvAvatarWrap">
+                    <img src="" id="cvAvatarImg" alt="Photo" style="display:none;">
+                    <div class="cv-avatar-initials" id="cvAvatarInit"></div>
+                </div>
+                <label class="cv-avatar-upload-btn" for="avatarInput"><i class="fas fa-camera"></i> Changer</label>
+                <input type="file" id="avatarInput" accept="image/*" style="display:none;">
+            </div>
+            <div class="cv-header-info">
+                <div class="cv-fullname" id="cvHeaderName">Chargement...</div>
+                <div class="cv-role-badge"><i class="fas fa-futbol"></i> Footballeur</div>
+                <div class="cv-contact-line" id="cvContactLine">
+                    <span><i class="fas fa-envelope"></i> <span id="cvEmail">—</span></span>
+                    <span><i class="fas fa-phone"></i> <span id="cvPhone">—</span></span>
+                    <span><i class="fas fa-globe-africa"></i> <span id="cvCountry">—</span></span>
+                    <span><i class="fas fa-birthday-cake"></i> <span id="cvAge">—</span> ans</span>
+                </div>
+                <div class="cv-hubid" onclick="copyHubId()" id="cvHubId" title="Cliquer pour copier">
+                    <i class="fas fa-id-card"></i> HID : <span id="cvHubIdVal">—</span>
+                    <i class="fas fa-copy" style="margin-left:4px;font-size:.7rem;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglets -->
+        <div class="cv-tabs-nav">
+            <button class="cv-tab-btn active" data-tab="tab0"><i class="fas fa-user"></i> Identité & Contact</button>
+            <button class="cv-tab-btn" data-tab="tab1"><i class="fas fa-graduation-cap"></i> Formation & Éducation</button>
+            <button class="cv-tab-btn" data-tab="tab2"><i class="fas fa-futbol"></i> Expérience Sportive</button>
+            <button class="cv-tab-btn" data-tab="tab3"><i class="fas fa-trophy"></i> Palmarès & Trophées</button>
+            <button class="cv-tab-btn" data-tab="tab4"><i class="fas fa-cogs"></i> Compétences Techniques</button>
+            <button class="cv-tab-btn" data-tab="tab5"><i class="fas fa-brain"></i> Compétences Mentales</button>
+            <button class="cv-tab-btn" data-tab="tab6"><i class="fas fa-globe-africa"></i> Langues</button>
+            <button class="cv-tab-btn" data-tab="tab7"><i class="fas fa-handshake"></i> Références</button>
+        </div>
+
+        <!-- Panneaux -->
+        <!-- Onglet 0 : Identité & Contact -->
+        <div id="tab0" class="cv-tab-panel active">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fas fa-user"></i> Identité & Contact</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Nom *</label><input type="text" id="cv_nom" placeholder="Nom de famille"></div>
+                    <div class="form-group"><label>Prénom *</label><input type="text" id="cv_prenom" placeholder="Prénom"></div>
+                    <div class="form-group"><label>Date de naissance</label><input type="date" id="cv_dob"></div>
+                    <div class="form-group"><label>Lieu de naissance</label><input type="text" id="cv_lieu_naissance" placeholder="Ville, Pays"></div>
+                    <div class="form-group"><label>Nationalité *</label><input type="text" id="cv_nationalite" placeholder="Ex: Béninoise"></div>
+                    <div class="form-group"><label>Pays de résidence *</label><input type="text" id="cv_pays" placeholder="Ex: Bénin"></div>
+                    <div class="form-group"><label>Email *</label><input type="email" id="cv_email" placeholder="exemple@email.com"></div>
+                    <div class="form-group"><label>Téléphone *</label><input type="tel" id="cv_telephone" placeholder="+229 XX XX XX XX"></div>
+                    <div class="form-group"><label>Taille (cm)</label><input type="number" id="cv_taille" placeholder="Ex: 180" min="100" max="250"></div>
+                    <div class="form-group"><label>Poids (kg)</label><input type="number" id="cv_poids" placeholder="Ex: 75" min="30" max="200"></div>
+                    <div class="form-group full"><label>Adresse actuelle</label><input type="text" id="cv_adresse" placeholder="Adresse complète"></div>
+                    <div class="form-group full"><label>Biographie / Présentation professionnelle</label><textarea id="cv_bio" placeholder="Décrivez votre parcours, votre philosophie, vos ambitions..."></textarea></div>
+                    <div class="form-group full"><label>Site web / Portfolio</label><input type="url" id="cv_website" placeholder="https://..."></div>
+                    <div class="form-group"><label>LinkedIn</label><input type="url" id="cv_linkedin" placeholder="https://linkedin.com/in/..."></div>
+                    <div class="form-group"><label>Instagram / Réseaux</label><input type="text" id="cv_instagram" placeholder="@pseudo"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet 1 : Formation -->
+        <div id="tab1" class="cv-tab-panel">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fas fa-graduation-cap"></i> Formation & Éducation</h3>
+                <div id="educationList" style="margin-bottom:16px;"></div>
+                <button class="btn-add-entry" id="addEducation"><i class="fas fa-plus"></i> Ajouter une formation / diplôme</button>
+            </div>
+        </div>
+
+        <!-- Onglet 2 : Expérience -->
+        <div id="tab2" class="cv-tab-panel">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fas fa-futbol"></i> Expérience Sportive</h3>
+                <div id="experienceList" style="margin-bottom:16px;"></div>
+                <button class="btn-add-entry" id="addExperience"><i class="fas fa-plus"></i> Ajouter une expérience</button>
+            </div>
+        </div>
+
+        <!-- Onglet 3 : Palmarès -->
+        <div id="tab3" class="cv-tab-panel">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fas fa-trophy"></i> Palmarès & Trophées</h3>
+                <div id="palmaresGrid" class="trophy-grid" style="margin-bottom:16px;"></div>
+                <button class="btn-add-entry" id="addPalmares"><i class="fas fa-plus"></i> Ajouter un titre / trophée</button>
+            </div>
+        </div>
+
+        <!-- Onglet 4 : Compétences Techniques -->
+        <div id="tab4" class="cv-tab-panel">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fas fa-cogs"></i> Compétences Techniques</h3>
+                <div id="techSkillsList"></div>
+                <button class="btn-add-entry" id="addTechSkill"><i class="fas fa-plus"></i> Ajouter une compétence technique</button>
+            </div>
+        </div>
+
+        <!-- Onglet 5 : Compétences Mentales -->
+        <div id="tab5" class="cv-tab-panel">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fas fa-brain"></i> Compétences Mentales</h3>
+                <div id="mentalSkillsList"></div>
+                <button class="btn-add-entry" id="addMentalSkill"><i class="fas fa-plus"></i> Ajouter une qualité mentale</button>
+            </div>
+        </div>
+
+        <!-- Onglet 6 : Langues -->
+        <div id="tab6" class="cv-tab-panel">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fas fa-globe-africa"></i> Langues</h3>
+                <div class="lang-grid" id="langChips" style="margin-bottom:16px;"></div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <div class="form-group" style="flex:1;min-width:140px;">
+                        <label>Langue</label>
+                        <input type="text" id="newLangName" placeholder="Ex: Français, Anglais, Fon...">
+                    </div>
+                    <div class="form-group" style="min-width:140px;">
+                        <label>Niveau</label>
+                        <select id="newLangLevel">
+                            <option value="Langue maternelle">Langue maternelle</option>
+                            <option value="Courant (C2)">Courant (C2)</option>
+                            <option value="Avancé (C1)">Avancé (C1)</option>
+                            <option value="Intermédiaire (B2)">Intermédiaire (B2)</option>
+                            <option value="Scolaire (B1)">Scolaire (B1)</option>
+                            <option value="Débutant (A2)">Débutant (A2)</option>
+                            <option value="Notions (A1)">Notions (A1)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="justify-content:flex-end;">
+                        <label>&nbsp;</label>
+                        <button class="btn-primary" id="addLanguageBtn" style="height:42px;"><i class="fas fa-plus"></i> Ajouter</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet 7 : Références -->
+        <div id="tab7" class="cv-tab-panel">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fas fa-handshake"></i> Références</h3>
+                <div id="referencesList" style="margin-bottom:16px;"></div>
+                <button class="btn-add-entry" id="addReference"><i class="fas fa-plus"></i> Ajouter une référence</button>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== DEBUT MODALE ENTRÉE ===== -->
+<div id="entryModal" class="cv-modal">
+    <div class="cv-modal-content">
+        <div class="cv-modal-header">
+            <h3 id="entryModalTitle"><i class="fas fa-plus"></i> Ajouter</h3>
+            <button class="cv-modal-close" id="closeEntryModalBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cv-modal-body" id="entryModalBody"></div>
+        <div class="cv-modal-footer">
+            <button class="btn-secondary" id="cancelEntryBtn">Annuler</button>
+            <button class="btn-primary" id="saveEntryBtn"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+    </div>
+</div>
+<!-- ===== FIN MODALE ENTRÉE ===== -->
+
+<!-- ===== DEBUT MODALE APERÇU ===== -->
+<div id="cvPreviewModal" class="cv-modal">
+    <div class="cv-modal-content" style="max-width:900px;">
+        <div class="cv-modal-header">
+            <h3><i class="fas fa-eye"></i> Aperçu — Footballeur</h3>
+            <button class="cv-modal-close" id="closePreviewModal"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cv-modal-body" id="cvPreviewBody"></div>
+        <div class="cv-modal-footer">
+            <button class="btn-secondary" id="closePreviewBtn">Fermer</button>
+            <button class="btn-primary" id="downloadFromPreviewBtn"><i class="fas fa-file-pdf"></i> Télécharger PDF</button>
+        </div>
+    </div>
+</div>
+<!-- ===== FIN MODALE APERÇU ===== -->
+
+<!-- ===== DEBUT MODALE SIGNATURE ===== -->
+<div id="signatureModal" class="cv-modal">
+    <div class="cv-modal-content">
+        <div class="cv-modal-header">
+            <h3><i class="fas fa-pen"></i> Signature électronique</h3>
+            <button class="cv-modal-close" id="closeSignatureModalBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cv-modal-body">
+            <canvas id="signatureCanvas" width="600" height="200" style="border:1px solid #ddd; border-radius:8px; width:100%; height:auto;"></canvas>
+            <div class="signature-controls">
+                <label>Couleur : <input type="color" id="penColor" value="#551B8C"></label>
+                <label>Épaisseur : <input type="range" id="penWidth" min="1" max="5" step="0.5" value="2"></label>
+            </div>
+        </div>
+        <div class="cv-modal-footer">
+            <button class="btn-secondary" id="clearSignature">Effacer</button>
+            <button class="btn-secondary" id="lockSignature">Verrouiller</button>
+            <button class="btn-primary" id="saveSignature">Valider la signature</button>
+        </div>
+    </div>
+</div>
+<!-- ===== FIN MODALE SIGNATURE ===== -->
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p>© 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== SCRIPT ===== -->
+<script src="foot-cv.js"></script>
+</body>
+</html>

@@ -228,15 +228,18 @@
                 await supabaseAuth.auth.signOut();
                 throw new Error(`Rôle incorrect. Attendu : ${expectedRole}, trouvé : ${profile.role_code}`);
             }
-            // Vérifier s'il y a un paramètre "redirect" dans l'URL (après le rôle)
+
+            // ===== NOUVEAU : REDIRECTION VERS UN MODULE SPÉCIFIQUE (portail admin) =====
             const urlParams = new URLSearchParams(window.location.search);
             const redirectParam = urlParams.get('redirect');
             if (redirectParam) {
                 window.location.href = decodeURIComponent(redirectParam);
             } else {
-                const redirectPath = roleDashboardMap[profile.role_code] || '../../footballeur/admin-foot/dashboard/admin-foot-dash.html';
+                const redirectPath = roleDashboardMap[profile.role_code] || '../../shared/construction.html';
                 window.location.href = redirectPath;
             }
+            // ===== FIN NOUVEAU =====
+
             showToast('Connexion réussie !', 'success');
             sessionStorage.setItem('currentRole', profile.role_code);
             sessionStorage.setItem('userId', authData.user.id);

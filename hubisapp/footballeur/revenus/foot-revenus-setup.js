@@ -202,7 +202,7 @@ async function checkSession() {
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
-        .from('supabaseAuthPrive_profiles')
+        .from('"supabaseAuthPrive_profiles"')
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
@@ -257,7 +257,7 @@ function updateNavbarAvatar() {
 // Début fonction checkExistingWallet
 async function checkExistingWallet() {
     const { data } = await supabaseClient
-        .from('supabaseAuthPrive_hubis_wallets')
+        .from('"supabaseAuthPrive_hubis_wallets"')
         .select('wallet_ref, status')
         .eq('auth_uuid', currentUser.id)
         .maybeSingle();
@@ -546,7 +546,7 @@ async function activateWallet() {
         expiryDate.setFullYear(expiryDate.getFullYear() + 4);
 
         const { error: insertError } = await supabaseClient
-            .from('supabaseAuthPrive_hubis_wallets')
+            .from('"supabaseAuthPrive_hubis_wallets"')
             .insert([{
                 auth_uuid: currentUser.id,
                 hubisoccer_id: userProfile.hubisoccer_id,
@@ -566,7 +566,7 @@ async function activateWallet() {
             throw insertError;
         }
 
-        await supabaseClient.from('supabaseAuthPrive_notifications').insert([{
+        await supabaseClient.from('"supabaseAuthPrive_notifications"').insert([{
             recipient_hubisoccer_id: userProfile.hubisoccer_id,
             type: 'wallet_created',
             title: '🎉 HubIS Wallet activé !',

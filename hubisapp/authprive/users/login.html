@@ -92,14 +92,14 @@
     </style>
 </head>
 <body>
-<!-- ===== VÉRIFICATION DU RÔLE (script critique corrigé – sans erreur visible) ===== -->
+<!-- ===== VÉRIFICATION DU RÔLE ===== -->
 <script>
     (function() {
         const urlParams = new URLSearchParams(window.location.search);
         const role = urlParams.get('role');
         if (!role) {
             window.location.replace('role-select.html?mode=login');
-            return;   // Arrête l'exécution sans lever d'erreur
+            return;
         }
         window.__HUBI_ROLE = role;
         document.addEventListener('DOMContentLoaded', function() {
@@ -119,7 +119,7 @@
     </div>
 </nav>
 
-<!-- ===== CONTENU PRINCIPAL (affiché si rôle présent) ===== -->
+<!-- ===== CONTENU PRINCIPAL ===== -->
 <div id="mainContent" class="main-content">
     <div class="glass-card">
         <h1><i class="fas fa-sign-in-alt"></i> Connexion</h1>
@@ -156,7 +156,7 @@
     const expectedRole = window.__HUBI_ROLE;
     // Fin initialisation Supabase
 
-    // Début mapping des rôles vers dashboards (chemins corrigés)
+    // Début mapping des rôles vers dashboards
     const roleDashboardMap = {
         'ADMIN': '../../authprive/admin/admin-dashboard.html',
         'FOOT_ADMIN': '../../footballeur/admin-foot/dashboard/admin-foot-dash.html',
@@ -228,11 +228,18 @@
                 await supabaseAuth.auth.signOut();
                 throw new Error(`Rôle incorrect. Attendu : ${expectedRole}, trouvé : ${profile.role_code}`);
             }
-            const redirectPath = roleDashboardMap[profile.role_code] || '../../shared/construction.html';
+            // Vérifier s'il y a un paramètre "redirect" dans l'URL (après le rôle)
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectParam = urlParams.get('redirect');
+            if (redirectParam) {
+                window.location.href = decodeURIComponent(redirectParam);
+            } else {
+                const redirectPath = roleDashboardMap[profile.role_code] || '../../footballeur/admin-foot/dashboard/admin-foot-dash.html';
+                window.location.href = redirectPath;
+            }
             showToast('Connexion réussie !', 'success');
             sessionStorage.setItem('currentRole', profile.role_code);
             sessionStorage.setItem('userId', authData.user.id);
-            setTimeout(() => window.location.href = redirectPath, 1500);
         } catch (err) {
             showToast(err.message, 'error');
             submitBtn.disabled = false;

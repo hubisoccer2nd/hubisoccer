@@ -299,6 +299,76 @@ img {
     overflow-y: auto;
 }
 
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--gray-light);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    position: relative;
+}
+
+.notif-item.unread {
+    background: var(--primary-xlight);
+}
+
+.notif-item:hover {
+    background: var(--gray-xlight);
+}
+
+.notif-icon-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--primary-xlight);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.notif-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--dark);
+}
+
+.notif-message {
+    font-size: 12px;
+    color: var(--gray-dark);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.notif-time {
+    font-size: 10px;
+    color: var(--gray);
+    margin-top: 4px;
+}
+
+.unread-dot {
+    position: absolute;
+    top: 18px;
+    right: 16px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+}
+
 .notif-placeholder {
     padding: 30px 20px;
     text-align: center;
@@ -611,7 +681,8 @@ img {
     transform-style: preserve-3d;
     transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(85, 27, 140, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(85, 27, 140, 0.1);
 }
 
 .hubis-card.flipped {
@@ -626,7 +697,6 @@ img {
     overflow: hidden;
 }
 
-/* Face avant */
 .card-front {
     background: linear-gradient(135deg, #2a3f6e 0%, #3b2d5c 55%, #1a1a3a 100%);
     padding: 22px 24px;
@@ -788,7 +858,6 @@ img {
     margin-left: 8px;
 }
 
-/* Face arrière */
 .card-back {
     background: linear-gradient(135deg, #2a3f6e 0%, #3b2d5c 55%, #1a1a3a 100%);
     transform: rotateY(180deg);
@@ -1274,7 +1343,7 @@ img {
     gap: 14px;
     background: var(--white);
     border: 1px solid var(--gray-light);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     padding: 14px 16px;
     cursor: pointer;
     transition: all 0.2s;
@@ -1395,7 +1464,7 @@ img {
 
 .sk-item {
     height: 72px;
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     background: linear-gradient(90deg, var(--gray-xlight) 25%, var(--gray-light) 50%, var(--gray-xlight) 75%);
     background-size: 400% 100%;
     animation: skeleton 1.5s ease-in-out infinite;
@@ -1446,7 +1515,7 @@ img {
     padding: 13px;
     background: transparent;
     border: 1px solid var(--gray-light);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     color: var(--gray-dark);
     font-family: 'Poppins', sans-serif;
     font-size: 14px;
@@ -1653,7 +1722,7 @@ img {
     padding: 13px 16px;
     background: var(--white);
     border: 1.5px solid var(--gray-light);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     color: var(--dark);
     font-family: 'Poppins', sans-serif;
     font-size: 14px;
@@ -1705,7 +1774,7 @@ img {
     gap: 12px;
     background: rgba(40, 167, 69, 0.08);
     border: 1px solid rgba(40, 167, 69, 0.25);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     padding: 12px 14px;
     animation: fadeInUp 0.3s ease;
 }
@@ -1757,7 +1826,7 @@ img {
     gap: 10px;
     background: var(--primary-xlight);
     border: 1px solid rgba(85, 27, 140, 0.2);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     padding: 12px 14px;
     font-size: 12px;
     color: var(--gray-dark);
@@ -1839,7 +1908,7 @@ img {
 
 .da-btn {
     padding: 12px;
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     background: var(--white);
     border: 1.5px solid var(--gray-light);
     color: var(--dark);
@@ -1870,7 +1939,7 @@ img {
     gap: 10px;
     background: var(--white);
     border: 1.5px solid var(--gray-light);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     padding: 13px 16px;
     cursor: pointer;
     font-size: 14px;
@@ -1934,7 +2003,7 @@ img {
     gap: 10px;
     background: var(--white);
     border: 1.5px solid var(--gray-light);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     padding: 13px 16px;
 }
 
@@ -1974,7 +2043,7 @@ img {
     gap: 10px;
     background: var(--gray-xlight);
     border: 1px solid var(--gray-light);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     padding: 12px 14px;
     font-size: 12px;
     color: var(--gray-dark);
@@ -2074,7 +2143,7 @@ img {
     flex: 1;
     padding: 14px;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     font-family: 'Poppins', sans-serif;
     font-size: 14px;
     font-weight: 700;
@@ -2115,7 +2184,7 @@ img {
     padding: 14px 20px;
     background: transparent;
     border: 1.5px solid var(--gray-light);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     color: var(--gray-dark);
     font-family: 'Poppins', sans-serif;
     font-size: 14px;

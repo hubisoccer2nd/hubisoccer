@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>HubIS Wallet – Activation | HubISoccer (Basketteur)</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="basket-revenus-setup.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR STANDARD ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-wallet"></i> HubIS Wallet</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelectHeader">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-wrapper">
+            <div class="notif-icon" id="notifIcon">
+                <i class="fas fa-bell"></i>
+                <span class="notif-badge" id="notifBadge">0</span>
+            </div>
+            <div class="notif-dropdown" id="notifDropdown">
+                <div class="notif-header">
+                    <h4>Notifications</h4>
+                    <button class="mark-all-read" id="markAllReadBtn">Tout lu</button>
+                </div>
+                <div class="notif-list" id="notifList">
+                    <p class="notif-placeholder">Chargement…</p>
+                </div>
+                <div class="notif-footer">
+                    <a href="#" id="viewAllNotifLink">Voir tout</a>
+                </div>
+            </div>
+        </div>
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" class="user-avatar" id="userAvatar" style="display:none;" alt="Avatar">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/basket-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/basket-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR STANDARD ===== -->
+
+<!-- ===== DEBUT SIDEBAR STANDARD ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-basketball-ball"></i><h3>Menu Basketteur</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="../dashboard/basket-dash.html"><i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span></a>
+        <a href="../verification/basket-verif.html"><i class="fas fa-shield-alt"></i><span>Vérification du Statut</span></a>
+        <a href="../cv/basket-cv.html"><i class="fas fa-file-alt"></i><span>Mon CV Pro</span></a>
+        <a href="../certifications/basket-certif.html"><i class="fas fa-certificate"></i><span>Diplômes & Certifs</span></a>
+        <a href="../transferts/basket-transfert.html"><i class="fas fa-exchange-alt"></i><span>Historique Transferts</span></a>
+        <a href="../videos/basket-videos.html"><i class="fas fa-video"></i><span>Mes Vidéos</span></a>
+        <a href="basket-revenus.html" class="active"><i class="fas fa-coins"></i><span>Mes Revenus</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/basket-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR STANDARD ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="setup-main">
+    <div class="setup-container">
+
+        <!-- En-tête du wizard -->
+        <div class="setup-header">
+            <div class="brand">
+                <div class="brand-icon"><i class="fas fa-wallet"></i></div>
+                <div class="brand-text">HubIS<span>Wallet</span></div>
+            </div>
+            <div class="step-counter"><span id="stepCounterText">Étape 1 sur 3</span></div>
+        </div>
+
+        <!-- Barre de progression -->
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            <div class="progress-nodes">
+                <div class="pnode active" id="pnode1"><div class="pnode-circle"><i class="fas fa-door-open"></i></div><span>Accueil</span></div>
+                <div class="pnode" id="pnode2"><div class="pnode-circle"><i class="fas fa-sliders"></i></div><span>Config</span></div>
+                <div class="pnode" id="pnode3"><div class="pnode-circle"><i class="fas fa-shield-halved"></i></div><span>Sécurité</span></div>
+            </div>
+        </div>
+
+        <!-- ===== STEP 1 : ACCUEIL ===== -->
+        <div class="step-panel active" id="step1">
+            <div class="hero-icon-wrap">
+                <div class="hero-icon"><i class="fas fa-wallet"></i></div>
+            </div>
+            <h1 class="step-title">Bienvenue sur <em>HubIS Wallet</em></h1>
+            <p class="step-desc">Votre espace financier sécurisé intégré à HubISoccer. Gérez vos revenus, envoyez et recevez des paiements en toute confiance.</p>
+
+            <!-- Carte d'identité utilisateur -->
+            <div class="identity-card" id="identityCard">
+                <div class="id-avatar" id="idAvatar"><i class="fas fa-user"></i></div>
+                <div class="id-info">
+                    <p class="id-name" id="idName">Chargement…</p>
+                    <p class="id-role" id="idRole"></p>
+                </div>
+                <div class="id-badge" id="idBadge"></div>
+            </div>
+
+            <!-- Liste des fonctionnalités -->
+            <div class="features-list">
+                <div class="feature-item"><div class="fi-icon teal"><i class="fas fa-credit-card"></i></div><div class="fi-text"><strong>Carte HubIS virtuelle</strong><span>Un numéro de carte unique, sécurisé et personnel</span></div></div>
+                <div class="feature-item"><div class="fi-icon gold"><i class="fas fa-bolt"></i></div><div class="fi-text"><strong>Transactions instantanées</strong><span>Envoi et réception en temps réel</span></div></div>
+                <div class="feature-item"><div class="fi-icon purple"><i class="fas fa-chart-pie"></i></div><div class="fi-text"><strong>Tableau de bord financier</strong><span>Suivez vos revenus, dépenses et soldes</span></div></div>
+                <div class="feature-item"><div class="fi-icon green"><i class="fas fa-lock"></i></div><div class="fi-text"><strong>Sécurité de niveau bancaire</strong><span>PIN chiffré, données isolées par utilisateur</span></div></div>
+            </div>
+
+            <button class="btn-cta" onclick="goToStep(2)">Configurer mon wallet <i class="fas fa-arrow-right"></i></button>
+        </div>
+
+        <!-- ===== STEP 2 : CONFIGURATION ===== -->
+        <div class="step-panel" id="step2">
+            <h1 class="step-title">Configurer <em>mon compte</em></h1>
+            <p class="step-desc">Personnalisez votre HubIS Wallet selon vos besoins.</p>
+
+            <!-- Type de compte -->
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-user-tie"></i> Type de compte</label>
+                <div class="radio-cards" id="accountTypeGroup">
+                    <label class="radio-card selected">
+                        <input type="radio" name="accountType" value="personnel" checked>
+                        <div class="rc-icon"><i class="fas fa-user"></i></div>
+                        <div class="rc-body"><strong>Personnel</strong><small>Revenus individuels, paiements personnels</small></div>
+                        <div class="rc-check"><i class="fas fa-check-circle"></i></div>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="accountType" value="professionnel">
+                        <div class="rc-icon"><i class="fas fa-briefcase"></i></div>
+                        <div class="rc-body"><strong>Professionnel</strong><small>Contrats, sponsors, revenus d'activité</small></div>
+                        <div class="rc-check"><i class="fas fa-check-circle"></i></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Devise -->
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-coins"></i> Devise principale</label>
+                <div class="currency-grid" id="currencyGrid"></div>
+            </div>
+
+            <!-- Langue -->
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-language"></i> Langue de l'interface</label>
+                <select class="form-select" id="languageSelect"></select>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-back" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Retour</button>
+                <button class="btn-cta" onclick="goToStep(3)">Continuer <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 3 : SÉCURITÉ ===== -->
+        <div class="step-panel" id="step3">
+            <h1 class="step-title">Sécuriser <em>mon wallet</em></h1>
+            <p class="step-desc">Créez un code PIN à 6 chiffres pour sécuriser chaque transaction.</p>
+
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-key"></i> Définir mon PIN</label>
+                <div class="pin-row" id="pinCreate">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="create" data-idx="0">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="create" data-idx="1">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="create" data-idx="2">
+                    <div class="pin-sep">—</div>
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="create" data-idx="3">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="create" data-idx="4">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="create" data-idx="5">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-rotate-right"></i> Confirmer mon PIN</label>
+                <div class="pin-row" id="pinConfirm">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="confirm" data-idx="0">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="confirm" data-idx="1">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="confirm" data-idx="2">
+                    <div class="pin-sep">—</div>
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="confirm" data-idx="3">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="confirm" data-idx="4">
+                    <input type="password" class="pin-box" maxlength="1" inputmode="numeric" data-group="confirm" data-idx="5">
+                </div>
+                <p class="pin-hint" id="pinHint"></p>
+            </div>
+
+            <label class="cgu-label">
+                <input type="checkbox" id="acceptCGU">
+                <span class="cgu-box"></span>
+                <span class="cgu-text">J'accepte les <a href="#" onclick="openCGU(event)">Conditions Générales d'Utilisation</a> du HubIS Wallet.</span>
+            </label>
+
+            <div class="security-note">
+                <i class="fas fa-shield-halved"></i>
+                <p>Votre PIN est chiffré localement avant envoi. HubISoccer ne peut jamais le lire. Ne le partagez jamais.</p>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-back" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Retour</button>
+                <button class="btn-cta btn-activate" onclick="activateWallet()"><i class="fas fa-rocket"></i> Activer mon wallet</button>
+            </div>
+        </div>
+
+        <!-- ===== STEP SUCCESS ===== -->
+        <div class="step-panel" id="stepSuccess">
+            <div class="success-burst">
+                <div class="burst-ring r1"></div><div class="burst-ring r2"></div><div class="burst-ring r3"></div>
+                <div class="burst-icon"><i class="fas fa-check"></i></div>
+            </div>
+            <h1 class="step-title">Wallet <em>activé !</em></h1>
+            <p class="step-desc">Félicitations ! Votre HubIS Wallet est prêt à l'emploi.</p>
+
+            <div class="wallet-reveal">
+                <div class="wr-label">Votre Wallet ID</div>
+                <div class="wr-id" id="walletIdDisplay">HIS-XXXX-XXXX-XXXX</div>
+                <div class="wr-copy" onclick="copyWalletId()"><i class="fas fa-copy"></i> Copier</div>
+                <p class="wr-note"><i class="fas fa-info-circle"></i> Partagez cet identifiant pour recevoir des paiements.</p>
+            </div>
+
+            <button class="btn-cta" onclick="goToDashboard()"><i class="fas fa-chart-line"></i> Accéder à mes revenus</button>
+        </div>
+
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== MODALE CGU ===== -->
+<div class="modal-overlay" id="cguModal" onclick="closeCGU(event)">
+    <div class="modal-box cgu-modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-file-contract"></i> CGU HubIS Wallet</h3>
+            <button class="modal-close" onclick="document.getElementById('cguModal').classList.remove('open')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body cgu-body">
+            <h4>1. Objet</h4><p>HubIS Wallet est un service de portefeuille numérique intégré à HubISoccer.</p>
+            <h4>2. Conditions d'utilisation</h4><p>L'utilisateur s'engage à utiliser HubIS Wallet exclusivement dans le cadre légal de son pays de résidence.</p>
+            <h4>3. Sécurité</h4><p>Le code PIN est chiffré côté client. HubISoccer ne stocke jamais le PIN en clair.</p>
+            <h4>4. Responsabilité</h4><p>HubISoccer décline toute responsabilité en cas de transaction effectuée suite à la divulgation volontaire ou involontaire du PIN.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cta" onclick="acceptCGUFromModal()"><i class="fas fa-check"></i> J'accepte les CGU</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== SCRIPT ===== -->
+<script src="basket-revenus-setup.js"></script>
+</body>
+</html>

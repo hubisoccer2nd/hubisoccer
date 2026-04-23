@@ -1,6 +1,6 @@
 /* ============================================================
    HubISoccer — foot-revenus-setup.js
-   Configuration du HubIS Wallet – Version complète et corrigée
+   Configuration du HubIS Wallet – Version corrigée finale
    ============================================================ */
 
 'use strict';
@@ -23,24 +23,66 @@ const PROGRESS_MAP = { 1: 0, 2: 50, 3: 85 };
 
 // Début mapping des rôles
 const ROLE_LABEL = {
-    FOOT:'⚽ Footballeur', BASK:'🏀 Basketteur', TENN:'🎾 Tennisman',
-    ATHL:'🏃 Athlète', HANDB:'🤾 Handballeur', VOLL:'🏐 Volleyeur',
-    RUGBY:'🏉 Rugbyman', NATA:'🏊 Nageur', ARTSM:'🥋 Arts martiaux',
-    CYCL:'🚴 Cycliste', CHAN:'🎤 Chanteur', DANS:'💃 Danseur',
-    COMP:'🎼 Compositeur', ACIN:'🎬 Acteur cinéma', ATHE:'🎭 Acteur théâtre',
-    HUMO:'🎙️ Humoriste', SLAM:'🗣️ Slameur', DJ:'🎧 DJ / Producteur',
-    CIRQ:'🤹 Artiste de cirque', VISU:'🎨 Artiste visuel',
-    PARRAIN:'🤝 Parrain', AGENT:'💼 Agent FIFA', COACH:'📋 Coach',
-    MEDIC:'⚕️ Staff médical', ARBIT:'🏁 Corps arbitral',
-    ACAD:'🏫 Académie sportive', FORM:'🎓 Formateur', TOURN:'🏆 Gestionnaire tournoi',
+    FOOT:'⚽ Footballeur',
+    BASK:'🏀 Basketteur',
+    TENN:'🎾 Tennisman',
+    ATHL:'🏃 Athlète',
+    HANDB:'🤾 Handballeur',
+    VOLL:'🏐 Volleyeur',
+    RUGBY:'🏉 Rugbyman',
+    NATA:'🏊 Nageur',
+    ARTSM:'🥋 Arts martiaux',
+    CYCL:'🚴 Cycliste',
+    CHAN:'🎤 Chanteur',
+    DANS:'💃 Danseur',
+    COMP:'🎼 Compositeur',
+    ACIN:'🎬 Acteur cinéma',
+    ATHE:'🎭 Acteur théâtre',
+    HUMO:'🎙️ Humoriste',
+    SLAM:'🗣️ Slameur',
+    DJ:'🎧 DJ / Producteur',
+    CIRQ:'🤹 Artiste de cirque',
+    VISU:'🎨 Artiste visuel',
+    PARRAIN:'🤝 Parrain',
+    AGENT:'💼 Agent FIFA',
+    COACH:'📋 Coach',
+    MEDIC:'⚕️ Staff médical',
+    ARBIT:'🏁 Corps arbitral',
+    ACAD:'🏫 Académie sportive',
+    FORM:'🎓 Formateur',
+    TOURN:'🏆 Gestionnaire tournoi',
     ADMIN:'🛡️ Administrateur'
 };
 const ROLE_EMOJI = {
-    FOOT:'⚽', BASK:'🏀', TENN:'🎾', ATHL:'🏃', HANDB:'🤾', VOLL:'🏐',
-    RUGBY:'🏉', NATA:'🏊', ARTSM:'🥋', CYCL:'🚴', CHAN:'🎤', DANS:'💃',
-    COMP:'🎼', ACIN:'🎬', ATHE:'🎭', HUMO:'🎙️', SLAM:'🗣️', DJ:'🎧',
-    CIRQ:'🤹', VISU:'🎨', PARRAIN:'🤝', AGENT:'💼', COACH:'📋',
-    MEDIC:'⚕️', ARBIT:'🏁', ACAD:'🏫', FORM:'🎓', TOURN:'🏆', ADMIN:'🛡️'
+    FOOT:'⚽',
+    BASK:'🏀',
+    TENN:'🎾',
+    ATHL:'🏃',
+    HANDB:'🤾',
+    VOLL:'🏐',
+    RUGBY:'🏉',
+    NATA:'🏊',
+    ARTSM:'🥋',
+    CYCL:'🚴',
+    CHAN:'🎤',
+    DANS:'💃',
+    COMP:'🎼',
+    ACIN:'🎬',
+    ATHE:'🎭',
+    HUMO:'🎙️',
+    SLAM:'🗣️',
+    DJ:'🎧',
+    CIRQ:'🤹',
+    VISU:'🎨',
+    PARRAIN:'🤝',
+    AGENT:'💼',
+    COACH:'📋',
+    MEDIC:'⚕️',
+    ARBIT:'🏁',
+    ACAD:'🏫',
+    FORM:'🎓',
+    TOURN:'🏆',
+    ADMIN:'🛡️'
 };
 // Fin mapping des rôles
 
@@ -202,7 +244,7 @@ async function checkSession() {
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
-        .from('"supabaseAuthPrive_profiles"')
+        .from('supabaseAuthPrive_profiles')
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
@@ -257,7 +299,7 @@ function updateNavbarAvatar() {
 // Début fonction checkExistingWallet
 async function checkExistingWallet() {
     const { data } = await supabaseClient
-        .from('"supabaseAuthPrive_hubis_wallets"')
+        .from('supabaseAuthPrive_hubis_wallets')
         .select('wallet_ref, status')
         .eq('auth_uuid', currentUser.id)
         .maybeSingle();
@@ -546,7 +588,7 @@ async function activateWallet() {
         expiryDate.setFullYear(expiryDate.getFullYear() + 4);
 
         const { error: insertError } = await supabaseClient
-            .from('"supabaseAuthPrive_hubis_wallets"')
+            .from('supabaseAuthPrive_hubis_wallets')
             .insert([{
                 auth_uuid: currentUser.id,
                 hubisoccer_id: userProfile.hubisoccer_id,
@@ -566,7 +608,7 @@ async function activateWallet() {
             throw insertError;
         }
 
-        await supabaseClient.from('"supabaseAuthPrive_notifications"').insert([{
+        await supabaseClient.from('supabaseAuthPrive_notifications').insert([{
             recipient_hubisoccer_id: userProfile.hubisoccer_id,
             type: 'wallet_created',
             title: '🎉 HubIS Wallet activé !',

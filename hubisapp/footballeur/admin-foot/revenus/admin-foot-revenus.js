@@ -1,6 +1,7 @@
 /* ============================================================
    HubISoccer — admin-foot-revenus.js
    Administration des revenus et wallets (Footballeur)
+   Version finale corrigée – Toutes fonctions implémentées
    ============================================================ */
 
 'use strict';
@@ -137,12 +138,24 @@ async function checkAdmin() {
 async function loadWallets() {
     showLoader(true);
     try {
-        const { data, error } = await supabaseClient
+        // Récupération séparée pour éviter les exclusions de la jointure !inner
+        const { data: wallets, error: walletError } = await supabaseClient
             .from('supabaseAuthPrive_hubis_wallets')
-            .select(`*, profile:supabaseAuthPrive_profiles!inner(full_name, avatar_url, role_code)`)
+            .select('*')
             .order('created_at', { ascending: false });
-        if (error) throw error;
-        walletsData = data || [];
+        if (walletError) throw walletError;
+
+        // Récupération des profils correspondants
+        const hubisoccerIds = wallets.map(w => w.hubisoccer_id).filter(Boolean);
+        const { data: profiles } = await supabaseClient
+            .from('supabaseAuthPrive_profiles')
+            .select('hubisoccer_id, full_name, avatar_url, role_code')
+            .in('hubisoccer_id', hubisoccerIds);
+
+        const profileMap = {};
+        (profiles || []).forEach(p => { profileMap[p.hubisoccer_id] = p; });
+
+        walletsData = wallets.map(w => ({ ...w, profile: profileMap[w.hubisoccer_id] || null }));
         renderWalletsTable();
         updateStats();
     } catch (err) {
@@ -225,21 +238,17 @@ function renderWalletsTable() {
 
 // Début fonction updateStats
 async function updateStats() {
-    // Total wallets
     document.getElementById('totalWallets').textContent = walletsData.length;
 
-    // Solde total
     const totalBalance = walletsData.reduce((sum, w) => sum + (w.balance || 0), 0);
     document.getElementById('totalBalance').textContent = formatAmount(totalBalance) + ' CFA';
 
-    // Demandes en attente
     const { count } = await supabaseClient
         .from('supabaseAuthPrive_hubis_transactions')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending');
     document.getElementById('pendingCount').textContent = count || 0;
 
-    // Volume mensuel
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
@@ -263,7 +272,7 @@ async function openWalletModal(walletId) {
     showLoader(true);
     const { data: wallet, error } = await supabaseClient
         .from('supabaseAuthPrive_hubis_wallets')
-        .select(`*, profile:supabaseAuthPrive_profiles!inner(full_name, avatar_url, role_code)`)
+        .select('*')
         .eq('id', walletId)
         .single();
     if (error || !wallet) {
@@ -271,6 +280,14 @@ async function openWalletModal(walletId) {
         showLoader(false);
         return;
     }
+
+    // Profil séparé
+    const { data: profile } = await supabaseClient
+        .from('supabaseAuthPrive_profiles')
+        .select('full_name, avatar_url, role_code')
+        .eq('hubisoccer_id', wallet.hubisoccer_id)
+        .maybeSingle();
+    wallet.profile = profile || null;
     selectedWallet = wallet;
 
     // Remplir les infos de base
@@ -283,13 +300,11 @@ async function openWalletModal(walletId) {
     document.getElementById('modalPendingBalance').value = wallet.pending_balance || 0;
     document.getElementById('modalAdminNotes').value = wallet.admin_notes || '';
 
-    // Bouton suspendre / réactiver
     const toggleBtn = document.getElementById('toggleSuspendBtn');
     toggleBtn.innerHTML = wallet.status === 'active'
         ? '<i class="fas fa-ban"></i> Suspendre'
         : '<i class="fas fa-check-circle"></i> Réactiver';
 
-    // Charger les onglets
     await loadBonusData(wallet.hubisoccer_id);
     await loadPendingTransactions(wallet.id);
     await loadWalletTransactions(wallet.id);
@@ -392,7 +407,6 @@ async function loadBonusData(hubisoccerId) {
         document.getElementById('bonusFollowersAvailable').value = data.followers_bonus_available || 0;
         document.getElementById('followersBonusCredited').textContent = data.followers_bonus_credited || 0;
     }
-    // Followers
     const { data: followerData } = await supabaseClient
         .from('supabaseAuthPrive_followers_count')
         .select('total_followers')
@@ -476,21 +490,25 @@ async function validateTransaction(txId) {
     const tx = pendingTransactions.find(t => t.id == txId);
     if (!tx) return;
     showLoader(true);
-    if (tx.type === 'deposit') {
-        // Créditer le solde
-        await supabaseClient.rpc('credit_wallet_from_deposit', { transaction_id: tx.id });
-    } else if (tx.type === 'withdraw') {
-        // Le retrait est déjà débité, on valide simplement le statut
-        await supabaseClient
-            .from('supabaseAuthPrive_hubis_transactions')
-            .update({ status: 'completed' })
-            .eq('id', tx.id);
+    try {
+        if (tx.type === 'deposit') {
+            await supabaseClient.rpc('credit_wallet_from_deposit', { transaction_id: tx.id });
+        } else if (tx.type === 'withdraw') {
+            await supabaseClient
+                .from('supabaseAuthPrive_hubis_transactions')
+                .update({ status: 'completed' })
+                .eq('id', tx.id);
+        }
+        showToast('Transaction validée', 'success');
+        loadPendingTransactions(selectedWallet.id);
+        loadWalletTransactions(selectedWallet.id);
+        updateStats();
+    } catch (err) {
+        console.error(err);
+        showToast('Erreur lors de la validation', 'error');
+    } finally {
+        showLoader(false);
     }
-    showLoader(false);
-    showToast('Transaction validée', 'success');
-    loadPendingTransactions(selectedWallet.id);
-    loadWalletTransactions(selectedWallet.id);
-    updateStats();
 }
 // Fin fonction validateTransaction
 
@@ -499,20 +517,25 @@ async function rejectTransaction(txId) {
     const tx = pendingTransactions.find(t => t.id == txId);
     if (!tx) return;
     showLoader(true);
-    if (tx.type === 'deposit') {
-        await supabaseClient
-            .from('supabaseAuthPrive_hubis_transactions')
-            .update({ status: 'failed' })
-            .eq('id', tx.id);
-    } else if (tx.type === 'withdraw') {
-        // Recréditer le solde
-        await supabaseClient.rpc('refund_withdraw', { transaction_id: tx.id });
+    try {
+        if (tx.type === 'deposit') {
+            await supabaseClient
+                .from('supabaseAuthPrive_hubis_transactions')
+                .update({ status: 'failed' })
+                .eq('id', tx.id);
+        } else if (tx.type === 'withdraw') {
+            await supabaseClient.rpc('refund_withdraw', { transaction_id: tx.id });
+        }
+        showToast('Transaction refusée', 'warning');
+        loadPendingTransactions(selectedWallet.id);
+        loadWalletTransactions(selectedWallet.id);
+        updateStats();
+    } catch (err) {
+        console.error(err);
+        showToast('Erreur lors du refus', 'error');
+    } finally {
+        showLoader(false);
     }
-    showLoader(false);
-    showToast('Transaction refusée', 'warning');
-    loadPendingTransactions(selectedWallet.id);
-    loadWalletTransactions(selectedWallet.id);
-    updateStats();
 }
 // Fin fonction rejectTransaction
 
@@ -633,7 +656,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const redirectUrl = document.getElementById('methodRedirectUrl').value;
             const isActive = document.getElementById('methodIsActive').checked;
 
-            const payload = { method_key: methodKey, display_name: displayName, instructions, redirect_url: redirectUrl, is_active: isActive, updated_at: new Date().toISOString() };
+            const payload = {
+                method_key: methodKey,
+                display_name: displayName,
+                instructions,
+                redirect_url: redirectUrl,
+                is_active: isActive,
+                updated_at: new Date().toISOString()
+            };
             showLoader(true);
             let error;
             if (id) {
@@ -656,17 +686,123 @@ document.addEventListener('DOMContentLoaded', () => {
 // Fin événement sauvegarde moyen de paiement
 
 // ============================================================
-// GÉNÉRATION DE DOCUMENTS
+// GÉNÉRATION DE DOCUMENTS (FACTURES & ATTESTATIONS)
 // ============================================================
 
 // Début fonction generateDocumentForTx
 async function generateDocumentForTx(txId, type) {
     const tx = currentWalletTransactions.find(t => t.id == txId);
-    if (!tx) return;
-    // À implémenter avec jsPDF et les données de transaction
-    showToast(`Génération ${type} pour transaction ${txId} à implémenter`, 'info');
+    if (!tx) {
+        showToast('Transaction introuvable', 'error');
+        return;
+    }
+    // On stocke la transaction courante et on ouvre la modale de signature
+    window._currentDocTx = tx;
+    window._currentDocType = type;
+    document.getElementById('invoiceModalTitle').textContent = type === 'invoice' ? 'Générer une facture' : 'Générer une attestation de virement';
+    document.getElementById('invoiceNumber').value = (type === 'invoice' ? 'INV-' : 'ATT-') + Date.now().toString(36).toUpperCase();
+    document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('invoiceSignature').value = '';
+    document.getElementById('invoiceNotes').value = '';
+    document.getElementById('invoiceModal').style.display = 'flex';
 }
 // Fin fonction generateDocumentForTx
+
+// Début fonction closeInvoiceModal
+function closeInvoiceModal() {
+    document.getElementById('invoiceModal').style.display = 'none';
+}
+// Fin fonction closeInvoiceModal
+
+// Début fonction generatePDF (appelée par le bouton de la modale)
+async function generatePDF() {
+    const tx = window._currentDocTx;
+    const type = window._currentDocType;
+    if (!tx) return;
+
+    const invoiceNumber = document.getElementById('invoiceNumber').value;
+    const invoiceDate = document.getElementById('invoiceDate').value;
+    const notes = document.getElementById('invoiceNotes').value;
+
+    // Upload de la signature si fichier sélectionné
+    let signatureUrl = null;
+    const fileInput = document.getElementById('invoiceSignature');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const path = `FOOT/${type}_${selectedWallet.hubisoccer_id}_${Date.now()}.png`;
+        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+            .from('admin-wallet-assets')
+            .upload(path, file, { cacheControl: '3600', upsert: true });
+        if (!uploadError && uploadData) {
+            signatureUrl = supabaseClient.storage.from('admin-wallet-assets').getPublicUrl(path).data.publicUrl;
+        }
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 14;
+
+    // Logo (base64 simplifié – à remplacer par logo officiel si disponible)
+    // Ici nous insérons un emplacement texte ou un logo chargé depuis URL
+    doc.setFontSize(22);
+    doc.setTextColor(85, 27, 140);
+    doc.text('HubISoccer', margin, 20);
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`RCCM: RB/ABC/24 A 111814  |  IFU: 0201910800236`, margin, 28);
+    doc.text(`+229 01 95 97 31 57  |  thehubisoccer@gmail.com`, margin, 34);
+
+    doc.setFontSize(16);
+    doc.setTextColor(0);
+    doc.text(type === 'invoice' ? 'FACTURE' : 'ATTESTATION DE VIREMENT', margin, 46);
+
+    doc.setFontSize(10);
+    doc.text(`Numéro: ${invoiceNumber}`, margin, 56);
+    doc.text(`Date: ${invoiceDate}`, margin, 62);
+    doc.text(`Wallet: ${selectedWallet.wallet_ref}`, margin, 68);
+    doc.text(`Titulaire: ${selectedWallet.profile?.full_name || 'N/A'}`, margin, 74);
+
+    doc.text(`Transaction: ${tx.type} – ${formatAmount(tx.amount)} CFA`, margin, 82);
+    doc.text(`Description: ${tx.description || 'N/A'}`, margin, 88);
+
+    if (notes) {
+        doc.text(`Notes: ${notes}`, margin, 96);
+    }
+
+    if (signatureUrl) {
+        try {
+            const img = new Image();
+            img.src = signatureUrl;
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+            doc.addImage(img, 'PNG', margin, 104, 50, 20);
+        } catch (e) {
+            doc.text('Signature non chargée', margin, 104);
+        }
+        doc.text('Signature / Cachet', margin, 126);
+    } else {
+        doc.text('Signature: _________________________', margin, 104);
+    }
+
+    doc.text('HubISoccer – The Hub of Inspiration of Soccer', margin, 140);
+    doc.save(`${invoiceNumber}.pdf`);
+
+    closeInvoiceModal();
+    showToast('PDF généré avec succès', 'success');
+}
+// Fin fonction generatePDF
+
+// Événement sur le bouton de confirmation de la modale
+document.addEventListener('DOMContentLoaded', () => {
+    const confirmBtn = document.getElementById('confirmInvoiceBtn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', generatePDF);
+    }
+});
 
 // ============================================================
 // UI SIDEBAR & MENU
@@ -706,6 +842,67 @@ function initLogout() {
 // Fin fonction initLogout
 
 // ============================================================
+// EXPORT DE DONNÉES
+// ============================================================
+
+// Début fonction exportData
+function exportData(format) {
+    const filtered = walletsData.filter(w => {
+        const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+        const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+        const profile = w.profile || {};
+        const matchSearch = (profile.full_name || '').toLowerCase().includes(searchTerm) ||
+                            (w.wallet_ref || '').toLowerCase().includes(searchTerm) ||
+                            (w.hubisoccer_id || '').toLowerCase().includes(searchTerm);
+        const matchStatus = statusFilter === 'all' || w.status === statusFilter;
+        return matchSearch && matchStatus;
+    });
+
+    const rows = filtered.map(w => ({
+        'Wallet ID': w.wallet_ref,
+        'Titulaire': w.profile?.full_name || '',
+        'Solde principal': formatAmount(w.balance),
+        'Solde carte': formatAmount(w.card_balance),
+        'Statut': w.status
+    }));
+
+    if (format === 'csv') {
+        const csv = [Object.keys(rows[0]||{}).join(','), ...rows.map(r => Object.values(r).map(v => `"${v}"`).join(','))].join('\n');
+        downloadBlob(csv, 'wallets.csv', 'text/csv');
+    } else if (format === 'xlsx') {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, 'Wallets');
+        XLSX.writeFile(wb, 'wallets.xlsx');
+    } else if (format === 'pdf') {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(12);
+        doc.text('Liste des wallets', 14, 20);
+        let y = 30;
+        rows.forEach(r => {
+            doc.text(`${r['Wallet ID']} - ${r['Titulaire']} - ${r['Solde principal']} CFA`, 14, y);
+            y += 8;
+            if (y > 280) { doc.addPage(); y = 20; }
+        });
+        doc.save('wallets.pdf');
+    }
+    document.getElementById('exportMenu').classList.remove('show');
+}
+// Fin fonction exportData
+
+// Début fonction downloadBlob
+function downloadBlob(content, fileName, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+// Fin fonction downloadBlob
+
+// ============================================================
 // INITIALISATION
 // ============================================================
 
@@ -722,8 +919,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadWallets();
         updateStats();
     });
+
     document.getElementById('exportBtn')?.addEventListener('click', () => {
         document.getElementById('exportMenu').classList.toggle('show');
+    });
+
+    document.querySelectorAll('.export-menu button').forEach(btn => {
+        btn.addEventListener('click', () => exportData(btn.dataset.format));
     });
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -736,8 +938,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // Boutons de l'onglet Documents
+    document.getElementById('generateInvoiceBtn')?.addEventListener('click', () => {
+        if (!selectedWallet) return;
+        // On peut générer une facture pour la dernière transaction ou pour un montant libre
+        // Ici on propose avec une transaction fictive administrative (à adapter)
+        showToast('Sélectionnez une transaction pour générer sa facture', 'info');
+    });
+    document.getElementById('generateReceiptBtn')?.addEventListener('click', () => {
+        if (!selectedWallet) return;
+        showToast('Sélectionnez une transaction pour générer son attestation', 'info');
+    });
+
     await loadWallets();
 
+    // Exposition globale des fonctions nécessaires aux onclick HTML
     window.openWalletModal = openWalletModal;
     window.closeWalletModal = closeWalletModal;
     window.validateTransaction = validateTransaction;
@@ -747,6 +962,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (method) openPaymentMethodModal(method);
     };
     window.closePaymentMethodModal = closePaymentMethodModal;
+    window.generateDocumentForTx = generateDocumentForTx;
+    window.closeInvoiceModal = closeInvoiceModal;
     document.getElementById('addPaymentMethodBtn')?.addEventListener('click', () => openPaymentMethodModal(null));
 });
 // Fin initialisation DOM

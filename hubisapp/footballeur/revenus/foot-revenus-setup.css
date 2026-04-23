@@ -1,6 +1,6 @@
 /* ============================================================
-   HubISoccer — revenue-setup.css
-   Styles de la page de configuration du HubIS Wallet
+   HubISoccer — foot-revenus-setup.css
+   Styles de la page de configuration du HubIS Wallet – Version complète
    ============================================================ */
 
 /* ===== DEBUT VARIABLES RACINES ===== */
@@ -291,7 +291,7 @@ img {
 
 .mark-all-read:hover {
     background: var(--primary);
-    color: white;
+    color: var(--white);
 }
 
 .notif-list {
@@ -741,8 +741,14 @@ img {
 }
 
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Hero icon (step 1) */
@@ -1353,8 +1359,14 @@ img {
 }
 
 @keyframes expandRing {
-    0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.5); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+    0% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
 }
 
 .burst-icon {
@@ -1431,7 +1443,7 @@ img {
     color: var(--primary);
 }
 
-/* Modal */
+/* ===== DEBUT MODALES ===== */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1467,8 +1479,14 @@ img {
 }
 
 @keyframes modalIn {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .modal-header {
@@ -1535,7 +1553,12 @@ img {
     border-top: 1px solid var(--gray-light);
 }
 
-/* Toast */
+.modal-footer .btn-cta {
+    width: 100%;
+}
+/* ===== FIN MODALES ===== */
+
+/* ===== DEBUT TOASTS ===== */
 .toast-container {
     position: fixed;
     bottom: 24px;
@@ -1640,18 +1663,34 @@ img {
 }
 
 @keyframes toastSlideIn {
-    0% { opacity: 0; transform: translateX(80px) scale(0.9); }
-    70% { transform: translateX(-6px) scale(1.02); }
-    100% { opacity: 1; transform: translateX(0) scale(1); }
+    0% {
+        opacity: 0;
+        transform: translateX(80px) scale(0.9);
+    }
+    70% {
+        transform: translateX(-6px) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
 }
+/* ===== FIN TOASTS ===== */
 
-/* Animations */
+/* ===== DEBUT ANIMATIONS ===== */
 @keyframes dropDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
+/* ===== FIN ANIMATIONS ===== */
 
-/* Responsive */
+/* ===== DEBUT RESPONSIVE ===== */
 @media (max-width: 600px) {
     .setup-main {
         padding: 16px 14px 40px;
@@ -1714,4 +1753,4 @@ img {
         font-size: 18px;
     }
 }
-/* ===== FIN CONTENU PRINCIPAL ===== */
+/* ===== FIN RESPONSIVE ===== */

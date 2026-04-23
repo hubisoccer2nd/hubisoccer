@@ -400,7 +400,7 @@ async function checkSession() {
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
-        .from('"supabaseAuthPrive_profiles"')
+        .from('supabaseAuthPrive_profiles')
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
@@ -419,7 +419,7 @@ async function loadProfile() {
 async function loadWallet() {
     showLoader();
     const { data, error } = await supabaseClient
-        .from('"supabaseAuthPrive_hubis_wallets"')
+        .from('supabaseAuthPrive_hubis_wallets')
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .maybeSingle();
@@ -451,7 +451,7 @@ async function loadBonusData() {
         return;
     }
     const { data, error } = await supabaseClient
-        .from('"supabaseAuthPrive_bonus"')
+        .from('supabaseAuthPrive_bonus')
         .select('*')
         .eq('hubisoccer_id', userProfile.hubisoccer_id)
         .maybeSingle();
@@ -461,7 +461,7 @@ async function loadBonusData() {
     }
     if (!data) {
         const { data: newB, error: insErr } = await supabaseClient
-            .from('"supabaseAuthPrive_bonus"')
+            .from('supabaseAuthPrive_bonus')
             .insert([{
                 hubisoccer_id: userProfile.hubisoccer_id,
                 homme_match: 0,
@@ -532,7 +532,7 @@ async function checkFollowerBonus() {
     
     // 1. Obtenir le nombre réel de followers depuis la vue
     const { data: followerData, error: followerError } = await supabaseClient
-        .from('"supabaseAuthPrive_followers_count"')
+        .from('supabaseAuthPrive_followers_count')
         .select('total_followers')
         .eq('hubisoccer_id', userProfile.hubisoccer_id)
         .maybeSingle();
@@ -550,7 +550,7 @@ async function checkFollowerBonus() {
     
     if (newBonus > 0) {
         await supabaseClient
-            .from('"supabaseAuthPrive_bonus"')
+            .from('supabaseAuthPrive_bonus')
             .update({
                 followers_bonus_available: (bonusData.followers_bonus_available || 0) + newBonus,
                 followers_bonus_credited: eligibleBonus
@@ -560,7 +560,7 @@ async function checkFollowerBonus() {
         bonusData.followers_bonus_available = (bonusData.followers_bonus_available || 0) + newBonus;
         updateBonusUI();
         
-        await supabaseClient.from('"supabaseAuthPrive_notifications"').insert([{
+        await supabaseClient.from('supabaseAuthPrive_notifications').insert([{
             recipient_hubisoccer_id: userProfile.hubisoccer_id,
             type: 'bonus_followers',
             title: '🎁 Bonus followers débloqué !',
@@ -593,7 +593,7 @@ async function withdrawBonus() {
         const ref = generateRef('BNS');
         const sym = getCurrencySymbol(walletData.currency);
 
-        await supabaseClient.from('"supabaseAuthPrive_hubis_transactions"').insert([{
+        await supabaseClient.from('supabaseAuthPrive_hubis_transactions').insert([{
             wallet_id: walletData.id,
             type: 'bonus',
             amount: total,
@@ -604,12 +604,12 @@ async function withdrawBonus() {
         }]);
 
         await supabaseClient
-            .from('"supabaseAuthPrive_hubis_wallets"')
+            .from('supabaseAuthPrive_hubis_wallets')
             .update({ balance: walletData.balance + total })
             .eq('id', walletData.id);
 
         await supabaseClient
-            .from('"supabaseAuthPrive_bonus"')
+            .from('supabaseAuthPrive_bonus')
             .update({
                 homme_match: 0,
                 primes: 0,
@@ -780,7 +780,7 @@ async function computeMonthStats() {
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
 
     const { data } = await supabaseClient
-        .from('"supabaseAuthPrive_hubis_transactions"')
+        .from('supabaseAuthPrive_hubis_transactions')
         .select('type, amount')
         .eq('wallet_id', walletData.id)
         .eq('status', 'completed')
@@ -828,7 +828,7 @@ async function transferToCard() {
         const ref = generateRef('TFC');
         const sym = getCurrencySymbol(walletData.currency);
 
-        await supabaseClient.from('"supabaseAuthPrive_hubis_transactions"').insert([{
+        await supabaseClient.from('supabaseAuthPrive_hubis_transactions').insert([{
             wallet_id: walletData.id,
             type: 'transfer_card',
             amount: amount,
@@ -839,7 +839,7 @@ async function transferToCard() {
         }]);
 
         await supabaseClient
-            .from('"supabaseAuthPrive_hubis_wallets"')
+            .from('supabaseAuthPrive_hubis_wallets')
             .update({
                 balance: walletData.balance - amount,
                 card_balance: (walletData.card_balance || 0) + amount
@@ -875,7 +875,7 @@ async function loadTransactions() {
     showTxSkeleton(true);
 
     const { data, error } = await supabaseClient
-        .from('"supabaseAuthPrive_hubis_transactions"')
+        .from('supabaseAuthPrive_hubis_transactions')
         .select('*')
         .eq('wallet_id', walletData.id)
         .order('created_at', { ascending: false })
@@ -1102,6 +1102,10 @@ function showTxSkeleton(show) {
 
 // Début fonction exportTransactionsToPDF
 async function exportTransactionsToPDF() {
+    if (!walletData) {
+        showToast('Wallet non chargé', 'error');
+        return;
+    }
     if (!window.jspdf) {
         showToast('Librairie PDF non chargée', 'error');
         return;
@@ -1122,7 +1126,7 @@ async function exportTransactionsToPDF() {
     ]);
 
     doc.autoTable({ head: headers, body: rows, startY: 40 });
-    doc.save(`hubisoccer_transactions_${walletData?.wallet_ref || 'export'}.pdf`);
+    doc.save(`hubisoccer_transactions_${walletData.wallet_ref || 'export'}.pdf`);
     showToast('PDF généré avec succès', 'success');
 }
 // Fin fonction exportTransactionsToPDF
@@ -1177,7 +1181,7 @@ async function executeTransfer() {
     }
 
     const { data: recipWallet, error: rwErr } = await supabaseClient
-        .from('"supabaseAuthPrive_hubis_wallets"')
+        .from('supabaseAuthPrive_hubis_wallets')
         .select('id, auth_uuid, hubisoccer_id, balance, status, wallet_ref')
         .eq('wallet_ref', recipientId)
         .maybeSingle();
@@ -1201,7 +1205,7 @@ async function executeTransfer() {
     try {
         const ref = generateRef('TRF');
 
-        await supabaseClient.from('"supabaseAuthPrive_hubis_transactions"').insert([{
+        await supabaseClient.from('supabaseAuthPrive_hubis_transactions').insert([{
             wallet_id: walletData.id,
             type: 'transfer_out',
             amount: amountVal,
@@ -1214,11 +1218,11 @@ async function executeTransfer() {
         }]);
 
         await supabaseClient
-            .from('"supabaseAuthPrive_hubis_wallets"')
+            .from('supabaseAuthPrive_hubis_wallets')
             .update({ balance: walletData.balance - amountVal, updated_at: new Date().toISOString() })
             .eq('id', walletData.id);
 
-        await supabaseClient.from('"supabaseAuthPrive_hubis_transactions"').insert([{
+        await supabaseClient.from('supabaseAuthPrive_hubis_transactions').insert([{
             wallet_id: recipWallet.id,
             type: 'transfer_in',
             amount: amountVal,
@@ -1231,11 +1235,11 @@ async function executeTransfer() {
         }]);
 
         await supabaseClient
-            .from('"supabaseAuthPrive_hubis_wallets"')
+            .from('supabaseAuthPrive_hubis_wallets')
             .update({ balance: recipWallet.balance + amountVal, updated_at: new Date().toISOString() })
             .eq('id', recipWallet.id);
 
-        await supabaseClient.from('"supabaseAuthPrive_notifications"').insert([{
+        await supabaseClient.from('supabaseAuthPrive_notifications').insert([{
             recipient_hubisoccer_id: recipWallet.hubisoccer_id,
             type: 'wallet_received',
             title: '💸 Transfert reçu',
@@ -1288,7 +1292,7 @@ async function executeDeposit() {
             fedaypay: 'Fedaypay'
         };
 
-        await supabaseClient.from('"supabaseAuthPrive_hubis_transactions"').insert([{
+        await supabaseClient.from('supabaseAuthPrive_hubis_transactions').insert([{
             wallet_id: walletData.id,
             type: 'deposit',
             amount: amount,
@@ -1300,7 +1304,7 @@ async function executeDeposit() {
 
         const newPending = (walletData.pending_balance || 0) + amount;
         await supabaseClient
-            .from('"supabaseAuthPrive_hubis_wallets"')
+            .from('supabaseAuthPrive_hubis_wallets')
             .update({ pending_balance: newPending, updated_at: new Date().toISOString() })
             .eq('id', walletData.id);
 
@@ -1419,7 +1423,7 @@ async function executeWithdraw() {
 
     try {
         const ref = generateRef('WDR');
-        await supabaseClient.from('"supabaseAuthPrive_hubis_transactions"').insert([{
+        await supabaseClient.from('supabaseAuthPrive_hubis_transactions').insert([{
             wallet_id: walletData.id,
             type: 'withdraw',
             amount: amount,
@@ -1431,7 +1435,7 @@ async function executeWithdraw() {
 
         const newPending = (walletData.pending_balance || 0) - amount;
         await supabaseClient
-            .from('"supabaseAuthPrive_hubis_wallets"')
+            .from('supabaseAuthPrive_hubis_wallets')
             .update({
                 balance: walletData.balance - amount,
                 pending_balance: Math.max(0, newPending),
@@ -1472,7 +1476,7 @@ async function fetchNotifications() {
         return [];
     }
     const { data } = await supabaseClient
-        .from('"supabaseAuthPrive_notifications"')
+        .from('supabaseAuthPrive_notifications')
         .select('*')
         .eq('recipient_hubisoccer_id', userProfile.hubisoccer_id)
         .order('created_at', { ascending: false })
@@ -1487,7 +1491,7 @@ async function updateNotificationBadge() {
         return;
     }
     const { count } = await supabaseClient
-        .from('"supabaseAuthPrive_notifications"')
+        .from('supabaseAuthPrive_notifications')
         .select('*', { count: 'exact', head: true })
         .eq('recipient_hubisoccer_id', userProfile.hubisoccer_id)
         .eq('read', false);
@@ -1543,7 +1547,7 @@ async function renderNotificationList() {
 // Début fonction markNotificationRead
 async function markNotificationRead(id) {
     await supabaseClient
-        .from('"supabaseAuthPrive_notifications"')
+        .from('supabaseAuthPrive_notifications')
         .update({ read: true })
         .eq('id', id);
     updateNotificationBadge();
@@ -1557,7 +1561,7 @@ async function markAllNotificationsRead() {
         return;
     }
     await supabaseClient
-        .from('"supabaseAuthPrive_notifications"')
+        .from('supabaseAuthPrive_notifications')
         .update({ read: true })
         .eq('recipient_hubisoccer_id', userProfile.hubisoccer_id)
         .eq('read', false);
@@ -1743,7 +1747,7 @@ function setupRecipientLookup() {
 
 async function lookupRecipient(walletRef) {
     const { data } = await supabaseClient
-        .from('"supabaseAuthPrive_hubis_wallets"')
+        .from('supabaseAuthPrive_hubis_wallets')
         .select('hubisoccer_id, status, supabaseAuthPrive_profiles!inner(full_name, avatar_url, role_code)')
         .eq('wallet_ref', walletRef)
         .eq('status', 'active')
@@ -1886,7 +1890,7 @@ function copyField(id) {
 async function confirmSuspendWallet() {
     if (confirm('Êtes-vous sûr de vouloir suspendre votre wallet ? Toutes les transactions seront bloquées.')) {
         await supabaseClient
-            .from('"supabaseAuthPrive_hubis_wallets"')
+            .from('supabaseAuthPrive_hubis_wallets')
             .update({ status: 'suspended', updated_at: new Date().toISOString() })
             .eq('id', walletData.id);
         showToast('Wallet suspendu. Contactez le support pour le réactiver.', 'warning', 30000);

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Admin Revenus Footballeur | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="admin-foot-revenus.css">
+    <!-- Bibliothèques d'export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.2.0/docx.umd.min.js"></script>
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-coins"></i> Admin Revenus Footballeur</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../dashboard/admin-foot-dash.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="../scouting/admin-foot-scout.html"><i class="fas fa-binoculars"></i> Scouting</a>
+                <a href="../certifications/admin-foot-certif.html"><i class="fas fa-certificate"></i> Certifications</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-futbol"></i><h3>Admin Footballeur</h3></div>
+        <button class="close-sidebar" id="closeSidebar" aria-label="Fermer"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Administration</div>
+        <a href="../dashboard/admin-foot-dash.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+        <a href="../scouting/admin-foot-scout.html"><i class="fas fa-binoculars"></i><span>Scouting</span></a>
+        <a href="../verifications/admin-foot-verif.html"><i class="fas fa-shield-alt"></i><span>Vérifications</span></a>
+        <a href="../certifications/admin-foot-certif.html"><i class="fas fa-certificate"></i><span>Certifications</span></a>
+        <a href="admin-foot-revenus.html" class="active"><i class="fas fa-coins"></i><span>Revenus</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Retour</div>
+        <a href="../../dashboard/foot-dash.html"><i class="fas fa-futbol"></i><span>Espace Footballeur</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="admin-main">
+    <div class="admin-container">
+
+        <!-- En-tête avec titre et actions -->
+        <div class="admin-header">
+            <h1><i class="fas fa-wallet"></i> Gestion des revenus & wallets</h1>
+            <div class="header-actions">
+                <div class="export-dropdown">
+                    <button class="btn-export" id="exportBtn"><i class="fas fa-download"></i> Exporter</button>
+                    <div class="export-menu" id="exportMenu">
+                        <button data-format="csv"><i class="fas fa-file-csv"></i> CSV</button>
+                        <button data-format="xlsx"><i class="fas fa-file-excel"></i> Excel</button>
+                        <button data-format="pdf"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button data-format="docx"><i class="fas fa-file-word"></i> Word</button>
+                    </div>
+                </div>
+                <button class="btn-refresh" id="refreshBtn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filters-panel">
+            <input type="text" id="searchInput" placeholder="Rechercher par nom, wallet ID ou hubisoccer_id...">
+            <select id="statusFilter">
+                <option value="all">Tous les statuts</option>
+                <option value="active">Actifs</option>
+                <option value="suspended">Suspendus</option>
+            </select>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="stats-cards">
+            <div class="stat-card total"><span class="stat-label">Total wallets</span><span class="stat-value" id="totalWallets">0</span></div>
+            <div class="stat-card balance"><span class="stat-label">Solde total (CFA)</span><span class="stat-value" id="totalBalance">0</span></div>
+            <div class="stat-card pending"><span class="stat-label">Demandes en attente</span><span class="stat-value" id="pendingCount">0</span></div>
+            <div class="stat-card volume"><span class="stat-label">Volume mensuel</span><span class="stat-value" id="monthVolume">0</span></div>
+        </div>
+
+        <!-- Tableau des wallets -->
+        <div id="walletsTableContainer" class="wallets-table-container">
+            <!-- Rempli dynamiquement par JS -->
+            <div class="table-loading">Chargement des wallets…</div>
+        </div>
+
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== MODALE DE GESTION D'UN WALLET (MULTI-ONGLETS) ===== -->
+<div id="walletModal" class="modal">
+    <div class="modal-content xlarge">
+        <div class="modal-header">
+            <h2 id="walletModalTitle">Gestion du wallet</h2>
+            <span class="close-modal" onclick="closeWalletModal()">&times;</span>
+        </div>
+
+        <!-- Onglets -->
+        <div class="modal-tabs">
+            <button class="tab-btn active" data-tab="infos"><i class="fas fa-info-circle"></i> Synthèse</button>
+            <button class="tab-btn" data-tab="bonus"><i class="fas fa-gift"></i> Bonus & Communauté</button>
+            <button class="tab-btn" data-tab="pending"><i class="fas fa-clock"></i> Demandes en attente</button>
+            <button class="tab-btn" data-tab="transactions"><i class="fas fa-list-ul"></i> Transactions</button>
+            <button class="tab-btn" data-tab="payment-methods"><i class="fas fa-credit-card"></i> Moyens de paiement</button>
+            <button class="tab-btn" data-tab="documents"><i class="fas fa-file-invoice"></i> Documents</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Onglet Infos générales -->
+            <div class="tab-pane active" id="tab-infos">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Wallet ID</label>
+                        <span id="modalWalletRef">—</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Titulaire</label>
+                        <span id="modalWalletHolder">—</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>HubISoccer ID</label>
+                        <span id="modalHubisoccerId">—</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Statut</label>
+                        <span id="modalStatus">—</span>
+                    </div>
+                </div>
+
+                <div class="editable-balances">
+                    <div class="balance-field">
+                        <label>Solde principal (CFA)</label>
+                        <input type="number" id="modalBalance" step="0.01" min="0">
+                    </div>
+                    <div class="balance-field">
+                        <label>Solde carte (CFA)</label>
+                        <input type="number" id="modalCardBalance" step="0.01" min="0">
+                    </div>
+                    <div class="balance-field">
+                        <label>Solde en attente (CFA)</label>
+                        <input type="number" id="modalPendingBalance" step="0.01" min="0">
+                    </div>
+                </div>
+
+                <div class="admin-notes">
+                    <label>Notes administratives</label>
+                    <textarea id="modalAdminNotes" rows="3" placeholder="Notes internes…"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-save" id="saveWalletInfoBtn"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+                    <button class="btn-suspend" id="toggleSuspendBtn"><i class="fas fa-ban"></i> Suspendre</button>
+                </div>
+            </div>
+
+            <!-- Onglet Bonus -->
+            <div class="tab-pane" id="tab-bonus">
+                <div class="bonus-grid">
+                    <div class="bonus-field">
+                        <label>Homme du match</label>
+                        <input type="number" id="bonusHommeMatch" min="0">
+                    </div>
+                    <div class="bonus-field">
+                        <label>Primes</label>
+                        <input type="number" id="bonusPrimes" min="0">
+                    </div>
+                    <div class="bonus-field">
+                        <label>Communauté</label>
+                        <input type="number" id="bonusCommunity" min="0">
+                    </div>
+                    <div class="bonus-field">
+                        <label>Bonus followers (disponible)</label>
+                        <input type="number" id="bonusFollowersAvailable" min="0">
+                    </div>
+                </div>
+                <div class="follower-info">
+                    <p>Nombre de followers : <span id="followerCount">—</span></p>
+                    <p>Bonus followers crédités : <span id="followersBonusCredited">—</span></p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-save" id="saveBonusBtn"><i class="fas fa-save"></i> Mettre à jour les bonus</button>
+                </div>
+            </div>
+
+            <!-- Onglet Demandes en attente -->
+            <div class="tab-pane" id="tab-pending">
+                <div id="pendingTransactionsList">
+                    <!-- Rempli dynamiquement -->
+                </div>
+            </div>
+
+            <!-- Onglet Transactions -->
+            <div class="tab-pane" id="tab-transactions">
+                <div class="transaction-filters">
+                    <input type="text" id="txSearch" placeholder="Rechercher...">
+                    <select id="txTypeFilter">
+                        <option value="all">Tous types</option>
+                        <option value="deposit">Dépôts</option>
+                        <option value="withdraw">Retraits</option>
+                        <option value="transfer">Transferts</option>
+                    </select>
+                </div>
+                <div id="walletTransactionsList">
+                    <!-- Rempli dynamiquement -->
+                </div>
+            </div>
+
+            <!-- Onglet Moyens de paiement -->
+            <div class="tab-pane" id="tab-payment-methods">
+                <div id="paymentMethodsList">
+                    <!-- Rempli dynamiquement -->
+                </div>
+                <button class="btn-add-method" id="addPaymentMethodBtn"><i class="fas fa-plus"></i> Ajouter un moyen de paiement</button>
+            </div>
+
+            <!-- Onglet Documents -->
+            <div class="tab-pane" id="tab-documents">
+                <div class="doc-actions">
+                    <button class="btn-generate" id="generateInvoiceBtn"><i class="fas fa-file-invoice"></i> Générer une facture</button>
+                    <button class="btn-generate" id="generateReceiptBtn"><i class="fas fa-receipt"></i> Attestation de virement</button>
+                </div>
+                <div id="documentsHistory">
+                    <!-- Historique des documents générés -->
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-close" onclick="closeWalletModal()">Fermer</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODALE DE GÉNÉRATION DE FACTURE/ATTESTATION ===== -->
+<div id="invoiceModal" class="modal">
+    <div class="modal-content medium">
+        <div class="modal-header">
+            <h2 id="invoiceModalTitle">Générer une facture</h2>
+            <span class="close-modal" onclick="closeInvoiceModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Numéro de facture</label>
+                <input type="text" id="invoiceNumber" placeholder="ex: INV-2026-001">
+            </div>
+            <div class="form-group">
+                <label>Date d'émission</label>
+                <input type="date" id="invoiceDate">
+            </div>
+            <div class="form-group">
+                <label>Signature / Cachet</label>
+                <input type="file" id="invoiceSignature" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label>Notes additionnelles</label>
+                <textarea id="invoiceNotes" rows="2"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeInvoiceModal()">Annuler</button>
+            <button class="btn-confirm" id="confirmInvoiceBtn">Générer PDF</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODALE D'AJOUT/ÉDITION DE MOYEN DE PAIEMENT ===== -->
+<div id="paymentMethodModal" class="modal">
+    <div class="modal-content small">
+        <div class="modal-header">
+            <h2 id="paymentMethodModalTitle">Ajouter un moyen de paiement</h2>
+            <span class="close-modal" onclick="closePaymentMethodModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="paymentMethodId">
+            <div class="form-group">
+                <label>Clé (ex: card, mobile)</label>
+                <input type="text" id="methodKey">
+            </div>
+            <div class="form-group">
+                <label>Nom affiché</label>
+                <input type="text" id="methodDisplayName">
+            </div>
+            <div class="form-group">
+                <label>Instructions</label>
+                <textarea id="methodInstructions" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>URL de redirection</label>
+                <input type="text" id="methodRedirectUrl">
+            </div>
+            <div class="form-group">
+                <label>Actif</label>
+                <input type="checkbox" id="methodIsActive" checked>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closePaymentMethodModal()">Annuler</button>
+            <button class="btn-confirm" id="savePaymentMethodBtn">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<!-- ===== SCRIPT ===== -->
+<script src="admin-foot-revenus.js"></script>
+</body>
+</html>

@@ -31,7 +31,30 @@
     </div>
     <div class="nav-right">
         <select class="lang-picker" id="langSelectHeader">
-            <!-- Rempli dynamiquement -->
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
         </select>
         <div class="notif-wrapper">
             <div class="notif-icon" id="notifIcon">
@@ -39,14 +62,21 @@
                 <span class="notif-badge" id="notifBadge">0</span>
             </div>
             <div class="notif-dropdown" id="notifDropdown">
-                <div class="notif-header"><h4>Notifications</h4><button class="mark-all-read" id="markAllReadBtn">Tout lu</button></div>
-                <div class="notif-list" id="notifList"><p class="notif-placeholder">Chargement…</p></div>
-                <div class="notif-footer"><a href="#" id="viewAllNotifLink">Voir tout</a></div>
+                <div class="notif-header">
+                    <h4>Notifications</h4>
+                    <button class="mark-all-read" id="markAllReadBtn">Tout lu</button>
+                </div>
+                <div class="notif-list" id="notifList">
+                    <p class="notif-placeholder">Chargement…</p>
+                </div>
+                <div class="notif-footer">
+                    <a href="#" id="viewAllNotifLink">Voir tout</a>
+                </div>
             </div>
         </div>
         <div class="user-menu" id="userMenu">
             <div class="user-avatar-container">
-                <img src="" class="user-avatar" id="userAvatar" style="display:none;">
+                <img src="" class="user-avatar" id="userAvatar" style="display:none;" alt="Avatar">
                 <div class="avatar-initials" id="userAvatarInitials"></div>
             </div>
             <span class="user-name" id="userName">Chargement…</span>
@@ -82,7 +112,8 @@
         <div class="nav-group-label">Plateforme</div>
         <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
         <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
-        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <!-- Correction du lien Gestion Tournoi -->
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
         <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
         <div class="nav-divider"></div>
         <a href="../support/foot-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
@@ -174,7 +205,7 @@
                 <div class="currency-grid" id="currencyGrid"></div>
             </div>
 
-            <!-- Langue (optionnelle, déjà dans le header mais proposée ici aussi) -->
+            <!-- Langue -->
             <div class="form-group">
                 <label class="form-label"><i class="fas fa-language"></i> Langue de l'interface</label>
                 <select class="form-select" id="languageSelect"></select>

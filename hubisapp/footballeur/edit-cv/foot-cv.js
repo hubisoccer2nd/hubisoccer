@@ -2,6 +2,7 @@
    HubISoccer — foot-cv.js
    CV Professionnel · Footballeur
    Corps · Âme · Esprit
+   Version corrigée – éditeurs riches, champs ville/social, etc.
    ============================================================ */
 'use strict';
 
@@ -32,6 +33,7 @@ let cvReferences   = [];
 
 // Éditeurs Quill
 let quillBio = null;
+let quillEntry = null;   // éditeur dans la modale d'entrée
 
 // Signature
 let signaturePad = null;
@@ -152,6 +154,7 @@ async function loadFootballeurProfile() {
     return footballeurProfile;
 }
 // Fin fonction loadFootballeurProfile
+
 // Début fonction updateAvatarNav
 function updateAvatarNav() {
     const avatarImg = document.getElementById('userAvatar');
@@ -301,6 +304,7 @@ function renderEducationList() {
             </div>
             <div class="entry-sub">${escapeHtml(item.etablissement || '')}</div>
             ${item.mention ? `<div class="entry-desc">Mention : ${escapeHtml(item.mention)}</div>` : ''}
+            ${item.description ? `<div class="entry-desc">${item.description}</div>` : ''}
             <div class="entry-actions">
                 <button class="btn-entry-edit" data-type="education" data-index="${idx}"><i class="fas fa-edit"></i> Modifier</button>
                 <button class="btn-entry-del" data-type="education" data-index="${idx}"><i class="fas fa-trash"></i> Supprimer</button>
@@ -499,12 +503,44 @@ function openEntryModal(type, index = -1) {
     title.innerHTML = index >= 0 ? 'Modifier' : 'Ajouter';
     body.innerHTML = buildEntryForm(type, item);
     modal.classList.add('show');
+
+    // Initialiser l'éditeur Quill pour les types ayant un champ description
+    initEntryQuill(item);
 }
 // Fin fonction openEntryModal
+
+// Début fonction initEntryQuill
+function initEntryQuill(item = {}) {
+    // Détruire l'instance précédente si elle existe
+    if (quillEntry) {
+        quillEntry = null;
+    }
+    const quillContainer = document.getElementById('em_quill_description');
+    if (quillContainer) {
+        quillEntry = new Quill('#em_quill_description', {
+            theme: 'snow',
+            placeholder: 'Décrivez ici…',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    ['link']
+                ]
+            }
+        });
+        if (item.description) {
+            quillEntry.root.innerHTML = item.description;
+        }
+    }
+}
+// Fin fonction initEntryQuill
 
 // Début fonction closeEntryModal
 function closeEntryModal() {
     document.getElementById('entryModal').classList.remove('show');
+    if (quillEntry) {
+        quillEntry = null;
+    }
 }
 // Fin fonction closeEntryModal
 
@@ -530,6 +566,7 @@ function buildEntryForm(type, item = {}) {
             <div class="form-group"><label>Établissement</label><input type="text" id="em_etablissement" value="${escapeHtml(item.etablissement || '')}"></div>
             <div class="form-group"><label>Année</label><input type="text" id="em_annee" value="${escapeHtml(item.annee || '')}"></div>
             <div class="form-group"><label>Mention</label><input type="text" id="em_mention" value="${escapeHtml(item.mention || '')}"></div>
+            <div class="form-group full"><label>Description</label><div id="em_quill_description" style="height:150px;"></div></div>
         `;
     }
     if (type === 'experience') {
@@ -537,7 +574,7 @@ function buildEntryForm(type, item = {}) {
             <div class="form-group"><label>Poste</label><input type="text" id="em_poste" value="${escapeHtml(item.poste || '')}"></div>
             <div class="form-group"><label>Club</label><input type="text" id="em_club" value="${escapeHtml(item.club || '')}"></div>
             <div class="form-group"><label>Période</label><input type="text" id="em_periode" value="${escapeHtml(item.periode || '')}"></div>
-            <div class="form-group"><label>Description</label><textarea id="em_description">${escapeHtml(item.description || '')}</textarea></div>
+            <div class="form-group full"><label>Description</label><div id="em_quill_description" style="height:150px;"></div></div>
         `;
     }
     if (type === 'palmares') {
@@ -578,14 +615,15 @@ function saveEntry() {
             diplome: document.getElementById('em_diplome')?.value || '',
             etablissement: document.getElementById('em_etablissement')?.value || '',
             annee: document.getElementById('em_annee')?.value || '',
-            mention: document.getElementById('em_mention')?.value || ''
+            mention: document.getElementById('em_mention')?.value || '',
+            description: quillEntry ? quillEntry.root.innerHTML : ''
         };
     } else if (type === 'experience') {
         newItem = {
             poste: document.getElementById('em_poste')?.value || '',
             club: document.getElementById('em_club')?.value || '',
             periode: document.getElementById('em_periode')?.value || '',
-            description: document.getElementById('em_description')?.value || ''
+            description: quillEntry ? quillEntry.root.innerHTML : ''
         };
     } else if (type === 'palmares') {
         newItem = {
@@ -716,7 +754,13 @@ function updateStatusBadge(status) {
     badge.className = `cv-status ${status}`;
     badge.innerHTML = `<i class="fas ${icons[status]}"></i> ${labels[status]}`;
     const exportBtn = document.getElementById('btnDownloadPDF');
-    if (exportBtn) exportBtn.disabled = (status !== 'approved');
+    const pdfHint = document.getElementById('pdfHint');
+    if (exportBtn) {
+        exportBtn.disabled = (status !== 'approved');
+        if (pdfHint) {
+            pdfHint.style.display = (status === 'approved') ? 'none' : 'inline';
+        }
+    }
 }
 // Fin fonction updateStatusBadge
 
@@ -745,8 +789,21 @@ function previewCV() {
     const fullName = `${data.prenom} ${data.nom}`.trim();
     const contactLine = [data.email, data.telephone, data.pays].filter(Boolean).join(' · ');
     const age = calculateAge(data.dob);
-    const formationsHtml = cvEducation.map(f => `<div><strong>${escapeHtml(f.diplome)}</strong><br>${escapeHtml(f.etablissement)} (${escapeHtml(f.annee)})</div>`).join('');
-    const experiencesHtml = cvExperience.map(e => `<div><strong>${escapeHtml(e.poste)}</strong> - ${escapeHtml(e.club)}<br><em>${escapeHtml(e.periode)}</em><br>${e.description || ''}</div>`).join('');
+    const formationsHtml = cvEducation.map(f => `
+        <div>
+            <strong>${escapeHtml(f.diplome)}</strong><br>
+            ${escapeHtml(f.etablissement)} (${escapeHtml(f.annee)})
+            ${f.mention ? `<br>Mention : ${escapeHtml(f.mention)}` : ''}
+            ${f.description ? `<div style="margin-top:4px;">${f.description}</div>` : ''}
+        </div>
+    `).join('');
+    const experiencesHtml = cvExperience.map(e => `
+        <div>
+            <strong>${escapeHtml(e.poste)}</strong> - ${escapeHtml(e.club)}<br>
+            <em>${escapeHtml(e.periode)}</em>
+            ${e.description ? `<div style="margin-top:4px;">${e.description}</div>` : ''}
+        </div>
+    `).join('');
     const skillsHtml = cvTechSkills.map(s => `<div>${escapeHtml(s.name)} : ${s.level}%</div>`).join('');
     const languagesHtml = cvLanguages.map(l => `<span>${escapeHtml(l.name)} (${escapeHtml(l.level)})</span>`).join(', ');
     const signatureImg = signatureDataURL ? `<img src="${signatureDataURL}" style="max-height:60px;">` : '';
@@ -992,6 +1049,7 @@ function initLogout() {
     });
 }
 // Fin fonction initLogout
+
 // Début fonction copyHubId
 async function copyHubId() {
     const id = footballeurProfile?.hubisoccer_id;

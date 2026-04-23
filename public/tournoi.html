@@ -103,33 +103,189 @@
 
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- ========== DÉBUT : MODALE D'INSCRIPTION V2 ========== -->
+    <!-- Modale agrandie et restructurée pour la fiche d'inscription provisoire V2 -->
     <div id="inscriptionModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-large">
             <span class="close-modal">&times;</span>
             <h3 data-i18n="tournoi.modal.title">Inscription au tournoi</h3>
             <form id="inscriptionForm">
                 <input type="hidden" id="modalCodeId">
                 <input type="hidden" id="modalTournoiId">
-                <div class="form-group">
-                    <label data-i18n="tournoi.modal.nom">Nom complet *</label>
-                    <input type="text" id="inscriptionNom" required>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="tournoi.modal.email">Email *</label>
-                    <input type="email" id="inscriptionEmail" required>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="tournoi.modal.telephone">Téléphone *</label>
-                    <input type="tel" id="inscriptionTelephone" required>
-                </div>
-                <div class="form-group" id="clubGroup" style="display: none;">
-                    <label data-i18n="tournoi.modal.nom_club">Nom du club *</label>
-                    <input type="text" id="inscriptionClub">
-                </div>
+                
+                <!-- ========== SECTION 1 : IDENTITÉ ET CONTACTS ========== -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-user"></i> 1. Identité et contacts</legend>
+                    
+                    <div class="form-group">
+                        <label data-i18n="tournoi.modal.nom">Nom complet *</label>
+                        <input type="text" id="inscriptionNom" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="tournoi.modal.date_naissance">Date de naissance *</label>
+                            <input type="date" id="inscriptionDateNaissance" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="tournoi.modal.ville_quartier">Ville / Quartier *</label>
+                            <input type="text" id="inscriptionVilleQuartier" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="tournoi.modal.telephone">Téléphone (WhatsApp) *</label>
+                            <input type="tel" id="inscriptionTelephone" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="tournoi.modal.email">Email *</label>
+                            <input type="email" id="inscriptionEmail" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label data-i18n="tournoi.modal.reseaux">Réseaux sociaux (Facebook / Instagram / TikTok)</label>
+                        <input type="text" id="inscriptionReseauxSociaux" placeholder="@pseudo ou URL">
+                    </div>
+                </fieldset>
+                
+                <!-- ========== SECTION 2 : PROFIL DU TALENT ========== -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-star"></i> 2. Profil du talent</legend>
+                    
+                    <div class="form-group">
+                        <label data-i18n="tournoi.modal.categorie">Catégorie principale *</label>
+                        <select id="inscriptionCategorie" required>
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="sportif">Sportif</option>
+                            <option value="artiste">Artiste</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="disciplineSportGroup" style="display: none;">
+                        <label data-i18n="tournoi.modal.discipline_sport">Discipline sportive *</label>
+                        <select id="inscriptionDisciplineSport">
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="football">Football</option>
+                            <option value="basketball">Basketball</option>
+                            <option value="tennis">Tennis</option>
+                            <option value="athletisme">Athlétisme</option>
+                            <option value="arts_martiaux">Arts Martiaux</option>
+                            <option value="autre_sport">Autre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="disciplineArtisteGroup" style="display: none;">
+                        <label data-i18n="tournoi.modal.discipline_artiste">Discipline artistique *</label>
+                        <select id="inscriptionDisciplineArtiste">
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="chant">Chant</option>
+                            <option value="danse">Danse</option>
+                            <option value="slam">Slam</option>
+                            <option value="humour">Humour</option>
+                            <option value="art_visuel">Art Visuel</option>
+                            <option value="autre_artiste">Autre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="autreDisciplineGroup" style="display: none;">
+                        <label data-i18n="tournoi.modal.autre_discipline">Précisez *</label>
+                        <input type="text" id="inscriptionAutreDiscipline">
+                    </div>
+                </fieldset>
+                
+                <!-- ========== SECTION 3 : STATUT ACTUEL ========== -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-users"></i> 3. Statut actuel</legend>
+                    
+                    <div class="form-group">
+                        <label data-i18n="tournoi.modal.statut_talent">Vous êtes *</label>
+                        <select id="inscriptionStatutTalent" required>
+                            <option value="libre">Talent Libre (Individuel)</option>
+                            <option value="en_club">Membre d'un Club / Association</option>
+                        </select>
+                    </div>
+                    
+                    <div id="clubFieldsGroup" style="display: none;">
+                        <div class="form-group">
+                            <label data-i18n="tournoi.modal.nom_club_actuel">Nom du Club / Association *</label>
+                            <input type="text" id="inscriptionNomClubActuel">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="tournoi.modal.contact_responsable">Nom et Contact du Responsable (Coach/Président) *</label>
+                            <input type="text" id="inscriptionContactResponsable">
+                        </div>
+                    </div>
+                    <!-- Note : l'ancien champ nom_club est conservé pour compatibilité mais masqué -->
+                    <input type="hidden" id="inscriptionClub" value="">
+                </fieldset>
+                
+                <!-- ========== SECTION 4 : VOLET TRINITÉ ========== -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-graduation-cap"></i> 4. Volet "Trinité" (Études & Métiers)</legend>
+                    
+                    <div class="form-group">
+                        <label data-i18n="tournoi.modal.niveau_etudes">Niveau d'études actuel</label>
+                        <input type="text" id="inscriptionNiveauEtudes" placeholder="Ex: Bac, Licence, CAP...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label data-i18n="tournoi.modal.metier_souhaite">Métier souhaité ou compétence secondaire</label>
+                        <input type="text" id="inscriptionMetierSouhaite" placeholder="Ex: Informaticien, Commerçant...">
+                    </div>
+                </fieldset>
+                
+                <!-- ========== SECTION 5 : DISPONIBILITÉS ========== -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-calendar-alt"></i> 5. Disponibilités pour les sélections</legend>
+                    <p class="fieldset-hint">Cochez les créneaux où vous êtes généralement libre.</p>
+                    
+                    <div class="dispo-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Heures</th>
+                                    <th>Lun</th>
+                                    <th>Mar</th>
+                                    <th>Mer</th>
+                                    <th>Jeu</th>
+                                    <th>Ven</th>
+                                    <th>Sam</th>
+                                    <th>Dim</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>06h - 10h</td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="lundi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="mardi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="mercredi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="jeudi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="vendredi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="samedi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="dimanche" data-slot="matin"></td>
+                                </tr>
+                                <tr>
+                                    <td>14h - 18h</td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="lundi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="mardi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="mercredi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="jeudi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="vendredi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="samedi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="dimanche" data-slot="apresmidi"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </fieldset>
+                
                 <button type="submit" class="btn-submit" data-i18n="tournoi.modal.envoyer">Envoyer ma demande</button>
             </form>
         </div>
     </div>
+    <!-- ========== FIN : MODALE D'INSCRIPTION V2 ========== -->
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/tournoi.js"></script>

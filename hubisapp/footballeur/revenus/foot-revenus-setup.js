@@ -1,6 +1,6 @@
 /* ============================================================
    HubISoccer — foot-revenus-setup.js
-   Configuration du HubIS Wallet
+   Configuration du HubIS Wallet – Version complète et corrigée
    ============================================================ */
 
 'use strict';
@@ -130,18 +130,57 @@ const CURRENCIES = [
 // Fin liste des devises
 
 // Début fonctions utilitaires
-function showLoader() { const l = document.getElementById('globalLoader'); if(l) l.style.display = 'flex'; }
-function hideLoader() { const l = document.getElementById('globalLoader'); if(l) l.style.display = 'none'; }
+function showLoader() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) {
+        loader.style.display = 'flex';
+    }
+}
+
+function hideLoader() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) {
+        loader.style.display = 'none';
+    }
+}
 
 function showToast(message, type = 'info', duration = 8000) {
     const container = document.getElementById('toastContainer');
-    if (!container) return;
-    const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
+    if (!container) {
+        return;
+    }
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `<div class="toast-icon"><i class="fas ${icons[type]||icons.info}"></i></div><div class="toast-content">${message}</div><div class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></div>`;
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <i class="fas ${icons[type] || icons.info}"></i>
+        </div>
+        <div class="toast-content">${message}</div>
+        <div class="toast-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </div>
+    `;
     container.appendChild(toast);
-    setTimeout(() => toast.remove(), duration);
+    setTimeout(() => {
+        toast.remove();
+    }, duration);
+}
+
+function getInitials(name) {
+    if (!name) {
+        return '?';
+    }
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
 }
 // Fin fonctions utilitaires
 
@@ -150,7 +189,10 @@ async function checkSession() {
     showLoader();
     const { data: { session }, error } = await supabaseClient.auth.getSession();
     hideLoader();
-    if (error || !session) { window.location.href = '../../authprive/users/login.html'; return null; }
+    if (error || !session) {
+        window.location.href = '../../authprive/users/login.html';
+        return null;
+    }
     currentUser = session.user;
     return currentUser;
 }
@@ -165,11 +207,52 @@ async function loadProfile() {
         .eq('auth_uuid', currentUser.id)
         .single();
     hideLoader();
-    if (error || !data) { showToast('Impossible de charger le profil', 'error'); return null; }
+    if (error || !data) {
+        showToast('Impossible de charger le profil', 'error');
+        return null;
+    }
     userProfile = data;
+    updateNavbarAvatar();
     return userProfile;
 }
 // Fin fonction loadProfile
+
+// Début fonction updateNavbarAvatar
+function updateNavbarAvatar() {
+    const userAvatar = document.getElementById('userAvatar');
+    const userInitials = document.getElementById('userAvatarInitials');
+    const userName = document.getElementById('userName');
+
+    if (!userProfile) {
+        return;
+    }
+
+    if (userName) {
+        userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
+    }
+
+    const avatarUrl = userProfile.avatar_url;
+
+    if (avatarUrl && avatarUrl !== '') {
+        if (userAvatar) {
+            userAvatar.src = avatarUrl;
+            userAvatar.style.display = 'block';
+        }
+        if (userInitials) {
+            userInitials.style.display = 'none';
+        }
+    } else {
+        const initials = getInitials(userProfile.full_name || userProfile.display_name || 'U');
+        if (userInitials) {
+            userInitials.textContent = initials;
+            userInitials.style.display = 'flex';
+        }
+        if (userAvatar) {
+            userAvatar.style.display = 'none';
+        }
+    }
+}
+// Fin fonction updateNavbarAvatar
 
 // Début fonction checkExistingWallet
 async function checkExistingWallet() {
@@ -180,7 +263,9 @@ async function checkExistingWallet() {
         .maybeSingle();
     if (data && data.status === 'active') {
         showToast('Wallet déjà configuré. Redirection…', 'success');
-        setTimeout(() => window.location.href = 'foot-revenus.html', 1500);
+        setTimeout(() => {
+            window.location.href = 'foot-revenus.html';
+        }, 1500);
         return true;
     }
     return false;
@@ -193,12 +278,22 @@ function displayUserInfo() {
     const roleEl = document.getElementById('idRole');
     const badgeEl = document.getElementById('idBadge');
     const avatarEl = document.getElementById('idAvatar');
-    if (nameEl) nameEl.textContent = userProfile.full_name || 'Utilisateur';
-    if (roleEl) roleEl.textContent = ROLE_LABEL[userProfile.role_code] || userProfile.role_code;
-    if (badgeEl) badgeEl.textContent = ROLE_EMOJI[userProfile.role_code] || '👤';
+
+    if (nameEl) {
+        nameEl.textContent = userProfile.full_name || 'Utilisateur';
+    }
+    if (roleEl) {
+        roleEl.textContent = ROLE_LABEL[userProfile.role_code] || userProfile.role_code;
+    }
+    if (badgeEl) {
+        badgeEl.textContent = ROLE_EMOJI[userProfile.role_code] || '👤';
+    }
     if (avatarEl) {
-        if (userProfile.avatar_url) avatarEl.innerHTML = `<img src="${userProfile.avatar_url}" alt="Avatar">`;
-        else avatarEl.innerHTML = `<i class="fas fa-user"></i>`;
+        if (userProfile.avatar_url) {
+            avatarEl.innerHTML = `<img src="${userProfile.avatar_url}" alt="Avatar">`;
+        } else {
+            avatarEl.innerHTML = `<i class="fas fa-user"></i>`;
+        }
     }
 }
 // Fin fonction displayUserInfo
@@ -206,7 +301,9 @@ function displayUserInfo() {
 // Début fonction populateLanguageSelect
 function populateLanguageSelect() {
     const select = document.getElementById('languageSelect');
-    if (!select) return;
+    if (!select) {
+        return;
+    }
     select.innerHTML = '';
     LANGUAGES.forEach(lang => {
         const option = document.createElement('option');
@@ -222,17 +319,28 @@ function populateLanguageSelect() {
 // Début fonction populateCurrencySelect
 function populateCurrencySelect() {
     const container = document.getElementById('currencyGrid');
-    if (!container) return;
+    if (!container) {
+        return;
+    }
     container.innerHTML = '';
     CURRENCIES.forEach(curr => {
         const card = document.createElement('label');
         card.className = 'currency-card';
         card.setAttribute('data-code', curr.code);
-        card.innerHTML = `<input type="radio" name="currency" value="${curr.code}"><span class="cc-symbol">${curr.symbol}</span><span class="cc-code">${curr.code}</span><span class="cc-name">${curr.name}</span><div class="cc-check"><i class="fas fa-check"></i></div>`;
+        card.innerHTML = `
+            <input type="radio" name="currency" value="${curr.code}">
+            <span class="cc-symbol">${curr.symbol}</span>
+            <span class="cc-code">${curr.code}</span>
+            <span class="cc-name">${curr.name}</span>
+            <div class="cc-check"><i class="fas fa-check"></i></div>
+        `;
         container.appendChild(card);
     });
     const defaultCard = container.querySelector('[data-code="XOF"]') || container.querySelector('[data-code="EUR"]');
-if (defaultCard) { defaultCard.classList.add('selected'); defaultCard.querySelector('input').checked = true; }
+    if (defaultCard) {
+        defaultCard.classList.add('selected');
+        defaultCard.querySelector('input').checked = true;
+    }
 }
 // Fin fonction populateCurrencySelect
 
@@ -240,18 +348,30 @@ if (defaultCard) { defaultCard.classList.add('selected'); defaultCard.querySelec
 function goToStep(step) {
     document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
     const target = document.getElementById(step === 'success' ? 'stepSuccess' : `step${step}`);
-    if (target) target.classList.add('active');
-    for (let i=1; i<=3; i++) {
+    if (target) {
+        target.classList.add('active');
+    }
+    for (let i = 1; i <= 3; i++) {
         const node = document.getElementById(`pnode${i}`);
-        if (!node) continue;
-        node.classList.remove('active','done');
-        if (i < step) node.classList.add('done');
-        if (i === step) node.classList.add('active');
+        if (!node) {
+            continue;
+        }
+        node.classList.remove('active', 'done');
+        if (i < step) {
+            node.classList.add('done');
+        }
+        if (i === step) {
+            node.classList.add('active');
+        }
     }
     const fill = document.getElementById('progressFill');
-    if (fill) fill.style.width = PROGRESS_MAP[step] + '%';
+    if (fill) {
+        fill.style.width = PROGRESS_MAP[step] + '%';
+    }
     const counter = document.getElementById('stepCounterText');
-    if (counter) counter.textContent = (typeof step === 'number') ? `Étape ${step} sur 3` : '✓ Terminé';
+    if (counter) {
+        counter.textContent = (typeof step === 'number') ? `Étape ${step} sur 3` : '✓ Terminé';
+    }
     currentStep = step;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -260,24 +380,28 @@ function goToStep(step) {
 // Début fonction initRadioCards
 function initRadioCards() {
     document.querySelectorAll('.radio-card').forEach(card => {
-        card.addEventListener('click', function() {
+        card.addEventListener('click', function () {
             const group = this.closest('.radio-cards');
             if (group) {
                 group.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
                 this.classList.add('selected');
                 const radio = this.querySelector('input[type="radio"]');
-                if (radio) radio.checked = true;
+                if (radio) {
+                    radio.checked = true;
+                }
             }
         });
     });
     document.querySelectorAll('.currency-card').forEach(card => {
-        card.addEventListener('click', function() {
+        card.addEventListener('click', function () {
             const grid = document.getElementById('currencyGrid');
             if (grid) {
                 grid.querySelectorAll('.currency-card').forEach(c => c.classList.remove('selected'));
                 this.classList.add('selected');
                 const radio = this.querySelector('input[type="radio"]');
-                if (radio) radio.checked = true;
+                if (radio) {
+                    radio.checked = true;
+                }
             }
         });
     });
@@ -292,37 +416,53 @@ function initPinInputs() {
         input.addEventListener('paste', handlePinPaste);
     });
 }
+
 function handlePinInput(e) {
     const input = e.target;
-    const val = input.value.replace(/\D/g,'');
+    const val = input.value.replace(/\D/g, '');
     input.value = val ? val[0] : '';
     input.classList.toggle('filled', !!input.value);
     if (input.value) {
         const group = input.dataset.group;
         const idx = parseInt(input.dataset.idx);
-        const next = document.querySelector(`.pin-box[data-group="${group}"][data-idx="${idx+1}"]`);
-        if (next) next.focus();
+        const next = document.querySelector(`.pin-box[data-group="${group}"][data-idx="${idx + 1}"]`);
+        if (next) {
+            next.focus();
+        }
     }
 }
+
 function handlePinKeydown(e) {
     const input = e.target;
     const group = input.dataset.group;
     const idx = parseInt(input.dataset.idx);
     if (e.key === 'Backspace' && !input.value && idx > 0) {
-        const prev = document.querySelector(`.pin-box[data-group="${group}"][data-idx="${idx-1}"]`);
-        if (prev) { prev.focus(); prev.value = ''; prev.classList.remove('filled'); }
+        const prev = document.querySelector(`.pin-box[data-group="${group}"][data-idx="${idx - 1}"]`);
+        if (prev) {
+            prev.focus();
+            prev.value = '';
+            prev.classList.remove('filled');
+        }
     }
 }
+
 function handlePinPaste(e) {
     e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
     const group = e.target.dataset.group;
     const inputs = document.querySelectorAll(`.pin-box[data-group="${group}"]`);
-    [...text.slice(0,6)].forEach((char, i) => { if(inputs[i]) { inputs[i].value = char; inputs[i].classList.add('filled'); } });
+    [...text.slice(0, 6)].forEach((char, i) => {
+        if (inputs[i]) {
+            inputs[i].value = char;
+            inputs[i].classList.add('filled');
+        }
+    });
 }
+
 function getPinValue(group) {
     return [...document.querySelectorAll(`.pin-box[data-group="${group}"]`)].map(i => i.value).join('');
 }
+
 function setPinError(group) {
     document.querySelectorAll(`.pin-box[data-group="${group}"]`).forEach(i => {
         i.classList.add('error');
@@ -336,15 +476,15 @@ async function hashPin(pin) {
     const salt = `hubisoccer_${userProfile.hubisoccer_id}_wallet`;
     const data = new TextEncoder().encode(pin + salt);
     const hash = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 // Fin fonction hashPin
 
 // Début fonction generateWalletRef
 function generateWalletRef(roleCode) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    const seg = () => Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
-    const roleTag = (roleCode || 'USR').slice(0,4).toUpperCase().padEnd(4,'X');
+    const seg = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    const roleTag = (roleCode || 'USR').slice(0, 4).toUpperCase().padEnd(4, 'X');
     return `HIS-${roleTag}-${seg()}-${seg()}`;
 }
 // Fin fonction generateWalletRef
@@ -356,21 +496,49 @@ async function activateWallet() {
     const pinHint = document.getElementById('pinHint');
     const cgu = document.getElementById('acceptCGU');
 
-    if (pin.length < 6) { showToast('Veuillez saisir un PIN de 6 chiffres', 'warning'); setPinError('create'); return; }
-    if (pinConf.length < 6) { showToast('Veuillez confirmer votre PIN', 'warning'); setPinError('confirm'); return; }
-    if (pin !== pinConf) { if(pinHint) pinHint.textContent = 'Les deux PIN ne correspondent pas.'; setPinError('create'); setPinError('confirm'); showToast('Les PIN ne correspondent pas', 'error'); return; }
-    if (!cgu?.checked) { showToast('Veuillez accepter les CGU', 'warning'); return; }
-    if (!userProfile) { showToast('Session expirée', 'error'); return; }
+    if (pin.length < 6) {
+        showToast('Veuillez saisir un PIN de 6 chiffres', 'warning');
+        setPinError('create');
+        return;
+    }
+    if (pinConf.length < 6) {
+        showToast('Veuillez confirmer votre PIN', 'warning');
+        setPinError('confirm');
+        return;
+    }
+    if (pin !== pinConf) {
+        if (pinHint) {
+            pinHint.textContent = 'Les deux PIN ne correspondent pas.';
+        }
+        setPinError('create');
+        setPinError('confirm');
+        showToast('Les PIN ne correspondent pas', 'error');
+        return;
+    }
+    if (!cgu?.checked) {
+        showToast('Veuillez accepter les CGU', 'warning');
+        return;
+    }
+    if (!userProfile) {
+        showToast('Session expirée', 'error');
+        return;
+    }
 
-    if(pinHint) pinHint.textContent = '';
+    if (pinHint) {
+        pinHint.textContent = '';
+    }
+
     const btn = document.querySelector('.btn-activate');
-    if(btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activation…'; }
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activation…';
+    }
     showLoader();
 
     try {
         const pinHash = await hashPin(pin);
         const accountType = document.querySelector('input[name="accountType"]:checked')?.value || 'personnel';
-        const currency = document.querySelector('input[name="currency"]:checked')?.value || 'EUR';
+        const currency = document.querySelector('input[name="currency"]:checked')?.value || 'XOF';
         const walletRef = generateWalletRef(userProfile.role_code);
         generatedWalletId = walletRef;
 
@@ -385,6 +553,7 @@ async function activateWallet() {
                 wallet_ref: walletRef,
                 balance: 0,
                 pending_balance: 0,
+                card_balance: 0,
                 currency: currency,
                 account_type: accountType,
                 pin_hash: pinHash,
@@ -393,7 +562,9 @@ async function activateWallet() {
                 created_at: new Date().toISOString()
             }]);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+            throw insertError;
+        }
 
         await supabaseClient.from('supabaseAuthPrive_notifications').insert([{
             recipient_hubisoccer_id: userProfile.hubisoccer_id,
@@ -406,69 +577,104 @@ async function activateWallet() {
 
         hideLoader();
         const walletDisplay = document.getElementById('walletIdDisplay');
-        if(walletDisplay) walletDisplay.textContent = walletRef;
+        if (walletDisplay) {
+            walletDisplay.textContent = walletRef;
+        }
         goToStep('success');
 
     } catch (err) {
         console.error(err);
         showToast('Erreur lors de l\'activation: ' + err.message, 'error');
-        if(btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-rocket"></i> Activer mon wallet'; }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rocket"></i> Activer mon wallet';
+        }
         hideLoader();
     }
 }
 // Fin fonction activateWallet
 
 // Début fonction goToDashboard
-function goToDashboard() { window.location.href = 'foot-revenus.html'; }
+function goToDashboard() {
+    window.location.href = 'foot-revenus.html';
+}
 // Fin fonction goToDashboard
 
 // Début fonction copyWalletId
 function copyWalletId() {
     const id = document.getElementById('walletIdDisplay')?.textContent;
-    if (!id) return;
+    if (!id) {
+        return;
+    }
     navigator.clipboard.writeText(id).then(() => showToast('Wallet ID copié !', 'success'));
 }
 // Fin fonction copyWalletId
 
 // Début fonctions CGU
-function openCGU(e) { e.preventDefault(); document.getElementById('cguModal')?.classList.add('open'); }
-function closeCGU(e) { if (e.target === document.getElementById('cguModal')) document.getElementById('cguModal')?.classList.remove('open'); }
+function openCGU(e) {
+    e.preventDefault();
+    document.getElementById('cguModal')?.classList.add('open');
+}
+
+function closeCGU(e) {
+    if (e.target === document.getElementById('cguModal')) {
+        document.getElementById('cguModal')?.classList.remove('open');
+    }
+}
+
 function acceptCGUFromModal() {
     const cguCheck = document.getElementById('acceptCGU');
-    if(cguCheck) cguCheck.checked = true;
+    if (cguCheck) {
+        cguCheck.checked = true;
+    }
     document.getElementById('cguModal')?.classList.remove('open');
     showToast('CGU acceptées', 'success');
 }
 // Fin fonctions CGU
 
 // ============================================================
-// NOUVELLES FONCTIONS AJOUTÉES POUR LA NAVBAR ET LA SIDEBAR
+// NAVBAR ET SIDEBAR
 // ============================================================
 
 // Début fonction initSidebar
 function initSidebar() {
-    const sidebar  = document.getElementById('leftSidebar');
-    const overlay  = document.getElementById('sidebarOverlay');
-    const menuBtn  = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('leftSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const menuBtn = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeLeftSidebar');
 
     function openSidebar() {
-        if (sidebar) sidebar.classList.add('active');
-        if (overlay) overlay.classList.add('active');
+        if (sidebar) {
+            sidebar.classList.add('active');
+        }
+        if (overlay) {
+            overlay.classList.add('active');
+        }
         document.body.style.overflow = 'hidden';
     }
 
     function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
+        if (sidebar) {
+            sidebar.classList.remove('active');
+        }
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
         document.body.style.overflow = '';
     }
 
-    if (menuBtn)  menuBtn.addEventListener('click', openSidebar);
-    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-    if (overlay)  overlay.addEventListener('click', closeSidebar);
+    if (menuBtn) {
+        menuBtn.addEventListener('click', openSidebar);
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSidebar);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
 
-    let touchStartX = 0, touchStartY = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
     const SWIPE_THRESHOLD = 55;
 
     document.addEventListener('touchstart', e => {
@@ -480,13 +686,22 @@ function initSidebar() {
         const dx = e.changedTouches[0].screenX - touchStartX;
         const dy = e.changedTouches[0].screenY - touchStartY;
 
-        if (Math.abs(dx) <= Math.abs(dy)) return;
-        if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+        if (Math.abs(dx) <= Math.abs(dy)) {
+            return;
+        }
+        if (Math.abs(dx) < SWIPE_THRESHOLD) {
+            return;
+        }
 
-        if (e.cancelable) e.preventDefault();
+        if (e.cancelable) {
+            e.preventDefault();
+        }
 
-        if (dx > 0 && touchStartX < 40) openSidebar();
-        else if (dx < 0) closeSidebar();
+        if (dx > 0 && touchStartX < 40) {
+            openSidebar();
+        } else if (dx < 0) {
+            closeSidebar();
+        }
     }, { passive: false });
 }
 // Fin fonction initSidebar
@@ -495,7 +710,9 @@ function initSidebar() {
 function initUserMenu() {
     const userMenu = document.getElementById('userMenu');
     const dropdown = document.getElementById('userDropdown');
-    if (!userMenu || !dropdown) return;
+    if (!userMenu || !dropdown) {
+        return;
+    }
 
     userMenu.addEventListener('click', e => {
         e.stopPropagation();
@@ -514,25 +731,37 @@ function initUserMenu() {
 
 // Début initialisation
 document.addEventListener('DOMContentLoaded', async () => {
+    initSidebar();
+    initUserMenu();
+
     const user = await checkSession();
-    if (!user) return;
+    if (!user) {
+        return;
+    }
 
     await loadProfile();
-    if (!userProfile) return;
+    if (!userProfile) {
+        return;
+    }
 
     const hasWallet = await checkExistingWallet();
-    if (hasWallet) return;
+    if (hasWallet) {
+        return;
+    }
 
     displayUserInfo();
     populateLanguageSelect();
     populateCurrencySelect();
     initPinInputs();
     initRadioCards();
-    
-    // NOUVEAUX APPELS AJOUTÉS
-    initSidebar();
-    initUserMenu();
 
+    // Mise à jour du badge de notifications (placeholder)
+    const badge = document.getElementById('notifBadge');
+    if (badge) {
+        badge.style.display = 'none';
+    }
+
+    // Exposer les fonctions globales
     window.goToStep = goToStep;
     window.activateWallet = activateWallet;
     window.goToDashboard = goToDashboard;

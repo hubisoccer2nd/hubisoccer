@@ -151,17 +151,23 @@ const CURRENCIES = [
 // Début fonctions utilitaires
 function showLoader() {
     const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
+    if (loader) {
+        loader.style.display = 'flex';
+    }
 }
 
 function hideLoader() {
     const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
+    if (loader) {
+        loader.style.display = 'none';
+    }
 }
 
 function showToast(message, type = 'info', duration = 30000) {
     const container = document.getElementById('toastContainer');
-    if (!container) return;
+    if (!container) {
+        return;
+    }
     const icons = {
         success: 'fa-check-circle',
         error: 'fa-exclamation-circle',
@@ -180,7 +186,9 @@ function showToast(message, type = 'info', duration = 30000) {
         </div>
     `;
     container.appendChild(toast);
-    setTimeout(() => toast.remove(), duration);
+    setTimeout(() => {
+        toast.remove();
+    }, duration);
 }
 
 function formatAmount(amount) {
@@ -196,7 +204,9 @@ function getCurrencySymbol(currencyCode) {
 }
 
 function getInitials(name) {
-    if (!name) return '?';
+    if (!name) {
+        return '?';
+    }
     const parts = name.trim().split(/\s+/);
     if (parts.length >= 2) {
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -213,13 +223,21 @@ function escHtml(s) {
 }
 
 function formatDate(iso, full = false) {
-    if (!iso) return '—';
+    if (!iso) {
+        return '—';
+    }
     const d = new Date(iso);
-    if (full) return d.toLocaleString('fr-FR');
+    if (full) {
+        return d.toLocaleString('fr-FR');
+    }
     const now = new Date();
     const diff = now - d;
-    if (diff < 60000) return 'À l\'instant';
-    if (diff < 3600000) return `Il y a ${Math.floor(diff / 60000)} min`;
+    if (diff < 60000) {
+        return 'À l\'instant';
+    }
+    if (diff < 3600000) {
+        return `Il y a ${Math.floor(diff / 60000)} min`;
+    }
     if (diff < 86400000) {
         return `Aujourd'hui ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
     }
@@ -239,23 +257,37 @@ function initSidebar() {
     const closeBtn = document.getElementById('closeLeftSidebar');
 
     function openSidebar() {
-        if (sidebar) sidebar.classList.add('active');
-        if (overlay) overlay.classList.add('active');
+        if (sidebar) {
+            sidebar.classList.add('active');
+        }
+        if (overlay) {
+            overlay.classList.add('active');
+        }
         document.body.style.overflow = 'hidden';
     }
 
     function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
+        if (sidebar) {
+            sidebar.classList.remove('active');
+        }
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
         document.body.style.overflow = '';
     }
 
-    if (menuBtn) menuBtn.addEventListener('click', openSidebar);
-    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-    if (overlay) overlay.addEventListener('click', closeSidebar);
+    if (menuBtn) {
+        menuBtn.addEventListener('click', openSidebar);
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSidebar);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+    }
 
-    let touchStartX = 0,
-        touchStartY = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
     const SWIPE_THRESHOLD = 55;
 
     document.addEventListener('touchstart', e => {
@@ -267,13 +299,22 @@ function initSidebar() {
         const dx = e.changedTouches[0].screenX - touchStartX;
         const dy = e.changedTouches[0].screenY - touchStartY;
 
-        if (Math.abs(dx) <= Math.abs(dy)) return;
-        if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+        if (Math.abs(dx) <= Math.abs(dy)) {
+            return;
+        }
+        if (Math.abs(dx) < SWIPE_THRESHOLD) {
+            return;
+        }
 
-        if (e.cancelable) e.preventDefault();
+        if (e.cancelable) {
+            e.preventDefault();
+        }
 
-        if (dx > 0 && touchStartX < 40) openSidebar();
-        else if (dx < 0) closeSidebar();
+        if (dx > 0 && touchStartX < 40) {
+            openSidebar();
+        } else if (dx < 0) {
+            closeSidebar();
+        }
     }, { passive: false });
 }
 // Fin fonction initSidebar
@@ -282,7 +323,9 @@ function initSidebar() {
 function initUserMenu() {
     const userMenu = document.getElementById('userMenu');
     const dropdown = document.getElementById('userDropdown');
-    if (!userMenu || !dropdown) return;
+    if (!userMenu || !dropdown) {
+        return;
+    }
 
     userMenu.addEventListener('click', e => {
         e.stopPropagation();
@@ -301,7 +344,9 @@ function updateNavbarAvatar() {
     const userInitials = document.getElementById('userAvatarInitials');
     const userName = document.getElementById('userName');
 
-    if (!userProfile) return;
+    if (!userProfile) {
+        return;
+    }
 
     if (userName) {
         userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
@@ -314,14 +359,18 @@ function updateNavbarAvatar() {
             userAvatar.src = avatarUrl;
             userAvatar.style.display = 'block';
         }
-        if (userInitials) userInitials.style.display = 'none';
+        if (userInitials) {
+            userInitials.style.display = 'none';
+        }
     } else {
         const initials = getInitials(userProfile.full_name || userProfile.display_name || 'U');
         if (userInitials) {
             userInitials.textContent = initials;
             userInitials.style.display = 'flex';
         }
-        if (userAvatar) userAvatar.style.display = 'none';
+        if (userAvatar) {
+            userAvatar.style.display = 'none';
+        }
     }
 }
 // Fin fonction updateNavbarAvatar
@@ -377,7 +426,9 @@ async function loadWallet() {
     hideLoader();
     if (!data || error) {
         showToast('Wallet non configuré. Redirection…', 'warning');
-        setTimeout(() => window.location.href = 'foot-revenus-setup.html', 1500);
+        setTimeout(() => {
+            window.location.href = 'foot-revenus-setup.html';
+        }, 1500);
         return null;
     }
     if (data.status === 'suspended') {
@@ -396,7 +447,9 @@ async function loadWallet() {
 
 // Début fonction loadBonusData
 async function loadBonusData() {
-    if (!userProfile) return;
+    if (!userProfile) {
+        return;
+    }
     const { data, error } = await supabaseClient
         .from('supabaseAuthPrive_bonus')
         .select('*')
@@ -419,7 +472,9 @@ async function loadBonusData() {
             }])
             .select()
             .single();
-        if (insErr) return;
+        if (insErr) {
+            return;
+        }
         bonusData = newB;
     } else {
         bonusData = data;
@@ -431,15 +486,23 @@ async function loadBonusData() {
 
 // Début fonction updateBonusUI
 function updateBonusUI() {
-    if (!bonusData) return;
+    if (!bonusData) {
+        return;
+    }
 
     const hommeEl = document.getElementById('bonusHomme');
     const primesEl = document.getElementById('bonusPrimes');
     const communityEl = document.getElementById('bonusCommunity');
 
-    if (hommeEl) hommeEl.textContent = bonusData.homme_match || 0;
-    if (primesEl) primesEl.textContent = bonusData.primes || 0;
-    if (communityEl) communityEl.textContent = bonusData.community || 0;
+    if (hommeEl) {
+        hommeEl.textContent = bonusData.homme_match || 0;
+    }
+    if (primesEl) {
+        primesEl.textContent = bonusData.primes || 0;
+    }
+    if (communityEl) {
+        communityEl.textContent = bonusData.community || 0;
+    }
 
     const totalBonus = (bonusData.homme_match || 0) +
         (bonusData.primes || 0) +
@@ -463,7 +526,9 @@ function updateBonusUI() {
 
 // Début fonction checkFollowerBonus
 async function checkFollowerBonus() {
-    if (!userProfile || !walletData || !bonusData) return;
+    if (!userProfile || !walletData || !bonusData) {
+        return;
+    }
     
     // 1. Obtenir le nombre réel de followers depuis la vue
     const { data: followerData, error: followerError } = await supabaseClient
@@ -509,7 +574,9 @@ async function checkFollowerBonus() {
 
 // Début fonction withdrawBonus
 async function withdrawBonus() {
-    if (!bonusData || !walletData) return;
+    if (!bonusData || !walletData) {
+        return;
+    }
 
     const total = (bonusData.homme_match || 0) +
         (bonusData.primes || 0) +
@@ -577,7 +644,9 @@ async function withdrawBonus() {
 
 // Début fonction renderCard
 function renderCard() {
-    if (!walletData || !userProfile) return;
+    if (!walletData || !userProfile) {
+        return;
+    }
 
     const sym = getCurrencySymbol(walletData.currency);
     const ref = walletData.wallet_ref || 'HIS-XXXX-XXXX-XXXX';
@@ -623,7 +692,9 @@ function renderCard() {
 
     ['sendCurrencyLabel', 'depositCurrencyLabel', 'withdrawCurrencyLabel', 'transferCardCurrencyLabel'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.textContent = sym;
+        if (el) {
+            el.textContent = sym;
+        }
     });
 
     drawSimpleQR(ref);
@@ -633,7 +704,9 @@ function renderCard() {
 // Début fonction drawSimpleQR
 function drawSimpleQR(data) {
     const canvas = document.getElementById('qrCanvas');
-    if (!canvas) return;
+    if (!canvas) {
+        return;
+    }
 
     const qr = qrcode(0, 'M');
     qr.addData(data);
@@ -662,7 +735,9 @@ function drawSimpleQR(data) {
 
 // Début fonction renderBalance
 function renderBalance() {
-    if (!walletData) return;
+    if (!walletData) {
+        return;
+    }
     const sym = getCurrencySymbol(walletData.currency);
 
     const bal = document.getElementById('balanceAmount');
@@ -697,7 +772,9 @@ function renderBalance() {
 
 // Début fonction computeMonthStats
 async function computeMonthStats() {
-    if (!walletData) return;
+    if (!walletData) {
+        return;
+    }
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
@@ -710,7 +787,9 @@ async function computeMonthStats() {
         .gte('created_at', start)
         .lte('created_at', end);
 
-    if (!data) return;
+    if (!data) {
+        return;
+    }
 
     const creditTypes = ['credit', 'transfer_in', 'deposit', 'gift', 'bonus'];
     const income = data
@@ -728,7 +807,9 @@ async function computeMonthStats() {
 
 // Début fonction transferToCard
 async function transferToCard() {
-    if (!walletData) return;
+    if (!walletData) {
+        return;
+    }
 
     const amountInput = document.getElementById('transferCardAmount');
     const amount = amountInput ? parseFloat(amountInput.value) : NaN;
@@ -788,7 +869,9 @@ async function transferToCard() {
 
 // Début fonction loadTransactions
 async function loadTransactions() {
-    if (!walletData) return;
+    if (!walletData) {
+        return;
+    }
     showTxSkeleton(true);
 
     const { data, error } = await supabaseClient
@@ -830,7 +913,9 @@ function applyFilter(filter) {
 // Début fonction filterTransactions
 function filterTransactions(filter, btn) {
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
+    if (btn) {
+        btn.classList.add('active');
+    }
     applyFilter(filter);
 }
 // Fin fonction filterTransactions
@@ -840,16 +925,24 @@ function renderTransactions() {
     const list = document.getElementById('txList');
     const empty = document.getElementById('txEmpty');
     const loadBtn = document.getElementById('btnLoadMore');
-    if (!list) return;
+    if (!list) {
+        return;
+    }
 
     list.querySelectorAll('.tx-item').forEach(el => el.remove());
 
     if (filteredTransactions.length === 0) {
-        if (empty) empty.classList.remove('hidden');
-        if (loadBtn) loadBtn.style.display = 'none';
+        if (empty) {
+            empty.classList.remove('hidden');
+        }
+        if (loadBtn) {
+            loadBtn.style.display = 'none';
+        }
         return;
     }
-    if (empty) empty.classList.add('hidden');
+    if (empty) {
+        empty.classList.add('hidden');
+    }
 
     const start = 0;
     const end = Math.min(TX_PAGE_SIZE * (txPage + 1), filteredTransactions.length);
@@ -948,7 +1041,9 @@ function showTxDetail(tx) {
     const body = document.getElementById('txDetailBody');
     const icon = document.getElementById('txDetailIcon');
     const sym = getCurrencySymbol(walletData?.currency);
-    if (!body) return;
+    if (!body) {
+        return;
+    }
 
     const creditTypes = ['credit', 'transfer_in', 'deposit', 'gift', 'bonus'];
     const isCredit = creditTypes.includes(tx.type);
@@ -995,7 +1090,9 @@ function showTxDetail(tx) {
 // Début fonction showTxSkeleton
 function showTxSkeleton(show) {
     const sk = document.getElementById('txSkeleton');
-    if (sk) sk.style.display = show ? 'flex' : 'none';
+    if (sk) {
+        sk.style.display = show ? 'flex' : 'none';
+    }
 }
 // Fin fonction showTxSkeleton
 
@@ -1025,7 +1122,7 @@ async function exportTransactionsToPDF() {
     ]);
 
     doc.autoTable({ head: headers, body: rows, startY: 40 });
-    doc.save(`hubisoccer_transactions_${walletData.wallet_ref}.pdf`);
+    doc.save(`hubisoccer_transactions_${walletData?.wallet_ref || 'export'}.pdf`);
     showToast('PDF généré avec succès', 'success');
 }
 // Fin fonction exportTransactionsToPDF
@@ -1038,7 +1135,9 @@ async function exportTransactionsToPDF() {
 function flipCard() {
     isCardFlipped = !isCardFlipped;
     const card = document.getElementById('hubisCard');
-    if (card) card.classList.toggle('flipped', isCardFlipped);
+    if (card) {
+        card.classList.toggle('flipped', isCardFlipped);
+    }
 }
 // Fin fonction flipCard
 
@@ -1049,14 +1148,33 @@ async function executeTransfer() {
     const note = document.getElementById('sendNote')?.value?.trim() || '';
     const pin = getPinValue('sendpin');
 
-    if (!recipientId) { showToast('Veuillez saisir un Wallet ID destinataire', 'warning'); return; }
-    if (!amountVal || amountVal < 100) { showToast('Montant minimum : 100 CFA', 'warning'); return; }
-    if (amountVal > (walletData?.balance || 0)) { showToast('Solde insuffisant', 'error'); return; }
-    if (pin.length < 6) { showToast('Saisissez votre PIN (6 chiffres)', 'warning'); return; }
-    if (recipientId === walletData?.wallet_ref) { showToast('Vous ne pouvez pas vous envoyer de fonds', 'warning'); return; }
+    if (!recipientId) {
+        showToast('Veuillez saisir un Wallet ID destinataire', 'warning');
+        return;
+    }
+    if (!amountVal || amountVal < 100) {
+        showToast('Montant minimum : 100 CFA', 'warning');
+        return;
+    }
+    if (amountVal > (walletData?.balance || 0)) {
+        showToast('Solde insuffisant', 'error');
+        return;
+    }
+    if (pin.length < 6) {
+        showToast('Saisissez votre PIN (6 chiffres)', 'warning');
+        return;
+    }
+    if (recipientId === walletData?.wallet_ref) {
+        showToast('Vous ne pouvez pas vous envoyer de fonds', 'warning');
+        return;
+    }
 
     const pinOk = await verifyPin(pin);
-    if (!pinOk) { showToast('PIN incorrect', 'error'); setPinError('sendpin'); return; }
+    if (!pinOk) {
+        showToast('PIN incorrect', 'error');
+        setPinError('sendpin');
+        return;
+    }
 
     const { data: recipWallet, error: rwErr } = await supabaseClient
         .from('supabaseAuthPrive_hubis_wallets')
@@ -1064,11 +1182,20 @@ async function executeTransfer() {
         .eq('wallet_ref', recipientId)
         .maybeSingle();
 
-    if (rwErr || !recipWallet) { showToast('Wallet destinataire introuvable', 'error'); return; }
-    if (recipWallet.status !== 'active') { showToast('Le wallet destinataire est inactif', 'error'); return; }
+    if (rwErr || !recipWallet) {
+        showToast('Wallet destinataire introuvable', 'error');
+        return;
+    }
+    if (recipWallet.status !== 'active') {
+        showToast('Le wallet destinataire est inactif', 'error');
+        return;
+    }
 
     const btn = document.querySelector('.send-confirm');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>…'; }
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>…';
+    }
     showLoader();
 
     try {
@@ -1132,7 +1259,10 @@ async function executeTransfer() {
         showToast('Erreur lors du transfert: ' + (err.message || ''), 'error');
         hideLoader();
     } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer'; }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer';
+        }
     }
 }
 // Fin fonction executeTransfer
@@ -1142,7 +1272,10 @@ async function executeDeposit() {
     const amount = parseFloat(document.getElementById('depositAmount')?.value);
     const method = document.querySelector('input[name="payMethod"]:checked')?.value || 'card';
 
-    if (!amount || amount < 100) { showToast('Montant minimum : 100 CFA', 'warning'); return; }
+    if (!amount || amount < 100) {
+        showToast('Montant minimum : 100 CFA', 'warning');
+        return;
+    }
 
     showLoader();
     try {
@@ -1193,46 +1326,95 @@ async function executeWithdraw() {
     const pin = getPinValue('wdpin');
     const sym = getCurrencySymbol(walletData?.currency);
 
-    if (!amount || amount < 500) { showToast('Montant minimum : 500 CFA', 'warning'); return; }
-    if (amount > (walletData?.balance || 0)) { showToast('Solde insuffisant', 'error'); return; }
-    if (pin.length < 6) { showToast('Saisissez votre PIN', 'warning'); return; }
+    if (!amount || amount < 500) {
+        showToast('Montant minimum : 500 CFA', 'warning');
+        return;
+    }
+    if (amount > (walletData?.balance || 0)) {
+        showToast('Solde insuffisant', 'error');
+        return;
+    }
+    if (pin.length < 6) {
+        showToast('Saisissez votre PIN', 'warning');
+        return;
+    }
 
     let details = '';
     if (method === 'transfer') {
         const iban = document.getElementById('withdrawIBAN')?.value?.trim().replace(/\s/g, '');
         const bic = document.getElementById('withdrawBIC')?.value?.trim();
         const holder = document.getElementById('withdrawAccountHolder')?.value?.trim();
-        if (!iban || iban.length < 15) { showToast('IBAN invalide', 'warning'); return; }
-        if (!bic) { showToast('Veuillez saisir le BIC/SWIFT', 'warning'); return; }
-        if (!holder) { showToast('Veuillez saisir le nom du titulaire', 'warning'); return; }
+        if (!iban || iban.length < 15) {
+            showToast('IBAN invalide', 'warning');
+            return;
+        }
+        if (!bic) {
+            showToast('Veuillez saisir le BIC/SWIFT', 'warning');
+            return;
+        }
+        if (!holder) {
+            showToast('Veuillez saisir le nom du titulaire', 'warning');
+            return;
+        }
         details = `Virement - IBAN ${iban.slice(0, 4)}****${iban.slice(-4)} - BIC ${bic} - ${holder}`;
     } else if (method === 'mobile') {
         const phone = document.getElementById('withdrawMobilePhone')?.value?.trim();
         const network = document.getElementById('withdrawMobileNetwork')?.value;
         const holder = document.getElementById('withdrawMobileHolder')?.value?.trim();
         const hubID = document.getElementById('withdrawMobileHubID')?.value?.trim().toUpperCase();
-        if (!phone) { showToast('Numéro de téléphone requis', 'warning'); return; }
-        if (!network) { showToast('Veuillez choisir un réseau', 'warning'); return; }
-        if (!holder) { showToast('Nom du titulaire requis', 'warning'); return; }
-        if (!hubID) { showToast('ID HubISoccer requis', 'warning'); return; }
+        if (!phone) {
+            showToast('Numéro de téléphone requis', 'warning');
+            return;
+        }
+        if (!network) {
+            showToast('Veuillez choisir un réseau', 'warning');
+            return;
+        }
+        if (!holder) {
+            showToast('Nom du titulaire requis', 'warning');
+            return;
+        }
+        if (!hubID) {
+            showToast('ID HubISoccer requis', 'warning');
+            return;
+        }
         details = `Mobile Money (${network}) - ${phone} - ${holder} - ID: ${hubID}`;
     } else {
         const phone = document.getElementById('withdrawEWalletPhone')?.value?.trim();
         const holder = document.getElementById('withdrawEWalletHolder')?.value?.trim();
         const email = document.getElementById('withdrawEWalletEmail')?.value?.trim();
         const hubID = document.getElementById('withdrawEWalletHubID')?.value?.trim().toUpperCase();
-        if (!phone) { showToast('Numéro de téléphone / ID compte requis', 'warning'); return; }
-        if (!holder) { showToast('Nom du titulaire requis', 'warning'); return; }
-        if (!email) { showToast('Adresse email requise', 'warning'); return; }
-        if (!hubID) { showToast('ID HubISoccer requis', 'warning'); return; }
+        if (!phone) {
+            showToast('Numéro de téléphone / ID compte requis', 'warning');
+            return;
+        }
+        if (!holder) {
+            showToast('Nom du titulaire requis', 'warning');
+            return;
+        }
+        if (!email) {
+            showToast('Adresse email requise', 'warning');
+            return;
+        }
+        if (!hubID) {
+            showToast('ID HubISoccer requis', 'warning');
+            return;
+        }
         details = `${method.toUpperCase()} - ${phone} - ${holder} - ${email} - ID: ${hubID}`;
     }
 
     const pinOk = await verifyPin(pin);
-    if (!pinOk) { showToast('PIN incorrect', 'error'); setPinError('wdpin'); return; }
+    if (!pinOk) {
+        showToast('PIN incorrect', 'error');
+        setPinError('wdpin');
+        return;
+    }
 
     const btn = document.querySelector('.withdraw-confirm');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>…'; }
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>…';
+    }
     showLoader();
 
     try {
@@ -1272,7 +1454,10 @@ async function executeWithdraw() {
         showToast('Erreur retrait', 'error');
         hideLoader();
     } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-money-bill-transfer"></i> Retirer'; }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-money-bill-transfer"></i> Retirer';
+        }
     }
 }
 // Fin fonction executeWithdraw
@@ -1283,7 +1468,9 @@ async function executeWithdraw() {
 
 // Début fonction fetchNotifications
 async function fetchNotifications() {
-    if (!userProfile) return [];
+    if (!userProfile) {
+        return [];
+    }
     const { data } = await supabaseClient
         .from('supabaseAuthPrive_notifications')
         .select('*')
@@ -1296,7 +1483,9 @@ async function fetchNotifications() {
 
 // Début fonction updateNotificationBadge
 async function updateNotificationBadge() {
-    if (!userProfile) return;
+    if (!userProfile) {
+        return;
+    }
     const { count } = await supabaseClient
         .from('supabaseAuthPrive_notifications')
         .select('*', { count: 'exact', head: true })
@@ -1314,7 +1503,9 @@ async function updateNotificationBadge() {
 // Début fonction renderNotificationList
 async function renderNotificationList() {
     const list = document.getElementById('notifList');
-    if (!list) return;
+    if (!list) {
+        return;
+    }
     const notifs = await fetchNotifications();
     if (notifs.length === 0) {
         list.innerHTML = '<p class="notif-placeholder">Aucune notification</p>';
@@ -1362,7 +1553,9 @@ async function markNotificationRead(id) {
 
 // Début fonction markAllNotificationsRead
 async function markAllNotificationsRead() {
-    if (!userProfile) return;
+    if (!userProfile) {
+        return;
+    }
     await supabaseClient
         .from('supabaseAuthPrive_notifications')
         .update({ read: true })
@@ -1377,13 +1570,17 @@ async function markAllNotificationsRead() {
 // Début fonction showNotificationModal
 function showNotificationModal(title, message, link) {
     const modal = document.getElementById('notificationModal');
-    if (!modal) return;
+    if (!modal) {
+        return;
+    }
     document.getElementById('notifModalTitle').textContent = title;
     document.getElementById('notifModalMessage').textContent = message;
     const btn = document.getElementById('notifActionBtn');
     if (link) {
         btn.style.display = 'inline-flex';
-        btn.onclick = () => { window.location.href = link; };
+        btn.onclick = () => {
+            window.location.href = link;
+        };
     } else {
         btn.style.display = 'none';
     }
@@ -1393,7 +1590,9 @@ function showNotificationModal(title, message, link) {
 
 // Début fonction subscribeToRealtimeNotifications
 function subscribeToRealtimeNotifications() {
-    if (!userProfile || notificationSubscription) return;
+    if (!userProfile || notificationSubscription) {
+        return;
+    }
     notificationSubscription = supabaseClient
         .channel('notifications')
         .on('postgres_changes', {
@@ -1422,13 +1621,19 @@ function initNotificationUI() {
         icon.addEventListener('click', e => {
             e.stopPropagation();
             dropdown.classList.toggle('show');
-            if (dropdown.classList.contains('show')) renderNotificationList();
+            if (dropdown.classList.contains('show')) {
+                renderNotificationList();
+            }
         });
     }
     document.addEventListener('click', e => {
-        if (!e.target.closest('.notif-wrapper')) dropdown.classList.remove('show');
+        if (!e.target.closest('.notif-wrapper')) {
+            dropdown.classList.remove('show');
+        }
     });
-    if (markAll) markAll.addEventListener('click', markAllNotificationsRead);
+    if (markAll) {
+        markAll.addEventListener('click', markAllNotificationsRead);
+    }
 
     document.getElementById('closeNotifModal')?.addEventListener('click', () => closeModal('notificationModal'));
     document.getElementById('closeNotifModalBtn')?.addEventListener('click', () => closeModal('notificationModal'));
@@ -1457,7 +1662,9 @@ function handlePinInput(e) {
         const group = input.dataset.group;
         const idx = parseInt(input.dataset.idx);
         const next = document.querySelector(`.pin-box-sm[data-group="${group}"][data-idx="${idx + 1}"]`);
-        if (next) next.focus();
+        if (next) {
+            next.focus();
+        }
     }
 }
 
@@ -1494,7 +1701,9 @@ function clearModalPins() {
 
 // Début fonction verifyPin
 async function verifyPin(pin) {
-    if (!userProfile || !walletData) return false;
+    if (!userProfile || !walletData) {
+        return false;
+    }
     const salt = `hubisoccer_${userProfile.hubisoccer_id}_wallet`;
     const data = new TextEncoder().encode(pin + salt);
     const hash = await crypto.subtle.digest('SHA-256', data);
@@ -1515,13 +1724,19 @@ function generateRef(prefix) {
 let lookupTimeout = null;
 function setupRecipientLookup() {
     const input = document.getElementById('sendRecipientId');
-    if (!input) return;
+    if (!input) {
+        return;
+    }
     input.addEventListener('input', () => {
         clearTimeout(lookupTimeout);
         const val = input.value.trim().toUpperCase();
         const preview = document.getElementById('recipientPreview');
-        if (preview) preview.classList.add('hidden');
-        if (val.length < 15) return;
+        if (preview) {
+            preview.classList.add('hidden');
+        }
+        if (val.length < 15) {
+            return;
+        }
         lookupTimeout = setTimeout(() => lookupRecipient(val), 600);
     });
 }
@@ -1535,17 +1750,24 @@ async function lookupRecipient(walletRef) {
         .maybeSingle();
 
     const preview = document.getElementById('recipientPreview');
-    if (!data || !preview) return;
+    if (!data || !preview) {
+        return;
+    }
 
     const profile = data.supabaseAuthPrive_profiles;
-    if (!profile) return;
+    if (!profile) {
+        return;
+    }
 
     document.getElementById('rpName').textContent = profile.full_name || 'Utilisateur';
     document.getElementById('rpRole').textContent = ROLE_LABEL[profile.role_code] || profile.role_code;
     const av = preview.querySelector('.rp-avatar');
     if (av) {
-        if (profile.avatar_url) av.innerHTML = `<img src="${profile.avatar_url}" alt="">`;
-        else av.innerHTML = `<i class="fas fa-user"></i>`;
+        if (profile.avatar_url) {
+            av.innerHTML = `<img src="${profile.avatar_url}" alt="">`;
+        } else {
+            av.innerHTML = `<i class="fas fa-user"></i>`;
+        }
     }
     preview.classList.remove('hidden');
 }
@@ -1561,7 +1783,9 @@ function formatIBAN(input) {
 // Début fonction setDepositAmount
 function setDepositAmount(val) {
     const inp = document.getElementById('depositAmount');
-    if (inp) inp.value = val;
+    if (inp) {
+        inp.value = val;
+    }
     document.querySelectorAll('.da-btn').forEach(b => {
         b.classList.toggle('selected', parseInt(b.textContent) === val);
     });
@@ -1577,7 +1801,9 @@ function initPaymentMethodCards() {
                 group.querySelectorAll('.pm-card').forEach(c => c.classList.remove('selected'));
                 this.classList.add('selected');
                 const radio = this.querySelector('input[type="radio"]');
-                if (radio) radio.checked = true;
+                if (radio) {
+                    radio.checked = true;
+                }
             }
         });
     });
@@ -1591,9 +1817,15 @@ function toggleWithdrawFields() {
     const mobileFields = document.getElementById('mobileMoneyFields');
     const eWalletFields = document.getElementById('eWalletFields');
 
-    if (transferFields) transferFields.style.display = method === 'transfer' ? 'block' : 'none';
-    if (mobileFields) mobileFields.style.display = method === 'mobile' ? 'block' : 'none';
-    if (eWalletFields) eWalletFields.style.display = (method === 'feexpay' || method === 'fedaypay') ? 'block' : 'none';
+    if (transferFields) {
+        transferFields.style.display = method === 'transfer' ? 'block' : 'none';
+    }
+    if (mobileFields) {
+        mobileFields.style.display = method === 'mobile' ? 'block' : 'none';
+    }
+    if (eWalletFields) {
+        eWalletFields.style.display = (method === 'feexpay' || method === 'fedaypay') ? 'block' : 'none';
+    }
 }
 // Fin fonction toggleWithdrawFields
 
@@ -1608,65 +1840,47 @@ function initWithdrawMethodListeners() {
 
 // Début fonction openModal
 function openModal(id) {
-  const m = document.getElementById(id);
-  if (m) m.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  
-  // Si on ouvre la modale de retrait, forcer la mise à jour des champs
-  if (id === 'withdrawModal') {
-    // Attendre que la modale soit rendue, puis exécuter
-    setTimeout(() => {
-      toggleWithdrawFields();
-    }, 50);
-  }
+    const m = document.getElementById(id);
+    if (m) {
+        m.classList.add('open');
+    }
+    document.body.style.overflow = 'hidden';
+    
+    if (id === 'withdrawModal') {
+        setTimeout(() => {
+            toggleWithdrawFields();
+        }, 50);
+    }
 }
 // Fin fonction openModal
 
 // Début fonction closeModal
 function closeModal(id) {
     const m = document.getElementById(id);
-    if (m) m.classList.remove('open');
+    if (m) {
+        m.classList.remove('open');
+    }
     document.body.style.overflow = '';
 }
 // Fin fonction closeModal
 
 // Début fonction closeModalOutside
 function closeModalOutside(e, id) {
-    if (e.target === document.getElementById(id)) closeModal(id);
+    if (e.target === document.getElementById(id)) {
+        closeModal(id);
+    }
 }
 // Fin fonction closeModalOutside
 
 // Début fonction copyField
 function copyField(id) {
     const el = document.getElementById(id);
-    if (!el) return;
+    if (!el) {
+        return;
+    }
     navigator.clipboard.writeText(el.textContent.trim()).then(() => showToast('Copié !', 'success'));
 } 
 // Fin fonction copyField
-
-// Début fonction refreshData
-async function refreshData() {
-    const icon = document.getElementById('refreshIcon');
-    if (icon) icon.closest('button').classList.add('spinning');
-    await loadWallet();
-    if (walletData) {
-        renderCard();
-        renderBalance();
-        await loadBonusData();
-        await loadTransactions();
-        await computeMonthStats();
-        updateNotificationBadge();
-    }
-    if (icon) icon.closest('button').classList.remove('spinning');
-    showToast('Données actualisées', 'success');
-}
-// Fin fonction refreshData
-
-// Début fonction openSettings
-function openSettings() {
-    openModal('settingsModal');
-}
-// Fin fonction openSettings
 
 // Début fonction confirmSuspendWallet
 async function confirmSuspendWallet() {
@@ -1694,13 +1908,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     initNotificationUI();
 
     const user = await checkSession();
-    if (!user) return;
+    if (!user) {
+        return;
+    }
 
     await loadProfile();
-    if (!userProfile) return;
+    if (!userProfile) {
+        return;
+    }
 
     const wallet = await loadWallet();
-    if (!wallet) return;
+    if (!wallet) {
+        return;
+    }
 
     renderCard();
     renderBalance();
@@ -1727,8 +1947,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.setDepositAmount = setDepositAmount;
     window.formatIBAN = formatIBAN;
     window.copyField = copyField;
-    window.refreshData = refreshData;
-    window.openSettings = openSettings;
     window.confirmSuspendWallet = confirmSuspendWallet;
     window.showToast = showToast;
     window.withdrawBonus = withdrawBonus;

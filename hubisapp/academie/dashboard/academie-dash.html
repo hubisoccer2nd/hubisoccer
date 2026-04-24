@@ -1,1 +1,273 @@
-
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Espace Académie Sportive · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="academie-dash.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-school"></i> Espace Académie Sportive</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/academie-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/academie-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-school"></i><h3>Menu Académie Sportive</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="academie-dash.html" class="active">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../verification/academie-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../athletes/academie-athletes.html">
+            <i class="fas fa-user-graduate"></i><span>Mes Athlètes</span>
+        </a>
+        <a href="../formateurs/academie-formateurs.html">
+            <i class="fas fa-chalkboard-teacher"></i><span>Mes Formateurs</span>
+        </a>
+        <a href="../programme/academie-prog.html">
+            <i class="fas fa-calendar"></i><span>Programmes</span>
+        </a>
+        <a href="../competitions/academie-compet.html">
+            <i class="fas fa-trophy"></i><span>Compétitions</span>
+        </a>
+        <a href="../stats/academie-stats.html">
+            <i class="fas fa-chart-bar"></i><span>Statistiques</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/academie-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<main class="dashboard-main">
+<div class="dashboard-container">
+    <aside class="profile-card glass-card">
+        <div class="avatar-upload" onclick="triggerUpload()">
+            <div id="profileAvatarContainer" class="avatar-container">
+                <img src="" id="profileDisplay" alt="Avatar" style="display:none;">
+                <div class="profile-initials" id="profileDisplayInitials"></div>
+            </div>
+            <div class="edit-badge"><i class="fas fa-camera"></i></div>
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        </div>
+        <button id="deleteAvatarBtn" class="btn-delete-avatar" style="display:none;">
+            <i class="fas fa-trash-alt"></i> Supprimer la photo
+        </button>
+        <h2 id="dashboardName">—</h2>
+        <div class="academie-pseudo"><i class="fas fa-school"></i><span id="academiePseudo">—</span></div>
+        <div class="academie-contact">
+            <p><i class="fas fa-phone-alt"></i> <span id="academiePhone">—</span></p>
+            <p><i class="fas fa-envelope"></i> <span id="academieEmail">—</span></p>
+            <p><i class="fas fa-flag"></i> <span id="academieCountryFlag">🌍</span> <span id="academieCountryName">—</span></p>
+        </div>
+        <p class="role-badge">Académie Sportive</p>
+        <div class="id-copy-box" onclick="copyID()">
+            <i class="fas fa-id-card"></i><span id="academieID">ID : —</span><i class="fas fa-copy copy-icon"></i>
+        </div>
+        <div class="stats-mini-container">
+            <button class="mini-stat-btn" onclick="location.href='../verification/academie-verif.html'">
+                <i class="fas fa-chart-pie"></i>
+                <span class="mini-stat-value" id="profileCompletion">0</span>%
+                <span class="mini-stat-label">Profil complété</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-binoculars"></i>
+                <span class="mini-stat-value" id="scoutingViews">0</span>
+                <span class="mini-stat-label">Vues profil</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-star"></i>
+                <span class="mini-stat-value" id="recruiterFavs">0</span>
+                <span class="mini-stat-label">Favoris</span>
+            </button>
+        </div>
+        <a href="../cv/academie-cv.html" class="btn-download-cv">
+            <i class="fas fa-file-pdf"></i> Télécharger mon CV PDF
+        </a>
+    </aside>
+    <div class="main-panel">
+        <div class="academie-header glass-card">
+            <div class="academie-header-left">
+                <h1 id="academieFullName">—</h1>
+                <p class="academie-position" id="academiePosition">Type d'académie non renseigné</p>
+            </div>
+            <div class="academie-header-right">
+                <div class="academie-basic-info">
+                    <span><i class="fas fa-birthday-cake"></i> <span id="academieAge">—</span> ans</span>
+                    <span><i class="fas fa-globe-africa"></i> <span id="academieNationality">—</span></span>
+                    <span><i class="fas fa-school"></i> <span id="academieSpecialite">—</span></span>
+                    <span><i class="fas fa-building"></i> <span id="academieClub">—</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="global-stats-grid">
+            <div class="stat-card-global"><div class="stat-card-label">ATHLÈTES INSCRITS</div><div class="stat-card-value" id="nbAthletes">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">FORMATEURS ACTIFS</div><div class="stat-card-value" id="nbFormateurs">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">DIPLÔMÉS PROFESSIONNELS PRODUITS</div><div class="stat-card-value" id="nbDiplomes">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">SPORTS ENSEIGNÉS</div><div class="stat-card-value" id="nbSports">—</div></div>
+        </div>
+        <div class="info-contrat glass-card">
+            <h3 class="section-title"><i class="fas fa-file-contract"></i> Situation contractuelle</h3>
+            <div class="info-contrat-grid">
+                <div class="info-item"><span class="info-label"><i class="fas fa-coins"></i> Salaire / Honoraires</span><span class="info-value" id="salary">—</span></div>
+                <div class="info-item"><span class="info-label"><i class="fas fa-calendar-times"></i> Expire le</span><span class="info-value" id="contractExpiry">—</span></div>
+                <div class="info-item"><span class="info-label"><i class="fas fa-chart-line"></i> Évaluation / Cote</span><span class="info-value" id="marketValue">—</span></div>
+                <div class="info-item"><span class="info-label"><i class="fas fa-id-badge"></i> Statut professionnel</span><span class="info-value" id="statutPro">—</span></div>
+            </div>
+        </div>
+        <div class="main-skills glass-card">
+            <h3 class="section-title"><i class="fas fa-chart-bar"></i> Compétences principales</h3>
+            <div class="skills-grid">
+                    <div class="skill-item"><span class="skill-label">Encadrement pédagogique</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_enc" style="width:0%"></div></div><span class="skill-value" id="skill_enc_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Programme de formation</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_prog" style="width:0%"></div></div><span class="skill-value" id="skill_prog_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Qualité infrastructure</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_infra" style="width:0%"></div></div><span class="skill-value" id="skill_infra_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Recrutement talents</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_rec" style="width:0%"></div></div><span class="skill-value" id="skill_rec_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Suivi individuel athlète</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_suivi" style="width:0%"></div></div><span class="skill-value" id="skill_suivi_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Partenariats</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_part" style="width:0%"></div></div><span class="skill-value" id="skill_part_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Organisation compétitions</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_comp" style="width:0%"></div></div><span class="skill-value" id="skill_comp_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Performance & Résultats</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_result" style="width:0%"></div></div><span class="skill-value" id="skill_result_value">0</span></div>
+            </div>
+        </div>
+        <div class="attributes-section glass-card">
+            <h3 class="section-title"><i class="fas fa-list-ul"></i> Profil détaillé — Corps · Âme · Esprit</h3>
+            <div class="attributes-tabs">
+                    <button class="attr-tab active" data-cat="competences"><i class="fas fa-school"></i> Esprit — Compétences Académie</button>
+                    <button class="attr-tab" data-cat="activite"><i class="fas fa-chart-bar"></i> Âme — Activité & Statistiques</button>
+                    <button class="attr-tab" data-cat="contrat"><i class="fas fa-file-contract"></i> Corps — Agrément & Structure</button>
+            </div>
+                <div id="competences-attrs" class="attr-content active">
+                    <div class="attr-grid">
+                        <div class="attr-item"><span class="attr-name">Encadrement pédagogique</span><span class="attr-value" id="cp_enc">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Programme de formation</span><span class="attr-value" id="cp_pro">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Qualité des infrastructures</span><span class="attr-value" id="cp_inf">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Recrutement de talents</span><span class="attr-value" id="cp_rec">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Suivi individualisé</span><span class="attr-value" id="cp_sui">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Partenariats institutionnels</span><span class="attr-value" id="cp_par">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Organisation compétitions</span><span class="attr-value" id="cp_com">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Double projet scolaire</span><span class="attr-value" id="cp_dou">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Communication externe</span><span class="attr-value" id="cp_coe">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Gestion administrative</span><span class="attr-value" id="cp_adm">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Innovation pédagogique</span><span class="attr-value" id="cp_inn">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Performance & Résultats</span><span class="attr-value" id="cp_per">0</span></div>
+                    </div>
+                </div>
+                <div id="activite-attrs" class="attr-content">
+                    <div class="attr-grid">
+                        <div class="attr-item"><span class="attr-name">Athlètes inscrits (total)</span><span class="attr-value" id="ac_ath">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Formateurs actifs</span><span class="attr-value" id="ac_for">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Diplômés professionnels produits</span><span class="attr-value" id="ac_dip">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Sports enseignés</span><span class="attr-value" id="ac_spo">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Budget annuel (€)</span><span class="attr-value" id="ac_bud">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Taux réussite scolaire (%)</span><span class="attr-value" id="ac_sco">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Athlètes professionnels formés</span><span class="attr-value" id="ac_pro">0</span></div>
+                    </div>
+                </div>
+                <div id="contrat-attrs" class="attr-content">
+                    <div class="attr-grid">
+                        <div class="attr-item"><span class="attr-name">Fédération affiliée</span><span class="attr-value" id="co_fed">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Division sportive</span><span class="attr-value" id="co_div">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Date d'agrément</span><span class="attr-value" id="co_agr">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Expiration agrément</span><span class="attr-value" id="co_exp">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Accréditations</span><span class="attr-value" id="co_acc">0</span></div>
+                        <div class="attr-item"><span class="attr-name">N° Agrément officiel</span><span class="attr-value" id="co_num">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Statut juridique</span><span class="attr-value" id="co_sta">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Présentation académie</span><span class="attr-value" id="co_pre">0</span></div>
+                    </div>
+                </div>
+        </div>
+        <div class="reports-section glass-card">
+            <h3 class="section-title"><i class="fas fa-file-signature"></i> Notes & Évaluations</h3>
+            <div class="reports-body">
+                <p id="scoutingReports" class="reports-text">Aucune note pour le moment.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+<div id="toastContainer" class="toast-container"></div>
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-school"></i> Ministère Sport · APDP Bénin</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Esprit</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<script src="academie-dash.js"></script>
+</body>
+</html>

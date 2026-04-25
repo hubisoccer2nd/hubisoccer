@@ -181,9 +181,9 @@ function updateSimulation() {
     const simSportifs = document.getElementById('simSportifs');
     const simVentes = document.getElementById('simVentes');
     const simMixte = document.getElementById('simMixte');
-    if (simSportifs) simSportifs.textContent = (10 * 5000).toLocaleString(); // 10 sportifs * 5000 FCFA * 10% = 5000
-    if (simVentes) simVentes.textContent = (25 * 5000 * 0.04).toLocaleString(); // 25 ventes * 5000 FCFA * 4% = 5000
-    if (simMixte) simMixte.textContent = (15 * 5000 * 0.10 + 20 * 5000 * 0.04).toLocaleString();
+    if (simSportifs) simSportifs.textContent = (10 * 500).toLocaleString(); // 10 sportifs * 500 FCFA * 10% = 500
+    if (simVentes) simVentes.textContent = (25 * 2500 * 0.04).toLocaleString(); // 25 ventes * 5000 FCFA * 4% = 5000
+    if (simMixte) simMixte.textContent = (15 * 500 * 0.10 + 20 * 2500 * 0.04).toLocaleString();
 }
 
 // ========== AFFILIATION FORM ==========

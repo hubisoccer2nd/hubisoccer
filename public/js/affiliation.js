@@ -7,14 +7,13 @@ const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
-        'nav.home': 'Accueil',
-        'nav.scouting': 'Scouting',
-        'nav.process': 'Processus',
-        'nav.affiliation': 'Affiliation',
-        'nav.actors': 'Devenir acteur',
-        'nav.tournoi': 'Tournois',
-        'nav.community': 'Community',
-        'nav.market': 'Market',
+        'nav.scouting': 'SCOUTING',
+        'nav.process': 'PROCESSUS',
+        'nav.affiliation': 'AFFILIATION',
+        'nav.actors': 'DEVENIR ACTEUR',
+        'nav.tournoi': 'TOURNOIS PUBLIC',
+        'nav.community': 'HUB COMMUNITY',
+        'nav.market': 'E-MARKET-HUBISOCCER',
         'nav.login': 'Connexion',
         'nav.signup': 'Inscription',
         'affiliation.header.title': 'Programme Ambassadeur',
@@ -74,7 +73,6 @@ const translations = {
     },
     en: {
         'loader.message': 'Loading...',
-        'nav.home': 'Home',
         'nav.scouting': 'Scouting',
         'nav.process': 'Process',
         'nav.affiliation': 'Affiliation',
@@ -181,7 +179,7 @@ function updateSimulation() {
     const simSportifs = document.getElementById('simSportifs');
     const simVentes = document.getElementById('simVentes');
     const simMixte = document.getElementById('simMixte');
-    if (simSportifs) simSportifs.textContent = (10 * 500 * 0,10).toLocaleString(); // 10 sportifs * 500 FCFA * 10% = 500
+    if (simSportifs) simSportifs.textContent = (10 * 500 * 0.10).toLocaleString(); // 10 sportifs * 500 FCFA * 10% = 500
     if (simVentes) simVentes.textContent = (25 * 2500 * 0.04).toLocaleString(); // 25 ventes * 2500 FCFA * 4% = 2500
     if (simMixte) simMixte.textContent = (15 * 500 * 0.10 + 20 * 2500 * 0.04).toLocaleString();
 }

@@ -127,6 +127,7 @@ document.addEventListener('click', function(e) {
 
 // ===== GESTION DES LANGUES (traductions intégrées) =====
 const translations = {
+    // ========== FRANÇAIS ==========
     fr: {
         titre_page: "HubISoccer | Le talent de la rue, le futur du football",
         sport_etudes: "Sport + Études + Métier",
@@ -140,7 +141,7 @@ const translations = {
         footer_conformite: "Conformité APDP Bénin",
         footer_reglementation: "Règlementation FIFA",
         footer_Triple_projet: "Triple Projet Sport-Études",
-        contact_tel: "📞 +2290195973157",
+        contact_tel: "📞 +229 01 95 97 31 57",
         contact_email: "📧 contacthubisoccer@gmail.com",
         rccm: "RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236",
         copyright: "© 2026 HubISoccer - Ozawa. Tous droits réservés.",
@@ -151,11 +152,14 @@ const translations = {
         scouting: "SCOUTING",
         processus: "PROCESSUS",
         affiliation: "AFFILIATION",
-        acteur: "DEVENEZ UN ACTEUR",
-        artiste: "DEVENEZ UN ARTISTE"
-        tournoi_public: "TOURNOI PUBLIC"
-
+        premier_pas: "PREMIER-PAS",
+        acteurs: "DEVENEZ UN ACTEUR",
+        artiste: "DEVENEZ UN ARTISTE",
+        tournoi_public: "TOURNOI PUBLIC",
+        esp: "SAVOIR+"
     },
+
+    // ========== ANGLAIS ==========
     en: {
         titre_page: "HubISoccer | Street talent, the future of football",
         sport_etudes: "Sport + Studies + Career",
@@ -169,7 +173,7 @@ const translations = {
         footer_conformite: "APDP Benin Compliance",
         footer_reglementation: "FIFA Regulations",
         footer_Triple_projet: "Triple Sport-Study Project",
-        contact_tel: "📞+2290195973157",
+        contact_tel: "📞 +229 01 95 97 31 57",
         contact_email: "📧 contacthubisoccer@gmail.com",
         rccm: "RCCM: RB/ABC/24 A 111814 | TIN: 0201910800236",
         copyright: "© 2026 HubISoccer - Ozawa. All rights reserved.",
@@ -180,9 +184,14 @@ const translations = {
         scouting: "Scouting",
         processus: "Process",
         affiliation: "AFFILIATION",
-        parrain: "SPONSOR",
-        tournoi_public: "Public Tournament"
+        premier_pas: "FIRST STEP",
+        acteurs: "BECOME AN ACTOR",
+        artiste: "BECOME AN ARTIST",
+        tournoi_public: "Public Tournament",
+        esp: "LEARN MORE"
     },
+
+    // ========== YORÙBÁ ==========
     yo: {
         titre_page: "HubISoccer | Talent ita, ọjọ iwaju bọọlu",
         sport_etudes: "Idaraya + Ẹkọ + Iṣẹ",
@@ -196,7 +205,7 @@ const translations = {
         footer_conformite: "Ifaramọ APDP Benin",
         footer_reglementation: "Awọn ilana FIFA",
         footer_Triple_projet: "Ise agbese Idaraya-Ẹkọ Meji",
-        contact_tel: "📞 +2290195973157",
+        contact_tel: "📞 +229 01 95 97 31 57",
         contact_email: "📧 contacthubisoccer@gmail.com",
         rccm: "RCCM: RB/ABC/24 A 111814 | IFU: 0201910800236",
         copyright: "© 2026 HubISoccer - Ozawa. Gbogbo ẹtọ wa ni ipamọ.",
@@ -207,8 +216,11 @@ const translations = {
         scouting: "Wiwa",
         processus: "Ilana",
         affiliation: "IFỌWỌSI",
-        parrain: "ONIGBOWO",
-        tournoi_public: "Idije Gbogbo eniyan"
+        premier_pas: "IGBESE AKỌKỌ",
+        acteurs: "DI Oṣere",
+        artiste: "DI Oṣere",
+        tournoi_public: "Idije Gbogbo eniyan",
+        esp: "KỌ ẸKỌ SIWAJU"
     },
     // Ajoute ici les autres langues si nécessaire (tu peux reprendre les objets depuis les fichiers JSON supprimés)
     fon: { /* ... */ },

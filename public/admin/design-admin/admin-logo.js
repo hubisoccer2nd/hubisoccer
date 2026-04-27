@@ -65,7 +65,7 @@ function renderLogos(logos) {
     const tbody = document.getElementById('logosTableBody');
     if (!tbody) return;
     if (!logos.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-row">Aucun logo soumis pour le moment.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Aucun logo soumis pour le moment.</td></tr>';
         return;
     }
     tbody.innerHTML = logos.map(logo => {

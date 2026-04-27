@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Validation Logos | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="admin-logo.css">
+</head>
+<body>
+    <!-- ========== DÉBUT : LOADER GLOBAL ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+
+    <!-- ========== DÉBUT : NAVIGATION ADMIN ========== -->
+    <nav>
+        <a href="../../index.html" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="admin-badge"><i class="fas fa-image"></i> ADMIN LOGOS</span>
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="admin-designer.html">VALIDER COMPTES</a>
+                <a href="admin-logo.html" class="active">VALIDER LOGOS</a>
+                <a href="admin-affiche.html">VALIDER AFFICHES</a>
+                <a href="../../index.html">RETOUR AU SITE</a>
+                <a href="#" id="logoutBtn">DÉCONNEXION</a>
+            </div>
+        </div>
+    </nav>
+    <!-- ========== FIN : NAVIGATION ADMIN ========== -->
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <div class="page-header">
+                <h1 class="page-title"><i class="fas fa-image"></i> Validation des Logos</h1>
+                <p class="page-subtitle">Gérez les soumissions de logos des clubs HubISoccer.</p>
+            </div>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card pending"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-info"><span class="stat-number" id="statPending">0</span><span class="stat-label">En attente</span></div></div>
+                <div class="stat-card approved"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-info"><span class="stat-number" id="statApproved">0</span><span class="stat-label">Approuvés</span></div></div>
+                <div class="stat-card rejected"><div class="stat-icon"><i class="fas fa-times-circle"></i></div><div class="stat-info"><span class="stat-number" id="statRejected">0</span><span class="stat-label">Rejetés</span></div></div>
+                <div class="stat-card deleted"><div class="stat-icon"><i class="fas fa-trash-alt"></i></div><div class="stat-info"><span class="stat-number" id="statDeleted">0</span><span class="stat-label">Supprimés</span></div></div>
+                <div class="stat-card viewed"><div class="stat-icon"><i class="fas fa-eye"></i></div><div class="stat-info"><span class="stat-number" id="statViewed">-</span><span class="stat-label">Visualisés</span></div></div>
+                <div class="stat-card refresh"><div class="stat-icon"><i class="fas fa-sync-alt"></i></div><div class="stat-info"><button id="refreshBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button></div></div>
+                <div class="stat-card blocked"><div class="stat-icon"><i class="fas fa-ban"></i></div><div class="stat-info"><span class="stat-number" id="statBlocked">0</span><span class="stat-label">Bloqués</span></div></div>
+            </div>
+
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>CLUB</th><th>QUARTIER</th><th>DATE</th><th>STATUT</th><th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logosTableBody">
+                        <tr><td colspan="6" class="empty-row">Aucun logo soumis.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="viewModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-eye"></i> Détail du Logo</h3>
+            <div id="viewContent" class="detail-view"></div>
+        </div>
+    </div>
+
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-check-circle"></i> Approuver le Logo</h3>
+            <div id="approveInfo" class="info-box"></div>
+            <button id="confirmApproveBtn" class="btn-submit"><i class="fas fa-check-circle"></i> CONFIRMER LA VALIDATION</button>
+        </div>
+    </div>
+
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-times-circle"></i> Rejeter le Logo</h3>
+            <div id="rejectInfo" class="info-box"></div>
+            <div class="form-group"><label>Motif du rejet</label><textarea id="rejectReason" rows="3"></textarea></div>
+            <button id="confirmRejectBtn" class="btn-submit danger"><i class="fas fa-times-circle"></i> CONFIRMER LE REJET</button>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-trash-alt"></i> Supprimer le Logo</h3>
+            <p>Supprimer définitivement ce logo ?</p>
+            <div id="deleteInfo" class="info-box"></div>
+            <button id="confirmDeleteBtn" class="btn-submit danger"><i class="fas fa-trash-alt"></i> CONFIRMER LA SUPPRESSION</button>
+        </div>
+    </div>
+
+    <div id="blockModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-ban"></i> Bloquer le Logo</h3>
+            <div id="blockInfo" class="info-box"></div>
+            <button id="confirmBlockBtn" class="btn-submit warning"><i class="fas fa-ban"></i> CONFIRMER LE BLOCAGE</button>
+        </div>
+    </div>
+
+    <footer><div class="legal"><p>© 2026 HubISoccer - Administration Logos</p></div></footer>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin-logo.js"></script>
+</body>
+</html>

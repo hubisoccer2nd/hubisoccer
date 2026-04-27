@@ -147,12 +147,14 @@ const translations = {
         connexion: "Connexion",
         inscrire: "S'inscrire",
         hub_market: "HUBISOCCER MARKET",
-        hub_community: "Hub Community",
-        scouting: "Scouting",
-        processus: "Processus",
+        hub_community: "HUB COMMUNITY",
+        scouting: "SCOUTING",
+        processus: "PROCESSUS",
         affiliation: "AFFILIATION",
-        parrain: "PARRAIN",
-        tournoi_public: "Tournoi Public"
+        acteur: "DEVENEZ UN ACTEUR",
+        artiste: "DEVENEZ UN ARTISTE"
+        tournoi_public: "TOURNOI PUBLIC"
+
     },
     en: {
         titre_page: "HubISoccer | Street talent, the future of football",

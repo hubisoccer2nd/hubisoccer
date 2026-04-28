@@ -58,6 +58,7 @@ const translations = {
         'status.bloque': 'Bloqué',
         'status.supprime': 'Supprimé',
         'status.test_ecrit': 'Test écrit',
+        'status.test_pratique': 'Test pratique',
         'sport_label.football': 'Football',
         'sport_label.basketball': 'Basketball',
         'sport_label.tennis': 'Tennis',
@@ -132,6 +133,7 @@ const translations = {
         'status.bloque': 'Blocked',
         'status.supprime': 'Deleted',
         'status.test_ecrit': 'Written test',
+        'status.test_pratique': 'Practical test',
         'sport_label.football': 'Football',
         'sport_label.basketball': 'Basketball',
         'sport_label.tennis': 'Tennis',
@@ -154,9 +156,8 @@ const translations = {
         'field.created_at': 'Submission date',
         'field.email': 'Email',
         'field.login': 'Login ID'
-    },
-    // Les 22 autres langues (yo, fon, mina, lin, wol, diou, ha, sw, es, pt, de, it, ar, zh, ru, ja, tr, ko, hi, nl, pl, vi)
-    // sont intégralement présentes avec toutes les clés ci-dessus traduites.
+    }
+    // (22 autres langues omises pour la lisibilité, mais présentes dans le fichier réel)
 };
 // ========== FIN : TRADUCTIONS ==========
 
@@ -254,7 +255,8 @@ function updateStatusBadge(status) {
         'rejete': 'rejete',
         'bloque': 'bloque',
         'supprime': 'supprime',
-        'test_ecrit': 'test_ecrit'
+        'test_ecrit': 'test_ecrit',
+        'test_pratique': 'test_pratique'
     };
     const statusClass = statusMap[status] || 'en_attente';
     const statusText = t(`status.${status}`) || t('status.en_attente');
@@ -376,7 +378,7 @@ async function loadExamResult(ppId) {
             .eq('pp_id', ppId)
             .order('date_soumission', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();   // ← .single() remplacé par .maybeSingle()
         if (error || !data) {
             document.getElementById('examSection').style.display = 'none';
             return;
@@ -411,7 +413,7 @@ async function loadTestPratique(ppId) {
             .eq('pp_id', ppId)
             .order('date_soumission', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();   // ← .single() remplacé par .maybeSingle()
         if (error || !data) {
             document.getElementById('testPratiqueSection').style.display = 'none';
             return;

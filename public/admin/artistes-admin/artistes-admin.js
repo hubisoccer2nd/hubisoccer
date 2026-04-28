@@ -162,7 +162,7 @@ function getFilteredArtistes() {
         const matchSearch = 
             ins.full_name.toLowerCase().includes(search) ||
             ins.artiste_id.toLowerCase().includes(search) ||
-            ins.email?.toLowerCase().includes(search);
+            (ins.email && ins.email.toLowerCase().includes(search));
         const matchDiscipline = discipline === 'all' || ins.discipline === discipline;
         const matchStatus = status === 'all' || ins.status === status;
         return matchSearch && matchDiscipline && matchStatus;
@@ -188,9 +188,9 @@ function renderArtistesTable() {
             <td><span class="status-badge ${getStatusClass(ins.status)}">${getStatusLabel(ins.status)}</span></td>
             <td class="actions-cell">
                 <button class="btn-icon btn-view" data-artisteid="${ins.artiste_id}" title="Visualiser"><i class="fas fa-eye"></i></button>
-                <button class="btn-icon btn-approve" data-artisteid="${ins.artiste_id}" title="Approuver"><i class="fas fa-check-circle"></i></button>
-                <button class="btn-icon btn-reject" data-artisteid="${ins.artiste_id}" title="Rejeter"><i class="fas fa-times-circle"></i></button>
-                <button class="btn-icon btn-block" data-artisteid="${ins.artiste_id}" title="Bloquer"><i class="fas fa-ban"></i></button>
+                ${ins.status !== 'valide_public' ? `<button class="btn-icon btn-approve" data-artisteid="${ins.artiste_id}" title="Approuver"><i class="fas fa-check-circle"></i></button>` : ''}
+                ${ins.status !== 'rejete' ? `<button class="btn-icon btn-reject" data-artisteid="${ins.artiste_id}" title="Rejeter"><i class="fas fa-times-circle"></i></button>` : ''}
+                ${ins.status !== 'bloque' ? `<button class="btn-icon btn-block" data-artisteid="${ins.artiste_id}" title="Bloquer"><i class="fas fa-ban"></i></button>` : ''}
                 <button class="btn-icon btn-delete" data-artisteid="${ins.artiste_id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
             </td>
         </tr>
@@ -318,17 +318,26 @@ async function sendMessage() {
     }
 }
 
-// Modale d'approbation
+// Modale d'approbation (corrigée)
 function openApproveModal(artisteId) {
     const ins = allInscriptions.find(i => i.artiste_id === artisteId);
     if (!ins) return;
     currentInscription = ins;
 
-    const login = generateLogin(ins.full_name);
-    const password = generatePassword();
+    // Si l'artiste a déjà un login, on l'affiche, sinon on en génère un nouveau
+    let login, password;
+    if (ins.login) {
+        login = ins.login;
+        password = '';
+        document.getElementById('generatedLogin').value = login;
+        document.getElementById('generatedPassword').value = '******** (déjà défini)';
+    } else {
+        login = generateLogin(ins.full_name);
+        password = generatePassword();
+        document.getElementById('generatedLogin').value = login;
+        document.getElementById('generatedPassword').value = password;
+    }
 
-    document.getElementById('generatedLogin').value = login;
-    document.getElementById('generatedPassword').value = password;
     document.getElementById('approveInfo').innerHTML = `
         <p><strong>Nom :</strong> ${escapeHtml(ins.full_name)}</p>
         <p><strong>Discipline :</strong> ${getDisciplineLabel(ins.discipline)}</p>
@@ -337,21 +346,27 @@ function openApproveModal(artisteId) {
     document.getElementById('confirmApprovalBtn').onclick = async () => {
         showLoader();
         try {
+            const updateData = {
+                status: 'valide_public',
+                updated_at: new Date().toISOString()
+            };
+            // Ne définir login/mot de passe que s'ils n'existent pas déjà
+            if (!ins.login) {
+                updateData.login = login;
+                updateData.mot_de_passe_hash = hashPassword(password);
+            }
             const { error } = await supabaseAdmin
                 .from('public_artistes_adhesion')
-                .update({
-                    status: 'valide_public',
-                    login: login,
-                    mot_de_passe_hash: hashPassword(password),
-                    updated_at: new Date().toISOString()
-                })
+                .update(updateData)
                 .eq('artiste_id', currentInscription.artiste_id);
             if (error) throw error;
 
             // Mise à jour locale
             currentInscription.status = 'valide_public';
-            currentInscription.login = login;
-            currentInscription.mot_de_passe_hash = hashPassword(password);
+            if (!ins.login) {
+                currentInscription.login = login;
+                currentInscription.mot_de_passe_hash = hashPassword(password);
+            }
 
             showToast('Artiste approuvé !', 'success');
             closeAllModals();

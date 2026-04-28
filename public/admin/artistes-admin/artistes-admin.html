@@ -2,112 +2,296 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Admin Artistes | HubISoccer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion des artistes | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="artistes-admin.css">
 </head>
 <body>
-    <nav class="dashboard-nav">
-        <div class="nav-left">
-            <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../administration.html'">
-            <span class="dashboard-title">Admin / Artistes</span>
-        </div>
+    <!-- ========== DÉBUT : LOADER GLOBAL ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+    <!-- ========== FIN : LOADER GLOBAL ========== -->
+
+    <!-- ========== DÉBUT : NAVIGATION ========== -->
+    <nav>
+        <a href="../../../index.html" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
         <div class="nav-right">
-            <button id="logoutBtn" class="logout-btn">Déconnexion</button>
+            <span class="admin-badge"><i class="fas fa-palette"></i> Administration Artistes</span>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="../administration.html"><i class="fas fa-th-large"></i> Portail</a>
+                <a href="../acteurs-admin/acteurs-admin.html"><i class="fas fa-users"></i> Acteurs</a>
+                <a href="../tournoi-admin/tournoi-admin.html"><i class="fas fa-trophy"></i> Tournois</a>
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
         </div>
     </nav>
+    <!-- ========== FIN : NAVIGATION ========== -->
 
-    <div class="admin-container">
-        <div class="admin-header">
-            <h1><i class="fas fa-palette"></i> Gestion des artistes</h1>
-            <p>Gérez les adhésions, les examens, les tests pratiques et la messagerie.</p>
-        </div>
-
-        <div class="stats-row" id="statsRow"></div>
-
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="artistes">Artistes</button>
-            <button class="tab-btn" data-tab="examens">Examens</button>
-            <button class="tab-btn" data-tab="analyses">Tests pratiques</button>
-            <button class="tab-btn" data-tab="messages">Messages</button>
-        </div>
-
-        <!-- Artistes -->
-        <div id="artistes" class="tab-content active">
-            <div class="search-bar">
-                <input type="text" id="searchArtiste" placeholder="Rechercher par ID, nom, téléphone...">
-                <select id="statusFilter">
-                    <option value="all">Tous</option>
-                    <option value="en_attente">En attente</option>
-                    <option value="valide_public">Validé</option>
-                    <option value="rejete">Rejeté</option>
-                </select>
-                <button id="refreshArtistes" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
+    <main class="admin-main">
+        <div class="admin-container">
+            <div class="page-header">
+                <h1 class="page-title"><i class="fas fa-palette"></i> Gestion des artistes</h1>
+                <p class="page-subtitle">Validez, rejetez ou bloquez les candidatures. Gérez les examens, les tests pratiques et échangez avec les artistes.</p>
             </div>
-            <div id="artistesList" class="admin-list"></div>
-        </div>
 
-        <!-- Examens -->
-        <div id="examens" class="tab-content">
-            <div class="search-bar">
-                <input type="text" id="searchExamen" placeholder="Rechercher par ID artiste...">
-                <select id="examenStatusFilter">
-                    <option value="all">Tous</option>
-                    <option value="en_attente">En attente</option>
-                    <option value="corrige">Corrigé</option>
-                </select>
-                <button id="refreshExamens" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+            <!-- ========== STATISTIQUES ========== -->
+            <div class="stats-bar" id="statsBar">
+                <div class="stat-card" data-status="en_attente">
+                    <i class="fas fa-clock"></i>
+                    <span class="stat-number" id="statEnAttente">0</span>
+                    <span class="stat-label">En attente</span>
+                </div>
+                <div class="stat-card" data-status="valide_public">
+                    <i class="fas fa-check-circle"></i>
+                    <span class="stat-number" id="statApprouve">0</span>
+                    <span class="stat-label">Approuvés</span>
+                </div>
+                <div class="stat-card" data-status="rejete">
+                    <i class="fas fa-times-circle"></i>
+                    <span class="stat-number" id="statRejete">0</span>
+                    <span class="stat-label">Rejetés</span>
+                </div>
+                <div class="stat-card" data-status="bloque">
+                    <i class="fas fa-ban"></i>
+                    <span class="stat-number" id="statBloque">0</span>
+                    <span class="stat-label">Bloqués</span>
+                </div>
+                <div class="stat-card" data-status="supprime">
+                    <i class="fas fa-trash-alt"></i>
+                    <span class="stat-number" id="statSupprime">0</span>
+                    <span class="stat-label">Supprimés</span>
+                </div>
+                <button class="btn-refresh" id="refreshStatsBtn">
+                    <i class="fas fa-sync-alt"></i> Rafraîchir
+                </button>
             </div>
-            <div id="examensList" class="admin-list"></div>
-        </div>
+            <!-- ========== FIN : STATISTIQUES ========== -->
 
-        <!-- Tests pratiques -->
-        <div id="analyses" class="tab-content">
-            <div class="search-bar">
-                <input type="text" id="searchAnalyse" placeholder="Rechercher par ID artiste...">
-                <select id="analyseStatusFilter">
-                    <option value="all">Tous</option>
-                    <option value="en_attente">En attente</option>
-                    <option value="valide">Validé</option>
-                    <option value="rejete">Rejeté</option>
-                </select>
-                <button id="refreshAnalyses" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+            <!-- ========== ONGLETS ========== -->
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="artistes"><i class="fas fa-user-friends"></i> Artistes</button>
+                <button class="tab-btn" data-tab="examens"><i class="fas fa-graduation-cap"></i> Examens</button>
+                <button class="tab-btn" data-tab="analyses"><i class="fas fa-video"></i> Tests pratiques</button>
+                <button class="tab-btn" data-tab="messages"><i class="fas fa-envelope"></i> Messages</button>
             </div>
-            <div id="analysesList" class="admin-list"></div>
-        </div>
+            <!-- ========== FIN : ONGLETS ========== -->
 
-        <!-- Messages -->
-        <div id="messages" class="tab-content">
-            <div class="send-message-section">
-                <h3>Envoyer un message à un artiste</h3>
-                <select id="targetArtiste" required>
-                    <option value="">Sélectionner un artiste</option>
-                </select>
-                <textarea id="adminMessage" rows="3" placeholder="Votre message..."></textarea>
-                <button id="sendMessageBtn" class="btn-submit">Envoyer le message</button>
+            <!-- ========== ONGLET ARTISTES ========== -->
+            <div id="artistes" class="tab-content active">
+                <div class="filters-bar">
+                    <input type="text" id="searchInput" placeholder="Rechercher par nom, email, ID...">
+                    <select id="roleFilter">
+                        <option value="all">Toutes les disciplines</option>
+                        <option value="chanteur">Chanteur</option>
+                        <option value="danseur">Danseur</option>
+                        <option value="compositeur">Compositeur</option>
+                        <option value="acteur_cinema">Acteur de cinéma</option>
+                        <option value="acteur_theatre">Acteur de théâtre</option>
+                        <option value="humoriste">Humoriste</option>
+                        <option value="slameur">Slameur</option>
+                        <option value="dj">DJ / producteur</option>
+                        <option value="cirque">Artiste de cirque</option>
+                        <option value="artiste_visuel">Artiste visuel</option>
+                    </select>
+                    <select id="statusFilter">
+                        <option value="all">Tous les statuts</option>
+                        <option value="en_attente">En attente</option>
+                        <option value="valide_public">Approuvé</option>
+                        <option value="rejete">Rejeté</option>
+                        <option value="bloque">Bloqué</option>
+                        <option value="supprime">Supprimé</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table id="inscriptionsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom complet</th>
+                                <th>Discipline</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr><td colspan="8" class="loading-placeholder">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div id="messagesList" class="admin-list"></div>
+            <!-- ========== FIN : ONGLET ARTISTES ========== -->
+
+            <!-- ========== ONGLET EXAMENS ========== -->
+            <div id="examens" class="tab-content">
+                <div class="filters-bar">
+                    <input type="text" id="searchExamen" placeholder="Rechercher par ID artiste...">
+                    <select id="examenStatusFilter">
+                        <option value="all">Tous</option>
+                        <option value="en_attente">En attente</option>
+                        <option value="corrige">Corrigé</option>
+                    </select>
+                    <button id="refreshExamens" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                </div>
+                <div class="table-container">
+                    <table id="examensTable">
+                        <thead>
+                            <tr>
+                                <th>Artiste</th>
+                                <th>ID artiste</th>
+                                <th>Note</th>
+                                <th>Statut</th>
+                                <th>Date soumission</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="examensBody">
+                            <tr><td colspan="6" class="loading-placeholder">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- ========== FIN : ONGLET EXAMENS ========== -->
+
+            <!-- ========== ONGLET TESTS PRATIQUES ========== -->
+            <div id="analyses" class="tab-content">
+                <div class="filters-bar">
+                    <input type="text" id="searchAnalyse" placeholder="Rechercher par ID artiste...">
+                    <select id="analyseStatusFilter">
+                        <option value="all">Tous</option>
+                        <option value="en_attente">En attente</option>
+                        <option value="valide">Validé</option>
+                        <option value="rejete">Rejeté</option>
+                    </select>
+                    <button id="refreshAnalyses" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                </div>
+                <div class="table-container">
+                    <table id="analysesTable">
+                        <thead>
+                            <tr>
+                                <th>Artiste</th>
+                                <th>ID artiste</th>
+                                <th>Statut</th>
+                                <th>Date soumission</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analysesBody">
+                            <tr><td colspan="5" class="loading-placeholder">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- ========== FIN : ONGLET TESTS PRATIQUES ========== -->
+
+            <!-- ========== ONGLET MESSAGES ========== -->
+            <div id="messages" class="tab-content">
+                <div class="send-message-section">
+                    <h3><i class="fas fa-paper-plane"></i> Envoyer un message à un artiste</h3>
+                    <div class="form-row">
+                        <select id="targetArtiste" required>
+                            <option value="">Sélectionner un artiste</option>
+                        </select>
+                    </div>
+                    <textarea id="adminMessage" rows="3" placeholder="Votre message..."></textarea>
+                    <button id="sendMessageBtn" class="btn-send"><i class="fas fa-paper-plane"></i> Envoyer</button>
+                </div>
+                <div class="table-container">
+                    <table id="messagesTable">
+                        <thead>
+                            <tr>
+                                <th>Destinataire</th>
+                                <th>Message</th>
+                                <th>Expéditeur</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messagesBody">
+                            <tr><td colspan="4" class="loading-placeholder">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- ========== FIN : ONGLET MESSAGES ========== -->
+        </div>
+    </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
+
+    <!-- ========== DÉBUT : MODALES ========== -->
+    <!-- Modale de visualisation -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-eye"></i> Détails de l'inscription</h3>
+            <div id="viewContent"></div>
         </div>
     </div>
 
-    <footer class="dashboard-footer">
-        <div class="footer-content">
-            <div class="legal">
-                <p>© 2026 HubISoccer - Tous droits réservés.</p>
+    <!-- Modale d'approbation -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-check-circle"></i> Approuver l'inscription</h3>
+            <div id="approveInfo"></div>
+            <div class="form-group">
+                <label>Login généré</label>
+                <input type="text" id="generatedLogin" readonly>
             </div>
+            <div class="form-group">
+                <label>Mot de passe généré</label>
+                <input type="text" id="generatedPassword" readonly>
+            </div>
+            <button id="confirmApprovalBtn" class="btn-submit"><i class="fas fa-check"></i> Confirmer l'approbation</button>
         </div>
-    </footer>
+    </div>
 
-    <div id="toastContainer" class="toast-container"></div>
+    <!-- Modale de rejet -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-times-circle"></i> Rejeter l'inscription</h3>
+            <div class="form-group">
+                <label>Motif du rejet</label>
+                <textarea id="rejectReason" rows="3" placeholder="Expliquez le motif..."></textarea>
+            </div>
+            <button id="confirmRejectBtn" class="btn-submit btn-danger"><i class="fas fa-times"></i> Confirmer le rejet</button>
+        </div>
+    </div>
 
-    <!-- Modale examen -->
+    <!-- Modale de confirmation de blocage -->
+    <div id="blockModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-ban"></i> Bloquer l'inscription</h3>
+            <p>Êtes-vous sûr de vouloir bloquer cet artiste ? Il ne pourra plus postuler.</p>
+            <button id="confirmBlockBtn" class="btn-submit btn-warning"><i class="fas fa-ban"></i> Bloquer</button>
+        </div>
+    </div>
+
+    <!-- Modale de confirmation de suppression -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-trash-alt"></i> Supprimer l'inscription</h3>
+            <p>Cette action est irréversible. Les messages associés seront également supprimés.</p>
+            <button id="confirmDeleteBtn" class="btn-submit btn-danger"><i class="fas fa-trash-alt"></i> Supprimer définitivement</button>
+        </div>
+    </div>
+
+    <!-- Modale de correction d'examen (conservée) -->
     <div id="examenModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h3>Corriger l'examen</h3>
+            <h3><i class="fas fa-graduation-cap"></i> Corriger l'examen</h3>
             <input type="hidden" id="examenId">
             <div class="form-group">
                 <label>Note /20</label>
@@ -121,11 +305,11 @@
         </div>
     </div>
 
-    <!-- Modale test pratique -->
+    <!-- Modale d'évaluation de test pratique (conservée) -->
     <div id="analyseModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h3>Évaluer le test pratique</h3>
+            <h3><i class="fas fa-video"></i> Évaluer le test pratique</h3>
             <input type="hidden" id="analyseId">
             <div class="form-group">
                 <label>Statut</label>
@@ -141,7 +325,11 @@
             <button id="saveAnalyseBtn" class="btn-submit">Enregistrer</button>
         </div>
     </div>
+    <!-- ========== FIN : MODALES ========== -->
 
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="artistes-admin.js"></script>
 </body>
 </html>

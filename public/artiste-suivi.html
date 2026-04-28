@@ -11,13 +11,10 @@
     <link rel="stylesheet" href="css/artiste-suivi.css">
 </head>
 <body>
-    <!-- ========== DÉBUT : LOADER ========== -->
     <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
         <div class="spinner"></div> <span data-i18n="loader.message">Chargement...</span>
     </div>
-    <!-- ========== FIN : LOADER ========== -->
 
-    <!-- ========== DÉBUT : NAVBAR OFFICIELLE ========== -->
     <nav>
         <a href="../index.html" class="logo-link">
             <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
@@ -66,7 +63,6 @@
             </div>
         </div>
     </nav>
-    <!-- ========== FIN : NAVBAR ========== -->
 
     <main class="suivi-main">
         <div class="suivi-container">
@@ -85,19 +81,16 @@
                 <div class="artist-data" id="artistData"></div>
                 <div class="admin-notes" id="adminNotes"></div>
 
-                <!-- Section examen (conservée) -->
                 <div class="exam-section" id="examSection" style="display: none;">
                     <h3><i class="fas fa-graduation-cap"></i> <span data-i18n="suivi.exam.title">Résultat de l'examen</span></h3>
                     <div id="examResult" class="exam-result"></div>
                 </div>
 
-                <!-- Section test pratique (conservée) -->
                 <div class="test-pratique-section" id="testPratiqueSection" style="display: none;">
                     <h3><i class="fas fa-video"></i> <span data-i18n="suivi.testpratique.title">Test pratique</span></h3>
                     <div id="testPratiqueContent" class="test-pratique-content"></div>
                 </div>
 
-                <!-- Section messagerie -->
                 <div class="messages-section">
                     <h3><i class="fas fa-comments"></i> <span data-i18n="suivi.messages.title">Messages</span></h3>
                     <div id="messagesContainer" class="messages-container scrollable"></div>

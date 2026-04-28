@@ -10,6 +10,7 @@ let allInscriptions = [];
 let currentInscription = null;
 let allExamens = [];
 let allAnalyses = [];
+let viewQuill = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
@@ -46,14 +47,8 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
 }
 
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
+function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 
 function formatDate(dateStr) {
     if (!dateStr) return '-';
@@ -62,34 +57,23 @@ function formatDate(dateStr) {
 
 function getDisciplineLabel(code) {
     const labels = {
-        chanteur: 'Chanteur',
-        danseur: 'Danseur',
-        compositeur: 'Compositeur',
-        acteur_cinema: 'Acteur de cinéma',
-        acteur_theatre: 'Acteur de théâtre',
-        humoriste: 'Humoriste',
-        slameur: 'Slameur',
-        dj: 'DJ/producteur',
-        cirque: 'Artiste de cirque',
-        artiste_visuel: 'Artiste visuel'
+        chanteur: 'Chanteur', danseur: 'Danseur', compositeur: 'Compositeur',
+        acteur_cinema: 'Acteur de cinéma', acteur_theatre: 'Acteur de théâtre',
+        humoriste: 'Humoriste', slameur: 'Slameur', dj: 'DJ/producteur',
+        cirque: 'Artiste de cirque', artiste_visuel: 'Artiste visuel'
     };
     return labels[code] || code;
 }
 
 function getStatusLabel(status) {
     const labels = {
-        'en_attente': 'En attente',
-        'valide_public': 'Approuvé',
-        'rejete': 'Rejeté',
-        'bloque': 'Bloqué',
-        'supprime': 'Supprimé'
+        'en_attente': 'En attente', 'valide_public': 'Approuvé',
+        'rejete': 'Rejeté', 'bloque': 'Bloqué', 'supprime': 'Supprimé'
     };
     return labels[status] || status;
 }
 
-function getStatusClass(status) {
-    return `status-${status}`;
-}
+function getStatusClass(status) { return `status-${status}`; }
 
 function generateLogin(nom) {
     const base = nom.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 8);
@@ -100,15 +84,11 @@ function generateLogin(nom) {
 function generatePassword() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%';
     let pwd = '';
-    for (let i = 0; i < 10; i++) {
-        pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    for (let i = 0; i < 10; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
     return pwd;
 }
 
-function hashPassword(password) {
-    return btoa(password);
-}
+function hashPassword(password) { return btoa(password); }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
 // ========== DÉBUT : CHARGEMENT DES ARTISTES ==========
@@ -123,66 +103,46 @@ async function loadArtistes() {
         allInscriptions = data || [];
         renderArtistesTable();
         updateStats();
-    } catch (err) {
-        console.error(err);
-        showToast('Erreur chargement des artistes', 'error');
-    } finally {
-        hideLoader();
-    }
+    } catch (err) { showToast('Erreur chargement artistes', 'error'); }
+    finally { hideLoader(); }
 }
 // ========== FIN : CHARGEMENT DES ARTISTES ==========
 
-// ========== DÉBUT : MISE À JOUR DES STATISTIQUES ==========
+// ========== DÉBUT : STATISTIQUES ==========
 function updateStats() {
-    const stats = {
-        en_attente: 0,
-        valide_public: 0,
-        rejete: 0,
-        bloque: 0,
-        supprime: 0
-    };
-    allInscriptions.forEach(ins => {
-        if (stats[ins.status] !== undefined) stats[ins.status]++;
-    });
-    document.getElementById('statEnAttente').textContent = stats.en_attente;
-    document.getElementById('statApprouve').textContent = stats.valide_public;
-    document.getElementById('statRejete').textContent = stats.rejete;
-    document.getElementById('statBloque').textContent = stats.bloque;
-    document.getElementById('statSupprime').textContent = stats.supprime;
+    const s = { en_attente:0, valide_public:0, rejete:0, bloque:0, supprime:0 };
+    allInscriptions.forEach(i => { if (s[i.status] !== undefined) s[i.status]++; });
+    document.getElementById('statEnAttente').textContent = s.en_attente;
+    document.getElementById('statApprouve').textContent = s.valide_public;
+    document.getElementById('statRejete').textContent = s.rejete;
+    document.getElementById('statBloque').textContent = s.bloque;
+    document.getElementById('statSupprime').textContent = s.supprime;
 }
-// ========== FIN : MISE À JOUR DES STATISTIQUES ==========
+// ========== FIN : STATISTIQUES ==========
 
-// ========== DÉBUT : RENDU DU TABLEAU ARTISTES ==========
+// ========== DÉBUT : TABLEAU ARTISTES ==========
 function getFilteredArtistes() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const discipline = document.getElementById('roleFilter').value;
-    const status = document.getElementById('statusFilter').value;
-
-    return allInscriptions.filter(ins => {
-        const matchSearch = 
-            ins.full_name.toLowerCase().includes(search) ||
-            ins.artiste_id.toLowerCase().includes(search) ||
-            (ins.email && ins.email.toLowerCase().includes(search));
-        const matchDiscipline = discipline === 'all' || ins.discipline === discipline;
-        const matchStatus = status === 'all' || ins.status === status;
-        return matchSearch && matchDiscipline && matchStatus;
-    });
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const d = document.getElementById('roleFilter').value;
+    const st = document.getElementById('statusFilter').value;
+    return allInscriptions.filter(ins =>
+        (ins.full_name.toLowerCase().includes(q) || ins.artiste_id.toLowerCase().includes(q) || (ins.email||'').toLowerCase().includes(q)) &&
+        (d === 'all' || ins.discipline === d) &&
+        (st === 'all' || ins.status === st)
+    );
 }
 
 function renderArtistesTable() {
-    const tableBody = document.getElementById('tableBody');
-    if (!tableBody) return;
+    const tbody = document.getElementById('tableBody');
+    if (!tbody) return;
     const filtered = getFilteredArtistes();
-    if (filtered.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="empty-message">Aucun artiste trouvé</td></tr>';
-        return;
-    }
-    tableBody.innerHTML = filtered.map(ins => `
+    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="8">Aucun artiste trouvé</td></tr>'; return; }
+    tbody.innerHTML = filtered.map(ins => `
         <tr data-artisteid="${ins.artiste_id}">
-            <td class="id-cell" title="${escapeHtml(ins.artiste_id)}">${escapeHtml(ins.artiste_id.substring(0, 10))}...</td>
+            <td class="id-cell" title="${escapeHtml(ins.artiste_id)}">${escapeHtml(ins.artiste_id.substring(0,10))}...</td>
             <td>${escapeHtml(ins.full_name)}</td>
             <td>${getDisciplineLabel(ins.discipline)}</td>
-            <td>${escapeHtml(ins.email || '-')}</td>
+            <td>${escapeHtml(ins.email||'-')}</td>
             <td>${escapeHtml(ins.phone)}</td>
             <td>${formatDate(ins.created_at)}</td>
             <td><span class="status-badge ${getStatusClass(ins.status)}">${getStatusLabel(ins.status)}</span></td>
@@ -195,73 +155,67 @@ function renderArtistesTable() {
             </td>
         </tr>
     `).join('');
-
-    // Attacher les événements aux boutons
-    document.querySelectorAll('.btn-view').forEach(btn => btn.addEventListener('click', () => openViewModal(btn.dataset.artisteid)));
-    document.querySelectorAll('.btn-approve').forEach(btn => btn.addEventListener('click', () => openApproveModal(btn.dataset.artisteid)));
-    document.querySelectorAll('.btn-reject').forEach(btn => btn.addEventListener('click', () => openRejectModal(btn.dataset.artisteid)));
-    document.querySelectorAll('.btn-block').forEach(btn => btn.addEventListener('click', () => openBlockModal(btn.dataset.artisteid)));
-    document.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => openDeleteModal(btn.dataset.artisteid)));
+    // événements
+    tbody.querySelectorAll('.btn-view').forEach(b => b.addEventListener('click', () => openViewModal(b.dataset.artisteid)));
+    tbody.querySelectorAll('.btn-approve').forEach(b => b.addEventListener('click', () => openApproveModal(b.dataset.artisteid)));
+    tbody.querySelectorAll('.btn-reject').forEach(b => b.addEventListener('click', () => openRejectModal(b.dataset.artisteid)));
+    tbody.querySelectorAll('.btn-block').forEach(b => b.addEventListener('click', () => openBlockModal(b.dataset.artisteid)));
+    tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => openDeleteModal(b.dataset.artisteid)));
 }
-// ========== FIN : RENDU DU TABLEAU ARTISTES ==========
+// ========== FIN : TABLEAU ARTISTES ==========
 
-// ========== DÉBUT : GESTION DES MODALES ==========
-function closeAllModals() {
-    document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-}
+// ========== DÉBUT : MODALE VISUALISATION (avec Quill) ==========
+function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
 
-// Modale de visualisation
 async function openViewModal(artisteId) {
     const ins = allInscriptions.find(i => i.artiste_id === artisteId);
     if (!ins) return;
     currentInscription = ins;
 
     const viewContent = document.getElementById('viewContent');
-    let html = `
+    viewContent.innerHTML = `
         <div class="view-details">
-            <div class="detail-section">
-                <h4><i class="fas fa-user"></i> Identité</h4>
-                <p><strong>Nom complet :</strong> ${escapeHtml(ins.full_name)}</p>
-                <p><strong>Date de naissance :</strong> ${formatDate(ins.birth_date)}</p>
-                <p><strong>Email :</strong> ${escapeHtml(ins.email || '-')}</p>
+            <div class="detail-section"><h4><i class="fas fa-user"></i> Identité</h4>
+                <p><strong>Nom :</strong> ${escapeHtml(ins.full_name)}</p>
+                <p><strong>Email :</strong> ${escapeHtml(ins.email||'-')}</p>
                 <p><strong>Téléphone :</strong> ${escapeHtml(ins.phone)}</p>
                 <p><strong>Discipline :</strong> ${getDisciplineLabel(ins.discipline)}</p>
-                <p><strong>Rôle :</strong> ${escapeHtml(ins.role)}</p>
-                <p><strong>ID :</strong> ${escapeHtml(ins.artiste_id)}</p>
                 <p><strong>Statut :</strong> <span class="status-badge ${getStatusClass(ins.status)}">${getStatusLabel(ins.status)}</span></p>
-                <p><strong>Date de soumission :</strong> ${formatDate(ins.created_at)}</p>
-                ${ins.parent_name ? `<p><strong>Parent / tuteur :</strong> ${escapeHtml(ins.parent_name)}</p>` : ''}
-                ${ins.inscription_code ? `<p><strong>Code d'inscription :</strong> ${escapeHtml(ins.inscription_code)}</p>` : ''}
-                ${ins.affiliate_id ? `<p><strong>ID affilié :</strong> ${escapeHtml(ins.affiliate_id)}</p>` : ''}
+                <p><strong>Date :</strong> ${formatDate(ins.created_at)}</p>
             </div>
-            <div class="detail-section">
-                <h4><i class="fas fa-file-alt"></i> Documents</h4>
-                <p><strong>Diplôme :</strong> ${ins.diploma_url ? `<a href="${escapeHtml(ins.diploma_url)}" target="_blank"><i class="fas fa-download"></i> Télécharger</a>` : '-'}</p>
-                <p><strong>Pièce d'identité :</strong> ${ins.id_card_url ? `<a href="${escapeHtml(ins.id_card_url)}" target="_blank"><i class="fas fa-download"></i> Télécharger</a>` : '-'}</p>
-                <p><strong>Titre diplôme :</strong> ${escapeHtml(ins.diploma_title)}</p>
+            <div class="detail-section"><h4><i class="fas fa-file-alt"></i> Documents</h4>
+                <p>Diplôme : ${ins.diploma_url ? `<a href="${escapeHtml(ins.diploma_url)}" target="_blank">Télécharger</a>` : '-'}</p>
+                <p>Pièce d'identité : ${ins.id_card_url ? `<a href="${escapeHtml(ins.id_card_url)}" target="_blank">Télécharger</a>` : '-'}</p>
             </div>
-            <div class="detail-section">
-                <h4><i class="fas fa-comments"></i> Messagerie</h4>
+            <div class="detail-section"><h4><i class="fas fa-comments"></i> Messagerie</h4>
                 <div id="adminMessagesContainer" class="messages-container"></div>
                 <div class="message-compose">
-                    <textarea id="adminMessageInput" rows="2" placeholder="Votre message..."></textarea>
-                    <button id="sendMessageBtn" class="btn-send"><i class="fas fa-paper-plane"></i> Envoyer</button>
+                    <div id="viewMessageEditor" style="height:120px;"></div>
+                    <button id="sendViewMsgBtn" class="btn-send"><i class="fas fa-paper-plane"></i> Envoyer</button>
                 </div>
             </div>
         </div>
     `;
-    viewContent.innerHTML = html;
 
-    // Charger les messages
+    if (viewQuill) { viewQuill = null; }
+    viewQuill = new Quill('#viewMessageEditor', {
+        theme: 'snow',
+        placeholder: 'Votre message...',
+        modules: {
+            toolbar: [
+                ['bold','italic','underline'],
+                ['link','blockquote'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                ['clean']
+            ]
+        }
+    });
+
     loadMessages(ins.artiste_id);
-
-    // Écouteur d'envoi de message
-    document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
-
+    document.getElementById('sendViewMsgBtn').addEventListener('click', sendViewMessage);
     document.getElementById('viewModal').classList.add('active');
 }
 
-// Chargement des messages
 async function loadMessages(artisteId) {
     try {
         const { data, error } = await supabaseAdmin
@@ -272,59 +226,42 @@ async function loadMessages(artisteId) {
         if (error) throw error;
         const container = document.getElementById('adminMessagesContainer');
         if (container) {
-            if (data && data.length > 0) {
-                container.innerHTML = data.map(msg => `
-                    <div class="message ${msg.sender}">
-                        <div class="message-bubble">
-                            <div>${msg.content}</div>
-                            <div class="message-time">${new Date(msg.created_at).toLocaleString('fr-FR')}</div>
-                        </div>
+            container.innerHTML = data && data.length ? data.map(msg => `
+                <div class="message ${msg.sender}">
+                    <div class="message-bubble">
+                        <div>${msg.content}</div>
+                        <div class="message-time">${new Date(msg.created_at).toLocaleString('fr-FR')}</div>
                     </div>
-                `).join('');
-            } else {
-                container.innerHTML = '<p class="empty-message">Aucun message échangé.</p>';
-            }
+                </div>
+            `).join('') : '<p class="empty-message">Aucun message.</p>';
         }
-    } catch (err) {
-        console.error(err);
-    }
+    } catch (err) { console.error(err); }
 }
 
-// Envoyer un message
-async function sendMessage() {
-    if (!currentInscription) return;
-    const input = document.getElementById('adminMessageInput');
-    const message = input.value.trim();
-    if (!message) {
-        showToast('Message vide', 'warning');
-        return;
-    }
+async function sendViewMessage() {
+    if (!currentInscription || !viewQuill) return;
+    const content = viewQuill.root.innerHTML.trim();
+    if (!content || content === '<p><br></p>') { showToast('Message vide', 'warning'); return; }
+    showLoader();
     try {
         const { error } = await supabaseAdmin
             .from('public_artiste_suivi_messages')
-            .insert([{
-                artiste_id: currentInscription.artiste_id,
-                sender: 'admin',
-                content: message,
-                created_at: new Date().toISOString()
-            }]);
+            .insert([{ artiste_id: currentInscription.artiste_id, sender: 'admin', content, created_at: new Date().toISOString() }]);
         if (error) throw error;
-        input.value = '';
+        viewQuill.root.innerHTML = '';
         await loadMessages(currentInscription.artiste_id);
         showToast('Message envoyé', 'success');
-    } catch (err) {
-        console.error(err);
-        showToast('Erreur envoi message', 'error');
-    }
+    } catch (err) { showToast('Erreur envoi', 'error'); }
+    finally { hideLoader(); }
 }
+// ========== FIN : MODALE VISUALISATION ==========
 
-// Modale d'approbation (corrigée)
+// ========== DÉBUT : APPROBATION ==========
 function openApproveModal(artisteId) {
     const ins = allInscriptions.find(i => i.artiste_id === artisteId);
     if (!ins) return;
     currentInscription = ins;
 
-    // Si l'artiste a déjà un login, on l'affiche, sinon on en génère un nouveau
     let login, password;
     if (ins.login) {
         login = ins.login;
@@ -346,43 +283,29 @@ function openApproveModal(artisteId) {
     document.getElementById('confirmApprovalBtn').onclick = async () => {
         showLoader();
         try {
-            const updateData = {
-                status: 'valide_public',
-                updated_at: new Date().toISOString()
-            };
-            // Ne définir login/mot de passe que s'ils n'existent pas déjà
+            const updateData = { status: 'valide_public', updated_at: new Date().toISOString() };
             if (!ins.login) {
                 updateData.login = login;
                 updateData.mot_de_passe_hash = hashPassword(password);
             }
-            const { error } = await supabaseAdmin
-                .from('public_artistes_adhesion')
-                .update(updateData)
-                .eq('artiste_id', currentInscription.artiste_id);
+            const { error } = await supabaseAdmin.from('public_artistes_adhesion').update(updateData).eq('artiste_id', currentInscription.artiste_id);
             if (error) throw error;
-
-            // Mise à jour locale
             currentInscription.status = 'valide_public';
             if (!ins.login) {
                 currentInscription.login = login;
                 currentInscription.mot_de_passe_hash = hashPassword(password);
             }
-
-            showToast('Artiste approuvé !', 'success');
+            showToast('Artiste approuvé', 'success');
             closeAllModals();
             loadArtistes();
-        } catch (err) {
-            console.error(err);
-            showToast('Erreur approbation', 'error');
-        } finally {
-            hideLoader();
-        }
+        } catch (err) { showToast('Erreur approbation', 'error'); }
+        finally { hideLoader(); }
     };
-
     document.getElementById('approveModal').classList.add('active');
 }
+// ========== FIN : APPROBATION ==========
 
-// Modale de rejet
+// ========== DÉBUT : REJET ==========
 function openRejectModal(artisteId) {
     const ins = allInscriptions.find(i => i.artiste_id === artisteId);
     if (!ins) return;
@@ -391,10 +314,7 @@ function openRejectModal(artisteId) {
     document.getElementById('rejectReason').value = '';
     document.getElementById('confirmRejectBtn').onclick = async () => {
         const reason = document.getElementById('rejectReason').value.trim();
-        if (!reason) {
-            showToast('Veuillez indiquer un motif', 'warning');
-            return;
-        }
+        if (!reason) { showToast('Veuillez indiquer un motif', 'warning'); return; }
         showLoader();
         try {
             const { error } = await supabaseAdmin
@@ -406,23 +326,18 @@ function openRejectModal(artisteId) {
                 })
                 .eq('artiste_id', currentInscription.artiste_id);
             if (error) throw error;
-
             currentInscription.status = 'rejete';
             showToast('Artiste rejeté', 'success');
             closeAllModals();
             loadArtistes();
-        } catch (err) {
-            console.error(err);
-            showToast('Erreur rejet', 'error');
-        } finally {
-            hideLoader();
-        }
+        } catch (err) { showToast('Erreur rejet', 'error'); }
+        finally { hideLoader(); }
     };
-
     document.getElementById('rejectModal').classList.add('active');
 }
+// ========== FIN : REJET ==========
 
-// Modale de blocage
+// ========== DÉBUT : BLOCAGE ==========
 function openBlockModal(artisteId) {
     const ins = allInscriptions.find(i => i.artiste_id === artisteId);
     if (!ins) return;
@@ -436,23 +351,18 @@ function openBlockModal(artisteId) {
                 .update({ status: 'bloque', updated_at: new Date().toISOString() })
                 .eq('artiste_id', currentInscription.artiste_id);
             if (error) throw error;
-
             currentInscription.status = 'bloque';
             showToast('Artiste bloqué', 'success');
             closeAllModals();
             loadArtistes();
-        } catch (err) {
-            console.error(err);
-            showToast('Erreur blocage', 'error');
-        } finally {
-            hideLoader();
-        }
+        } catch (err) { showToast('Erreur blocage', 'error'); }
+        finally { hideLoader(); }
     };
-
     document.getElementById('blockModal').classList.add('active');
 }
+// ========== FIN : BLOCAGE ==========
 
-// Modale de suppression
+// ========== DÉBUT : SUPPRESSION ==========
 function openDeleteModal(artisteId) {
     const ins = allInscriptions.find(i => i.artiste_id === artisteId);
     if (!ins) return;
@@ -461,33 +371,22 @@ function openDeleteModal(artisteId) {
     document.getElementById('confirmDeleteBtn').onclick = async () => {
         showLoader();
         try {
-            // Supprimer les messages associés
             await supabaseAdmin.from('public_artiste_suivi_messages').delete().eq('artiste_id', currentInscription.artiste_id);
-            // Supprimer l'inscription
-            const { error } = await supabaseAdmin
-                .from('public_artistes_adhesion')
-                .delete()
-                .eq('artiste_id', currentInscription.artiste_id);
+            const { error } = await supabaseAdmin.from('public_artistes_adhesion').delete().eq('artiste_id', currentInscription.artiste_id);
             if (error) throw error;
-
             allInscriptions = allInscriptions.filter(i => i.artiste_id !== currentInscription.artiste_id);
-            showToast('Artiste supprimé définitivement', 'success');
+            showToast('Artiste supprimé', 'success');
             closeAllModals();
             renderArtistesTable();
             updateStats();
-        } catch (err) {
-            console.error(err);
-            showToast('Erreur suppression', 'error');
-        } finally {
-            hideLoader();
-        }
+        } catch (err) { showToast('Erreur suppression', 'error'); }
+        finally { hideLoader(); }
     };
-
     document.getElementById('deleteModal').classList.add('active');
 }
-// ========== FIN : GESTION DES MODALES ==========
+// ========== FIN : SUPPRESSION ==========
 
-// ========== DÉBUT : GESTION DES EXAMENS ==========
+// ========== DÉBUT : EXAMENS ==========
 async function loadExamens() {
     try {
         const { data, error } = await supabaseAdmin
@@ -497,19 +396,14 @@ async function loadExamens() {
         if (error) throw error;
         allExamens = data || [];
         renderExamensTable();
-    } catch (err) {
-        console.error(err);
-    }
+    } catch (err) { console.error(err); }
 }
 
 function renderExamensTable() {
-    const tableBody = document.getElementById('examensBody');
-    if (!tableBody) return;
-    if (allExamens.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" class="empty-message">Aucun examen trouvé</td></tr>';
-        return;
-    }
-    tableBody.innerHTML = allExamens.map(ex => {
+    const tbody = document.getElementById('examensBody');
+    if (!tbody) return;
+    if (!allExamens.length) { tbody.innerHTML = '<tr><td colspan="6">Aucun examen trouvé</td></tr>'; return; }
+    tbody.innerHTML = allExamens.map(ex => {
         const artiste = allInscriptions.find(a => a.artiste_id === ex.artiste_id);
         const artisteNom = artiste ? artiste.full_name : ex.artiste_id;
         return `
@@ -519,14 +413,11 @@ function renderExamensTable() {
                 <td>${ex.note_finale !== null ? ex.note_finale + '/20' : 'Non corrigé'}</td>
                 <td><span class="status-badge ${ex.statut === 'corrige' ? 'status-valide_public' : 'status-en_attente'}">${ex.statut === 'corrige' ? 'Corrigé' : 'En attente'}</span></td>
                 <td>${formatDate(ex.date_soumission)}</td>
-                <td>
-                    ${ex.statut === 'en_attente' ? `<button class="btn-icon btn-correct" data-examenid="${ex.id}" title="Corriger"><i class="fas fa-graduation-cap"></i></button>` : ''}
-                </td>
+                <td>${ex.statut === 'en_attente' ? `<button class="btn-icon btn-correct" data-examenid="${ex.id}" title="Corriger"><i class="fas fa-graduation-cap"></i></button>` : ''}</td>
             </tr>
         `;
     }).join('');
-
-    document.querySelectorAll('.btn-correct').forEach(btn => btn.addEventListener('click', () => openExamenModal(btn.dataset.examenid)));
+    tbody.querySelectorAll('.btn-correct').forEach(b => b.addEventListener('click', () => openExamenModal(b.dataset.examenid)));
 }
 
 function openExamenModal(examenId) {
@@ -540,24 +431,17 @@ async function saveExamenCorrection() {
     const examenId = document.getElementById('examenId').value;
     const note = parseFloat(document.getElementById('examenNote').value);
     const commentaire = document.getElementById('examenCommentaire').value.trim();
-    if (isNaN(note) || note < 0 || note > 20) {
-        showToast('La note doit être comprise entre 0 et 20.', 'warning');
-        return;
-    }
+    if (isNaN(note) || note < 0 || note > 20) { showToast('Note invalide', 'warning'); return; }
     const { error } = await supabaseAdmin
         .from('public_artiste_examens')
         .update({ note_finale: note, commentaire_admin: commentaire, statut: 'corrige', date_correction: new Date().toISOString() })
         .eq('id', examenId);
     if (error) showToast('Erreur : ' + error.message, 'error');
-    else {
-        showToast('Examen corrigé', 'success');
-        closeAllModals();
-        loadExamens();
-    }
+    else { showToast('Examen corrigé', 'success'); closeAllModals(); loadExamens(); }
 }
-// ========== FIN : GESTION DES EXAMENS ==========
+// ========== FIN : EXAMENS ==========
 
-// ========== DÉBUT : GESTION DES TESTS PRATIQUES ==========
+// ========== DÉBUT : TESTS PRATIQUES ==========
 async function loadAnalyses() {
     try {
         const { data, error } = await supabaseAdmin
@@ -567,19 +451,14 @@ async function loadAnalyses() {
         if (error) throw error;
         allAnalyses = data || [];
         renderAnalysesTable();
-    } catch (err) {
-        console.error(err);
-    }
+    } catch (err) { console.error(err); }
 }
 
 function renderAnalysesTable() {
-    const tableBody = document.getElementById('analysesBody');
-    if (!tableBody) return;
-    if (allAnalyses.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="empty-message">Aucun test pratique trouvé</td></tr>';
-        return;
-    }
-    tableBody.innerHTML = allAnalyses.map(an => {
+    const tbody = document.getElementById('analysesBody');
+    if (!tbody) return;
+    if (!allAnalyses.length) { tbody.innerHTML = '<tr><td colspan="5">Aucun test pratique trouvé</td></tr>'; return; }
+    tbody.innerHTML = allAnalyses.map(an => {
         const artiste = allInscriptions.find(a => a.artiste_id === an.artiste_id);
         const artisteNom = artiste ? artiste.full_name : an.artiste_id;
         return `
@@ -588,14 +467,11 @@ function renderAnalysesTable() {
                 <td>${escapeHtml(an.artiste_id)}</td>
                 <td><span class="status-badge ${an.statut === 'valide' ? 'status-valide_public' : an.statut === 'rejete' ? 'status-rejete' : 'status-en_attente'}">${an.statut === 'valide' ? 'Validé' : an.statut === 'rejete' ? 'Rejeté' : 'En attente'}</span></td>
                 <td>${formatDate(an.date_soumission)}</td>
-                <td>
-                    ${an.statut === 'en_attente' ? `<button class="btn-icon btn-evaluate" data-analyseid="${an.id}" title="Évaluer"><i class="fas fa-video"></i></button>` : ''}
-                </td>
+                <td>${an.statut === 'en_attente' ? `<button class="btn-icon btn-evaluate" data-analyseid="${an.id}" title="Évaluer"><i class="fas fa-video"></i></button>` : ''}</td>
             </tr>
         `;
     }).join('');
-
-    document.querySelectorAll('.btn-evaluate').forEach(btn => btn.addEventListener('click', () => openAnalyseModal(btn.dataset.analyseid)));
+    tbody.querySelectorAll('.btn-evaluate').forEach(b => b.addEventListener('click', () => openAnalyseModal(b.dataset.analyseid)));
 }
 
 function openAnalyseModal(analyseId) {
@@ -614,15 +490,11 @@ async function saveAnalyseEvaluation() {
         .update({ statut: statut, commentaire_admin: commentaire, date_traitement: new Date().toISOString() })
         .eq('id', analyseId);
     if (error) showToast('Erreur : ' + error.message, 'error');
-    else {
-        showToast('Test pratique évalué', 'success');
-        closeAllModals();
-        loadAnalyses();
-    }
+    else { showToast('Test pratique évalué', 'success'); closeAllModals(); loadAnalyses(); }
 }
-// ========== FIN : GESTION DES TESTS PRATIQUES ==========
+// ========== FIN : TESTS PRATIQUES ==========
 
-// ========== DÉBUT : GESTION DES MESSAGES (ONGLET) ==========
+// ========== DÉBUT : ONGLET MESSAGES ==========
 async function loadAllMessages() {
     try {
         const { data, error } = await supabaseAdmin
@@ -630,13 +502,9 @@ async function loadAllMessages() {
             .select('*')
             .order('created_at', { ascending: false });
         if (error) throw error;
-        const tableBody = document.getElementById('messagesBody');
-        if (!tableBody) return;
-        if (!data || data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="empty-message">Aucun message envoyé</td></tr>';
-            return;
-        }
-        tableBody.innerHTML = data.map(msg => {
+        const tbody = document.getElementById('messagesBody');
+        if (!tbody) return;
+        tbody.innerHTML = data.length ? data.map(msg => {
             const artiste = allInscriptions.find(a => a.artiste_id === msg.artiste_id);
             const artisteNom = artiste ? artiste.full_name : msg.artiste_id;
             return `
@@ -647,10 +515,8 @@ async function loadAllMessages() {
                     <td>${new Date(msg.created_at).toLocaleString('fr-FR')}</td>
                 </tr>
             `;
-        }).join('');
-    } catch (err) {
-        console.error(err);
-    }
+        }).join('') : '<tr><td colspan="4">Aucun message</td></tr>';
+    } catch (err) { console.error(err); }
 }
 
 async function populateArtisteSelect() {
@@ -667,81 +533,48 @@ async function populateArtisteSelect() {
 async function sendGlobalMessage() {
     const artisteId = document.getElementById('targetArtiste').value;
     const message = document.getElementById('adminMessage').value.trim();
-    if (!artisteId || !message) {
-        showToast('Veuillez sélectionner un artiste et écrire un message.', 'warning');
-        return;
-    }
+    if (!artisteId || !message) { showToast('Veuillez sélectionner un artiste et écrire un message.', 'warning'); return; }
     const { error } = await supabaseAdmin.from('public_artiste_suivi_messages').insert([{
-        artiste_id: artisteId,
-        sender: 'admin',
-        content: message,
-        created_at: new Date().toISOString()
+        artiste_id: artisteId, sender: 'admin', content: message, created_at: new Date().toISOString()
     }]);
     if (error) showToast('Erreur : ' + error.message, 'error');
-    else {
-        showToast('Message envoyé', 'success');
-        document.getElementById('adminMessage').value = '';
-        loadAllMessages();
-    }
+    else { showToast('Message envoyé', 'success'); document.getElementById('adminMessage').value = ''; loadAllMessages(); }
 }
-// ========== FIN : GESTION DES MESSAGES ==========
+// ========== FIN : ONGLET MESSAGES ==========
 
-// ========== DÉBUT : FERMETURE DES MODALES ==========
-document.querySelectorAll('.close-modal').forEach(btn => {
-    btn.addEventListener('click', closeAllModals);
-});
-window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal')) closeAllModals();
-});
-// ========== FIN : FERMETURE DES MODALES ==========
-
-// ========== DÉBUT : ÉVÉNEMENTS FILTRES ET RAFRAÎCHISSEMENT ==========
+// ========== DÉBUT : ÉVÉNEMENTS GÉNÉRAUX ==========
 document.getElementById('searchInput').addEventListener('input', renderArtistesTable);
 document.getElementById('roleFilter').addEventListener('change', renderArtistesTable);
 document.getElementById('statusFilter').addEventListener('change', renderArtistesTable);
-document.getElementById('refreshStatsBtn').addEventListener('click', () => {
-    loadArtistes();
-    showToast('Données rafraîchies', 'info');
-});
+document.getElementById('refreshStatsBtn').addEventListener('click', () => { loadArtistes(); showToast('Rafraîchi', 'info'); });
 document.getElementById('searchExamen').addEventListener('input', renderExamensTable);
 document.getElementById('examenStatusFilter').addEventListener('change', renderExamensTable);
 document.getElementById('refreshExamens').addEventListener('click', loadExamens);
 document.getElementById('searchAnalyse').addEventListener('input', renderAnalysesTable);
 document.getElementById('analyseStatusFilter').addEventListener('change', renderAnalysesTable);
 document.getElementById('refreshAnalyses').addEventListener('click', loadAnalyses);
-document.getElementById('sendMessageBtn').addEventListener('click', sendGlobalMessage);
+document.getElementById('sendGlobalMsgBtn').addEventListener('click', sendGlobalMessage);
 document.getElementById('saveExamenBtn').addEventListener('click', saveExamenCorrection);
 document.getElementById('saveAnalyseBtn').addEventListener('click', saveAnalyseEvaluation);
-// ========== FIN : ÉVÉNEMENTS ==========
 
-// ========== DÉBUT : MENU MOBILE ==========
+document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', closeAllModals));
+window.addEventListener('click', e => { if (e.target.classList.contains('modal')) closeAllModals(); });
+
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 if (menuToggle && navLinks) {
-    menuToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-        menuToggle.classList.toggle('open');
-    });
-    document.addEventListener('click', (e) => {
+    menuToggle.addEventListener('click', () => { navLinks.classList.toggle('active'); menuToggle.classList.toggle('open'); });
+    document.addEventListener('click', e => {
         if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
-            navLinks.classList.remove('active');
-            menuToggle.classList.remove('open');
+            navLinks.classList.remove('active'); menuToggle.classList.remove('open');
         }
     });
 }
-const logoutBtn = document.getElementById('logoutBtn');
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        showToast('Déconnexion (à implémenter)', 'info');
-    });
-}
-// ========== FIN : MENU MOBILE ==========
+document.getElementById('logoutBtn')?.addEventListener('click', e => { e.preventDefault(); showToast('Déconnexion', 'info'); });
 
-// ========== DÉBUT : GESTION DES ONGLETS ==========
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        const tabId = btn.getAttribute('data-tab');
+        const tabId = btn.dataset.tab;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
@@ -752,7 +585,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         else if (tabId === 'messages') { loadAllMessages(); populateArtisteSelect(); }
     });
 });
-// ========== FIN : GESTION DES ONGLETS ==========
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', () => {

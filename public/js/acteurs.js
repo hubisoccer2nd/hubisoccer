@@ -2155,7 +2155,7 @@ document.getElementById('inscriptionForm').addEventListener('submit', async (e) 
         if (error) throw error;
 
         document.getElementById('trackingId').textContent = ppId;
-        document.getElementById('trackingLink').href = `suivi-acteur.html?id=${ppId}`;
+        // ==========document.getElementById('trackingLink').href = `suivi-acteur.html?id=${ppId}`;==========
         document.getElementById('successModal').classList.add('active');
         closeInscriptionModal();
     } catch (err) {

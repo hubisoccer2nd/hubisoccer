@@ -1,9 +1,9 @@
 /* ========== SUIVI-ACTEUR.CSS ========== */
-/* début variables et reset */
+/* ========== DÉBUT : VARIABLES ET RESET ========== */
 :root {
-    --primary: #551B8C;
-    --primary-light: #7e3db0;
-    --primary-dark: #3d1266;
+    --primary: #4B0082;
+    --primary-light: #7B2FBE;
+    --primary-dark: #2E004F;
     --gold: #FFCC00;
     --gold-dark: #e6b800;
     --bg-light: #F0F8FF;
@@ -15,7 +15,7 @@
     --warning: #ffc107;
     --danger: #dc3545;
     --shadow: 0 10px 30px rgba(0,0,0,0.05);
-    --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
+    --shadow-hover: 0 15px 40px rgba(75,0,130,0.15);
     --transition: all 0.3s ease;
 }
 
@@ -47,9 +47,9 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-/* fin variables et reset */
+/* ========== FIN : VARIABLES ET RESET ========== */
 
-/* début navbar (identique aux autres pages) */
+/* ========== DÉBUT : NAVBAR ========== */
 nav {
     display: flex;
     justify-content: space-between;
@@ -133,12 +133,12 @@ nav {
 .nav-links {
     display: flex;
     align-items: center;
+    gap: 20px;
 }
 
 .nav-links a {
     color: var(--primary);
     text-decoration: none;
-    margin-left: 20px;
     font-weight: 600;
     font-size: 0.9rem;
     transition: var(--transition);
@@ -187,9 +187,9 @@ nav {
 .btn-auth.gold:hover {
     background: var(--gold-dark);
 }
-/* fin navbar */
+/* ========== FIN : NAVBAR ========== */
 
-/* début contenu principal suivi-acteur */
+/* ========== DÉBUT : CONTENU PRINCIPAL ========== */
 .suivi-main {
     min-height: 70vh;
     padding: 60px 5%;
@@ -241,7 +241,7 @@ nav {
 .search-box input:focus {
     border-color: var(--primary);
     outline: none;
-    box-shadow: 0 0 0 4px rgba(85,27,140,0.1);
+    box-shadow: 0 0 0 4px rgba(75,0,130,0.1);
 }
 
 .btn-check {
@@ -292,6 +292,16 @@ nav {
 
 .status-badge.rejete {
     background: var(--danger);
+    color: white;
+}
+
+.status-badge.bloque {
+    background: var(--gray);
+    color: white;
+}
+
+.status-badge.supprime {
+    background: #444;
     color: white;
 }
 
@@ -361,9 +371,16 @@ nav {
     margin: 20px 0;
     border-left: 4px solid var(--gold);
     font-size: 0.9rem;
+    color: var(--dark);
 }
 
-/* messagerie */
+.admin-notes i {
+    color: var(--primary);
+    margin-right: 5px;
+}
+/* ========== FIN : CONTENU PRINCIPAL ========== */
+
+/* ========== DÉBUT : MESSAGERIE ========== */
 .messages-section {
     margin-top: 30px;
     border-top: 1px solid var(--light-gray);
@@ -387,6 +404,12 @@ nav {
     overflow-y: auto;
     margin-bottom: 15px;
     border: 1px solid var(--light-gray);
+}
+
+.empty-message {
+    text-align: center;
+    color: var(--gray);
+    padding: 20px;
 }
 
 .message {
@@ -495,8 +518,9 @@ nav {
 .contact-support a:hover {
     text-decoration: underline;
 }
+/* ========== FIN : MESSAGERIE ========== */
 
-/* toasts */
+/* ========== DÉBUT : TOASTS ========== */
 .toast-container {
     position: fixed;
     bottom: 20px;
@@ -552,8 +576,9 @@ nav {
 @keyframes fadeOut {
     to { opacity: 0; transform: translateX(100%); }
 }
+/* ========== FIN : TOASTS ========== */
 
-/* footer */
+/* ========== DÉBUT : FOOTER ========== */
 footer {
     background: #0a0a0a;
     color: white;
@@ -600,8 +625,9 @@ footer {
     color: rgba(255,255,255,0.5);
     margin: 5px 0;
 }
+/* ========== FIN : FOOTER ========== */
 
-/* responsive */
+/* ========== DÉBUT : RESPONSIVE ========== */
 @media (max-width: 1008px) {
     .menu-toggle {
         display: flex;
@@ -620,14 +646,15 @@ footer {
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         border: 1px solid var(--light-gray);
         z-index: 999;
+        gap: 15px;
     }
     .nav-links.active {
         display: flex;
     }
     .nav-links a {
-        margin: 12px 0;
-        margin-left: 0;
+        margin: 0;
         text-align: center;
+        font-size: 1.1rem;
     }
     .btn-auth {
         text-align: center;
@@ -664,3 +691,21 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+/* Très petits mobiles (< 400px) */
+@media (max-width: 400px) {
+    nav {
+        padding: 15px 4%;
+    }
+    .logo-nav {
+        height: 40px;
+    }
+    .suivi-main {
+        padding: 20px 15px;
+    }
+    .search-box input {
+        font-size: 0.9rem;
+    }
+}
+/* ========== FIN : RESPONSIVE ========== */
+/* ========== FIN DE SUIVI-ACTEUR.CSS ========== */

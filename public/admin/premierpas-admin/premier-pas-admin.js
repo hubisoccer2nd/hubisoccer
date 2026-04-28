@@ -151,8 +151,8 @@ function renderSportifsTable() {
                 ${ins.status !== 'valide_public' ? `<button class="btn-icon btn-approve" data-ppid="${ins.pp_id}" title="Approuver"><i class="fas fa-check-circle"></i></button>` : ''}
                 ${ins.status !== 'rejete' ? `<button class="btn-icon btn-reject" data-ppid="${ins.pp_id}" title="Rejeter"><i class="fas fa-times-circle"></i></button>` : ''}
                 ${ins.status !== 'bloque' ? `<button class="btn-icon btn-block" data-ppid="${ins.pp_id}" title="Bloquer"><i class="fas fa-ban"></i></button>` : ''}
-                ${ins.status !== 'test_ecrit' && ins.status !== 'valide_public' ? `<button class="btn-icon btn-test-ecrit" data-ppid="${ins.pp_id}" title="Test écrit"><i class="fas fa-pencil-alt"></i></button>` : ''}
-                ${ins.status !== 'test_pratique' && ins.status !== 'valide_public' ? `<button class="btn-icon btn-test-pratique" data-ppid="${ins.pp_id}" title="Test pratique"><i class="fas fa-video"></i></button>` : ''}
+                ${ins.status !== 'test_ecrit' ? `<button class="btn-icon btn-test-ecrit" data-ppid="${ins.pp_id}" title="Test écrit"><i class="fas fa-pencil-alt"></i></button>` : ''}
+                ${ins.status !== 'test_pratique' ? `<button class="btn-icon btn-test-pratique" data-ppid="${ins.pp_id}" title="Test pratique"><i class="fas fa-video"></i></button>` : ''}
                 <button class="btn-icon btn-delete" data-ppid="${ins.pp_id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
             </td>
         </tr>

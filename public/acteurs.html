@@ -12,21 +12,19 @@
     <meta property="og:image" content="https://hubisoccer2nd.github.io/hubisoccer/public/img/stade-cotonou.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Chemin absolu pour que la page fonctionne depuis n’importe quel dossier -->
-    <base href="/hubisoccer/">
-    <link rel="stylesheet" href="public/css/acteurs.css">
+    <!-- Chemin relatif correct depuis /public/acteurs.html -->
+    <link rel="stylesheet" href="css/acteurs.css">
 </head>
 <body>
-    <!-- Loader -->
     <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
         <div class="spinner"></div>
         <span data-i18n="loader.message">Chargement...</span>
     </div>
 
-    <!-- ========== NAVBAR OFFICIELLE (identique à la page d’accueil) ========== -->
     <nav>
         <a href="./" class="logo-link">
-            <img src="public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+            <!-- Chemin relatif correct depuis /public/acteurs.html -->
+            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
             <select class="lang-picker" id="langSelect">
@@ -57,23 +55,23 @@
             </select>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="public/e-marketing-hubisoccer.html" data-i18n="hub_market">HUBISOCCER MARKET</a>
-                <a href="public/hub-community.html" data-i18n="hub_community">HUB COMMUNITY</a>
-                <a href="public/scouting.html" data-i18n="scouting">SCOUTING</a>
-                <a href="public/processus.html" data-i18n="processus">PROCESSUS</a>
-                <a href="public/affiliation.html" data-i18n="affiliation">AFFILIATION</a>
-                <a href="public/premier-pas.html" data-i18n="premier_pas">PREMIER-PAS</a>
-                <a href="public/acteurs.html" class="active" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
-                <a href="public/artiste-adhesion.html" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
-                <a href="public/tournoi.html" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
-                <a href="public/esp.html" data-i18n="esp">SAVOIR+</a>
-                <a href="hubisapp/authprive/users/login.html" class="btn-auth" data-i18n="connexion">Connexion</a>
-                <a href="hubisapp/authprive/users/signup.html" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
+                <a href="e-marketing-hubisoccer.html" data-i18n="hub_market">HUBISOCCER MARKET</a>
+                <a href="hub-community.html" data-i18n="hub_community">HUB COMMUNITY</a>
+                <a href="scouting.html" data-i18n="scouting">SCOUTING</a>
+                <a href="processus.html" data-i18n="processus">PROCESSUS</a>
+                <a href="affiliation.html" data-i18n="affiliation">AFFILIATION</a>
+                <a href="premier-pas.html" data-i18n="premier_pas">PREMIER-PAS</a>
+                <a href="acteurs.html" class="active" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
+                <a href="artiste-adhesion.html" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
+                <a href="tournoi.html" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
+                <a href="esp.html" data-i18n="esp">SAVOIR+</a>
+                <a href="../hubisapp/authprive/users/login.html" class="btn-auth" data-i18n="connexion">Connexion</a>
+                <a href="../hubisapp/authprive/users/signup.html" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
             </div>
         </div>
     </nav>
 
-    <header class="acteur-header" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(75,0,130,0.8)), url('public/img/stade-cotonou.jpg') center/cover no-repeat;">
+    <header class="acteur-header" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(75,0,130,0.8)), url('img/stade-cotonou.jpg') center/cover no-repeat;">
         <h1><span data-i18n="acteur.header.title">Devenez</span> <span class="highlight" data-i18n="acteur.header.highlight">Acteur</span></h1>
         <p data-i18n="acteur.header.subtitle">Soutenez les talents et contribuez au développement du football.</p>
     </header>
@@ -132,7 +130,7 @@
         </section>
     </main>
 
-    <!-- MODALE D'ADHÉSION (devenir acteur) -->
+    <!-- Modale d'adhésion -->
     <div id="inscriptionModal" class="modal">
         <div class="modal-content large">
             <span class="close-modal" onclick="closeInscriptionModal()">×</span>
@@ -159,7 +157,7 @@
                         <span data-i18n="acteur.modal.upload_click">Cliquez pour télécharger (PDF, JPG, PNG)</span>
                         <input type="file" id="inscriptionFile" accept=".jpg,.png,.pdf" required>
                         <div class="upload-status" id="uploadStatus" style="display: none;">
-                            <span class="upload-spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid var(--light-gray); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px;"></span>
+                            <span class="upload-spinner"></span>
                             <span id="uploadStatusText">Téléversement en cours...</span>
                         </div>
                         <div class="upload-success" id="uploadSuccess" style="display: none;">
@@ -173,7 +171,7 @@
         </div>
     </div>
 
-    <!-- MODALE DE CONTACT -->
+    <!-- Modale de contact -->
     <div id="contactModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeContactModal()">×</span>
@@ -198,7 +196,7 @@
         </div>
     </div>
 
-    <!-- MODALE DE SUCCÈS -->
+    <!-- Modale de succès -->
     <div id="successModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -242,6 +240,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="public/js/acteurs.js"></script>
+    <!-- Chemin relatif correct depuis /public/acteurs.html -->
+    <script src="js/acteurs.js"></script>
 </body>
 </html>

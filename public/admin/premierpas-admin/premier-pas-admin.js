@@ -67,7 +67,8 @@ function getSportLabel(code) {
 function getStatusLabel(status) {
     const labels = {
         'en_attente': 'En attente', 'valide_public': 'Approuvé',
-        'rejete': 'Rejeté', 'bloque': 'Bloqué', 'supprime': 'Supprimé', 'test_ecrit': 'Test écrit'
+        'rejete': 'Rejeté', 'bloque': 'Bloqué', 'supprime': 'Supprimé',
+        'test_ecrit': 'Test écrit', 'test_pratique': 'Test pratique'
     };
     return labels[status] || status;
 }
@@ -109,7 +110,7 @@ async function loadSportifs() {
 
 // ========== DÉBUT : STATISTIQUES ==========
 function updateStats() {
-    const s = { en_attente:0, valide_public:0, rejete:0, bloque:0, supprime:0, test_ecrit:0 };
+    const s = { en_attente:0, valide_public:0, rejete:0, bloque:0, supprime:0, test_ecrit:0, test_pratique:0 };
     allInscriptions.forEach(i => { if (s[i.status] !== undefined) s[i.status]++; });
     document.getElementById('statEnAttente').textContent = s.en_attente;
     document.getElementById('statApprouve').textContent = s.valide_public;
@@ -150,6 +151,8 @@ function renderSportifsTable() {
                 ${ins.status !== 'valide_public' ? `<button class="btn-icon btn-approve" data-ppid="${ins.pp_id}" title="Approuver"><i class="fas fa-check-circle"></i></button>` : ''}
                 ${ins.status !== 'rejete' ? `<button class="btn-icon btn-reject" data-ppid="${ins.pp_id}" title="Rejeter"><i class="fas fa-times-circle"></i></button>` : ''}
                 ${ins.status !== 'bloque' ? `<button class="btn-icon btn-block" data-ppid="${ins.pp_id}" title="Bloquer"><i class="fas fa-ban"></i></button>` : ''}
+                ${ins.status !== 'test_ecrit' && ins.status !== 'valide_public' ? `<button class="btn-icon btn-test-ecrit" data-ppid="${ins.pp_id}" title="Test écrit"><i class="fas fa-pencil-alt"></i></button>` : ''}
+                ${ins.status !== 'test_pratique' && ins.status !== 'valide_public' ? `<button class="btn-icon btn-test-pratique" data-ppid="${ins.pp_id}" title="Test pratique"><i class="fas fa-video"></i></button>` : ''}
                 <button class="btn-icon btn-delete" data-ppid="${ins.pp_id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
             </td>
         </tr>
@@ -159,6 +162,8 @@ function renderSportifsTable() {
     tbody.querySelectorAll('.btn-approve').forEach(b => b.addEventListener('click', () => openApproveModal(b.dataset.ppid)));
     tbody.querySelectorAll('.btn-reject').forEach(b => b.addEventListener('click', () => openRejectModal(b.dataset.ppid)));
     tbody.querySelectorAll('.btn-block').forEach(b => b.addEventListener('click', () => openBlockModal(b.dataset.ppid)));
+    tbody.querySelectorAll('.btn-test-ecrit').forEach(b => b.addEventListener('click', () => openTestEcritModal(b.dataset.ppid)));
+    tbody.querySelectorAll('.btn-test-pratique').forEach(b => b.addEventListener('click', () => openTestPratiqueModal(b.dataset.ppid)));
     tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => openDeleteModal(b.dataset.ppid)));
 }
 // ========== FIN : TABLEAU SPORTIFS ==========
@@ -374,6 +379,56 @@ function openBlockModal(ppId) {
 }
 // ========== FIN : BLOCAGE ==========
 
+// ========== DÉBUT : TEST ÉCRIT ==========
+function openTestEcritModal(ppId) {
+    const ins = allInscriptions.find(i => i.pp_id === ppId);
+    if (!ins) return;
+    currentInscription = ins;
+
+    document.getElementById('confirmTestEcritBtn').onclick = async () => {
+        showLoader();
+        try {
+            const { error } = await supabaseAdmin
+                .from('public_premierpas')
+                .update({ status: 'test_ecrit', updated_at: new Date().toISOString() })
+                .eq('pp_id', currentInscription.pp_id);
+            if (error) throw error;
+            currentInscription.status = 'test_ecrit';
+            showToast('Sportif envoyé en test écrit', 'success');
+            closeAllModals();
+            loadSportifs();
+        } catch (err) { showToast('Erreur', 'error'); }
+        finally { hideLoader(); }
+    };
+    document.getElementById('testEcritModal').classList.add('active');
+}
+// ========== FIN : TEST ÉCRIT ==========
+
+// ========== DÉBUT : TEST PRATIQUE ==========
+function openTestPratiqueModal(ppId) {
+    const ins = allInscriptions.find(i => i.pp_id === ppId);
+    if (!ins) return;
+    currentInscription = ins;
+
+    document.getElementById('confirmTestPratiqueBtn').onclick = async () => {
+        showLoader();
+        try {
+            const { error } = await supabaseAdmin
+                .from('public_premierpas')
+                .update({ status: 'test_pratique', updated_at: new Date().toISOString() })
+                .eq('pp_id', currentInscription.pp_id);
+            if (error) throw error;
+            currentInscription.status = 'test_pratique';
+            showToast('Sportif envoyé en test pratique', 'success');
+            closeAllModals();
+            loadSportifs();
+        } catch (err) { showToast('Erreur', 'error'); }
+        finally { hideLoader(); }
+    };
+    document.getElementById('testPratiqueModal').classList.add('active');
+}
+// ========== FIN : TEST PRATIQUE ==========
+
 // ========== DÉBUT : SUPPRESSION ==========
 function openDeleteModal(ppId) {
     const ins = allInscriptions.find(i => i.pp_id === ppId);
@@ -453,7 +508,7 @@ async function saveExamenCorrection() {
 }
 // ========== FIN : EXAMENS ==========
 
-// ========== DÉBUT : TESTS PRATIQUES ==========
+// ========== DÉBUT : TESTS PRATIQUES (ANALYSES) ==========
 async function loadAnalyses() {
     try {
         const { data, error } = await supabaseAdmin
@@ -512,7 +567,7 @@ async function saveAnalyseEvaluation() {
 }
 // ========== FIN : TESTS PRATIQUES ==========
 
-// ========== DÉBUT : ONGLET MESSAGES ==========
+// ========== DÉBUT : ONGLET MESSAGES (GLOBAL) ==========
 async function loadAllMessages() {
     try {
         const { data, error } = await supabaseAdmin
@@ -590,6 +645,7 @@ if (menuToggle && navLinks) {
 }
 document.getElementById('logoutBtn')?.addEventListener('click', e => { e.preventDefault(); showToast('Déconnexion', 'info'); });
 
+// ========== GESTION DES ONGLETS ==========
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const tabId = btn.dataset.tab;

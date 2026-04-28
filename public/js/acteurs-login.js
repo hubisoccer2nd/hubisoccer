@@ -21,26 +21,26 @@ function showToast(message, type = 'info') {
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value.trim();
+    const identifiant = document.getElementById('loginIdentifiant').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
 
-    if (!email || !password) {
+    if (!identifiant || !password) {
         showToast('Veuillez remplir tous les champs.', 'error');
         return;
     }
 
-    // Hasher le mot de passe comme lors de l'approbation
+    // Hachage identique à celui de l'administration
     const hash = btoa(password);
 
     const { data, error } = await supabasePublic
         .from('public_acteur_inscriptions')
-        .select('pp_id, email, mot_de_passe_hash')
-        .eq('email', email)
+        .select('pp_id, login, mot_de_passe_hash')
+        .eq('login', identifiant)
         .eq('mot_de_passe_hash', hash)
         .maybeSingle();
 
     if (error || !data) {
-        showToast('Email ou mot de passe incorrect.', 'error');
+        showToast('Identifiant ou mot de passe incorrect.', 'error');
         return;
     }
 

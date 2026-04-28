@@ -413,6 +413,7 @@ tbody tr:last-child td {
 .status-bloque { background: var(--gray); color: white; }
 .status-supprime { background: #444; color: white; }
 .status-test_ecrit { background: var(--info); color: white; }
+.status-test_pratique { background: var(--info); color: white; }
 
 .actions-cell {
     display: flex;
@@ -447,6 +448,12 @@ tbody tr:last-child td {
 
 .btn-block { color: var(--gray); border: 1px solid var(--gray); }
 .btn-block:hover { background: var(--gray); color: white; }
+
+.btn-test-ecrit { color: var(--info); border: 1px solid var(--info); }
+.btn-test-ecrit:hover { background: var(--info); color: white; }
+
+.btn-test-pratique { color: var(--info); border: 1px solid var(--info); }
+.btn-test-pratique:hover { background: var(--info); color: white; }
 
 .btn-delete { color: #c82333; border: 1px solid #c82333; }
 .btn-delete:hover { background: #c82333; color: white; }
@@ -693,6 +700,18 @@ tbody tr:last-child td {
 .message-compose textarea:focus {
     border-color: var(--primary);
     outline: none;
+}
+
+/* Éditeur Quill */
+#viewMessageEditor .ql-toolbar {
+    border-radius: 12px 12px 0 0;
+    background: white;
+}
+#viewMessageEditor .ql-container {
+    border-radius: 0 0 12px 12px;
+    background: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
 }
 
 .btn-send {

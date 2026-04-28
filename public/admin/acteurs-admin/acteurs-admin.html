@@ -6,105 +6,188 @@
     <title>Admin - Gestion des acteurs | HubISoccer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.snow.css">
     <link rel="stylesheet" href="acteurs-admin.css">
 </head>
 <body>
+    <!-- ========== DÉBUT : LOADER GLOBAL ========== -->
     <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
         <div class="spinner"></div> Chargement...
     </div>
+    <!-- ========== FIN : LOADER GLOBAL ========== -->
 
+    <!-- ========== DÉBUT : NAVIGATION ========== -->
     <nav>
         <a href="../../../index.html" class="logo-link">
             <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
-            <span class="admin-badge">Espace Administration - Acteurs</span>
+            <span class="admin-badge"><i class="fas fa-lock"></i> Administration Acteurs</span>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="../../../index.html">Accueil site</a>
-                <a href="#" id="logoutBtn">Déconnexion</a>
+                <a href="../administration.html"><i class="fas fa-th-large"></i> Portail</a>
+                <a href="../tournoi-admin/tournoi-admin.html"><i class="fas fa-trophy"></i> Tournois</a>
+                <a href="../actualites-admin/actualites-admin.html"><i class="fas fa-newspaper"></i> Actualités</a>
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
             </div>
         </div>
     </nav>
+    <!-- ========== FIN : NAVIGATION ========== -->
 
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
     <main class="admin-main">
         <div class="admin-container">
-            <h1 class="page-title"><i class="fas fa-users"></i> Gestion des inscriptions « Acteurs »</h1>
-            <p class="page-subtitle">Consultez les demandes (parrain, coach, agent...), validez ou rejetez, échangez avec les candidats, et supprimez si nécessaire.</p>
-
-            <div class="admin-layout">
-                <!-- Colonne gauche : liste des inscriptions -->
-                <div class="inscriptions-list">
-                    <div class="list-header">
-                        <input type="text" id="searchInput" placeholder="Rechercher par nom, ID, email...">
-                        <select id="roleFilter">
-                            <option value="all">Tous les rôles</option>
-                            <option value="PR">Parrain</option>
-                            <option value="ST">Staff médical</option>
-                            <option value="CO">Coach</option>
-                            <option value="AG">Agent</option>
-                            <option value="AC">Académie</option>
-                            <option value="CL">Club</option>
-                            <option value="FO">Formateur</option>
-                        </select>
-                        <select id="statusFilter">
-                            <option value="all">Tous les statuts</option>
-                            <option value="en_attente">En attente</option>
-                            <option value="valide_public">Approuvé</option>
-                            <option value="rejete">Rejeté</option>
-                        </select>
-                    </div>
-                    <div id="inscriptionsListContainer" class="list-container">
-                        <div class="loading-placeholder">Chargement des inscriptions...</div>
-                    </div>
-                </div>
-
-                <!-- Colonne droite : détails de l'inscription sélectionnée -->
-                <div class="inscription-detail" id="inscriptionDetail" style="display: none;">
-                    <div class="detail-header">
-                        <h2 id="detailName"></h2>
-                        <div class="status-selector">
-                            <select id="statusSelect">
-                                <option value="en_attente">En attente</option>
-                                <option value="valide_public">Approuver</option>
-                                <option value="rejete">Rejeter</option>
-                            </select>
-                            <button id="updateStatusBtn" class="btn-update">Mettre à jour</button>
-                            <button id="deleteInscriptionBtn" class="btn-delete">🗑️ Supprimer</button>
-                        </div>
-                    </div>
-                    <div class="detail-content" id="detailContent"></div>
-                    
-                    <!-- Section messagerie admin -->
-                    <div class="admin-messages-section">
-                        <h3><i class="fas fa-comments"></i> Conversation avec le candidat</h3>
-                        <div id="adminMessagesContainer" class="messages-container scrollable"></div>
-                        <div class="message-compose">
-                            <div id="adminReplyEditor" style="height: 120px;"></div>
-                            <button id="sendAdminMsgBtn" class="btn-send"><i class="fas fa-paper-plane"></i> Envoyer un message</button>
-                        </div>
-                    </div>
-
-                    <div class="documents-links">
-                        <h3><i class="fas fa-file-alt"></i> Justificatif fourni</h3>
-                        <p><a href="#" id="documentLink" target="_blank">📄 Télécharger le fichier</a></p>
-                    </div>
-                </div>
+            <div class="page-header">
+                <h1 class="page-title"><i class="fas fa-users"></i> Gestion des acteurs</h1>
+                <p class="page-subtitle">Validez, rejetez ou bloquez les candidatures. Échangez avec les candidats.</p>
             </div>
+
+            <!-- ========== STATISTIQUES ========== -->
+            <div class="stats-bar" id="statsBar">
+                <div class="stat-card" data-status="en_attente">
+                    <i class="fas fa-clock"></i>
+                    <span class="stat-number" id="statEnAttente">0</span>
+                    <span class="stat-label">En attente</span>
+                </div>
+                <div class="stat-card" data-status="valide_public">
+                    <i class="fas fa-check-circle"></i>
+                    <span class="stat-number" id="statApprouve">0</span>
+                    <span class="stat-label">Approuvés</span>
+                </div>
+                <div class="stat-card" data-status="rejete">
+                    <i class="fas fa-times-circle"></i>
+                    <span class="stat-number" id="statRejete">0</span>
+                    <span class="stat-label">Rejetés</span>
+                </div>
+                <div class="stat-card" data-status="bloque">
+                    <i class="fas fa-ban"></i>
+                    <span class="stat-number" id="statBloque">0</span>
+                    <span class="stat-label">Bloqués</span>
+                </div>
+                <div class="stat-card" data-status="supprime">
+                    <i class="fas fa-trash-alt"></i>
+                    <span class="stat-number" id="statSupprime">0</span>
+                    <span class="stat-label">Supprimés</span>
+                </div>
+                <button class="btn-refresh" id="refreshStatsBtn">
+                    <i class="fas fa-sync-alt"></i> Rafraîchir
+                </button>
+            </div>
+            <!-- ========== FIN : STATISTIQUES ========== -->
+
+            <!-- ========== FILTRES ========== -->
+            <div class="filters-bar">
+                <input type="text" id="searchInput" placeholder="Rechercher par nom, email, ID...">
+                <select id="roleFilter">
+                    <option value="all">Tous les rôles</option>
+                    <option value="PR">Parrain</option>
+                    <option value="ST">Staff médical</option>
+                    <option value="CO">Coach</option>
+                    <option value="AG">Agent</option>
+                    <option value="AC">Académie</option>
+                    <option value="CL">Club</option>
+                    <option value="FO">Formateur</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="all">Tous les statuts</option>
+                    <option value="en_attente">En attente</option>
+                    <option value="valide_public">Approuvé</option>
+                    <option value="rejete">Rejeté</option>
+                    <option value="bloque">Bloqué</option>
+                    <option value="supprime">Supprimé</option>
+                </select>
+            </div>
+            <!-- ========== FIN : FILTRES ========== -->
+
+            <!-- ========== TABLEAU DES INSCRIPTIONS ========== -->
+            <div class="table-container">
+                <table id="inscriptionsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom complet</th>
+                            <th>Rôle</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="8" class="loading-placeholder">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- ========== FIN : TABLEAU ========== -->
         </div>
     </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
 
-    <footer>
-        <div class="legal">
-            <p>© 2026 HubISoccer - Administration Acteurs. Tous droits réservés.</p>
+    <!-- ========== DÉBUT : MODALES ========== -->
+    <!-- Modale de visualisation -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-eye"></i> Détails de l'inscription</h3>
+            <div id="viewContent"></div>
         </div>
-    </footer>
+    </div>
+
+    <!-- Modale d'approbation -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-check-circle"></i> Approuver l'inscription</h3>
+            <div id="approveInfo"></div>
+            <div class="form-group">
+                <label>Login généré</label>
+                <input type="text" id="generatedLogin" readonly>
+            </div>
+            <div class="form-group">
+                <label>Mot de passe généré</label>
+                <input type="text" id="generatedPassword" readonly>
+            </div>
+            <button id="confirmApprovalBtn" class="btn-submit"><i class="fas fa-check"></i> Confirmer l'approbation</button>
+        </div>
+    </div>
+
+    <!-- Modale de rejet -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-times-circle"></i> Rejeter l'inscription</h3>
+            <div class="form-group">
+                <label>Motif du rejet</label>
+                <textarea id="rejectReason" rows="3" placeholder="Expliquez le motif..."></textarea>
+            </div>
+            <button id="confirmRejectBtn" class="btn-submit btn-danger"><i class="fas fa-times"></i> Confirmer le rejet</button>
+        </div>
+    </div>
+
+    <!-- Modale de confirmation de blocage -->
+    <div id="blockModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-ban"></i> Bloquer l'inscription</h3>
+            <p>Êtes-vous sûr de vouloir bloquer ce candidat ? Il ne pourra plus postuler.</p>
+            <button id="confirmBlockBtn" class="btn-submit btn-warning"><i class="fas fa-ban"></i> Bloquer</button>
+        </div>
+    </div>
+
+    <!-- Modale de confirmation de suppression -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-trash-alt"></i> Supprimer l'inscription</h3>
+            <p>Cette action est irréversible. Les messages associés seront également supprimés.</p>
+            <button id="confirmDeleteBtn" class="btn-submit btn-danger"><i class="fas fa-trash-alt"></i> Supprimer définitivement</button>
+        </div>
+    </div>
+    <!-- ========== FIN : MODALES ========== -->
 
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="acteurs-admin.js"></script>
 </body>
 </html>

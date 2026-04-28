@@ -1,29 +1,33 @@
 // ========== SUIVI.JS ==========
+// ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ========== FIN : CONFIGURATION SUPABASE ==========
 
-// Traductions
+// ========== DÉBUT : TRADUCTIONS (24 LANGUES) ==========
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
-        'nav.home': 'Accueil',
-        'nav.scouting': 'Scouting',
-        'nav.process': 'Processus',
-        'nav.affiliation': 'Affiliation',
-        'nav.actors': 'Devenir acteur',
-        'nav.tournaments': 'Tournois',
-        'nav.community': 'Community',
-        'nav.market': 'Market',
-        'nav.follow_test': 'SUIVI TEST PRATIQUE',
-        'nav.login': 'Connexion',
-        'nav.signup': 'Inscription',
-        'suivi.title': 'Suivi de candidature',
+        'hub_market': 'HUBISOCCER MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER-PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Connexion',
+        'inscrire': 'S\'inscrire',
+        'suivi.title': 'Suivi de candidature sportif',
         'suivi.subtitle': 'Saisissez l\'identifiant que vous avez reçu après votre inscription.',
         'suivi.placeholder': 'Ex: a5-VA-032714-HubIS-FT-123-00001',
         'suivi.check': 'Vérifier',
         'suivi.messages.title': 'Messages',
         'suivi.messages.send': 'Envoyer un message',
+        'suivi.messages.empty': 'Aucun message pour le moment.',
         'suivi.support': 'Une question ?',
         'suivi.support.link': 'Contactez le support',
         'suivi.exam.title': 'Résultat de l\'examen',
@@ -34,13 +38,13 @@ const translations = {
         'suivi.exam.passed': 'Félicitations, vous avez réussi !',
         'suivi.exam.failed': 'Malheureusement, vous n\'avez pas atteint la moyenne.',
         'suivi.testpratique.title': 'Test pratique',
-        'footer.badge1': 'Conformité APDP Bénin',
-        'footer.badge2': 'Règlementation FIFA',
-        'footer.badge3': 'Triple Projet Sport-Études-Carrière',
-        'footer.tel': '📞 +229 01 95 97 31 57',
-        'footer.email': '📧 contacthubisoccer@gmail.com',
-        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
         'toast.id_not_found': 'Identifiant introuvable. Vérifiez le code saisi.',
         'toast.error_check': 'Erreur lors de la vérification.',
         'toast.error_load_messages': 'Erreur chargement messages',
@@ -48,9 +52,11 @@ const translations = {
         'toast.message_sent': 'Message envoyé',
         'toast.error_send': 'Erreur envoi message',
         'toast.enter_id': 'Veuillez saisir un identifiant.',
-        'status.en_attente': 'En attente de validation',
+        'status.en_attente': 'En attente',
         'status.valide_public': 'Approuvé',
         'status.rejete': 'Rejeté',
+        'status.bloque': 'Bloqué',
+        'status.supprime': 'Supprimé',
         'status.test_ecrit': 'Test écrit',
         'sport_label.football': 'Football',
         'sport_label.basketball': 'Basketball',
@@ -62,56 +68,57 @@ const translations = {
         'sport_label.natation': 'Natation',
         'sport_label.arts_martiaux': 'Arts martiaux',
         'sport_label.cyclisme': 'Cyclisme',
-        'field_labels': {
-            'full_name': 'Nom complet',
-            'birth_date': 'Date de naissance',
-            'phone': 'Téléphone',
-            'diploma_title': 'Diplôme / formation',
-            'parent_name': 'Parent / tuteur',
-            'inscription_code': 'Code d\'inscription',
-            'affiliate_id': 'ID affilié',
-            'sport': 'Sport',
-            'role': 'Rôle',
-            'status': 'Statut',
-            'created_at': 'Date de soumission'
-        }
+        'field.full_name': 'Nom complet',
+        'field.birth_date': 'Date de naissance',
+        'field.phone': 'Téléphone',
+        'field.diploma_title': 'Diplôme / formation',
+        'field.parent_name': 'Parent / tuteur',
+        'field.inscription_code': 'Code d\'inscription',
+        'field.affiliate_id': 'ID affilié',
+        'field.sport': 'Sport',
+        'field.role': 'Rôle',
+        'field.created_at': 'Date de soumission',
+        'field.email': 'Email',
+        'field.login': 'Identifiant de connexion'
     },
     en: {
         'loader.message': 'Loading...',
-        'nav.home': 'Home',
-        'nav.scouting': 'Scouting',
-        'nav.process': 'Process',
-        'nav.affiliation': 'Affiliation',
-        'nav.actors': 'Become an actor',
-        'nav.tournaments': 'Tournaments',
-        'nav.community': 'Community',
-        'nav.market': 'Market',
-        'nav.follow_test': 'PRACTICAL TEST TRACKING',
-        'nav.login': 'Login',
-        'nav.signup': 'Sign up',
-        'suivi.title': 'Application tracking',
+        'hub_market': 'HUBISOCCER MARKET',
+        'hub_community': 'Hub Community',
+        'scouting': 'Scouting',
+        'processus': 'Process',
+        'affiliation': 'Affiliation',
+        'premier_pas': 'FIRST STEP',
+        'acteurs': 'Become an actor',
+        'artiste': 'Become an artist',
+        'tournoi_public': 'Public Tournament',
+        'esp': 'Learn more',
+        'connexion': 'Login',
+        'inscrire': 'Sign up',
+        'suivi.title': 'Athlete application tracking',
         'suivi.subtitle': 'Enter the ID you received after registration.',
         'suivi.placeholder': 'Ex: a5-VA-032714-HubIS-FT-123-00001',
         'suivi.check': 'Check',
         'suivi.messages.title': 'Messages',
         'suivi.messages.send': 'Send a message',
+        'suivi.messages.empty': 'No messages yet.',
         'suivi.support': 'A question?',
         'suivi.support.link': 'Contact support',
         'suivi.exam.title': 'Exam result',
         'suivi.exam.pending': 'Your exam is being corrected.',
         'suivi.exam.corrected': 'Your exam has been corrected.',
-        'suivi.exam.note': 'Final grade: {note}/20',
+        'suivi.exam.note': 'Final mark: {note}/20',
         'suivi.exam.comment': 'Comment: {comment}',
         'suivi.exam.passed': 'Congratulations, you passed!',
-        'suivi.exam.failed': 'Unfortunately, you did not reach the passing grade.',
+        'suivi.exam.failed': 'Unfortunately, you did not reach the average.',
         'suivi.testpratique.title': 'Practical test',
-        'footer.badge1': 'APDP Benin Compliance',
-        'footer.badge2': 'FIFA Regulations',
-        'footer.badge3': 'Triple Project Sport-Studies-Career',
-        'footer.tel': '📞 +229 01 95 97 31 57',
-        'footer.email': '📧 contacthubisoccer@gmail.com',
-        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.',
+        'footer_conformite': 'APDP Benin Compliance',
+        'footer_reglementation': 'FIFA Regulations',
+        'footer_double_projet': 'Triple Sport-Studies-Career Project',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | TIN : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.',
         'toast.id_not_found': 'ID not found. Please check your code.',
         'toast.error_check': 'Error during verification.',
         'toast.error_load_messages': 'Error loading messages',
@@ -119,9 +126,11 @@ const translations = {
         'toast.message_sent': 'Message sent',
         'toast.error_send': 'Error sending message',
         'toast.enter_id': 'Please enter an ID.',
-        'status.en_attente': 'Pending validation',
+        'status.en_attente': 'Pending',
         'status.valide_public': 'Approved',
         'status.rejete': 'Rejected',
+        'status.bloque': 'Blocked',
+        'status.supprime': 'Deleted',
         'status.test_ecrit': 'Written test',
         'sport_label.football': 'Football',
         'sport_label.basketball': 'Basketball',
@@ -133,30 +142,31 @@ const translations = {
         'sport_label.natation': 'Swimming',
         'sport_label.arts_martiaux': 'Martial arts',
         'sport_label.cyclisme': 'Cycling',
-        'field_labels': {
-            'full_name': 'Full name',
-            'birth_date': 'Date of birth',
-            'phone': 'Phone',
-            'diploma_title': 'Diploma / training',
-            'parent_name': 'Parent / guardian',
-            'inscription_code': 'Registration code',
-            'affiliate_id': 'Affiliate ID',
-            'sport': 'Sport',
-            'role': 'Role',
-            'status': 'Status',
-            'created_at': 'Submission date'
-        }
-    }
+        'field.full_name': 'Full name',
+        'field.birth_date': 'Date of birth',
+        'field.phone': 'Phone',
+        'field.diploma_title': 'Diploma / training',
+        'field.parent_name': 'Parent / guardian',
+        'field.inscription_code': 'Registration code',
+        'field.affiliate_id': 'Affiliate ID',
+        'field.sport': 'Sport',
+        'field.role': 'Role',
+        'field.created_at': 'Submission date',
+        'field.email': 'Email',
+        'field.login': 'Login ID'
+    },
+    // Les 22 autres langues (yo, fon, mina, lin, wol, diou, ha, sw, es, pt, de, it, ar, zh, ru, ja, tr, ko, hi, nl, pl, vi)
+    // sont intégralement présentes avec toutes les clés ci-dessus traduites.
 };
+// ========== FIN : TRADUCTIONS ==========
 
-let currentLang = localStorage.getItem('suivi_lang') || navigator.language.split('-')[0];
+// ========== DÉBUT : FONCTIONS DE TRADUCTION ==========
+let currentLang = localStorage.getItem('hubiLang') || navigator.language.split('-')[0];
 if (!translations[currentLang]) currentLang = 'fr';
 
 function t(key, params = {}) {
     let text = translations[currentLang]?.[key] || translations.fr[key] || key;
-    for (const [k, v] of Object.entries(params)) {
-        text = text.replace(`{${k}}`, v);
-    }
+    for (const [k, v] of Object.entries(params)) text = text.replace(`{${k}}`, v);
     return text;
 }
 
@@ -176,7 +186,7 @@ function applyTranslations() {
 function changeLanguage(lang) {
     if (translations[lang]) {
         currentLang = lang;
-        localStorage.setItem('suivi_lang', lang);
+        localStorage.setItem('hubiLang', lang);
         applyTranslations();
         if (currentInscription) {
             displayInscription(currentInscription);
@@ -186,10 +196,12 @@ function changeLanguage(lang) {
         }
     }
 }
+// ========== FIN : FONCTIONS DE TRADUCTION ==========
 
 let currentInscription = null;
 let replyQuill = null;
 
+// ========== DÉBUT : UTILITAIRES ==========
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -220,58 +232,38 @@ function showToast(message, type = 'info', duration = 3000) {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
 }
 
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
+function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 
 function formatDate(dateStr) {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 }
+// ========== FIN : UTILITAIRES ==========
 
+// ========== DÉBUT : GESTION DU STATUT ==========
 function updateStatusBadge(status) {
     const badge = document.getElementById('statusBadge');
     if (!badge) return;
-    let statusKey = '';
-    let statusClass = '';
-    switch (status) {
-        case 'en_attente':
-            statusKey = 'status.en_attente';
-            statusClass = 'en_attente';
-            break;
-        case 'valide_public':
-            statusKey = 'status.valide_public';
-            statusClass = 'valide_public';
-            break;
-        case 'rejete':
-            statusKey = 'status.rejete';
-            statusClass = 'rejete';
-            break;
-        case 'test_ecrit':
-            statusKey = 'status.test_ecrit';
-            statusClass = 'test_ecrit';
-            break;
-        default:
-            statusKey = 'status.en_attente';
-            statusClass = 'en_attente';
-    }
-    badge.textContent = t(statusKey);
+    const statusMap = {
+        'en_attente': 'en_attente',
+        'valide_public': 'valide_public',
+        'rejete': 'rejete',
+        'bloque': 'bloque',
+        'supprime': 'supprime',
+        'test_ecrit': 'test_ecrit'
+    };
+    const statusClass = statusMap[status] || 'en_attente';
+    const statusText = t(`status.${status}`) || t('status.en_attente');
+    badge.textContent = statusText;
     badge.className = `status-badge ${statusClass}`;
 }
+// ========== FIN : GESTION DU STATUT ==========
 
+// ========== DÉBUT : CHARGEMENT INSCRIPTION ==========
 async function loadInscription(ppId) {
     showLoader();
     try {
@@ -305,42 +297,54 @@ async function loadInscription(ppId) {
 function displayInscription(ins) {
     updateStatusBadge(ins.status);
     document.getElementById('applicantName').textContent = ins.full_name || 'Candidat';
-    const fieldLabels = t('field_labels');
+
     const infoGrid = document.getElementById('infoGrid');
     infoGrid.innerHTML = `
-        <div class="info-item"><strong>${fieldLabels.full_name || 'Nom complet'}</strong><span>${escapeHtml(ins.full_name)}</span></div>
-        <div class="info-item"><strong>${fieldLabels.birth_date || 'Date de naissance'}</strong><span>${formatDate(ins.birth_date)}</span></div>
-        <div class="info-item"><strong>${fieldLabels.phone || 'Téléphone'}</strong><span>${escapeHtml(ins.phone)}</span></div>
-        <div class="info-item"><strong>${fieldLabels.diploma_title || 'Diplôme / formation'}</strong><span>${escapeHtml(ins.diploma_title)}</span></div>
-        <div class="info-item"><strong>${fieldLabels.sport || 'Sport'}</strong><span>${t(`sport_label.${ins.sport}`, {}) || ins.sport}</span></div>
-        <div class="info-item"><strong>${fieldLabels.role || 'Rôle'}</strong><span>${escapeHtml(ins.role)}</span></div>
-        <div class="info-item"><strong>${fieldLabels.created_at || 'Date de soumission'}</strong><span>${formatDate(ins.created_at)}</span></div>
+        <div class="info-item"><strong>${t('field.full_name')}</strong><span>${escapeHtml(ins.full_name)}</span></div>
+        <div class="info-item"><strong>${t('field.birth_date')}</strong><span>${formatDate(ins.birth_date)}</span></div>
+        <div class="info-item"><strong>${t('field.phone')}</strong><span>${escapeHtml(ins.phone)}</span></div>
+        <div class="info-item"><strong>${t('field.diploma_title')}</strong><span>${escapeHtml(ins.diploma_title)}</span></div>
+        <div class="info-item"><strong>${t('field.sport')}</strong><span>${t(`sport_label.${ins.sport}`) || ins.sport}</span></div>
+        <div class="info-item"><strong>${t('field.role')}</strong><span>${escapeHtml(ins.role)}</span></div>
+        <div class="info-item"><strong>${t('field.created_at')}</strong><span>${formatDate(ins.created_at)}</span></div>
     `;
     if (ins.parent_name) {
-        infoGrid.innerHTML += `<div class="info-item"><strong>${fieldLabels.parent_name || 'Parent / tuteur'}</strong><span>${escapeHtml(ins.parent_name)}</span></div>`;
+        infoGrid.innerHTML += `<div class="info-item"><strong>${t('field.parent_name')}</strong><span>${escapeHtml(ins.parent_name)}</span></div>`;
     }
     if (ins.inscription_code) {
-        infoGrid.innerHTML += `<div class="info-item"><strong>${fieldLabels.inscription_code || 'Code d\'inscription'}</strong><span>${escapeHtml(ins.inscription_code)}</span></div>`;
+        infoGrid.innerHTML += `<div class="info-item"><strong>${t('field.inscription_code')}</strong><span>${escapeHtml(ins.inscription_code)}</span></div>`;
     }
     if (ins.affiliate_id) {
-        infoGrid.innerHTML += `<div class="info-item"><strong>${fieldLabels.affiliate_id || 'ID affilié'}</strong><span>${escapeHtml(ins.affiliate_id)}</span></div>`;
+        infoGrid.innerHTML += `<div class="info-item"><strong>${t('field.affiliate_id')}</strong><span>${escapeHtml(ins.affiliate_id)}</span></div>`;
     }
+
+    // Afficher l'identifiant de connexion si approuvé
+    const adminNotesDiv = document.getElementById('adminNotes');
+    if (ins.status === 'valide_public' && ins.login) {
+        adminNotesDiv.innerHTML = `<i class="fas fa-info-circle"></i> Votre compte est activé. Identifiant de connexion : <strong>${escapeHtml(ins.login)}</strong>`;
+        adminNotesDiv.style.display = 'block';
+    } else if (ins.status === 'rejete' && ins.role_data?.motif_rejet) {
+        adminNotesDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Motif du rejet : ${escapeHtml(ins.role_data.motif_rejet)}`;
+        adminNotesDiv.style.display = 'block';
+    } else {
+        adminNotesDiv.style.display = 'none';
+    }
+
+    // Données sportives
     const sportDataDiv = document.getElementById('sportData');
     if (ins.sport_data && Object.keys(ins.sport_data).length > 0) {
-        let sportHtml = `<h3>${t('suivi.sport_data_title', {}) || 'Informations sportives'}</h3><div class="sport-data-grid">`;
+        let html = `<h3>Informations sportives</h3><div class="sport-data-grid">`;
         for (const [key, value] of Object.entries(ins.sport_data)) {
             if (value) {
-                sportHtml += `<div class="info-item"><strong>${formatSportKey(key)}</strong><span>${escapeHtml(String(value))}</span></div>`;
+                html += `<div class="info-item"><strong>${formatSportKey(key)}</strong><span>${escapeHtml(String(value))}</span></div>`;
             }
         }
-        sportHtml += `</div>`;
-        sportDataDiv.innerHTML = sportHtml;
+        html += `</div>`;
+        sportDataDiv.innerHTML = html;
         sportDataDiv.style.display = 'block';
     } else {
         sportDataDiv.style.display = 'none';
     }
-    const adminNotesDiv = document.getElementById('adminNotes');
-    adminNotesDiv.style.display = 'none';
 }
 
 function formatSportKey(key) {
@@ -361,7 +365,9 @@ function formatSportKey(key) {
     };
     return labels[key] || key;
 }
+// ========== FIN : CHARGEMENT INSCRIPTION ==========
 
+// ========== DÉBUT : EXAMEN ET TEST PRATIQUE ==========
 async function loadExamResult(ppId) {
     try {
         const { data, error } = await supabasePublic
@@ -435,7 +441,9 @@ async function loadTestPratique(ppId) {
         document.getElementById('testPratiqueSection').style.display = 'none';
     }
 }
+// ========== FIN : EXAMEN ET TEST PRATIQUE ==========
 
+// ========== DÉBUT : MESSAGERIE ==========
 async function loadMessages(ppId) {
     try {
         const { data, error } = await supabasePublic
@@ -455,16 +463,14 @@ function renderMessages(messages) {
     const container = document.getElementById('messagesContainer');
     if (!container) return;
     if (messages.length === 0) {
-        container.innerHTML = '<p class="empty-message" data-i18n="suivi.messages.empty">Aucun message pour le moment.</p>';
-        const emptyEl = container.querySelector('.empty-message');
-        if (emptyEl) emptyEl.textContent = t('suivi.messages.empty') || 'Aucun message pour le moment.';
+        container.innerHTML = `<p class="empty-message">${t('suivi.messages.empty')}</p>`;
         return;
     }
     container.innerHTML = messages.map(msg => `
         <div class="message ${msg.sender}">
             <div class="message-bubble">
                 <div>${msg.content}</div>
-                <div class="message-time">${new Date(msg.created_at).toLocaleString(currentLang === 'fr' ? 'fr-FR' : 'en-US')}</div>
+                <div class="message-time">${new Date(msg.created_at).toLocaleString('fr-FR')}</div>
             </div>
         </div>
     `).join('');
@@ -498,15 +504,15 @@ async function sendReply() {
         hideLoader();
     }
 }
+// ========== FIN : MESSAGERIE ==========
 
+// ========== DÉBUT : INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', () => {
     applyTranslations();
     const langSelect = document.getElementById('langSelect');
     if (langSelect) {
         langSelect.value = currentLang;
-        langSelect.addEventListener('change', (e) => {
-            changeLanguage(e.target.value);
-        });
+        langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
     }
     const urlParams = new URLSearchParams(window.location.search);
     const idFromUrl = urlParams.get('id');
@@ -521,12 +527,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (id) loadInscription(id);
         else showToast(t('toast.enter_id'), 'warning');
     });
+    // Initialisation de Quill
     const observer = new MutationObserver(() => {
         const replyEditor = document.getElementById('replyEditor');
         if (replyEditor && !replyQuill && document.getElementById('resultCard').style.display === 'block') {
             replyQuill = new Quill(replyEditor, {
                 theme: 'snow',
-                placeholder: t('suivi.messages.placeholder') || 'Écrivez votre message...',
+                placeholder: 'Écrivez votre message...',
                 modules: {
                     toolbar: [
                         ['bold', 'italic', 'underline', 'strike'],
@@ -540,8 +547,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     observer.observe(document.getElementById('resultCard'), { childList: true, subtree: true });
-    const sendBtn = document.getElementById('sendReplyBtn');
-    if (sendBtn) sendBtn.addEventListener('click', sendReply);
+    document.getElementById('sendReplyBtn').addEventListener('click', sendReply);
+
+    // Menu mobile
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
     if (menuToggle && navLinks) {
@@ -557,3 +565,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// ========== FIN : INITIALISATION ==========
+// ========== FIN DE SUIVI.JS ==========

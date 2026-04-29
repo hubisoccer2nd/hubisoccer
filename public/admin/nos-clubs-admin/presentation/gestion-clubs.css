@@ -385,7 +385,7 @@ tbody tr:last-child td {
 }
 
 .modal-content.large {
-    max-width: 900px;
+    max-width: 1000px;
 }
 
 .close-modal {
@@ -457,6 +457,45 @@ tbody tr:last-child td {
     grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
+
+/* Styles pour les éditeurs Quill */
+.ql-toolbar {
+    border-radius: 20px 20px 0 0;
+    background: var(--bg-light);
+    border-color: var(--light-gray);
+    border-width: 2px;
+}
+
+.ql-container {
+    border-radius: 0 0 20px 20px;
+    border-color: var(--light-gray);
+    border-width: 2px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    min-height: 150px;
+}
+
+.ql-editor {
+    min-height: 150px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.ql-editor.ql-blank::before {
+    font-style: italic;
+    color: var(--gray);
+}
+
+/* Ajustement des polices personnalisées dans Quill */
+.ql-font-Rockwell { font-family: 'Rockwell', serif; }
+.ql-font-Times-New-Roman { font-family: 'Times New Roman', serif; }
+.ql-font-Calibri { font-family: 'Calibri', sans-serif; }
+.ql-font-Arial { font-family: 'Arial', sans-serif; }
+.ql-font-Georgia { font-family: 'Georgia', serif; }
+.ql-font-Verdana { font-family: 'Verdana', sans-serif; }
+.ql-font-Courier-New { font-family: 'Courier New', monospace; }
+.ql-font-Impact { font-family: 'Impact', sans-serif; }
+.ql-font-Tahoma { font-family: 'Tahoma', sans-serif; }
 
 .file-upload-box {
     border: 2px dashed var(--gold);
@@ -646,6 +685,9 @@ tbody tr:last-child td {
     .form-row {
         grid-template-columns: 1fr;
     }
+    .modal-content.large {
+        max-width: 95%;
+    }
 }
 
 @media (max-width: 600px) {
@@ -667,6 +709,11 @@ tbody tr:last-child td {
     tbody td {
         padding: 10px 6px;
         font-size: 0.8rem;
+    }
+    .ql-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 }
 /* ========== FIN : RESPONSIVE ========== */

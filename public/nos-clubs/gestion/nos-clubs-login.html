@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Nos Clubs | HubISoccer</title>
+    <meta name="description" content="Connectez-vous à votre espace membre du club HubISoccer.">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="nos-clubs-login.css">
+</head>
+<body>
+    <!-- ========== DÉBUT : NAVBAR ========== -->
+    <nav>
+        <a href="../presentation/clubs.html" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <a href="../presentation/clubs.html" class="btn-back"><i class="fas fa-arrow-left"></i> Retour</a>
+        </div>
+    </nav>
+    <!-- ========== FIN : NAVBAR ========== -->
+
+    <!-- ========== DÉBUT : FORMULAIRE DE CONNEXION ========== -->
+    <main>
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <i class="fas fa-users login-icon"></i>
+                    <h1>Espace Membre</h1>
+                    <p>Connectez-vous avec l'identifiant et le mot de passe fournis par l'administration.</p>
+                </div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginIdentifiant"><i class="fas fa-user"></i> Identifiant</label>
+                        <input type="text" id="loginIdentifiant" placeholder="Votre identifiant" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword"><i class="fas fa-lock"></i> Mot de passe</label>
+                        <input type="password" id="loginPassword" placeholder="Votre mot de passe" required>
+                    </div>
+                    <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Se connecter</button>
+                </form>
+                <p class="login-help">
+                    Vous n'avez pas encore vos identifiants ?<br>
+                    Ils vous seront communiqués après validation de votre inscription.
+                </p>
+            </div>
+        </div>
+    </main>
+    <!-- ========== FIN : FORMULAIRE DE CONNEXION ========== -->
+
+    <!-- ========== DÉBUT : FOOTER ========== -->
+    <footer>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+    <!-- ========== FIN : FOOTER ========== -->
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="nos-clubs-login.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-// ========== FICHE-CLUB.JS ==========
+// ========== FICHE-CLUB.JS (CORRIGÉ) ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -53,14 +53,8 @@ function showToast(message, type = 'info', duration = 15000) {
     }, duration);
 }
 
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
+function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 
 function generateLogin(nom) {
     const base = nom.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 8);
@@ -75,9 +69,7 @@ function generatePassword() {
     return pwd;
 }
 
-function hashPassword(password) {
-    return btoa(password);
-}
+function hashPassword(password) { return btoa(password); }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
 // ========== DÉBUT : CHARGEMENT DU CLUB ==========
@@ -112,17 +104,20 @@ async function loadClub() {
 function displayClub(club) {
     document.getElementById('clubNom').textContent = club.nom;
     document.getElementById('clubDiscipline').innerHTML = `<i class="fas ${club.nosclub_roles?.icone || 'fa-users'}"></i> ${club.nosclub_roles?.nom || ''}`;
+
+    // Utiliser innerHTML pour la mission et la philosophie (permet le HTML)
     document.getElementById('clubAdresse').textContent = `${club.quartier || ''}, ${club.ville || ''}`;
     document.getElementById('clubMission').innerHTML = club.mission || 'Non renseigné.';
     document.getElementById('clubPhilosophie').innerHTML = club.philosophie || 'Non renseigné.';
-    document.getElementById('clubFonctionnement').textContent = 'Jours d\'entraînement : Mercredi 15h, Samedi 8h. Cotisation : 55 CFA/jour.';
-    document.getElementById('clubCoach').innerHTML = `<strong>Coach :</strong> ${escapeHtml(club.coach_nom || 'À désigner')}`;
-    document.getElementById('clubParrain').innerHTML = `<strong>Parrain :</strong> ${escapeHtml(club.parrain_nom || 'À désigner')}`;
+    // Le fonctionnement est un texte simple
+    document.getElementById('clubFonctionnement').textContent = nosClubsT('fiche.fonctionnement_valeur') || 'Jours d\'entraînement : Mercredi 15h, Samedi 8h. Cotisation : 55 CFA/jour.';
+    document.getElementById('clubCoach').innerHTML = `<strong>${nosClubsT('fiche.coach') || 'Coach'} :</strong> ${escapeHtml(club.coach_nom || 'À désigner')}`;
+    document.getElementById('clubParrain').innerHTML = `<strong>${nosClubsT('fiche.parrain') || 'Parrain'} :</strong> ${escapeHtml(club.parrain_nom || 'À désigner')}`;
 
     const quotaMax = club.quota_max || 30;
     const quotaUtilise = club.quota_utilise || 0;
     const disponible = quotaMax - quotaUtilise;
-    document.getElementById('clubQuota').textContent = `${disponible} place(s) disponible(s) sur ${quotaMax}`;
+    document.getElementById('clubQuota').textContent = `${disponible} ${nosClubsT('fiche.places_label') || 'place(s) disponible(s) sur'} ${quotaMax}`;
 
     // Badge
     const badge = document.getElementById('clubBadge');
@@ -149,6 +144,9 @@ function displayClub(club) {
     document.getElementById('formRole').value = club.nosclub_roles?.nom || '';
     document.getElementById('formClubId').value = club.id;
     document.getElementById('attenteClubId').value = club.id;
+
+    // Appliquer les traductions sur les éléments de la fiche
+    applyNosClubsTranslations();
 }
 
 function updateButtons(club) {
@@ -169,7 +167,7 @@ function updateButtons(club) {
 }
 // ========== FIN : CHARGEMENT DU CLUB ==========
 
-// ========== DÉBUT : GESTION UPLOAD PHOTO ==========
+// ========== DÉBUT : UPLOAD PHOTO ==========
 function setupPhotoUpload() {
     const box = document.getElementById('uploadPhoto');
     const input = document.getElementById('formPhoto');
@@ -215,14 +213,14 @@ function setupPhotoUpload() {
         if (e.target !== input) input.click();
     });
 }
-// ========== FIN : GESTION UPLOAD PHOTO ==========
+// ========== FIN : UPLOAD PHOTO ==========
 
 // ========== DÉBUT : SOUMISSION FORMULAIRE COMPLET ==========
 document.getElementById('formulaireInscription').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     if (!uploadedPhotoUrl) {
-        showToast('Veuillez téléverser votre photo d\'identité.', 'warning');
+        showToast(nosClubsT('toast.photo_requise') || 'Veuillez téléverser votre photo d\'identité.', 'warning');
         return;
     }
 
@@ -252,7 +250,7 @@ document.getElementById('formulaireInscription').addEventListener('submit', asyn
     });
 
     if (!nom || !dateNaissance || !villeQuartier || !telephone || !specialite) {
-        showToast('Veuillez remplir tous les champs obligatoires.', 'warning');
+        showToast(nosClubsT('toast.champs_obligatoires') || 'Veuillez remplir tous les champs obligatoires.', 'warning');
         return;
     }
 
@@ -302,7 +300,7 @@ document.getElementById('formulaireInscription').addEventListener('submit', asyn
         document.getElementById('formPhoto').value = '';
     } catch (err) {
         console.error(err);
-        showToast('Erreur lors de l\'inscription : ' + err.message, 'error');
+        showToast((nosClubsT('toast.erreur_inscription') || 'Erreur lors de l\'inscription : ') + err.message, 'error');
     } finally {
         hideLoader();
     }
@@ -322,7 +320,7 @@ document.getElementById('formulaireAttente').addEventListener('submit', async (e
     const motivation = document.getElementById('attenteMotivation').value.trim();
 
     if (!nom || !villeQuartier || !telephone) {
-        showToast('Veuillez remplir les champs obligatoires.', 'warning');
+        showToast(nosClubsT('toast.champs_obligatoires') || 'Veuillez remplir les champs obligatoires.', 'warning');
         return;
     }
 
@@ -346,10 +344,10 @@ document.getElementById('formulaireAttente').addEventListener('submit', async (e
 
         document.getElementById('attenteModal').classList.remove('active');
         document.getElementById('formulaireAttente').reset();
-        showToast('Vous avez été inscrit sur la liste d\'attente avec succès.', 'success');
+        showToast(nosClubsT('toast.attente_succes') || 'Vous avez été inscrit sur la liste d\'attente avec succès.', 'success');
     } catch (err) {
         console.error(err);
-        showToast('Erreur lors de l\'inscription sur liste d\'attente : ' + err.message, 'error');
+        showToast((nosClubsT('toast.erreur_inscription') || 'Erreur lors de l\'inscription sur liste d\'attente : ') + err.message, 'error');
     } finally {
         hideLoader();
     }
@@ -377,7 +375,6 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// Fermeture avec Escape
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
@@ -392,9 +389,9 @@ document.getElementById('copyIdsBtn').addEventListener('click', () => {
     const texte = `Identifiant: ${id}\nMot de passe: ${pwd}`;
 
     navigator.clipboard.writeText(texte).then(() => {
-        showToast('Identifiants copiés dans le presse-papiers !', 'success');
+        showToast(nosClubsT('toast.copie_succes') || 'Identifiants copiés dans le presse-papiers !', 'success');
     }).catch(() => {
-        showToast('Erreur lors de la copie.', 'error');
+        showToast(nosClubsT('toast.erreur_copie') || 'Erreur lors de la copie.', 'error');
     });
 });
 // ========== FIN : COPIE DES IDENTIFIANTS ==========

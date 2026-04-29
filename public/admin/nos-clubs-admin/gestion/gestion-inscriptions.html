@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion des inscriptions | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.snow.css">
+    <link rel="stylesheet" href="gestion-inscriptions.css">
+</head>
+<body>
+    <!-- ========== DÉBUT : LOADER GLOBAL ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+    <!-- ========== FIN : LOADER GLOBAL ========== -->
+
+    <!-- ========== DÉBUT : NAVIGATION ========== -->
+    <nav>
+        <a href="../../../index.html" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="admin-badge"><i class="fas fa-file-alt"></i> Administration Inscriptions</span>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="../administration.html"><i class="fas fa-th-large"></i> Portail</a>
+                <a href="../acteurs-admin/acteurs-admin.html"><i class="fas fa-users"></i> Acteurs</a>
+                <a href="../tournoi-admin/tournoi-admin.html"><i class="fas fa-trophy"></i> Tournois</a>
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+    <!-- ========== FIN : NAVIGATION ========== -->
+
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
+    <main class="admin-main">
+        <div class="admin-container">
+            <div class="page-header">
+                <h1 class="page-title"><i class="fas fa-file-alt"></i> Gestion des inscriptions – Nos Clubs</h1>
+                <p class="page-subtitle">Validez, rejetez, modifiez les candidatures. Gérez la liste d’attente et les preuves de paiement.</p>
+            </div>
+
+            <!-- ========== FILTRES ========== -->
+            <div class="filters-bar">
+                <input type="text" id="searchInput" placeholder="Rechercher par nom, téléphone, email...">
+                <select id="clubFilter">
+                    <option value="all">Tous les clubs</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="all">Tous les statuts</option>
+                    <option value="en_attente">En attente</option>
+                    <option value="valide">Validé</option>
+                    <option value="rejete">Rejeté</option>
+                    <option value="bloque">Bloqué</option>
+                    <option value="supprime">Supprimé</option>
+                </select>
+            </div>
+            <!-- ========== FIN : FILTRES ========== -->
+
+            <!-- ========== TABLEAU INSCRIPTIONS ========== -->
+            <h2><i class="fas fa-users"></i> Candidatures (formulaire complet)</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Club</th>
+                            <th>Téléphone</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Paiement</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inscriptionsBody">
+                        <tr><td colspan="8" class="loading-placeholder">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- ========== FIN : TABLEAU INSCRIPTIONS ========== -->
+
+            <!-- ========== TABLEAU LISTE D'ATTENTE ========== -->
+            <h2 style="margin-top: 40px;"><i class="fas fa-clock"></i> Liste d'attente</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Club</th>
+                            <th>Téléphone</th>
+                            <th>Motivation</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attenteBody">
+                        <tr><td colspan="6" class="loading-placeholder">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- ========== FIN : TABLEAU LISTE D'ATTENTE ========== -->
+        </div>
+    </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
+
+    <!-- ========== DÉBUT : MODALES ========== -->
+    <!-- Modale de visualisation -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-eye"></i> Détails du dossier</h3>
+            <div id="viewContent"></div>
+        </div>
+    </div>
+
+    <!-- Modale d'approbation -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-check-circle"></i> Approuver l'inscription</h3>
+            <div id="approveInfo"></div>
+            <div class="form-group">
+                <label>Login généré</label>
+                <input type="text" id="generatedLogin" readonly>
+            </div>
+            <div class="form-group">
+                <label>Mot de passe généré</label>
+                <input type="text" id="generatedPassword" readonly>
+            </div>
+            <button id="confirmApprovalBtn" class="btn-submit"><i class="fas fa-check"></i> Confirmer l'approbation</button>
+        </div>
+    </div>
+
+    <!-- Modale de rejet -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-times-circle"></i> Rejeter l'inscription</h3>
+            <div class="form-group">
+                <label>Motif du rejet</label>
+                <textarea id="rejectReason" rows="3" placeholder="Expliquez le motif..."></textarea>
+            </div>
+            <button id="confirmRejectBtn" class="btn-submit btn-danger"><i class="fas fa-times"></i> Confirmer le rejet</button>
+        </div>
+    </div>
+
+    <!-- Modale de modification -->
+    <div id="editModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-edit"></i> Modifier les informations</h3>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nom complet *</label>
+                        <input type="text" id="editNom" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date de naissance</label>
+                        <input type="date" id="editDateNaissance">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ville / Quartier</label>
+                        <input type="text" id="editVilleQuartier">
+                    </div>
+                    <div class="form-group">
+                        <label>Téléphone *</label>
+                        <input type="tel" id="editTelephone" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email & Réseaux sociaux</label>
+                    <input type="text" id="editEmailReseaux">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Spécialité / Poste</label>
+                        <input type="text" id="editSpecialite">
+                    </div>
+                    <div class="form-group">
+                        <label>Pied fort / Main dominante</label>
+                        <select id="editPiedMain">
+                            <option value="">--</option>
+                            <option value="Droit">Droit</option>
+                            <option value="Gauche">Gauche</option>
+                            <option value="Ambidextre">Ambidextre</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Taille (cm)</label>
+                        <input type="number" id="editTaille">
+                    </div>
+                    <div class="form-group">
+                        <label>Poids (kg)</label>
+                        <input type="number" id="editPoids" step="0.1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Niveau d'études</label>
+                    <input type="text" id="editNiveauEtudes">
+                </div>
+                <div class="form-group">
+                    <label>Métier souhaité</label>
+                    <input type="text" id="editMetierSouhaite">
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale d'upload de preuve de paiement -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-credit-card"></i> Preuve de paiement</h3>
+            <div class="form-group">
+                <label>Téléverser la preuve (PDF, JPG, PNG)</label>
+                <div class="file-upload-box" id="uploadPreuve">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Cliquez pour télécharger</span>
+                    <input type="file" id="preuveFile" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="upload-status" id="uploadStatusPreuve" style="display: none;">
+                        <span class="upload-spinner"></span><span>Téléversement...</span>
+                    </div>
+                    <div class="upload-success" id="uploadSuccessPreuve" style="display: none;">
+                        <i class="fas fa-check-circle"></i><span>Preuve prête</span>
+                    </div>
+                </div>
+            </div>
+            <button id="savePaymentBtn" class="btn-submit"><i class="fas fa-save"></i> Enregistrer la preuve</button>
+        </div>
+    </div>
+
+    <!-- Modale de confirmation de blocage -->
+    <div id="blockModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-ban"></i> Bloquer l'inscription</h3>
+            <p>Le candidat ne pourra plus postuler.</p>
+            <button id="confirmBlockBtn" class="btn-submit btn-warning"><i class="fas fa-ban"></i> Bloquer</button>
+        </div>
+    </div>
+
+    <!-- Modale de confirmation de suppression -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-trash-alt"></i> Supprimer l'inscription</h3>
+            <p>Cette action est irréversible.</p>
+            <button id="confirmDeleteBtn" class="btn-submit btn-danger"><i class="fas fa-trash-alt"></i> Supprimer définitivement</button>
+        </div>
+    </div>
+
+    <!-- Modale de conversion depuis liste d'attente -->
+    <div id="convertModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-exchange-alt"></i> Convertir en inscription</h3>
+            <p>Remplissez le formulaire complet pour finaliser l'inscription.</p>
+            <!-- Réutilisation du formulaire complet avec des champs pré-remplis -->
+            <div id="convertFormContainer"></div>
+        </div>
+    </div>
+    <!-- ========== FIN : MODALES ========== -->
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="gestion-inscriptions.js"></script>
+</body>
+</html>

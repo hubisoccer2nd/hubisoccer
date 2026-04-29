@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feuille de présence Coach | HubISoccer</title>
+    <meta name="description" content="Gérez la présence des talents à vos séances d'entraînement.">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="coach-presences.css">
+</head>
+<body>
+    <!-- ========== DÉBUT : NAVBAR MEMBRE ========== -->
+    <nav class="member-nav">
+        <div class="nav-brand">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+            <span class="nav-title">Espace Coach</span>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+        <div class="nav-links" id="navLinks">
+            <a href="coach-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+            <a href="coach-presences.html" class="active"><i class="fas fa-clipboard-check"></i> Présences</a>
+            <a href="coach-performances.html"><i class="fas fa-chart-line"></i> Performances</a>
+            <a href="coach-messages.html"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="coach-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+        </div>
+    </nav>
+    <!-- ========== FIN : NAVBAR MEMBRE ========== -->
+
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
+    <main class="presences-main">
+        <div class="presences-container">
+            <h1><i class="fas fa-clipboard-check"></i> Feuille de présence</h1>
+            <p class="subtitle">Sélectionnez une date et cochez les talents présents.</p>
+
+            <div class="date-selector">
+                <label for="datePresence"><i class="fas fa-calendar-day"></i> Date de la séance :</label>
+                <input type="date" id="datePresence" required>
+            </div>
+
+            <div class="table-container">
+                <table id="presencesTable">
+                    <thead>
+                        <tr>
+                            <th>Talent</th>
+                            <th>Spécialité</th>
+                            <th>Présent</th>
+                            <th>Commentaire</th>
+                        </tr>
+                    </thead>
+                    <tbody id="presencesBody">
+                        <tr><td colspan="4" class="loading-placeholder">Chargement des talents...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="action-bar">
+                <button id="savePresencesBtn" class="btn-submit"><i class="fas fa-save"></i> Enregistrer la présence</button>
+            </div>
+        </div>
+    </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
+
+    <!-- ========== DÉBUT : FOOTER ========== -->
+    <footer>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+    <!-- ========== FIN : FOOTER ========== -->
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../nos-clubs-i18n.js"></script>
+    <script src="coach-presences.js"></script>
+</body>
+</html>

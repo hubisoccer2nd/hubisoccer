@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nos Clubs | HubISoccer</title>
+    <meta name="description" content="Découvrez les clubs officiels HubISoccer près de chez vous. Postulez pour rejoindre un club ou inscrivez-vous sur liste d'attente.">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/clubs.css">
+</head>
+<body>
+    <!-- ========== DÉBUT : NAVBAR ========== -->
+    <nav>
+        <a href="./" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+            </select>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="clubs.html" class="active">Nos Clubs</a>
+                <a href="nos-clubs-login.html">Connexion</a>
+            </div>
+        </div>
+    </nav>
+    <!-- ========== FIN : NAVBAR ========== -->
+
+    <!-- ========== DÉBUT : HEADER ========== -->
+    <header class="clubs-header">
+        <h1><i class="fas fa-users"></i> Nos Clubs</h1>
+        <p>Rejoignez un club près de chez vous. Entraînez-vous, progressez et préparez votre avenir avec la Trinité HubISoccer.</p>
+    </header>
+    <!-- ========== FIN : HEADER ========== -->
+
+    <!-- ========== DÉBUT : BARRE DE RECHERCHE ET FILTRES ========== -->
+    <section class="filters-section">
+        <div class="filter-group">
+            <input type="text" id="searchInput" placeholder="Rechercher un club...">
+            <select id="disciplineFilter">
+                <option value="all">Toutes les disciplines</option>
+                <option value="sportif">Tous les sports</option>
+                <option value="artiste">Tous les artistes</option>
+                <!-- Les options détaillées seront remplies dynamiquement par le JS -->
+            </select>
+            <select id="villeFilter">
+                <option value="all">Toutes les villes</option>
+            </select>
+            <select id="statutFilter">
+                <option value="all">Tous les statuts</option>
+                <option value="actif">Actifs</option>
+                <option value="archive">Archivés</option>
+            </select>
+        </div>
+    </section>
+    <!-- ========== FIN : FILTRES ========== -->
+
+    <!-- ========== DÉBUT : GRILLE DES CLUBS ========== -->
+    <section class="clubs-grid-section">
+        <div class="clubs-grid" id="clubsGrid">
+            <!-- Les cartes des clubs seront injectées par JavaScript -->
+            <div class="loading-placeholder">Chargement des clubs...</div>
+        </div>
+    </section>
+    <!-- ========== FIN : GRILLE DES CLUBS ========== -->
+
+    <!-- ========== DÉBUT : FOOTER ========== -->
+    <footer>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+    <!-- ========== FIN : FOOTER ========== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/clubs.js"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performances des Talents | HubISoccer</title>
+    <meta name="description" content="Évaluez les performances techniques et physiques des talents de votre club.">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="coach-performances.css">
+</head>
+<body>
+    <!-- ========== DÉBUT : NAVBAR MEMBRE ========== -->
+    <nav class="member-nav">
+        <div class="nav-brand">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+            <span class="nav-title">Espace Coach</span>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+        <div class="nav-links" id="navLinks">
+            <a href="coach-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+            <a href="coach-presences.html"><i class="fas fa-clipboard-check"></i> Présences</a>
+            <a href="coach-performances.html" class="active"><i class="fas fa-chart-line"></i> Performances</a>
+            <a href="coach-messages.html"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="coach-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+        </div>
+    </nav>
+    <!-- ========== FIN : NAVBAR MEMBRE ========== -->
+
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
+    <main class="performances-main">
+        <div class="performances-container">
+            <h1><i class="fas fa-chart-line"></i> Évaluation des performances</h1>
+            <p class="subtitle">Attribuez des notes à vos talents pour suivre leur progression.</p>
+
+            <div class="form-card">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="talentSelect"><i class="fas fa-user"></i> Sélectionner un talent *</label>
+                        <select id="talentSelect" required>
+                            <option value="">-- Choisir un talent --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateEval"><i class="fas fa-calendar-day"></i> Date d'évaluation *</label>
+                        <input type="date" id="dateEval" required>
+                    </div>
+                </div>
+
+                <div class="notes-grid">
+                    <div class="form-group">
+                        <label for="noteVitesse"><i class="fas fa-running"></i> Vitesse (sur 20)</label>
+                        <input type="number" id="noteVitesse" min="0" max="20" step="1" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="noteTechnique"><i class="fas fa-futbol"></i> Technique (sur 20)</label>
+                        <input type="number" id="noteTechnique" min="0" max="20" step="1" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="noteDiscipline"><i class="fas fa-shield-alt"></i> Discipline (sur 20)</label>
+                        <input type="number" id="noteDiscipline" min="0" max="20" step="1" value="10">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="commentairePerf"><i class="fas fa-comment"></i> Commentaire</label>
+                    <textarea id="commentairePerf" rows="3" placeholder="Observations, consignes..."></textarea>
+                </div>
+
+                <button id="savePerfBtn" class="btn-submit"><i class="fas fa-save"></i> Enregistrer l'évaluation</button>
+            </div>
+
+            <!-- Historique des évaluations -->
+            <div class="historique-section">
+                <h2><i class="fas fa-history"></i> Dernières évaluations</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Talent</th>
+                                <th>Date</th>
+                                <th>Vitesse</th>
+                                <th>Technique</th>
+                                <th>Discipline</th>
+                                <th>Commentaire</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historiqueBody">
+                            <tr><td colspan="6" class="loading-placeholder">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
+
+    <!-- ========== DÉBUT : FOOTER ========== -->
+    <footer>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+    <!-- ========== FIN : FOOTER ========== -->
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../nos-clubs-i18n.js"></script>
+    <script src="coach-performances.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-// ========== GESTION-CLUBS.JS ==========
+// ========== GESTION-CLUBS.JS (CORRIGÉ) ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -68,7 +68,6 @@ const quillToolbarOptions = [
 ];
 
 function initEditors() {
-    // Détruire les instances existantes si présentes
     if (missionQuill) {
         missionQuill = null;
     }
@@ -76,26 +75,21 @@ function initEditors() {
         philosophieQuill = null;
     }
 
-    // Récupérer les conteneurs
     const missionEditor = document.getElementById('editorMission');
     const philosophieEditor = document.getElementById('editorPhilosophie');
 
-    // Vider le contenu précédent (important pour éviter doublons)
     if (missionEditor) missionEditor.innerHTML = '';
     if (philosophieEditor) philosophieEditor.innerHTML = '';
 
-    // Initialiser Quill pour la mission
     if (missionEditor) {
         missionQuill = new Quill('#editorMission', {
             theme: 'snow',
             modules: { toolbar: quillToolbarOptions },
             placeholder: 'Décrivez la mission et les objectifs du club...'
         });
-        // Appliquer une police par défaut
         missionQuill.root.style.fontFamily = 'Calibri, sans-serif';
     }
 
-    // Initialiser Quill pour la philosophie
     if (philosophieEditor) {
         philosophieQuill = new Quill('#editorPhilosophie', {
             theme: 'snow',
@@ -107,12 +101,18 @@ function initEditors() {
 }
 
 function setQuillContent(quillInstance, htmlContent) {
-    if (quillInstance && htmlContent) {
-        // Utiliser clipboard.dangerouslyPasteHTML pour insérer du HTML proprement
+    if (!quillInstance) return;
+    if (!htmlContent) {
+        quillInstance.setText('');
+        return;
+    }
+    // Si le contenu contient des balises HTML, on le traite comme du HTML
+    if (/<[a-z][\s\S]*>/i.test(htmlContent)) {
         const delta = quillInstance.clipboard.convert({ html: htmlContent });
         quillInstance.setContents(delta, 'silent');
-    } else if (quillInstance) {
-        quillInstance.setText('');
+    } else {
+        // Sinon, c'est du texte brut (anciennes descriptions)
+        quillInstance.setText(htmlContent);
     }
 }
 // ========== FIN : ÉDITEUR QUILL ==========
@@ -204,7 +204,6 @@ function renderTable() {
         `;
     }).join('');
 
-    // Événements
     tbody.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.dataset.clubid)));
     tbody.querySelectorAll('.btn-archive').forEach(btn => btn.addEventListener('click', () => toggleArchive(btn.dataset.clubid, btn.dataset.statut)));
     tbody.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => openDeleteModal(btn.dataset.clubid)));
@@ -222,7 +221,6 @@ function openCreateModal() {
     uploadedLogoUrl = null;
     uploadedBanniereUrl = null;
     resetUploadIndicators();
-    // Réinitialiser les éditeurs Quill
     initEditors();
     document.getElementById('clubModal').classList.add('active');
 }
@@ -246,13 +244,9 @@ async function openEditModal(clubId) {
     uploadedLogoUrl = club.logo_url || null;
     uploadedBanniereUrl = club.banniere_url || null;
     resetUploadIndicators();
-
-    // Initialiser les éditeurs
     initEditors();
-    // Remplir avec le contenu existant
     setQuillContent(missionQuill, club.mission || '');
     setQuillContent(philosophieQuill, club.philosophie || '');
-
     document.getElementById('clubModal').classList.add('active');
 }
 
@@ -265,7 +259,6 @@ function resetUploadIndicators() {
     document.getElementById('clubBanniereFile').value = '';
 }
 
-// Upload fichiers
 async function uploadFile(file, bucket, indicatorPrefix) {
     const statusDiv = document.getElementById(`uploadStatus${indicatorPrefix}`);
     const successDiv = document.getElementById(`uploadSuccess${indicatorPrefix}`);
@@ -290,7 +283,6 @@ async function uploadFile(file, bucket, indicatorPrefix) {
     }
 }
 
-// Écouteurs pour les uploads
 document.getElementById('clubLogoFile').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -307,11 +299,9 @@ document.getElementById('clubBanniereFile').addEventListener('change', async (e)
     } catch (err) { /* déjà toasté */ }
 });
 
-// Clic sur les boîtes d'upload
 document.getElementById('uploadLogo').addEventListener('click', () => document.getElementById('clubLogoFile').click());
 document.getElementById('uploadBanniere').addEventListener('click', () => document.getElementById('clubBanniereFile').click());
 
-// Soumission du formulaire
 document.getElementById('clubForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nom = document.getElementById('clubNom').value.trim();
@@ -321,7 +311,6 @@ document.getElementById('clubForm').addEventListener('submit', async (e) => {
         return;
     }
 
-    // Récupérer le HTML des éditeurs
     const missionHTML = missionQuill ? missionQuill.root.innerHTML : '';
     const philosophieHTML = philosophieQuill ? philosophieQuill.root.innerHTML : '';
 

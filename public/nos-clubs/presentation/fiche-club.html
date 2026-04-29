@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiche Club | HubISoccer</title>
+    <meta name="description" content="Découvrez les détails du club et postulez pour le rejoindre.">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="fiche-club.css">
+</head>
+<body>
+    <!-- ========== DÉBUT : LOADER ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+    <!-- ========== FIN : LOADER ========== -->
+
+    <!-- ========== DÉBUT : NAVBAR ========== -->
+    <nav>
+        <a href="./" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="clubs.html" data-i18n="nav.clubs">Nos Clubs</a>
+                <a href="../gestion/nos-clubs-login.html" data-i18n="nav.login">Connexion</a>
+            </div>
+        </div>
+    </nav>
+    <!-- ========== FIN : NAVBAR ========== -->
+
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
+    <main class="fiche-main">
+        <!-- Section Hero du club -->
+        <section class="club-hero" id="clubHero">
+            <div class="club-hero-overlay"></div>
+            <div class="club-hero-content">
+                <div class="club-logo-container" id="clubLogoContainer">
+                    <!-- Injecté par JS : logo ou initiales -->
+                </div>
+                <h1 id="clubNom"></h1>
+                <p id="clubDiscipline"></p>
+                <span id="clubBadge" class="club-badge"></span>
+            </div>
+        </section>
+
+        <!-- Section Informations détaillées -->
+        <section class="club-details">
+            <div class="details-grid">
+                <!-- Localisation -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-map-marker-alt"></i> <span data-i18n="fiche.localisation">Localisation & QG</span></h3>
+                    <p id="clubAdresse"></p>
+                </div>
+
+                <!-- Mission -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-bullseye"></i> <span data-i18n="fiche.mission">Mission & Objectifs</span></h3>
+                    <p id="clubMission"></p>
+                </div>
+
+                <!-- Philosophie -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-fire"></i> <span data-i18n="fiche.philosophie">Ambiance & Philosophie</span></h3>
+                    <p id="clubPhilosophie"></p>
+                </div>
+
+                <!-- Fonctionnement -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-calendar-alt"></i> <span data-i18n="fiche.fonctionnement">Fonctionnement</span></h3>
+                    <p id="clubFonctionnement"></p>
+                </div>
+
+                <!-- Encadrement -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-users"></i> <span data-i18n="fiche.encadrement">Encadrement</span></h3>
+                    <p id="clubCoach"></p>
+                    <p id="clubParrain"></p>
+                </div>
+
+                <!-- Quota -->
+                <div class="detail-card">
+                    <h3><i class="fas fa-chart-pie"></i> <span data-i18n="fiche.places">Places disponibles</span></h3>
+                    <p id="clubQuota"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Appel à l'action -->
+        <section class="club-cta">
+            <button id="btnPostuler" class="btn-postuler">
+                <i class="fas fa-paper-plane"></i> <span data-i18n="fiche.postuler">POSTULER POUR CE CLUB</span>
+            </button>
+            <button id="btnAttente" class="btn-attente" style="display: none;">
+                <i class="fas fa-clock"></i> <span data-i18n="fiche.attente">REJOINDRE LA LISTE D'ATTENTE</span>
+            </button>
+        </section>
+    </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
+
+    <!-- ========== DÉBUT : MODALE FORMULAIRE D'INSCRIPTION (COMPLET) ========== -->
+    <div id="formulaireModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h2 data-i18n="form.titre">Postuler pour ce club</h2>
+            <form id="formulaireInscription">
+                <input type="hidden" id="formClubId">
+                <!-- Section 1 : Identité -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-user"></i> <span data-i18n="form.section1">1. Identité & Proximité</span></legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="form.nom">Nom complet *</label>
+                            <input type="text" id="formNom" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="form.date_naissance">Date de naissance *</label>
+                            <input type="date" id="formDateNaissance" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="form.ville_quartier">Ville / Quartier *</label>
+                            <input type="text" id="formVilleQuartier" required>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="form.telephone">Téléphone WhatsApp *</label>
+                            <input type="tel" id="formTelephone" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="form.email_reseaux">Email & Réseaux sociaux</label>
+                        <input type="text" id="formEmailReseaux">
+                    </div>
+                </fieldset>
+
+                <!-- Section 2 : Profil Technique -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-star"></i> <span data-i18n="form.section2">2. Profil Technique</span></legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="form.role">Rôle</label>
+                            <input type="text" id="formRole" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="form.specialite">Spécialité / Poste *</label>
+                            <input type="text" id="formSpecialite" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="form.pied_main">Pied fort / Main dominante</label>
+                            <select id="formPiedMain">
+                                <option value="">-- Choisir --</option>
+                                <option value="Droit">Droit</option>
+                                <option value="Gauche">Gauche</option>
+                                <option value="Ambidextre">Ambidextre</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="form.taille">Taille (cm)</label>
+                            <input type="number" id="formTaille" min="100" max="250">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="form.poids">Poids (kg)</label>
+                            <input type="number" id="formPoids" min="30" max="200" step="0.1">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Section 3 : Trinité -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-graduation-cap"></i> <span data-i18n="form.section3">3. Volet "Trinité"</span></legend>
+                    <div class="form-group">
+                        <label data-i18n="form.niveau_etudes">Niveau d'études actuel</label>
+                        <input type="text" id="formNiveauEtudes">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="form.metier_souhaite">Compétence secondaire / Métier souhaité</label>
+                        <input type="text" id="formMetierSouhaite">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="form.statut_actuel">Statut actuel</label>
+                        <select id="formStatutActuel">
+                            <option value="Libre">Libre</option>
+                            <option value="En club">En club</option>
+                        </select>
+                    </div>
+                    <div id="groupeClubActuel" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label data-i18n="form.nom_club_actuel">Nom du club actuel</label>
+                                <input type="text" id="formNomClubActuel">
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="form.contact_responsable">Contact du responsable</label>
+                                <input type="text" id="formContactResponsable">
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Section 4 : Disponibilités -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-calendar-check"></i> <span data-i18n="form.section4">4. Disponibilités</span></legend>
+                    <div class="dispo-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Matin (06h-10h)</td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="lundi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="mardi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="mercredi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="jeudi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="vendredi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="samedi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="dimanche" data-slot="matin"></td>
+                                </tr>
+                                <tr>
+                                    <td>Après-midi (14h-18h)</td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="lundi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="mardi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="mercredi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="jeudi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="vendredi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="samedi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="dispo-check" data-day="dimanche" data-slot="apresmidi"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </fieldset>
+
+                <!-- Section 5 : Engagement & Média -->
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-camera"></i> <span data-i18n="form.section5">5. Engagement & Média</span></legend>
+                    <div class="form-group">
+                        <label data-i18n="form.photo">Photo d'identité *</label>
+                        <div class="file-upload-box" id="uploadPhoto">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span data-i18n="form.upload_photo">Cliquez pour télécharger (JPG, PNG)</span>
+                            <input type="file" id="formPhoto" accept=".jpg,.jpeg,.png" required>
+                            <div class="upload-status" id="uploadStatusPhoto" style="display: none;">
+                                <span class="upload-spinner"></span><span>Téléversement...</span>
+                            </div>
+                            <div class="upload-success" id="uploadSuccessPhoto" style="display: none;">
+                                <i class="fas fa-check-circle"></i><span>Photo prête</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="formEngagement" required>
+                        <label for="formEngagement" data-i18n="form.engagement">
+                            Je m'engage à payer la cotisation journalière de 55 CFA pour l'accès aux entraînements, au coaching et à mon espace numérique.
+                        </label>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane"></i> <span data-i18n="form.envoyer">ENVOYER MA CANDIDATURE OFFICIELLE</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    <!-- ========== FIN : MODALE FORMULAIRE COMPLET ========== -->
+
+    <!-- ========== DÉBUT : MODALE FORMULAIRE LISTE D'ATTENTE (COURT) ========== -->
+    <div id="attenteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 data-i18n="attente.titre">Rejoindre la liste d'attente</h2>
+            <form id="formulaireAttente">
+                <input type="hidden" id="attenteClubId">
+                <div class="form-group">
+                    <label data-i18n="attente.nom">Nom complet *</label>
+                    <input type="text" id="attenteNom" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="attente.ville_quartier">Ville / Quartier *</label>
+                    <input type="text" id="attenteVilleQuartier" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="attente.telephone">Téléphone WhatsApp *</label>
+                    <input type="tel" id="attenteTelephone" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="attente.specialite">Spécialité / Poste</label>
+                    <input type="text" id="attenteSpecialite">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="attente.niveau_etudes">Niveau d'études</label>
+                    <input type="text" id="attenteNiveauEtudes">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="attente.motivation">Pourquoi veux-tu rejoindre ce club ?</label>
+                    <textarea id="attenteMotivation" rows="3"></textarea>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="attenteEngagement" required>
+                    <label for="attenteEngagement" data-i18n="attente.engagement">
+                        Je confirme être prêt à assumer la cotisation de 55 CFA/jour dès qu'une place se libérera pour moi.
+                    </label>
+                </div>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-clock"></i> <span data-i18n="attente.envoyer">M'INSCRIRE PRIORITAIREMENT SUR LA LISTE</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    <!-- ========== FIN : MODALE LISTE D'ATTENTE ========== -->
+
+    <!-- ========== DÉBUT : MODALE DE SUCCÈS ========== -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="success-icon-container">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 data-i18n="success.titre">Inscription enregistrée avec succès !</h2>
+            <div class="success-ids">
+                <p class="warning-note" data-i18n="success.note">⚠️ Copie et garde jalousement ces informations. Elles sont personnelles et uniques.</p>
+                <div class="id-row">
+                    <span data-i18n="success.id_label">Identifiant (ID) :</span>
+                    <strong id="successId"></strong>
+                </div>
+                <div class="id-row">
+                    <span data-i18n="success.pwd_label">Mot de passe :</span>
+                    <strong id="successPwd"></strong>
+                </div>
+                <button id="copyIdsBtn" class="btn-copy">
+                    <i class="fas fa-copy"></i> <span data-i18n="success.copy">Copier mes identifiants</span>
+                </button>
+            </div>
+            <p class="info-delai" data-i18n="success.delai">
+                L'accès à ton dashboard ne sera actif qu'après validation humaine de ton dossier (délai 0 à 1 heure).
+            </p>
+            <a href="../gestion/nos-clubs-login.html" class="btn-acces" data-i18n="success.acces">
+                ACCÉDER À MON ESPACE CLUB
+            </a>
+        </div>
+    </div>
+    <!-- ========== FIN : MODALE DE SUCCÈS ========== -->
+
+    <!-- ========== DÉBUT : FOOTER ========== -->
+    <footer>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+    <!-- ========== FIN : FOOTER ========== -->
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../nos-clubs-i18n.js"></script>
+    <script src="fiche-club.js"></script>
+</body>
+</html>

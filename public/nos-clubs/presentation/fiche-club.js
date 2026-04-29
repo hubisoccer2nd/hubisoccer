@@ -113,8 +113,8 @@ function displayClub(club) {
     document.getElementById('clubNom').textContent = club.nom;
     document.getElementById('clubDiscipline').innerHTML = `<i class="fas ${club.nosclub_roles?.icone || 'fa-users'}"></i> ${club.nosclub_roles?.nom || ''}`;
     document.getElementById('clubAdresse').textContent = `${club.quartier || ''}, ${club.ville || ''}`;
-    document.getElementById('clubMission').textContent = club.mission || 'Non renseigné.';
-    document.getElementById('clubPhilosophie').textContent = club.philosophie || 'Non renseigné.';
+    document.getElementById('clubMission').innerHTML = club.mission || 'Non renseigné.';
+    document.getElementById('clubPhilosophie').innerHTML = club.philosophie || 'Non renseigné.';
     document.getElementById('clubFonctionnement').textContent = 'Jours d\'entraînement : Mercredi 15h, Samedi 8h. Cotisation : 55 CFA/jour.';
     document.getElementById('clubCoach').innerHTML = `<strong>Coach :</strong> ${escapeHtml(club.coach_nom || 'À désigner')}`;
     document.getElementById('clubParrain').innerHTML = `<strong>Parrain :</strong> ${escapeHtml(club.parrain_nom || 'À désigner')}`;

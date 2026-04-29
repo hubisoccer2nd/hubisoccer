@@ -11,6 +11,8 @@ let allRoles = [];
 let currentClubId = null;
 let uploadedLogoUrl = null;
 let uploadedBanniereUrl = null;
+let missionQuill = null;
+let philosophieQuill = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
@@ -50,6 +52,70 @@ function escapeHtml(str) {
 function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
 function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
+
+// ========== DÉBUT : ÉDITEUR QUILL ==========
+const quillToolbarOptions = [
+    [{ 'font': ['Rockwell', 'Times New Roman', 'Calibri', 'Arial', 'Georgia', 'Verdana', 'Courier New', 'Impact', 'Tahoma'] }],
+    [{ 'size': ['small', false, 'large', 'huge'] }],
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'align': [] }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+    ['link', 'image', 'video'],
+    ['blockquote', 'code-block'],
+    ['clean']
+];
+
+function initEditors() {
+    // Détruire les instances existantes si présentes
+    if (missionQuill) {
+        missionQuill = null;
+    }
+    if (philosophieQuill) {
+        philosophieQuill = null;
+    }
+
+    // Récupérer les conteneurs
+    const missionEditor = document.getElementById('editorMission');
+    const philosophieEditor = document.getElementById('editorPhilosophie');
+
+    // Vider le contenu précédent (important pour éviter doublons)
+    if (missionEditor) missionEditor.innerHTML = '';
+    if (philosophieEditor) philosophieEditor.innerHTML = '';
+
+    // Initialiser Quill pour la mission
+    if (missionEditor) {
+        missionQuill = new Quill('#editorMission', {
+            theme: 'snow',
+            modules: { toolbar: quillToolbarOptions },
+            placeholder: 'Décrivez la mission et les objectifs du club...'
+        });
+        // Appliquer une police par défaut
+        missionQuill.root.style.fontFamily = 'Calibri, sans-serif';
+    }
+
+    // Initialiser Quill pour la philosophie
+    if (philosophieEditor) {
+        philosophieQuill = new Quill('#editorPhilosophie', {
+            theme: 'snow',
+            modules: { toolbar: quillToolbarOptions },
+            placeholder: 'Décrivez l\'ambiance et la philosophie du club...'
+        });
+        philosophieQuill.root.style.fontFamily = 'Calibri, sans-serif';
+    }
+}
+
+function setQuillContent(quillInstance, htmlContent) {
+    if (quillInstance && htmlContent) {
+        // Utiliser clipboard.dangerouslyPasteHTML pour insérer du HTML proprement
+        const delta = quillInstance.clipboard.convert({ html: htmlContent });
+        quillInstance.setContents(delta, 'silent');
+    } else if (quillInstance) {
+        quillInstance.setText('');
+    }
+}
+// ========== FIN : ÉDITEUR QUILL ==========
 
 // ========== DÉBUT : CHARGEMENT DES RÔLES ==========
 async function loadRoles() {
@@ -156,6 +222,8 @@ function openCreateModal() {
     uploadedLogoUrl = null;
     uploadedBanniereUrl = null;
     resetUploadIndicators();
+    // Réinitialiser les éditeurs Quill
+    initEditors();
     document.getElementById('clubModal').classList.add('active');
 }
 
@@ -175,11 +243,16 @@ async function openEditModal(clubId) {
     document.getElementById('clubCoachContact').value = club.coach_contact || '';
     document.getElementById('clubParrainNom').value = club.parrain_nom || '';
     document.getElementById('clubParrainContact').value = club.parrain_contact || '';
-    document.getElementById('clubMission').value = club.mission || '';
-    document.getElementById('clubPhilosophie').value = club.philosophie || '';
     uploadedLogoUrl = club.logo_url || null;
     uploadedBanniereUrl = club.banniere_url || null;
     resetUploadIndicators();
+
+    // Initialiser les éditeurs
+    initEditors();
+    // Remplir avec le contenu existant
+    setQuillContent(missionQuill, club.mission || '');
+    setQuillContent(philosophieQuill, club.philosophie || '');
+
     document.getElementById('clubModal').classList.add('active');
 }
 
@@ -248,6 +321,10 @@ document.getElementById('clubForm').addEventListener('submit', async (e) => {
         return;
     }
 
+    // Récupérer le HTML des éditeurs
+    const missionHTML = missionQuill ? missionQuill.root.innerHTML : '';
+    const philosophieHTML = philosophieQuill ? philosophieQuill.root.innerHTML : '';
+
     const clubData = {
         nom: nom,
         discipline_id: parseInt(disciplineId),
@@ -259,8 +336,8 @@ document.getElementById('clubForm').addEventListener('submit', async (e) => {
         coach_contact: document.getElementById('clubCoachContact').value.trim() || null,
         parrain_nom: document.getElementById('clubParrainNom').value.trim() || null,
         parrain_contact: document.getElementById('clubParrainContact').value.trim() || null,
-        mission: document.getElementById('clubMission').value.trim() || null,
-        philosophie: document.getElementById('clubPhilosophie').value.trim() || null,
+        mission: missionHTML,
+        philosophie: philosophieHTML,
         logo_url: uploadedLogoUrl,
         banniere_url: uploadedBanniereUrl,
         updated_at: new Date().toISOString()

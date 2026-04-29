@@ -7,7 +7,7 @@
     <meta name="description" content="Découvrez les clubs officiels HubISoccer près de chez vous. Postulez pour rejoindre un club ou inscrivez-vous sur liste d'attente.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/clubs.css">
+    <link rel="stylesheet" href="clubs.css">
 </head>
 <body>
     <!-- ========== DÉBUT : NAVBAR ========== -->
@@ -19,11 +19,33 @@
             <select class="lang-picker" id="langSelect">
                 <option value="fr">🇫🇷 Français</option>
                 <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
             </select>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="clubs.html" class="active">Nos Clubs</a>
-                <a href="nos-clubs-login.html">Connexion</a>
+                <a href="clubs.html" class="active" data-i18n="nav.clubs">Nos Clubs</a>
+                <a href="../gestion/nos-clubs-login.html" data-i18n="nav.login">Connexion</a>
             </div>
         </div>
     </nav>
@@ -31,28 +53,29 @@
 
     <!-- ========== DÉBUT : HEADER ========== -->
     <header class="clubs-header">
-        <h1><i class="fas fa-users"></i> Nos Clubs</h1>
-        <p>Rejoignez un club près de chez vous. Entraînez-vous, progressez et préparez votre avenir avec la Trinité HubISoccer.</p>
+        <h1 data-i18n="header.title">Nos Clubs</h1>
+        <p data-i18n="header.subtitle">Rejoignez un club près de chez vous. Entraînez-vous, progressez et préparez votre avenir avec la Trinité HubISoccer.</p>
     </header>
     <!-- ========== FIN : HEADER ========== -->
 
     <!-- ========== DÉBUT : BARRE DE RECHERCHE ET FILTRES ========== -->
     <section class="filters-section">
         <div class="filter-group">
-            <input type="text" id="searchInput" placeholder="Rechercher un club...">
+            <input type="text" id="searchInput" data-i18n-placeholder="filter.search" placeholder="Rechercher un club...">
             <select id="disciplineFilter">
-                <option value="all">Toutes les disciplines</option>
-                <option value="sportif">Tous les sports</option>
-                <option value="artiste">Tous les artistes</option>
-                <!-- Les options détaillées seront remplies dynamiquement par le JS -->
+                <option value="all" data-i18n="filter.discipline_all">Toutes les disciplines</option>
+                <option value="sportif" data-i18n="filter.discipline_sport">Tous les sports</option>
+                <option value="artiste" data-i18n="filter.discipline_artiste">Tous les artistes</option>
+                <!-- Les rôles détaillés seront injectés par JavaScript -->
             </select>
             <select id="villeFilter">
-                <option value="all">Toutes les villes</option>
+                <option value="all" data-i18n="filter.ville_all">Toutes les villes</option>
+                <!-- Les villes seront injectées dynamiquement par JavaScript -->
             </select>
             <select id="statutFilter">
-                <option value="all">Tous les statuts</option>
-                <option value="actif">Actifs</option>
-                <option value="archive">Archivés</option>
+                <option value="all" data-i18n="filter.statut_all">Tous les statuts</option>
+                <option value="actif" data-i18n="filter.statut_actif">Actifs</option>
+                <option value="archive" data-i18n="filter.statut_archive">Archivés</option>
             </select>
         </div>
     </section>
@@ -71,13 +94,14 @@
     <footer>
         <div class="legal">
             <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
-            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
-            <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
         </div>
     </footer>
     <!-- ========== FIN : FOOTER ========== -->
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/clubs.js"></script>
+    <script src="../nos-clubs-i18n.js"></script>
+    <script src="clubs.js"></script>
 </body>
 </html>

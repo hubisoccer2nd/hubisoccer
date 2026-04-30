@@ -1,4 +1,4 @@
-// ========== COMMUNITY-ADMIN.JS ==========
+// ========== COMMUNITY-ADMIN.JS (CORRIGÉ – VERSION FINALE) ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -78,7 +78,157 @@ function initPostEditor() {
 }
 // ========== FIN : ÉDITEUR QUILL ==========
 
-// ========== DÉBUT : CHARGEMENT DES DONNÉES ==========
+// ========== DÉBUT : CHARGEMENT DYNAMIQUE DES ENTITÉS ==========
+async function loadEntitiesByType(type) {
+    let table = '';
+    let selectId = '';
+    let displayName = '';
+
+    switch (type) {
+        case 'club':
+            table = 'nosclub_clubs';
+            selectId = 'id';
+            displayName = 'nom';
+            break;
+        case 'tournoi':
+            table = 'public_tournois';
+            selectId = 'id';
+            displayName = 'titre';
+            break;
+        case 'scouting':
+            table = 'public_scouting_sportifs';
+            selectId = 'id';
+            displayName = 'nom';
+            break;
+        case 'artiste':
+            table = 'public_artistes_adhesion';
+            selectId = 'artiste_id';
+            displayName = 'full_name';
+            break;
+        case 'sportif':
+            table = 'public_premierpas';
+            selectId = 'pp_id';
+            displayName = 'full_name';
+            break;
+        default:
+            return [];
+    }
+
+    const { data, error } = await supabaseAdmin
+        .from(table)
+        .select(`${selectId}, ${displayName}`)
+        .order(displayName, { ascending: true });
+
+    if (error) {
+        console.error('Erreur chargement entités:', error);
+        return [];
+    }
+    return data || [];
+}
+
+async function populateEntitySelect() {
+    const type = document.getElementById('entityType').value;
+    const select = document.getElementById('entitySelect');
+    const nameField = document.getElementById('entityName');
+
+    if (!type) {
+    select.innerHTML = "<option value=''>-- Sélectionnez d'abord un type --</option>";
+    select.disabled = true;
+    nameField.value = '';
+    return;
+}
+
+    select.disabled = false;
+    select.innerHTML = '<option value="">Chargement...</option>';
+
+    const entities = await loadEntitiesByType(type);
+
+    if (entities.length === 0) {
+        select.innerHTML = '<option value="">Aucune entité trouvée</option>';
+        return;
+    }
+
+    let displayName = '';
+    switch (type) {
+        case 'club': displayName = 'nom'; break;
+        case 'tournoi': displayName = 'titre'; break;
+        case 'scouting': displayName = 'nom'; break;
+        case 'artiste': displayName = 'full_name'; break;
+        case 'sportif': displayName = 'full_name'; break;
+    }
+
+    let selectId = '';
+    switch (type) {
+        case 'club': selectId = 'id'; break;
+        case 'tournoi': selectId = 'id'; break;
+        case 'scouting': selectId = 'id'; break;
+        case 'artiste': selectId = 'artiste_id'; break;
+        case 'sportif': selectId = 'pp_id'; break;
+    }
+
+    select.innerHTML = '<option value="">-- Choisir --</option>';
+    entities.forEach(entity => {
+        const option = document.createElement('option');
+        option.value = entity[selectId];
+        option.textContent = entity[displayName];
+        select.appendChild(option);
+    });
+
+    // Déclencher manuellement pour remplir le nom si une option est déjà sélectionnée (cas édition)
+    if (select.value) {
+        select.dispatchEvent(new Event('change'));
+    }
+}
+
+document.getElementById('entityType').addEventListener('change', populateEntitySelect);
+// ========== FIN : CHARGEMENT DYNAMIQUE DES ENTITÉS ==========
+
+// ========== DÉBUT : UPLOAD MÉDIA CORRIGÉ ==========
+function resetMediaUpload() {
+    document.getElementById('uploadStatusPostMedia').style.display = 'none';
+    document.getElementById('uploadSuccessPostMedia').style.display = 'none';
+    document.getElementById('postMediaFile').value = '';
+}
+
+document.getElementById('uploadPostMedia').addEventListener('click', function(e) {
+    if (e.target !== document.getElementById('postMediaFile')) {
+        document.getElementById('postMediaFile').click();
+    }
+});
+
+document.getElementById('postMediaFile').addEventListener('change', async function(e) {
+    const file = this.files[0];
+    if (!file) return;
+
+    const span = document.querySelector('#uploadPostMedia span:not(.upload-spinner):not(.progress-text)');
+    if (span) span.textContent = file.name;
+
+    document.getElementById('uploadStatusPostMedia').style.display = 'flex';
+    document.getElementById('uploadSuccessPostMedia').style.display = 'none';
+
+    try {
+        const safeName = `post_${currentPostId || 'new'}_${Date.now()}`;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${safeName}.${fileExt}`;
+
+        const { error } = await supabaseAdmin.storage.from('community_medias').upload(fileName, file);
+        if (error) throw error;
+
+        const { data: urlData } = supabaseAdmin.storage.from('community_medias').getPublicUrl(fileName);
+        uploadedMediaUrl = urlData.publicUrl;
+
+        document.getElementById('uploadStatusPostMedia').style.display = 'none';
+        document.getElementById('uploadSuccessPostMedia').style.display = 'flex';
+        showToast('Média téléversé avec succès.', 'success');
+    } catch (err) {
+        document.getElementById('uploadStatusPostMedia').style.display = 'none';
+        showToast('Erreur upload : ' + err.message, 'error');
+        this.value = '';
+    }
+});
+// ========== FIN : UPLOAD MÉDIA CORRIGÉ ==========
+
+// ========== DÉBUT : CHARGEMENT DES POSTS ==========
 async function loadPosts() {
     showLoader();
     try {
@@ -230,7 +380,8 @@ function openCreatePostModal() {
     document.getElementById('postModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Nouvelle publication';
     document.getElementById('postId').value = '';
     document.getElementById('entityType').value = '';
-    document.getElementById('entityId').value = '';
+    document.getElementById('entitySelect').innerHTML = "<option value=''>-- Sélectionnez d'abord un type --</option>";    
+    document.getElementById('entitySelect').disabled = true;
     document.getElementById('entityName').value = '';
     document.getElementById('postEpingle').checked = false;
     document.getElementById('postCommentairesActifs').checked = true;
@@ -247,7 +398,6 @@ async function openEditPostModal(postId) {
     document.getElementById('postModalTitle').innerHTML = '<i class="fas fa-edit"></i> Modifier la publication';
     document.getElementById('postId').value = post.id;
     document.getElementById('entityType').value = post.entity_type || '';
-    document.getElementById('entityId').value = post.entity_id || '';
     document.getElementById('entityName').value = post.entity_name || '';
     document.getElementById('postEpingle').checked = post.epingle || false;
     document.getElementById('postCommentairesActifs').checked = post.commentaires_actifs !== false;
@@ -256,56 +406,23 @@ async function openEditPostModal(postId) {
     if (post.content) {
         postQuill.root.innerHTML = post.content;
     }
+    // Charger les entités et présélectionner
+    if (post.entity_type) {
+        await populateEntitySelect();
+        document.getElementById('entitySelect').value = post.entity_id || '';
+        // Déclencher le change pour remplir le nom
+        document.getElementById('entitySelect').dispatchEvent(new Event('change'));
+    }
     document.getElementById('postModal').classList.add('active');
 }
 
-function resetMediaUpload() {
-    document.getElementById('uploadStatusPostMedia').style.display = 'none';
-    document.getElementById('uploadSuccessPostMedia').style.display = 'none';
-    document.getElementById('postMediaFile').value = '';
-}
-
-async function uploadPostMedia(file) {
-    const statusDiv = document.getElementById('uploadStatusPostMedia');
-    const successDiv = document.getElementById('uploadSuccessPostMedia');
-    statusDiv.style.display = 'flex';
-    successDiv.style.display = 'none';
-
-    const safeName = `post_${currentPostId || 'new'}_${Date.now()}`;
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${safeName}.${fileExt}`;
-
-    try {
-        const { error } = await supabaseAdmin.storage.from('community_medias').upload(fileName, file);
-        if (error) throw error;
-        const { data: urlData } = supabaseAdmin.storage.from('community_medias').getPublicUrl(fileName);
-        statusDiv.style.display = 'none';
-        successDiv.style.display = 'flex';
-        return urlData.publicUrl;
-    } catch (err) {
-        statusDiv.style.display = 'none';
-        showToast('Erreur upload : ' + err.message, 'error');
-        throw err;
-    }
-}
-
-document.getElementById('postMediaFile').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try {
-        uploadedMediaUrl = await uploadPostMedia(file);
-    } catch (err) { /* déjà toasté */ }
-});
-
-document.getElementById('uploadPostMedia').addEventListener('click', () => {
-    document.getElementById('postMediaFile').click();
-});
-
+// Soumission du formulaire
 document.getElementById('postForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const content = postQuill ? postQuill.root.innerHTML : '';
     const entityType = document.getElementById('entityType').value || null;
-    const entityId = document.getElementById('entityId').value?.trim() || null;
+    const entitySelect = document.getElementById('entitySelect');
+    const entityId = entitySelect.value || null;
     const entityName = document.getElementById('entityName').value?.trim() || null;
     const epingle = document.getElementById('postEpingle').checked;
     const commentairesActifs = document.getElementById('postCommentairesActifs').checked;
@@ -526,5 +643,19 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPosts();
     loadComments();
     loadReports();
+
+    // Gestionnaire unique pour le champ entityName lorsqu'on sélectionne une entité
+    const entitySelect = document.getElementById('entitySelect');
+    if (entitySelect) {
+        entitySelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const nameField = document.getElementById('entityName');
+            if (selectedOption && selectedOption.textContent !== '-- Choisir --') {
+                nameField.value = selectedOption.textContent;
+            } else {
+                nameField.value = '';
+            }
+        });
+    }
 });
 // ========== FIN DE COMMUNITY-ADMIN.JS ==========

@@ -1,4 +1,4 @@
-// ========== GESTION-CLUBS.JS (CORRIGÉ) ==========
+// ========== GESTION-CLUBS.JS (CORRIGÉ DÉFINITIF – COMPLET) ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -55,13 +55,12 @@ function hideLoader() { document.getElementById('globalLoader').style.display = 
 
 // ========== DÉBUT : ÉDITEUR QUILL ==========
 const quillToolbarOptions = [
-    [{ 'font': ['Rockwell', 'Times New Roman', 'Calibri', 'Arial', 'Georgia', 'Verdana', 'Courier New', 'Impact', 'Tahoma'] }],
+    [{ 'font': [] }],
     [{ 'size': ['small', false, 'large', 'huge'] }],
-    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
     ['bold', 'italic', 'underline', 'strike'],
     [{ 'color': [] }, { 'background': [] }],
     [{ 'align': [] }],
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
     ['link', 'image', 'video'],
     ['blockquote', 'code-block'],
     ['clean']
@@ -87,7 +86,6 @@ function initEditors() {
             modules: { toolbar: quillToolbarOptions },
             placeholder: 'Décrivez la mission et les objectifs du club...'
         });
-        missionQuill.root.style.fontFamily = 'Calibri, sans-serif';
     }
 
     if (philosophieEditor) {
@@ -96,22 +94,23 @@ function initEditors() {
             modules: { toolbar: quillToolbarOptions },
             placeholder: 'Décrivez l\'ambiance et la philosophie du club...'
         });
-        philosophieQuill.root.style.fontFamily = 'Calibri, sans-serif';
     }
 }
 
 function setQuillContent(quillInstance, htmlContent) {
     if (!quillInstance) return;
-    if (!htmlContent) {
+    if (!htmlContent || htmlContent === '<p><br></p>') {
         quillInstance.setText('');
         return;
     }
-    // Si le contenu contient des balises HTML, on le traite comme du HTML
-    if (/<[a-z][\s\S]*>/i.test(htmlContent)) {
+    if (!/<[a-z][\s\S]*>/i.test(htmlContent)) {
+        quillInstance.setText(htmlContent);
+        return;
+    }
+    try {
         const delta = quillInstance.clipboard.convert({ html: htmlContent });
         quillInstance.setContents(delta, 'silent');
-    } else {
-        // Sinon, c'est du texte brut (anciennes descriptions)
+    } catch (e) {
         quillInstance.setText(htmlContent);
     }
 }

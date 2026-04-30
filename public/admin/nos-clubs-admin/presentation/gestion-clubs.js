@@ -1,4 +1,4 @@
-// ========== GESTION-CLUBS.JS (CORRIGÉ – NE DÉTRUIT PLUS LES DONNÉES) ==========
+// ========== GESTION-CLUBS.JS (CORRIGÉ COMPLET) ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -13,7 +13,6 @@ let uploadedLogoUrl = null;
 let uploadedBanniereUrl = null;
 let missionQuill = null;
 let philosophieQuill = null;
-let isUploading = false; // verrou pour éviter la soumission pendant un upload
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
@@ -54,7 +53,7 @@ function showLoader() { document.getElementById('globalLoader').style.display = 
 function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : ÉDITEUR QUILL (CORRIGÉ) ==========
+// ========== DÉBUT : ÉDITEUR QUILL ==========
 const quillToolbarOptions = [
     [{ 'font': [] }],
     [{ 'size': ['small', false, 'large', 'huge'] }],
@@ -67,32 +66,38 @@ const quillToolbarOptions = [
     ['clean']
 ];
 
-function destroyEditors() {
+function initEditors() {
+    // Détruire les instances précédentes pour éviter les doublons
     if (missionQuill) {
-        missionQuill.destroy();
+        missionQuill.enable(false);
         missionQuill = null;
     }
     if (philosophieQuill) {
-        philosophieQuill.destroy();
+        philosophieQuill.enable(false);
         philosophieQuill = null;
     }
-}
 
-function initEditors() {
-    destroyEditors();
-    document.getElementById('editorMission').innerHTML = '';
-    document.getElementById('editorPhilosophie').innerHTML = '';
+    const missionEditor = document.getElementById('editorMission');
+    const philosophieEditor = document.getElementById('editorPhilosophie');
 
-    missionQuill = new Quill('#editorMission', {
-        theme: 'snow',
-        modules: { toolbar: quillToolbarOptions },
-        placeholder: 'Mission & Objectifs...'
-    });
-    philosophieQuill = new Quill('#editorPhilosophie', {
-        theme: 'snow',
-        modules: { toolbar: quillToolbarOptions },
-        placeholder: 'Ambiance & Philosophie...'
-    });
+    if (missionEditor) missionEditor.innerHTML = '';
+    if (philosophieEditor) philosophieEditor.innerHTML = '';
+
+    if (missionEditor) {
+        missionQuill = new Quill('#editorMission', {
+            theme: 'snow',
+            modules: { toolbar: quillToolbarOptions },
+            placeholder: 'Décrivez la mission et les objectifs du club...'
+        });
+    }
+
+    if (philosophieEditor) {
+        philosophieQuill = new Quill('#editorPhilosophie', {
+            theme: 'snow',
+            modules: { toolbar: quillToolbarOptions },
+            placeholder: 'Décrivez l\'ambiance et la philosophie du club...'
+        });
+    }
 }
 
 function setQuillContent(quillInstance, htmlContent) {
@@ -193,6 +198,7 @@ function renderTable() {
                 <td>${quotaUtilise} / ${quotaMax}</td>
                 <td>${statutBadge}</td>
                 <td class="actions-cell">
+                    <button class="btn-icon btn-view" data-clubid="${club.id}" title="Visualiser"><i class="fas fa-eye"></i></button>
                     <button class="btn-icon btn-edit" data-clubid="${club.id}" title="Modifier"><i class="fas fa-edit"></i></button>
                     <button class="btn-icon btn-archive" data-clubid="${club.id}" data-statut="${club.statut}" title="${club.statut === 'actif' ? 'Archiver' : 'Désarchiver'}"><i class="fas fa-archive"></i></button>
                     <button class="btn-icon btn-delete" data-clubid="${club.id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
@@ -201,13 +207,68 @@ function renderTable() {
         `;
     }).join('');
 
-    tbody.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.dataset.clubid)));
-    tbody.querySelectorAll('.btn-archive').forEach(btn => btn.addEventListener('click', () => toggleArchive(btn.dataset.clubid, btn.dataset.statut)));
-    tbody.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => openDeleteModal(btn.dataset.clubid)));
+    // Attacher les événements (en supprimant d'abord les anciens pour éviter les doublons)
+    tbody.querySelectorAll('.btn-view').forEach(btn => {
+        btn.removeEventListener('click', openViewModal);
+        btn.addEventListener('click', () => openViewModal(btn.dataset.clubid));
+    });
+    tbody.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.removeEventListener('click', openEditModal);
+        btn.addEventListener('click', () => openEditModal(btn.dataset.clubid));
+    });
+    tbody.querySelectorAll('.btn-archive').forEach(btn => {
+        btn.removeEventListener('click', toggleArchive);
+        btn.addEventListener('click', () => toggleArchive(btn.dataset.clubid, btn.dataset.statut));
+    });
+    tbody.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.removeEventListener('click', openDeleteModal);
+        btn.addEventListener('click', () => openDeleteModal(btn.dataset.clubid));
+    });
 }
 // ========== FIN : CHARGEMENT DES CLUBS ==========
 
-// ========== DÉBUT : GESTION DU FORMULAIRE CLUB (CORRIGÉ) ==========
+// ========== DÉBUT : VISUALISATION ==========
+function openViewModal(clubId) {
+    const club = allClubs.find(c => c.id == clubId);
+    if (!club) return;
+
+    const viewContent = document.getElementById('viewContent');
+    viewContent.innerHTML = `
+        <div class="view-details">
+            <div class="detail-section">
+                <h4><i class="fas fa-info-circle"></i> Identité</h4>
+                <p><strong>Nom :</strong> ${escapeHtml(club.nom)}</p>
+                <p><strong>Discipline :</strong> ${escapeHtml(club.nosclub_roles?.nom || '-')}</p>
+                <p><strong>Ville :</strong> ${escapeHtml(club.ville || '-')}</p>
+                <p><strong>Quartier :</strong> ${escapeHtml(club.quartier || '-')}</p>
+                <p><strong>Quota :</strong> ${club.quota_utilise || 0} / ${club.quota_max || 30}</p>
+                <p><strong>Statut :</strong> ${club.statut === 'actif' ? 'Actif' : 'Archivé'}</p>
+            </div>
+            <div class="detail-section">
+                <h4><i class="fas fa-users"></i> Encadrement</h4>
+                <p><strong>Coach :</strong> ${escapeHtml(club.coach_nom || 'À désigner')}</p>
+                <p><strong>Contact Coach :</strong> ${escapeHtml(club.coach_contact || '-')}</p>
+                <p><strong>Parrain :</strong> ${escapeHtml(club.parrain_nom || 'À désigner')}</p>
+                <p><strong>Contact Parrain :</strong> ${escapeHtml(club.parrain_contact || '-')}</p>
+            </div>
+            <div class="detail-section">
+                <h4><i class="fas fa-bullseye"></i> Mission & Philosophie</h4>
+                <div class="rich-content">${club.mission || 'Non renseigné.'}</div>
+                <div class="rich-content">${club.philosophie || 'Non renseigné.'}</div>
+            </div>
+            <div class="detail-section">
+                <h4><i class="fas fa-image"></i> Médias</h4>
+                <p>Logo : ${club.logo_url ? `<img src="${escapeHtml(club.logo_url)}" class="preview-img">` : 'Aucun'}</p>
+                <p>Bannière : ${club.banniere_url ? `<img src="${escapeHtml(club.banniere_url)}" class="preview-img">` : 'Aucune'}</p>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('viewModal').classList.add('active');
+}
+// ========== FIN : VISUALISATION ==========
+
+// ========== DÉBUT : GESTION DU FORMULAIRE CLUB ==========
 function openCreateModal() {
     currentClubId = null;
     document.getElementById('clubModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Nouveau club';
@@ -252,8 +313,7 @@ function resetUploadIndicators() {
     document.getElementById('uploadSuccessLogo').style.display = 'none';
     document.getElementById('uploadStatusBanniere').style.display = 'none';
     document.getElementById('uploadSuccessBanniere').style.display = 'none';
-    document.getElementById('clubLogoFile').value = '';
-    document.getElementById('clubBanniereFile').value = '';
+    // Ne pas vider les variables uploaded ici, elles sont gérées par les écouteurs
 }
 
 async function uploadFile(file, bucket, indicatorPrefix) {
@@ -280,36 +340,51 @@ async function uploadFile(file, bucket, indicatorPrefix) {
     }
 }
 
-// ----- GESTION DES FICHIERS (NETTOYÉE) -----
-function handleLogoUpload(file) {
-    if (!file) return;
-    isUploading = true;
-    uploadFile(file, 'nosclub_documents', 'Logo')
-        .then(url => { uploadedLogoUrl = url; })
-        .finally(() => { isUploading = false; });
+// Écouteurs d'upload avec suppression préalable des anciens
+const logoFileInput = document.getElementById('clubLogoFile');
+const banniereFileInput = document.getElementById('clubBanniereFile');
+const uploadLogoBox = document.getElementById('uploadLogo');
+const uploadBanniereBox = document.getElementById('uploadBanniere');
+
+if (logoFileInput) {
+    logoFileInput.removeEventListener('change', handleLogoChange);
+    logoFileInput.addEventListener('change', handleLogoChange);
+}
+if (banniereFileInput) {
+    banniereFileInput.removeEventListener('change', handleBanniereChange);
+    banniereFileInput.addEventListener('change', handleBanniereChange);
+}
+if (uploadLogoBox) {
+    uploadLogoBox.removeEventListener('click', triggerLogoInput);
+    uploadLogoBox.addEventListener('click', triggerLogoInput);
+}
+if (uploadBanniereBox) {
+    uploadBanniereBox.removeEventListener('click', triggerBanniereInput);
+    uploadBanniereBox.addEventListener('click', triggerBanniereInput);
 }
 
-function handleBanniereUpload(file) {
+async function handleLogoChange(e) {
+    const file = e.target.files[0];
     if (!file) return;
-    isUploading = true;
-    uploadFile(file, 'nosclub_documents', 'Banniere')
-        .then(url => { uploadedBanniereUrl = url; })
-        .finally(() => { isUploading = false; });
+    try {
+        uploadedLogoUrl = await uploadFile(file, 'nosclub_documents', 'Logo');
+    } catch (err) { /* déjà toasté */ }
 }
 
-document.getElementById('clubLogoFile').addEventListener('change', (e) => handleLogoUpload(e.target.files[0]));
-document.getElementById('clubBanniereFile').addEventListener('change', (e) => handleBanniereUpload(e.target.files[0]));
+async function handleBanniereChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+        uploadedBanniereUrl = await uploadFile(file, 'nosclub_documents', 'Banniere');
+    } catch (err) { /* déjà toasté */ }
+}
 
-document.getElementById('uploadLogo').addEventListener('click', () => document.getElementById('clubLogoFile').click());
-document.getElementById('uploadBanniere').addEventListener('click', () => document.getElementById('clubBanniereFile').click());
+function triggerLogoInput() { document.getElementById('clubLogoFile').click(); }
+function triggerBanniereInput() { document.getElementById('clubBanniereFile').click(); }
 
-// ----- SOUMISSION (PROTÉGÉE) -----
+// Soumission du formulaire
 document.getElementById('clubForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (isUploading) {
-        showToast('Veuillez attendre la fin du téléversement.', 'warning');
-        return;
-    }
     const nom = document.getElementById('clubNom').value.trim();
     const disciplineId = document.getElementById('clubDiscipline').value;
     if (!nom || !disciplineId) {
@@ -439,6 +514,10 @@ document.addEventListener('keydown', (e) => {
 document.getElementById('searchInput').addEventListener('input', renderTable);
 document.getElementById('statutFilter').addEventListener('change', renderTable);
 document.getElementById('newClubBtn').addEventListener('click', openCreateModal);
+document.getElementById('refreshClubsBtn').addEventListener('click', () => {
+    loadClubs();
+    showToast('Liste des clubs rafraîchie.', 'success');
+});
 // ========== FIN : ÉVÉNEMENTS FILTRES ==========
 
 // ========== DÉBUT : MENU MOBILE ==========

@@ -1,4 +1,4 @@
-// ========== GESTION-CLUBS.JS (CORRIGÉ COMPLET) ==========
+// ========== GESTION-CLUBS.JS (CORRIGÉ DÉFINITIF – COMPLET) ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -13,6 +13,10 @@ let uploadedLogoUrl = null;
 let uploadedBanniereUrl = null;
 let missionQuill = null;
 let philosophieQuill = null;
+
+// Cache pour préserver le contenu des éditeurs en cas de réinitialisation accidentelle
+let cachedMission = '';
+let cachedPhilosophie = '';
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
@@ -53,7 +57,7 @@ function showLoader() { document.getElementById('globalLoader').style.display = 
 function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : ÉDITEUR QUILL ==========
+// ========== DÉBUT : ÉDITEUR QUILL (PROTÉGÉ) ==========
 const quillToolbarOptions = [
     [{ 'font': [] }],
     [{ 'size': ['small', false, 'large', 'huge'] }],
@@ -67,12 +71,14 @@ const quillToolbarOptions = [
 ];
 
 function initEditors() {
-    // Détruire les instances précédentes pour éviter les doublons
+    // Sauvegarde le contenu actuel avant de détruire
     if (missionQuill) {
+        cachedMission = missionQuill.root.innerHTML;
         missionQuill.enable(false);
         missionQuill = null;
     }
     if (philosophieQuill) {
+        cachedPhilosophie = philosophieQuill.root.innerHTML;
         philosophieQuill.enable(false);
         philosophieQuill = null;
     }
@@ -80,6 +86,7 @@ function initEditors() {
     const missionEditor = document.getElementById('editorMission');
     const philosophieEditor = document.getElementById('editorPhilosophie');
 
+    // Ne vider les conteneurs QUE si on n'est pas en train de les remplir immédiatement après
     if (missionEditor) missionEditor.innerHTML = '';
     if (philosophieEditor) philosophieEditor.innerHTML = '';
 
@@ -97,6 +104,16 @@ function initEditors() {
             modules: { toolbar: quillToolbarOptions },
             placeholder: 'Décrivez l\'ambiance et la philosophie du club...'
         });
+    }
+
+    // Restaurer le contenu sauvegardé s'il existait
+    if (cachedMission && missionQuill) {
+        setQuillContent(missionQuill, cachedMission);
+        cachedMission = '';
+    }
+    if (cachedPhilosophie && philosophieQuill) {
+        setQuillContent(philosophieQuill, cachedPhilosophie);
+        cachedPhilosophie = '';
     }
 }
 
@@ -207,23 +224,10 @@ function renderTable() {
         `;
     }).join('');
 
-    // Attacher les événements (en supprimant d'abord les anciens pour éviter les doublons)
-    tbody.querySelectorAll('.btn-view').forEach(btn => {
-        btn.removeEventListener('click', openViewModal);
-        btn.addEventListener('click', () => openViewModal(btn.dataset.clubid));
-    });
-    tbody.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.removeEventListener('click', openEditModal);
-        btn.addEventListener('click', () => openEditModal(btn.dataset.clubid));
-    });
-    tbody.querySelectorAll('.btn-archive').forEach(btn => {
-        btn.removeEventListener('click', toggleArchive);
-        btn.addEventListener('click', () => toggleArchive(btn.dataset.clubid, btn.dataset.statut));
-    });
-    tbody.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.removeEventListener('click', openDeleteModal);
-        btn.addEventListener('click', () => openDeleteModal(btn.dataset.clubid));
-    });
+    tbody.querySelectorAll('.btn-view').forEach(btn => btn.addEventListener('click', () => openViewModal(btn.dataset.clubid)));
+    tbody.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.dataset.clubid)));
+    tbody.querySelectorAll('.btn-archive').forEach(btn => btn.addEventListener('click', () => toggleArchive(btn.dataset.clubid, btn.dataset.statut)));
+    tbody.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => openDeleteModal(btn.dataset.clubid)));
 }
 // ========== FIN : CHARGEMENT DES CLUBS ==========
 
@@ -254,6 +258,7 @@ function openViewModal(clubId) {
             <div class="detail-section">
                 <h4><i class="fas fa-bullseye"></i> Mission & Philosophie</h4>
                 <div class="rich-content">${club.mission || 'Non renseigné.'}</div>
+                <hr>
                 <div class="rich-content">${club.philosophie || 'Non renseigné.'}</div>
             </div>
             <div class="detail-section">
@@ -313,7 +318,6 @@ function resetUploadIndicators() {
     document.getElementById('uploadSuccessLogo').style.display = 'none';
     document.getElementById('uploadStatusBanniere').style.display = 'none';
     document.getElementById('uploadSuccessBanniere').style.display = 'none';
-    // Ne pas vider les variables uploaded ici, elles sont gérées par les écouteurs
 }
 
 async function uploadFile(file, bucket, indicatorPrefix) {
@@ -340,49 +344,25 @@ async function uploadFile(file, bucket, indicatorPrefix) {
     }
 }
 
-// Écouteurs d'upload avec suppression préalable des anciens
+// Écouteurs d'upload propres
 const logoFileInput = document.getElementById('clubLogoFile');
 const banniereFileInput = document.getElementById('clubBanniereFile');
 const uploadLogoBox = document.getElementById('uploadLogo');
 const uploadBanniereBox = document.getElementById('uploadBanniere');
 
-if (logoFileInput) {
-    logoFileInput.removeEventListener('change', handleLogoChange);
-    logoFileInput.addEventListener('change', handleLogoChange);
-}
-if (banniereFileInput) {
-    banniereFileInput.removeEventListener('change', handleBanniereChange);
-    banniereFileInput.addEventListener('change', handleBanniereChange);
-}
-if (uploadLogoBox) {
-    uploadLogoBox.removeEventListener('click', triggerLogoInput);
-    uploadLogoBox.addEventListener('click', triggerLogoInput);
-}
-if (uploadBanniereBox) {
-    uploadBanniereBox.removeEventListener('click', triggerBanniereInput);
-    uploadBanniereBox.addEventListener('click', triggerBanniereInput);
-}
-
-async function handleLogoChange(e) {
+if (logoFileInput) logoFileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    try {
-        uploadedLogoUrl = await uploadFile(file, 'nosclub_documents', 'Logo');
-    } catch (err) { /* déjà toasté */ }
-}
-
-async function handleBanniereChange(e) {
+    try { uploadedLogoUrl = await uploadFile(file, 'nosclub_documents', 'Logo'); } catch (err) {}
+});
+if (banniereFileInput) banniereFileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    try {
-        uploadedBanniereUrl = await uploadFile(file, 'nosclub_documents', 'Banniere');
-    } catch (err) { /* déjà toasté */ }
-}
+    try { uploadedBanniereUrl = await uploadFile(file, 'nosclub_documents', 'Banniere'); } catch (err) {}
+});
+if (uploadLogoBox) uploadLogoBox.addEventListener('click', () => document.getElementById('clubLogoFile').click());
+if (uploadBanniereBox) uploadBanniereBox.addEventListener('click', () => document.getElementById('clubBanniereFile').click());
 
-function triggerLogoInput() { document.getElementById('clubLogoFile').click(); }
-function triggerBanniereInput() { document.getElementById('clubBanniereFile').click(); }
-
-// Soumission du formulaire
 document.getElementById('clubForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nom = document.getElementById('clubNom').value.trim();

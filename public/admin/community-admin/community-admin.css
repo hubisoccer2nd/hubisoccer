@@ -479,7 +479,7 @@ tbody tr:last-child td {
 }
 /* ========== FIN : TABLEAUX ========== */
 
-/* ========== DÉBUT : MODALES ========== */
+/* ========== DÉBUT : MODALES GÉNÉRALES ========== */
 .modal {
     display: none;
     position: fixed;

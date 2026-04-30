@@ -236,19 +236,62 @@ function renderPosts(posts) {
     container.innerHTML = html;
 }
 
+// ========== DÉBUT : RENDU AVEC HTML NON ÉCHAPPÉ ==========
 function renderPostContent(content) {
     if (!content) return '';
     const maxLength = 300;
-    if (content.length <= maxLength) return escapeHtml(content);
-    const truncated = escapeHtml(content.substring(0, maxLength)) + '...';
-    const full = escapeHtml(content);
-    const postId = 'post-text-' + Math.random().toString(36).substr(2, 9);
+    // Comptage du texte visible en supprimant les balises
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const textContent = tempDiv.textContent || tempDiv.innerText || '';
+    if (textContent.length <= maxLength) {
+        return content; // pas de troncature
+    }
+    // Tronquer le HTML en conservant les balises
+    const truncated = truncateHtml(content, maxLength);
     return `
-        <span class="post-text-short">${truncated}</span>
-        <span class="post-text-full" style="display: none;">${full}</span>
+        <span class="post-text-short">${truncated}...</span>
+        <span class="post-text-full" style="display: none;">${content}</span>
         <button class="btn-see-more" data-action="more">${t('post.see_more')}</button>
     `;
 }
+
+// Troncature sécurisée de HTML
+function truncateHtml(html, length) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    let textCount = 0;
+    let result = '';
+
+    function processNodes(nodes) {
+        for (const node of nodes) {
+            if (textCount >= length) return;
+            if (node.nodeType === Node.TEXT_NODE) {
+                const remaining = length - textCount;
+                const text = node.textContent || '';
+                if (text.length <= remaining) {
+                    result += escapeHtml(text);
+                    textCount += text.length;
+                } else {
+                    result += escapeHtml(text.substring(0, remaining));
+                    textCount = length;
+                    return;
+                }
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                // Récupérer le tag de base sans ses attributs
+                const tag = node.tagName.toLowerCase();
+                // On ne garde que le tag, pas les attributs (pour éviter les styles/quill classes indésirables dans le tronqué)
+                result += `<${tag}>`;
+                processNodes(node.childNodes);
+                result += `</${tag}>`;
+            }
+        }
+    }
+
+    processNodes(div.childNodes);
+    return result;
+}
+// ========== FIN : RENDU AVEC HTML NON ÉCHAPPÉ ==========
 
 function getMediaType(url) {
     if (!url) return 'image';
@@ -401,7 +444,6 @@ async function toggleLike(postId) {
         return;
     }
     try {
-        // Vérifier si l'utilisateur a déjà liké
         const { data: existingLike } = await supabasePublic
             .from('public_community_likes')
             .select('id')
@@ -410,34 +452,15 @@ async function toggleLike(postId) {
             .maybeSingle();
 
         if (existingLike) {
-            // Retirer le like
             await supabasePublic.from('public_community_likes').delete().eq('id', existingLike.id);
-            await supabasePublic.rpc('decrement_likes_count', { p_post_id: postId }).catch(() => {
-                // Fallback si RPC inexistante
-                supabasePublic
-                    .from('public_community_posts')
-                    .select('likes_count')
-                    .eq('id', postId)
-                    .single()
-                    .then(({ data }) => {
-                        const count = Math.max(0, (data?.likes_count || 0) - 1);
-                        supabasePublic.from('public_community_posts').update({ likes_count: count }).eq('id', postId);
-                    });
-            });
+            const { data: post } = await supabasePublic.from('public_community_posts').select('likes_count').eq('id', postId).single();
+            const newCount = Math.max(0, (post?.likes_count || 0) - 1);
+            await supabasePublic.from('public_community_posts').update({ likes_count: newCount }).eq('id', postId);
         } else {
-            // Ajouter le like
             await supabasePublic.from('public_community_likes').insert([{ post_id: postId, user_id: currentUserId }]);
-            await supabasePublic.rpc('increment_likes_count', { p_post_id: postId }).catch(() => {
-                supabasePublic
-                    .from('public_community_posts')
-                    .select('likes_count')
-                    .eq('id', postId)
-                    .single()
-                    .then(({ data }) => {
-                        const count = (data?.likes_count || 0) + 1;
-                        supabasePublic.from('public_community_posts').update({ likes_count: count }).eq('id', postId);
-                    });
-            });
+            const { data: post } = await supabasePublic.from('public_community_posts').select('likes_count').eq('id', postId).single();
+            const newCount = (post?.likes_count || 0) + 1;
+            await supabasePublic.from('public_community_posts').update({ likes_count: newCount }).eq('id', postId);
         }
         loadPosts();
     } catch (err) {
@@ -499,7 +522,6 @@ async function sharePost(postId) {
         }
     }
 
-    // Incrémenter le compteur de partages
     try {
         const { data: post } = await supabasePublic.from('public_community_posts').select('shares_count').eq('id', postId).single();
         const newCount = (post?.shares_count || 0) + 1;

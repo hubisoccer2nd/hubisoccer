@@ -202,13 +202,15 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>ID de l'entité</label>
-                        <input type="text" id="entityId" placeholder="ID du club, tournoi...">
+                        <label>Choisir l'entité</label>
+                        <select id="entitySelect" disabled>
+                            <option value="">-- Sélectionnez d'abord un type --</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Nom de l'entité (affiché sur le bouton)</label>
-                    <input type="text" id="entityName" placeholder="Ex: Cotonou Impact FC">
+                    <input type="text" id="entityName" readonly placeholder="Rempli automatiquement">
                 </div>
                 <div class="form-row">
                     <div class="form-group">

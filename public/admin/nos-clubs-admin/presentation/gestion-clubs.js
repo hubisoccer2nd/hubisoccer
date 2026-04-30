@@ -1,4 +1,4 @@
-// ========== GESTION-CLUBS.JS (CORRIGÉ DÉFINITIF – COMPLET) ==========
+// ========== GESTION-CLUBS.JS (CORRIGÉ – NE DÉTRUIT PLUS LES DONNÉES) ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -13,6 +13,7 @@ let uploadedLogoUrl = null;
 let uploadedBanniereUrl = null;
 let missionQuill = null;
 let philosophieQuill = null;
+let isUploading = false; // verrou pour éviter la soumission pendant un upload
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
@@ -53,7 +54,7 @@ function showLoader() { document.getElementById('globalLoader').style.display = 
 function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : ÉDITEUR QUILL ==========
+// ========== DÉBUT : ÉDITEUR QUILL (CORRIGÉ) ==========
 const quillToolbarOptions = [
     [{ 'font': [] }],
     [{ 'size': ['small', false, 'large', 'huge'] }],
@@ -66,35 +67,32 @@ const quillToolbarOptions = [
     ['clean']
 ];
 
-function initEditors() {
+function destroyEditors() {
     if (missionQuill) {
+        missionQuill.destroy();
         missionQuill = null;
     }
     if (philosophieQuill) {
+        philosophieQuill.destroy();
         philosophieQuill = null;
     }
+}
 
-    const missionEditor = document.getElementById('editorMission');
-    const philosophieEditor = document.getElementById('editorPhilosophie');
+function initEditors() {
+    destroyEditors();
+    document.getElementById('editorMission').innerHTML = '';
+    document.getElementById('editorPhilosophie').innerHTML = '';
 
-    if (missionEditor) missionEditor.innerHTML = '';
-    if (philosophieEditor) philosophieEditor.innerHTML = '';
-
-    if (missionEditor) {
-        missionQuill = new Quill('#editorMission', {
-            theme: 'snow',
-            modules: { toolbar: quillToolbarOptions },
-            placeholder: 'Décrivez la mission et les objectifs du club...'
-        });
-    }
-
-    if (philosophieEditor) {
-        philosophieQuill = new Quill('#editorPhilosophie', {
-            theme: 'snow',
-            modules: { toolbar: quillToolbarOptions },
-            placeholder: 'Décrivez l\'ambiance et la philosophie du club...'
-        });
-    }
+    missionQuill = new Quill('#editorMission', {
+        theme: 'snow',
+        modules: { toolbar: quillToolbarOptions },
+        placeholder: 'Mission & Objectifs...'
+    });
+    philosophieQuill = new Quill('#editorPhilosophie', {
+        theme: 'snow',
+        modules: { toolbar: quillToolbarOptions },
+        placeholder: 'Ambiance & Philosophie...'
+    });
 }
 
 function setQuillContent(quillInstance, htmlContent) {
@@ -209,7 +207,7 @@ function renderTable() {
 }
 // ========== FIN : CHARGEMENT DES CLUBS ==========
 
-// ========== DÉBUT : GESTION DU FORMULAIRE CLUB ==========
+// ========== DÉBUT : GESTION DU FORMULAIRE CLUB (CORRIGÉ) ==========
 function openCreateModal() {
     currentClubId = null;
     document.getElementById('clubModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Nouveau club';
@@ -282,27 +280,36 @@ async function uploadFile(file, bucket, indicatorPrefix) {
     }
 }
 
-document.getElementById('clubLogoFile').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
+// ----- GESTION DES FICHIERS (NETTOYÉE) -----
+function handleLogoUpload(file) {
     if (!file) return;
-    try {
-        uploadedLogoUrl = await uploadFile(file, 'nosclub_documents', 'Logo');
-    } catch (err) { /* déjà toasté */ }
-});
+    isUploading = true;
+    uploadFile(file, 'nosclub_documents', 'Logo')
+        .then(url => { uploadedLogoUrl = url; })
+        .finally(() => { isUploading = false; });
+}
 
-document.getElementById('clubBanniereFile').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
+function handleBanniereUpload(file) {
     if (!file) return;
-    try {
-        uploadedBanniereUrl = await uploadFile(file, 'nosclub_documents', 'Banniere');
-    } catch (err) { /* déjà toasté */ }
-});
+    isUploading = true;
+    uploadFile(file, 'nosclub_documents', 'Banniere')
+        .then(url => { uploadedBanniereUrl = url; })
+        .finally(() => { isUploading = false; });
+}
+
+document.getElementById('clubLogoFile').addEventListener('change', (e) => handleLogoUpload(e.target.files[0]));
+document.getElementById('clubBanniereFile').addEventListener('change', (e) => handleBanniereUpload(e.target.files[0]));
 
 document.getElementById('uploadLogo').addEventListener('click', () => document.getElementById('clubLogoFile').click());
 document.getElementById('uploadBanniere').addEventListener('click', () => document.getElementById('clubBanniereFile').click());
 
+// ----- SOUMISSION (PROTÉGÉE) -----
 document.getElementById('clubForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (isUploading) {
+        showToast('Veuillez attendre la fin du téléversement.', 'warning');
+        return;
+    }
     const nom = document.getElementById('clubNom').value.trim();
     const disciplineId = document.getElementById('clubDiscipline').value;
     if (!nom || !disciplineId) {

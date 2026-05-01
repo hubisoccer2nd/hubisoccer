@@ -1,4 +1,4 @@
-// ========== FICHE-CLUB.JS (CORRIGÉ) ==========
+// ========== FICHE-CLUB.JS – VERSION FINALE ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -8,12 +8,13 @@ const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 // ========== DÉBUT : VARIABLES GLOBALES ==========
 let currentClub = null;
 let uploadedPhotoUrl = null;
+let formModified = false;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
 }
 
 function getInitiales(nom) {
@@ -35,11 +36,7 @@ function showToast(message, type = 'info', duration = 15000) {
     }
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <div class="toast-icon"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i></div>
-        <div class="toast-content">${escapeHtml(message)}</div>
-        <button class="toast-close"><i class="fas fa-times"></i></button>
-    `;
+    toast.innerHTML = `<div class="toast-icon"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i></div><div class="toast-content">${escapeHtml(message)}</div><button class="toast-close"><i class="fas fa-times"></i></button>`;
     container.appendChild(toast);
     toast.querySelector('.toast-close').addEventListener('click', () => {
         toast.style.animation = 'fadeOut 0.3s forwards';
@@ -72,6 +69,124 @@ function generatePassword() {
 function hashPassword(password) { return btoa(password); }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
+// ========== DÉBUT : SAUVEGARDE AUTOMATIQUE LOCALSTORAGE ==========
+function saveFormToLocalStorage() {
+    const form = document.getElementById('formulaireInscription');
+    if (!form) return;
+    const data = {
+        nom: document.getElementById('formNom')?.value || '',
+        dateNaissance: document.getElementById('formDateNaissance')?.value || '',
+        villeQuartier: document.getElementById('formVilleQuartier')?.value || '',
+        telephone: document.getElementById('formTelephone')?.value || '',
+        emailReseaux: document.getElementById('formEmailReseaux')?.value || '',
+        specialite: document.getElementById('formSpecialite')?.value || '',
+        piedMain: document.getElementById('formPiedMain')?.value || '',
+        taille: document.getElementById('formTaille')?.value || '',
+        poids: document.getElementById('formPoids')?.value || '',
+        niveauEtudes: document.getElementById('formNiveauEtudes')?.value || '',
+        metierSouhaite: document.getElementById('formMetierSouhaite')?.value || '',
+        statutActuel: document.getElementById('formStatutActuel')?.value || '',
+        nomClubActuel: document.getElementById('formNomClubActuel')?.value || '',
+        contactResponsable: document.getElementById('formContactResponsable')?.value || ''
+    };
+    localStorage.setItem('hubi_fiche_form', JSON.stringify(data));
+}
+
+function restoreFormFromLocalStorage() {
+    const saved = localStorage.getItem('hubi_fiche_form');
+    if (!saved) return;
+    try {
+        const data = JSON.parse(saved);
+        if (data.nom) document.getElementById('formNom').value = data.nom;
+        if (data.dateNaissance) document.getElementById('formDateNaissance').value = data.dateNaissance;
+        if (data.villeQuartier) document.getElementById('formVilleQuartier').value = data.villeQuartier;
+        if (data.telephone) document.getElementById('formTelephone').value = data.telephone;
+        if (data.emailReseaux) document.getElementById('formEmailReseaux').value = data.emailReseaux;
+        if (data.specialite) document.getElementById('formSpecialite').value = data.specialite;
+        if (data.piedMain) document.getElementById('formPiedMain').value = data.piedMain;
+        if (data.taille) document.getElementById('formTaille').value = data.taille;
+        if (data.poids) document.getElementById('formPoids').value = data.poids;
+        if (data.niveauEtudes) document.getElementById('formNiveauEtudes').value = data.niveauEtudes;
+        if (data.metierSouhaite) document.getElementById('formMetierSouhaite').value = data.metierSouhaite;
+        if (data.statutActuel) document.getElementById('formStatutActuel').value = data.statutActuel;
+        if (data.nomClubActuel) document.getElementById('formNomClubActuel').value = data.nomClubActuel;
+        if (data.contactResponsable) document.getElementById('formContactResponsable').value = data.contactResponsable;
+        // Mettre à jour l'affichage conditionnel du club actuel
+        if (data.statutActuel === 'En club') {
+            document.getElementById('groupeClubActuel').style.display = 'block';
+        }
+    } catch (e) {}
+}
+
+function clearFormLocalStorage() {
+    localStorage.removeItem('hubi_fiche_form');
+}
+
+// Écouteurs pour sauvegarder à chaque modification
+function setupAutoSave() {
+    const form = document.getElementById('formulaireInscription');
+    if (!form) return;
+    const fields = form.querySelectorAll('input, select, textarea');
+    fields.forEach(field => {
+        field.addEventListener('input', () => { formModified = true; saveFormToLocalStorage(); });
+        field.addEventListener('change', () => { formModified = true; saveFormToLocalStorage(); });
+    });
+}
+// ========== FIN : SAUVEGARDE AUTOMATIQUE ==========
+
+// ========== DÉBUT : UPLOAD PHOTO CORRIGÉ ==========
+function setupPhotoUpload() {
+    const box = document.getElementById('uploadPhoto');
+    const input = document.getElementById('formPhoto');
+    const statusDiv = document.getElementById('uploadStatusPhoto');
+    const successDiv = document.getElementById('uploadSuccessPhoto');
+    if (!box || !input) return;
+
+    statusDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    uploadedPhotoUrl = null;
+
+    // Supprimer tout ancien écouteur pour éviter les doublons
+    input.removeEventListener('change', handleFileSelect);
+    input.addEventListener('change', handleFileSelect);
+
+    // Le clic sur la box ne fait rien : seul l'input capte le clic (couvre toute la box)
+}
+
+async function handleFileSelect() {
+    const input = document.getElementById('formPhoto');
+    const statusDiv = document.getElementById('uploadStatusPhoto');
+    const successDiv = document.getElementById('uploadSuccessPhoto');
+    const file = input.files[0];
+    if (!file) return;
+
+    statusDiv.style.display = 'flex';
+    successDiv.style.display = 'none';
+
+    try {
+        const safeName = 'candidat_' + Date.now();
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${safeName}.${fileExt}`;
+        const bucket = 'nosclub_documents';
+
+        const { error } = await supabasePublic.storage.from(bucket).upload(fileName, file);
+        if (error) throw error;
+
+        const { data: urlData } = supabasePublic.storage.from(bucket).getPublicUrl(fileName);
+        uploadedPhotoUrl = urlData.publicUrl;
+
+        statusDiv.style.display = 'none';
+        successDiv.style.display = 'flex';
+        showToast('Photo téléversée avec succès.', 'success');
+    } catch (err) {
+        console.error(err);
+        statusDiv.style.display = 'none';
+        showToast('Erreur upload photo : ' + err.message, 'error');
+        input.value = '';
+    }
+}
+// ========== FIN : UPLOAD PHOTO ==========
+
 // ========== DÉBUT : CHARGEMENT DU CLUB ==========
 async function loadClub() {
     const params = new URLSearchParams(window.location.search);
@@ -102,33 +217,23 @@ async function loadClub() {
 }
 
 function displayClub(club) {
-    document.getElementById('clubNom').textContent = club.nom;
-    document.getElementById('clubDiscipline').innerHTML = `<i class="fas ${club.nosclub_roles?.icone || 'fa-users'}"></i> ${club.nosclub_roles?.nom || ''}`;
+    // Hero
+    document.getElementById('clubNom').textContent = club.nom || '';
+    document.getElementById('clubSlogan').textContent = club.slogan || '';
 
-    // Utiliser innerHTML pour la mission et la philosophie (permet le HTML)
-    document.getElementById('clubAdresse').textContent = `${club.quartier || ''}, ${club.ville || ''}`;
-    document.getElementById('clubMission').innerHTML = club.mission || 'Non renseigné.';
-    document.getElementById('clubPhilosophie').innerHTML = club.philosophie || 'Non renseigné.';
-    // Le fonctionnement est un texte simple
-    document.getElementById('clubFonctionnement').textContent = nosClubsT('fiche.fonctionnement_valeur') || 'Jours d\'entraînement : Mercredi 15h, Samedi 8h. Cotisation : 55 CFA/jour.';
-    document.getElementById('clubCoach').innerHTML = `<strong>${nosClubsT('fiche.coach') || 'Coach'} :</strong> ${escapeHtml(club.coach_nom || 'À désigner')}`;
-    document.getElementById('clubParrain').innerHTML = `<strong>${nosClubsT('fiche.parrain') || 'Parrain'} :</strong> ${escapeHtml(club.parrain_nom || 'À désigner')}`;
-
+    // Badge capacité
     const quotaMax = club.quota_max || 30;
     const quotaUtilise = club.quota_utilise || 0;
     const disponible = quotaMax - quotaUtilise;
-    document.getElementById('clubQuota').textContent = `${disponible} ${nosClubsT('fiche.places_label') || 'place(s) disponible(s) sur'} ${quotaMax}`;
-
-    // Badge
     const badge = document.getElementById('clubBadge');
     if (disponible <= 0) {
         badge.textContent = nosClubsT('club.complet');
         badge.className = 'club-badge badge-rouge';
     } else if (disponible <= 5) {
-        badge.textContent = nosClubsT('club.presque_complet') + ' (' + disponible + ' ' + nosClubsT('club.places', {places: disponible}) + ')';
+        badge.textContent = nosClubsT('club.presque_complet') + ' (' + disponible + ' ' + nosClubsT('club.places', { places: disponible }) + ')';
         badge.className = 'club-badge badge-orange';
     } else {
-        badge.textContent = nosClubsT('club.recrutement_ouvert') + ' (' + disponible + ' ' + nosClubsT('club.places', {places: disponible}) + ')';
+        badge.textContent = nosClubsT('club.recrutement_ouvert') + ' (' + disponible + ' ' + nosClubsT('club.places', { places: disponible }) + ')';
         badge.className = 'club-badge badge-vert';
     }
 
@@ -140,12 +245,53 @@ function displayClub(club) {
         logoContainer.innerHTML = `<div class="club-initiales-large">${getInitiales(club.nom)}</div>`;
     }
 
-    // Mettre à jour le champ rôle dans le formulaire
+    // Bannière de fond
+    const hero = document.getElementById('clubHero');
+    if (club.banniere_url) {
+        hero.style.backgroundImage = `url('${escapeHtml(club.banniere_url)}')`;
+        hero.style.backgroundSize = 'cover';
+        hero.style.backgroundPosition = 'center';
+    }
+
+    // Discipline
+    document.getElementById('clubDiscipline').innerHTML = `<i class="fas ${club.nosclub_roles?.icone || 'fa-users'}"></i> ${club.nosclub_roles?.nom || ''}`;
+
+    // Localisation
+    document.getElementById('clubAdresse').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${club.quartier || ''}, ${club.ville || ''}`;
+
+    // Statut
+    const statutTexte = club.statut === 'actif' ? (nosClubsT('fiche.statut_actif') || 'Actif (Enregistré HubISoccer)') : (nosClubsT('fiche.statut_archive') || 'Archivé');
+    document.getElementById('clubStatut').innerHTML = `<i class="fas fa-check-circle"></i> ${statutTexte}`;
+
+    // Effectif
+    document.getElementById('clubEffectif').innerHTML = `<i class="fas fa-users"></i> ${quotaUtilise} / ${quotaMax} ${nosClubsT('fiche.membres') || 'membres'}`;
+
+    // Ambiance
+    document.getElementById('clubAmbiance').innerHTML = club.ambiance ? `<i class="fas fa-fire"></i> ${escapeHtml(club.ambiance)}` : '';
+
+    // Parrain
+    document.getElementById('clubParrainNom').innerHTML = club.parrain_nom ? `<strong><i class="fas fa-hands-helping"></i> ${escapeHtml(club.parrain_nom)}</strong>` : '';
+    document.getElementById('clubParrainCitation').innerHTML = club.parrain_citation ? `« ${escapeHtml(club.parrain_citation)} »` : '';
+    document.getElementById('clubParrainContact').innerHTML = club.parrain_contact ? `<i class="fas fa-phone-alt"></i> <a href="https://wa.me/${club.parrain_contact.replace(/[^0-9]/g, '')}" target="_blank">${escapeHtml(club.parrain_contact)}</a>` : '';
+
+    // Coach
+    document.getElementById('clubCoachNom').innerHTML = club.coach_nom ? `<strong><i class="fas fa-user-tie"></i> ${escapeHtml(club.coach_nom)}</strong>` : '';
+    document.getElementById('clubCoachContact').innerHTML = club.coach_contact ? `<i class="fas fa-phone-alt"></i> ${escapeHtml(club.coach_contact)}` : '';
+
+    // Mission (contenu riche)
+    document.getElementById('clubMission').innerHTML = club.mission || '';
+
+    // Engagements (contenu riche)
+    document.getElementById('clubEngagements').innerHTML = club.engagements || '';
+
+    // Conclusion
+    document.getElementById('clubConclusion').innerHTML = club.conclusion || '';
+
+    // Pré-remplir le formulaire
     document.getElementById('formRole').value = club.nosclub_roles?.nom || '';
     document.getElementById('formClubId').value = club.id;
     document.getElementById('attenteClubId').value = club.id;
 
-    // Appliquer les traductions sur les éléments de la fiche
     applyNosClubsTranslations();
 }
 
@@ -158,62 +304,14 @@ function updateButtons(club) {
     const btnAttente = document.getElementById('btnAttente');
 
     if (disponible > 0) {
-        btnPostuler.style.display = 'block';
+        btnPostuler.style.display = 'inline-block';
         btnAttente.style.display = 'none';
     } else {
         btnPostuler.style.display = 'none';
-        btnAttente.style.display = 'block';
+        btnAttente.style.display = 'inline-block';
     }
 }
 // ========== FIN : CHARGEMENT DU CLUB ==========
-
-// ========== DÉBUT : UPLOAD PHOTO ==========
-function setupPhotoUpload() {
-    const box = document.getElementById('uploadPhoto');
-    const input = document.getElementById('formPhoto');
-    const statusDiv = document.getElementById('uploadStatusPhoto');
-    const successDiv = document.getElementById('uploadSuccessPhoto');
-    if (!box || !input) return;
-
-    statusDiv.style.display = 'none';
-    successDiv.style.display = 'none';
-    uploadedPhotoUrl = null;
-
-    input.addEventListener('change', async () => {
-        const file = input.files[0];
-        if (!file) return;
-
-        statusDiv.style.display = 'flex';
-        successDiv.style.display = 'none';
-
-        try {
-            const safeName = 'candidat_' + Date.now();
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${safeName}.${fileExt}`;
-            const bucket = 'nosclub_documents';
-
-            const { error } = await supabasePublic.storage.from(bucket).upload(fileName, file);
-            if (error) throw error;
-
-            const { data: urlData } = supabasePublic.storage.from(bucket).getPublicUrl(fileName);
-            uploadedPhotoUrl = urlData.publicUrl;
-
-            statusDiv.style.display = 'none';
-            successDiv.style.display = 'flex';
-            showToast('Photo téléversée avec succès.', 'success');
-        } catch (err) {
-            console.error(err);
-            statusDiv.style.display = 'none';
-            showToast('Erreur upload photo : ' + err.message, 'error');
-            input.value = '';
-        }
-    });
-
-    box.addEventListener('click', (e) => {
-        if (e.target !== input) input.click();
-    });
-}
-// ========== FIN : UPLOAD PHOTO ==========
 
 // ========== DÉBUT : SOUMISSION FORMULAIRE COMPLET ==========
 document.getElementById('formulaireInscription').addEventListener('submit', async (e) => {
@@ -298,6 +396,8 @@ document.getElementById('formulaireInscription').addEventListener('submit', asyn
         document.getElementById('uploadStatusPhoto').style.display = 'none';
         document.getElementById('uploadSuccessPhoto').style.display = 'none';
         document.getElementById('formPhoto').value = '';
+        clearFormLocalStorage();
+        formModified = false;
     } catch (err) {
         console.error(err);
         showToast((nosClubsT('toast.erreur_inscription') || 'Erreur lors de l\'inscription : ') + err.message, 'error');
@@ -327,7 +427,7 @@ document.getElementById('formulaireAttente').addEventListener('submit', async (e
     showLoader();
     try {
         const { error } = await supabasePublic
-            .from('nosclub_inscriptions_attente')
+            .from('nosclub_attente')
             .insert([{
                 club_id: clubId,
                 nom_complet: nom,
@@ -355,7 +455,17 @@ document.getElementById('formulaireAttente').addEventListener('submit', async (e
 // ========== FIN : SOUMISSION LISTE D'ATTENTE ==========
 
 // ========== DÉBUT : OUVERTURE / FERMETURE MODALES ==========
+function confirmCloseModal(modal) {
+    if (formModified) {
+        if (!confirm(nosClubsT('confirm_close') || 'Vous avez des modifications non sauvegardées. Voulez-vous vraiment fermer ?')) {
+            return false;
+        }
+    }
+    return true;
+}
+
 document.getElementById('btnPostuler').addEventListener('click', () => {
+    restoreFormFromLocalStorage();
     document.getElementById('formulaireModal').classList.add('active');
 });
 
@@ -365,19 +475,27 @@ document.getElementById('btnAttente').addEventListener('click', () => {
 
 document.querySelectorAll('.close-modal').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+        const modal = btn.closest('.modal');
+        if (modal && confirmCloseModal(modal)) {
+            modal.classList.remove('active');
+        }
     });
 });
 
 window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal')) {
-        e.target.classList.remove('active');
+        if (confirmCloseModal(e.target)) {
+            e.target.classList.remove('active');
+        }
     }
 });
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+        const activeModal = document.querySelector('.modal.active');
+        if (activeModal && confirmCloseModal(activeModal)) {
+            activeModal.classList.remove('active');
+        }
     }
 });
 // ========== FIN : OUVERTURE / FERMETURE MODALES ==========
@@ -458,5 +576,6 @@ document.addEventListener('DOMContentLoaded', () => {
     applyNosClubsTranslations();
     loadClub();
     setupPhotoUpload();
+    setupAutoSave();
 });
 // ========== FIN DE FICHE-CLUB.JS ==========

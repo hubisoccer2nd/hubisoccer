@@ -180,4 +180,21 @@ footer {
     }
 }
 /* ========== FIN : RESPONSIVE ========== */
+
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--light-gray);
+    border-radius: 15px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    transition: 0.3s;
+    background: white;
+}
+.form-group select:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(75,0,130,0.15);
+}
+
 /* ========== FIN DE NOS-CLUBS-LOGIN.CSS ========== */

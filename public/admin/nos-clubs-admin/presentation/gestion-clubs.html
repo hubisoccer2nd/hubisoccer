@@ -4,17 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Gestion des clubs | HubISoccer</title>
-
-    <!-- Polices Google -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
-
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <!-- Quill CSS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-
-    <!-- CSS local -->
     <link rel="stylesheet" href="gestion-clubs.css">
 </head>
 <body>
@@ -24,7 +16,7 @@
     </div>
     <!-- ========== FIN : LOADER GLOBAL ========== -->
 
-    <!-- ========== DÉBUT : NAVIGATION ========== -->
+    <!-- ========== DÉBUT : NAVIGATION ADMIN ========== -->
     <nav>
         <a href="../../../index.html" class="logo-link">
             <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
@@ -35,6 +27,8 @@
             <div class="nav-links" id="navLinks">
                 <a href="../administration.html"><i class="fas fa-th-large"></i> Portail</a>
                 <a href="../acteurs-admin/acteurs-admin.html"><i class="fas fa-users"></i> Acteurs</a>
+                <a href="../premierpas-admin/premier-pas-admin.html"><i class="fas fa-running"></i> Premier Pas</a>
+                <a href="../artistes-admin/artistes-admin.html"><i class="fas fa-paint-brush"></i> Artistes</a>
                 <a href="../tournoi-admin/tournoi-admin.html"><i class="fas fa-trophy"></i> Tournois</a>
                 <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
             </div>
@@ -42,7 +36,6 @@
     </nav>
     <!-- ========== FIN : NAVIGATION ========== -->
 
-    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
     <main class="admin-main">
         <div class="admin-container">
             <div class="page-header">
@@ -50,7 +43,7 @@
                 <p class="page-subtitle">Créez, modifiez, archivez ou supprimez les clubs visibles sur la page publique.</p>
             </div>
 
-            <!-- ========== FILTRES ========== -->
+            <!-- FILTRES -->
             <div class="filters-bar">
                 <input type="text" id="searchInput" placeholder="Rechercher par nom ou ville...">
                 <select id="statutFilter">
@@ -61,9 +54,8 @@
                 <button id="newClubBtn" class="btn-primary"><i class="fas fa-plus-circle"></i> Créer un club</button>
                 <button id="refreshClubsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
             </div>
-            <!-- ========== FIN : FILTRES ========== -->
 
-            <!-- ========== TABLEAU DES CLUBS ========== -->
+            <!-- TABLEAU DES CLUBS -->
             <div class="table-container">
                 <table id="clubsTable">
                     <thead>
@@ -82,12 +74,10 @@
                     </tbody>
                 </table>
             </div>
-            <!-- ========== FIN : TABLEAU ========== -->
         </div>
     </main>
-    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
 
-    <!-- ========== DÉBUT : MODALE CRÉATION / MODIFICATION ========== -->
+    <!-- ========== MODALE CRÉATION / MODIFICATION ========== -->
     <div id="clubModal" class="modal">
         <div class="modal-content large">
             <span class="close-modal">&times;</span>
@@ -101,9 +91,7 @@
                     </div>
                     <div class="form-group">
                         <label>Discipline *</label>
-                        <select id="clubDiscipline" required>
-                            <!-- Rempli dynamiquement par le JS -->
-                        </select>
+                        <select id="clubDiscipline" required></select>
                     </div>
                 </div>
                 <div class="form-row">
@@ -122,9 +110,13 @@
                         <input type="number" id="clubQuotaMax" value="30" min="1" required>
                     </div>
                     <div class="form-group">
-                        <label>Quota utilisé</label>
-                        <input type="number" id="clubQuotaUtilise" value="0" min="0" readonly>
+                        <label>Slogan</label>
+                        <input type="text" id="clubSlogan" placeholder="« L'Élite de Demain, Forgée Aujourd'hui »" maxlength="200">
                     </div>
+                </div>
+                <div class="form-group">
+                    <label>Ambiance</label>
+                    <input type="text" id="clubAmbiance" placeholder="Professionnelle • Intense • Visionnaire">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -146,47 +138,45 @@
                         <input type="text" id="clubParrainContact">
                     </div>
                 </div>
+                <div class="form-group">
+                    <label>Citation du parrain</label>
+                    <textarea id="clubParrainCitation" rows="2" placeholder="« Investir dans la jeunesse... »"></textarea>
+                </div>
 
-                <!-- ========== ÉDITEUR RICHE (QUILL) POUR LA MISSION ========== -->
+                <!-- Éditeurs Quill -->
                 <div class="form-group">
                     <label>Mission & Objectifs</label>
                     <div id="editorMission" style="height: 200px; background: white;"></div>
                 </div>
-
-                <!-- ========== ÉDITEUR RICHE (QUILL) POUR LA PHILOSOPHIE ========== -->
                 <div class="form-group">
                     <label>Ambiance & Philosophie</label>
                     <div id="editorPhilosophie" style="height: 200px; background: white;"></div>
                 </div>
-
-                <!-- Upload logo -->
                 <div class="form-group">
-                    <label>Logo du club</label>
-                    <div class="file-upload-box" id="uploadLogo">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span>Cliquez pour télécharger (JPG, PNG)</span>
-                        <input type="file" id="clubLogoFile" accept=".jpg,.jpeg,.png">
-                        <div class="upload-status" id="uploadStatusLogo" style="display: none;">
-                            <span class="upload-spinner"></span><span>Téléversement...</span>
-                        </div>
-                        <div class="upload-success" id="uploadSuccessLogo" style="display: none;">
-                            <i class="fas fa-check-circle"></i><span>Logo prêt</span>
-                        </div>
-                    </div>
+                    <label>Engagements stratégiques (tableau)</label>
+                    <div id="editorEngagements" style="height: 200px; background: white;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Conclusion</label>
+                    <div id="editorConclusion" style="height: 200px; background: white;"></div>
                 </div>
 
-                <!-- Upload bannière -->
-                <div class="form-group">
-                    <label>Bannière du club</label>
-                    <div class="file-upload-box" id="uploadBanniere">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span>Cliquez pour télécharger (JPG, PNG)</span>
-                        <input type="file" id="clubBanniereFile" accept=".jpg,.jpeg,.png">
-                        <div class="upload-status" id="uploadStatusBanniere" style="display: none;">
-                            <span class="upload-spinner"></span><span>Téléversement...</span>
+                <!-- Uploads (fichiers sélectionnés seulement, pas d'upload auto) -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Logo du club</label>
+                        <div class="file-upload-box" id="uploadLogoBox">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="logoFileName">Cliquez pour choisir un fichier (JPG, PNG)</span>
+                            <input type="file" id="clubLogoFile" accept=".jpg,.jpeg,.png">
                         </div>
-                        <div class="upload-success" id="uploadSuccessBanniere" style="display: none;">
-                            <i class="fas fa-check-circle"></i><span>Bannière prête</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Bannière du club</label>
+                        <div class="file-upload-box" id="uploadBanniereBox">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="banniereFileName">Cliquez pour choisir un fichier (JPG, PNG)</span>
+                            <input type="file" id="clubBanniereFile" accept=".jpg,.jpeg,.png">
                         </div>
                     </div>
                 </div>
@@ -195,9 +185,8 @@
             </form>
         </div>
     </div>
-    <!-- ========== FIN : MODALE CRÉATION / MODIFICATION ========== -->
 
-    <!-- ========== DÉBUT : MODALE DE VISUALISATION ========== -->
+    <!-- ========== MODALE DE VISUALISATION ========== -->
     <div id="viewModal" class="modal">
         <div class="modal-content large">
             <span class="close-modal">&times;</span>
@@ -205,22 +194,20 @@
             <div id="viewContent"></div>
         </div>
     </div>
-    <!-- ========== FIN : MODALE DE VISUALISATION ========== -->
 
-    <!-- ========== DÉBUT : MODALE DE CONFIRMATION SUPPRESSION ========== -->
+    <!-- ========== MODALE DE CONFIRMATION SUPPRESSION ========== -->
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h3><i class="fas fa-trash-alt"></i> Supprimer le club</h3>
-            <p>Cette action est irréversible. Tous les membres et messages liés à ce club seront également supprimés.</p>
+            <p>Voulez-vous vraiment supprimer le club <strong id="deleteClubName"></strong> ? Cette action est irréversible. Tous les membres et messages liés seront également supprimés.</p>
             <button id="confirmDeleteBtn" class="btn-submit btn-danger"><i class="fas fa-trash-alt"></i> Supprimer définitivement</button>
         </div>
     </div>
-    <!-- ========== FIN : MODALE DE SUPPRESSION ========== -->
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Quill JS -->
+    <!-- Scripts -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="gestion-clubs.js"></script>

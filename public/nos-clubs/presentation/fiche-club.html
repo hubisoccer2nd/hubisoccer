@@ -12,13 +12,13 @@
 <body>
     <!-- ========== DÉBUT : LOADER ========== -->
     <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
-        <div class="spinner"></div> Chargement...
+        <div class="spinner"></div> <span data-i18n="loading">Chargement...</span>
     </div>
     <!-- ========== FIN : LOADER ========== -->
 
-    <!-- ========== DÉBUT : NAVBAR ========== -->
+    <!-- ========== DÉBUT : NAVBAR OFFICIELLE ========== -->
     <nav>
-        <a href="./" class="logo-link">
+        <a href="../../index.html" class="logo-link">
             <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
@@ -48,83 +48,121 @@
                 <option value="pl">🇵🇱 Polski</option>
                 <option value="vi">🇻🇳 Tiếng Việt</option>
             </select>
-            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <div class="nav-links" id="navLinks">
-                <a href="clubs.html" data-i18n="nav.clubs">Nos Clubs</a>
+                <a href="../../premier-pas.html" data-i18n="nav.premier_pas">Premier Pas</a>
+                <a href="../../acteurs.html" data-i18n="nav.acteurs">Acteurs</a>
+                <a href="../../artiste-adhesion.html" data-i18n="nav.artistes">Artistes</a>
+                <a href="../../tournoi.html" data-i18n="nav.tournois">Tournois</a>
+                <a href="clubs.html" class="active" data-i18n="nav.clubs">Nos Clubs</a>
+                <a href="../../hub-community.html" data-i18n="nav.community">Communauté</a>
+                <a href="../../actualites.html" data-i18n="nav.actualites">Actualités</a>
+                <a href="../../contact.html" data-i18n="nav.contact">Contact</a>
                 <a href="../gestion/nos-clubs-login.html" data-i18n="nav.login">Connexion</a>
             </div>
         </div>
     </nav>
-    <!-- ========== FIN : NAVBAR ========== -->
+    <!-- ========== FIN : NAVBAR OFFICIELLE ========== -->
 
-    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
-    <main class="fiche-main">
-        <!-- Section Hero du club -->
-        <section class="club-hero" id="clubHero">
-            <div class="club-hero-overlay"></div>
-            <div class="club-hero-content">
-                <div class="club-logo-container" id="clubLogoContainer">
-                    <!-- Injecté par JS : logo ou initiales -->
-                </div>
-                <h1 id="clubNom"></h1>
+    <!-- ========== DÉBUT : HERO DU CLUB ========== -->
+    <section class="club-hero" id="clubHero">
+        <div class="club-hero-overlay"></div>
+        <div class="club-hero-content">
+            <div class="club-logo-container" id="clubLogoContainer">
+                <!-- Injecté par JS : logo ou initiales -->
+            </div>
+            <h1 id="clubNom"></h1>
+            <p class="club-slogan" id="clubSlogan"></p>
+            <span id="clubBadge" class="club-badge"></span>
+        </div>
+    </section>
+    <!-- ========== FIN : HERO DU CLUB ========== -->
+
+    <!-- ========== DÉBUT : FICHE D'IDENTITÉ (6 CARTES) ========== -->
+    <section class="club-details">
+        <div class="details-grid">
+            <!-- Discipline -->
+            <div class="detail-card">
+                <h3><i class="fas fa-futbol"></i> <span data-i18n="fiche.discipline">Discipline</span></h3>
                 <p id="clubDiscipline"></p>
-                <span id="clubBadge" class="club-badge"></span>
             </div>
-        </section>
-
-        <!-- Section Informations détaillées -->
-        <section class="club-details">
-            <div class="details-grid">
-                <!-- Localisation -->
-                <div class="detail-card">
-                    <h3><i class="fas fa-map-marker-alt"></i> <span data-i18n="fiche.localisation">Localisation & QG</span></h3>
-                    <p id="clubAdresse"></p>
-                </div>
-
-                <!-- Mission -->
-                <div class="detail-card">
-                    <h3><i class="fas fa-bullseye"></i> <span data-i18n="fiche.mission">Mission & Objectifs</span></h3>
-                    <p id="clubMission"></p>
-                </div>
-
-                <!-- Philosophie -->
-                <div class="detail-card">
-                    <h3><i class="fas fa-fire"></i> <span data-i18n="fiche.philosophie">Ambiance & Philosophie</span></h3>
-                    <p id="clubPhilosophie"></p>
-                </div>
-
-                <!-- Fonctionnement -->
-                <div class="detail-card">
-                    <h3><i class="fas fa-calendar-alt"></i> <span data-i18n="fiche.fonctionnement">Fonctionnement</span></h3>
-                    <p id="clubFonctionnement"></p>
-                </div>
-
-                <!-- Encadrement -->
-                <div class="detail-card">
-                    <h3><i class="fas fa-users"></i> <span data-i18n="fiche.encadrement">Encadrement</span></h3>
-                    <p id="clubCoach"></p>
-                    <p id="clubParrain"></p>
-                </div>
-
-                <!-- Quota -->
-                <div class="detail-card">
-                    <h3><i class="fas fa-chart-pie"></i> <span data-i18n="fiche.places">Places disponibles</span></h3>
-                    <p id="clubQuota"></p>
-                </div>
+            <!-- Localisation -->
+            <div class="detail-card">
+                <h3><i class="fas fa-map-marker-alt"></i> <span data-i18n="fiche.localisation">Localisation & QG</span></h3>
+                <p id="clubAdresse"></p>
             </div>
-        </section>
+            <!-- Statut -->
+            <div class="detail-card">
+                <h3><i class="fas fa-check-circle"></i> <span data-i18n="fiche.statut">Statut</span></h3>
+                <p id="clubStatut"></p>
+            </div>
+            <!-- Effectif -->
+            <div class="detail-card">
+                <h3><i class="fas fa-users"></i> <span data-i18n="fiche.effectif">Effectif</span></h3>
+                <p id="clubEffectif"></p>
+            </div>
+            <!-- Ambiance -->
+            <div class="detail-card">
+                <h3><i class="fas fa-fire"></i> <span data-i18n="fiche.ambiance">Ambiance</span></h3>
+                <p id="clubAmbiance"></p>
+            </div>
+            <!-- Parrain -->
+            <div class="detail-card">
+                <h3><i class="fas fa-hands-helping"></i> <span data-i18n="fiche.parrain">Parrain</span></h3>
+                <p id="clubParrainNom"></p>
+                <p class="citation" id="clubParrainCitation"></p>
+                <p id="clubParrainContact"></p>
+            </div>
+            <!-- Coach (ajout pour exhaustivité) -->
+            <div class="detail-card">
+                <h3><i class="fas fa-user-tie"></i> <span data-i18n="fiche.coach">Coach</span></h3>
+                <p id="clubCoachNom"></p>
+                <p id="clubCoachContact"></p>
+            </div>
+        </div>
+    </section>
+    <!-- ========== FIN : FICHE D'IDENTITÉ ========== -->
 
-        <!-- Section Appel à l'action -->
-        <section class="club-cta">
-            <button id="btnPostuler" class="btn-postuler">
-                <i class="fas fa-paper-plane"></i> <span data-i18n="fiche.postuler">POSTULER POUR CE CLUB</span>
-            </button>
-            <button id="btnAttente" class="btn-attente" style="display: none;">
-                <i class="fas fa-clock"></i> <span data-i18n="fiche.attente">REJOINDRE LA LISTE D'ATTENTE</span>
-            </button>
-        </section>
-    </main>
-    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
+    <!-- ========== DÉBUT : MISSION (BLOC RICHE) ========== -->
+    <section class="club-mission">
+        <div class="detail-card full-width">
+            <h3><i class="fas fa-bullseye"></i> <span data-i18n="fiche.mission">Mission & Philosophie</span></h3>
+            <div class="rich-content" id="clubMission"></div>
+        </div>
+    </section>
+    <!-- ========== FIN : MISSION ========== -->
+
+    <!-- ========== DÉBUT : ENGAGEMENTS (TABLEAU) ========== -->
+    <section class="club-engagements">
+        <div class="detail-card full-width">
+            <h3><i class="fas fa-flag-checkered"></i> <span data-i18n="fiche.engagements">Nos Engagements Stratégiques</span></h3>
+            <div class="rich-content" id="clubEngagements"></div>
+        </div>
+    </section>
+    <!-- ========== FIN : ENGAGEMENTS ========== -->
+
+    <!-- ========== DÉBUT : CONCLUSION ========== -->
+    <section class="club-conclusion">
+        <div class="detail-card full-width">
+            <div class="rich-content" id="clubConclusion"></div>
+        </div>
+    </section>
+    <!-- ========== FIN : CONCLUSION ========== -->
+
+    <!-- ========== DÉBUT : APPEL À L'ACTION ========== -->
+    <section class="club-cta">
+        <button id="btnPostuler" class="btn-postuler">
+            <i class="fas fa-paper-plane"></i> <span data-i18n="fiche.postuler">POSTULER POUR CE CLUB</span>
+        </button>
+        <button id="btnAttente" class="btn-attente" style="display: none;">
+            <i class="fas fa-clock"></i> <span data-i18n="fiche.attente">REJOINDRE LA LISTE D'ATTENTE</span>
+        </button>
+    </section>
+    <!-- ========== FIN : APPEL À L'ACTION ========== -->
 
     <!-- ========== DÉBUT : MODALE FORMULAIRE D'INSCRIPTION (COMPLET) ========== -->
     <div id="formulaireModal" class="modal">

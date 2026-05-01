@@ -75,6 +75,9 @@
             <div class="club-logo-container" id="clubLogoContainer">
                 <!-- Injecté par JS : logo ou initiales -->
             </div>
+            <button id="btnAgrandirBanniere" class="btn-agrandir-banniere" title="Agrandir la bannière">
+                <i class="fas fa-expand"></i>
+            </button>
             <h1 id="clubNom"></h1>
             <p class="club-slogan" id="clubSlogan"></p>
             <span id="clubBadge" class="club-badge"></span>
@@ -117,7 +120,7 @@
                 <p class="citation" id="clubParrainCitation"></p>
                 <p id="clubParrainContact"></p>
             </div>
-            <!-- Coach (ajout pour exhaustivité) -->
+            <!-- Coach -->
             <div class="detail-card">
                 <h3><i class="fas fa-user-tie"></i> <span data-i18n="fiche.coach">Coach</span></h3>
                 <p id="clubCoachNom"></p>
@@ -127,14 +130,23 @@
     </section>
     <!-- ========== FIN : FICHE D'IDENTITÉ ========== -->
 
-    <!-- ========== DÉBUT : MISSION (BLOC RICHE) ========== -->
+    <!-- ========== DÉBUT : MISSION ========== -->
     <section class="club-mission">
         <div class="detail-card full-width">
-            <h3><i class="fas fa-bullseye"></i> <span data-i18n="fiche.mission">Mission & Philosophie</span></h3>
+            <h3><i class="fas fa-bullseye"></i> <span data-i18n="fiche.mission">Mission</span></h3>
             <div class="rich-content" id="clubMission"></div>
         </div>
     </section>
     <!-- ========== FIN : MISSION ========== -->
+
+    <!-- ========== DÉBUT : PHILOSOPHIE ========== -->
+    <section class="club-philosophie">
+        <div class="detail-card full-width">
+            <h3><i class="fas fa-lightbulb"></i> <span data-i18n="fiche.philosophie">Philosophie</span></h3>
+            <div class="rich-content" id="clubPhilosophie"></div>
+        </div>
+    </section>
+    <!-- ========== FIN : PHILOSOPHIE ========== -->
 
     <!-- ========== DÉBUT : ENGAGEMENTS (TABLEAU) ========== -->
     <section class="club-engagements">

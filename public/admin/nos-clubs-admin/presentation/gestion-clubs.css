@@ -1,5 +1,5 @@
-/* ========== GESTION-CLUBS.CSS ========== */
-/* ========== DÉBUT : VARIABLES ========== */
+/* ========== GESTION-CLUBS.CSS – VERSION FINALE ========== */
+/* ========== DÉBUT : VARIABLES ET RÉINITIALISATION ========== */
 :root {
     --primary: #4B0082;
     --primary-light: #7B2FBE;
@@ -48,7 +48,7 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-/* ========== FIN : VARIABLES ========== */
+/* ========== FIN : VARIABLES ET RÉINITIALISATION ========== */
 
 /* ========== DÉBUT : NAVBAR ========== */
 nav {
@@ -246,6 +246,25 @@ nav {
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(75,0,130,0.3);
 }
+
+.btn-refresh {
+    background: var(--white);
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 10px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-refresh:hover {
+    background: var(--primary);
+    color: white;
+}
 /* ========== FIN : FILTRES ========== */
 
 /* ========== DÉBUT : TABLEAU ========== */
@@ -344,6 +363,9 @@ tbody tr:last-child td {
 
 .btn-delete { color: #c82333; border: 1px solid #c82333; }
 .btn-delete:hover { background: #c82333; color: white; }
+
+.btn-view { color: var(--info); border: 1px solid var(--info); }
+.btn-view:hover { background: var(--info); color: white; }
 
 .empty-message, .loading-placeholder {
     text-align: center;
@@ -444,6 +466,11 @@ tbody tr:last-child td {
     background: white;
 }
 
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
@@ -497,6 +524,7 @@ tbody tr:last-child td {
 .ql-font-Impact { font-family: 'Impact', sans-serif; }
 .ql-font-Tahoma { font-family: 'Tahoma', sans-serif; }
 
+/* Upload */
 .file-upload-box {
     border: 2px dashed var(--gold);
     border-radius: 20px;
@@ -536,38 +564,6 @@ tbody tr:last-child td {
     cursor: pointer;
 }
 
-.upload-status,
-.upload-success {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(255,255,255,0.95);
-    padding: 8px 18px;
-    border-radius: 40px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    font-size: 0.85rem;
-}
-
-.upload-spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid var(--light-gray);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-.upload-success i {
-    color: var(--success);
-    font-size: 1.5rem;
-    margin: 0;
-}
-
 .btn-submit {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
@@ -600,6 +596,69 @@ tbody tr:last-child td {
     background: var(--danger);
 }
 /* ========== FIN : FORMULAIRE DANS LA MODALE ========== */
+
+/* ========== DÉBUT : MODALE DE VISUALISATION ========== */
+.view-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.detail-section {
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.detail-section h4 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+}
+
+.detail-section h4 i {
+    color: var(--gold);
+}
+
+.detail-section p {
+    margin-bottom: 8px;
+    color: var(--dark);
+}
+
+.rich-content {
+    line-height: 1.7;
+    color: var(--dark);
+}
+
+.rich-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.rich-content th,
+.rich-content td {
+    padding: 8px 12px;
+    border: 1px solid var(--light-gray);
+    text-align: left;
+}
+
+.rich-content th {
+    background: var(--primary);
+    color: white;
+}
+
+.preview-img {
+    max-width: 200px;
+    max-height: 150px;
+    border-radius: 12px;
+    margin-top: 8px;
+    box-shadow: var(--shadow);
+}
+/* ========== FIN : MODALE DE VISUALISATION ========== */
 
 /* ========== DÉBUT : TOASTS ========== */
 .toast-container {
@@ -714,6 +773,9 @@ tbody tr:last-child td {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
+    }
+    .file-upload-box {
+        padding: 15px;
     }
 }
 /* ========== FIN : RESPONSIVE ========== */

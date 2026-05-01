@@ -16,6 +16,14 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
 }
 
+function sanitizeHtml(html) {
+    if (!html) return '';
+    let cleaned = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    cleaned = cleaned.replace(/ on\w+="[^"]*"/gi, '');
+    cleaned = cleaned.replace(/ on\w+='[^']*'/gi, '');
+    return cleaned;
+}
+
 function getInitiales(nom) {
     if (!nom) return '??';
     return nom.split(' ').map(mot => mot.charAt(0).toUpperCase()).slice(0, 2).join('');
@@ -98,8 +106,8 @@ function displayClubDetails() {
     const container = document.getElementById('clubDetailsContent');
     if (!currentClub) return;
     container.innerHTML = `
-        <p><strong>Mission :</strong> ${escapeHtml(currentClub.mission || 'Non renseignée')}</p>
-        <p><strong>Philosophie :</strong> ${escapeHtml(currentClub.philosophie || 'Non renseignée')}</p>
+        <p><strong>Mission :</strong> <span>${sanitizeHtml(currentClub.mission || 'Non renseignée')}</span></p>
+        <p><strong>Philosophie :</strong> <span>${sanitizeHtml(currentClub.philosophie || 'Non renseignée')}</span></p>
         <p><strong>Coach :</strong> ${escapeHtml(currentClub.coach_nom || 'À désigner')}</p>
         <p><strong>Parrain :</strong> ${escapeHtml(currentClub.parrain_nom || 'À désigner')}</p>
     `;

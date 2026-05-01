@@ -1,4 +1,4 @@
-/* ========== CLUBS.CSS ========== */
+/* ========== CLUBS.CSS – VERSION FINALE ========== */
 /* ========== DÉBUT : VARIABLES ET RÉINITIALISATION ========== */
 :root {
     --primary: #4B0082;
@@ -252,6 +252,11 @@ nav {
     box-shadow: var(--shadow-hover);
 }
 
+.club-card.archive {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 .club-logo-container {
     height: 160px;
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -354,6 +359,17 @@ nav {
     box-shadow: 0 8px 20px rgba(75,0,130,0.3);
 }
 
+.archive-label {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gray);
+    background: var(--light-gray);
+    border-radius: 50px;
+}
+
 .loading-placeholder,
 .empty-message,
 .error-message {
@@ -362,6 +378,30 @@ nav {
     padding: 60px 20px;
     color: var(--gray);
     font-size: 1.1rem;
+}
+
+/* Bouton Réessayer */
+.retry-container {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.btn-retry {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: var(--white);
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-retry:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(75,0,130,0.3);
 }
 /* ========== FIN : GRILLE DES CLUBS ========== */
 

@@ -1,4 +1,4 @@
-// ========== GESTION-CLUBS.JS (CORRIGÉ DÉFINITIF – COMPLET) ==========
+// ========== GESTION-CLUBS.JS – VERSION FINALE ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -9,14 +9,14 @@ const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_K
 let allClubs = [];
 let allRoles = [];
 let currentClubId = null;
-let uploadedLogoUrl = null;
-let uploadedBanniereUrl = null;
+let selectedLogoFile = null;
+let selectedBanniereFile = null;
+
+// Éditeurs Quill (initialisés une seule fois)
 let missionQuill = null;
 let philosophieQuill = null;
-
-// Cache pour préserver le contenu des éditeurs en cas de réinitialisation accidentelle
-let cachedMission = '';
-let cachedPhilosophie = '';
+let engagementsQuill = null;
+let conclusionQuill = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
@@ -30,11 +30,7 @@ function showToast(message, type = 'info', duration = 15000) {
     }
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <div class="toast-icon"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i></div>
-        <div class="toast-content">${escapeHtml(message)}</div>
-        <button class="toast-close"><i class="fas fa-times"></i></button>
-    `;
+    toast.innerHTML = `<div class="toast-icon"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i></div><div class="toast-content">${escapeHtml(message)}</div><button class="toast-close"><i class="fas fa-times"></i></button>`;
     container.appendChild(toast);
     toast.querySelector('.toast-close').addEventListener('click', () => {
         toast.style.animation = 'fadeOut 0.3s forwards';
@@ -50,14 +46,23 @@ function showToast(message, type = 'info', duration = 15000) {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
 }
 
 function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
 function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
+
+function sanitizeClubName(name) {
+    return name
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '')
+        .substring(0, 50);
+}
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : ÉDITEUR QUILL (PROTÉGÉ) ==========
+// ========== DÉBUT : INITIALISATION UNIQUE DES ÉDITEURS QUILL ==========
 const quillToolbarOptions = [
     [{ 'font': [] }],
     [{ 'size': ['small', false, 'large', 'huge'] }],
@@ -70,51 +75,27 @@ const quillToolbarOptions = [
     ['clean']
 ];
 
-function initEditors() {
-    // Sauvegarde le contenu actuel avant de détruire
-    if (missionQuill) {
-        cachedMission = missionQuill.root.innerHTML;
-        missionQuill.enable(false);
-        missionQuill = null;
-    }
-    if (philosophieQuill) {
-        cachedPhilosophie = philosophieQuill.root.innerHTML;
-        philosophieQuill.enable(false);
-        philosophieQuill = null;
-    }
-
-    const missionEditor = document.getElementById('editorMission');
-    const philosophieEditor = document.getElementById('editorPhilosophie');
-
-    // Ne vider les conteneurs QUE si on n'est pas en train de les remplir immédiatement après
-    if (missionEditor) missionEditor.innerHTML = '';
-    if (philosophieEditor) philosophieEditor.innerHTML = '';
-
-    if (missionEditor) {
-        missionQuill = new Quill('#editorMission', {
-            theme: 'snow',
-            modules: { toolbar: quillToolbarOptions },
-            placeholder: 'Décrivez la mission et les objectifs du club...'
-        });
-    }
-
-    if (philosophieEditor) {
-        philosophieQuill = new Quill('#editorPhilosophie', {
-            theme: 'snow',
-            modules: { toolbar: quillToolbarOptions },
-            placeholder: 'Décrivez l\'ambiance et la philosophie du club...'
-        });
-    }
-
-    // Restaurer le contenu sauvegardé s'il existait
-    if (cachedMission && missionQuill) {
-        setQuillContent(missionQuill, cachedMission);
-        cachedMission = '';
-    }
-    if (cachedPhilosophie && philosophieQuill) {
-        setQuillContent(philosophieQuill, cachedPhilosophie);
-        cachedPhilosophie = '';
-    }
+function initQuillEditors() {
+    missionQuill = new Quill('#editorMission', {
+        theme: 'snow',
+        modules: { toolbar: quillToolbarOptions },
+        placeholder: 'Décrivez la mission et les objectifs du club...'
+    });
+    philosophieQuill = new Quill('#editorPhilosophie', {
+        theme: 'snow',
+        modules: { toolbar: quillToolbarOptions },
+        placeholder: 'Décrivez l\'ambiance et la philosophie du club...'
+    });
+    engagementsQuill = new Quill('#editorEngagements', {
+        theme: 'snow',
+        modules: { toolbar: quillToolbarOptions },
+        placeholder: 'Tableau des engagements stratégiques...'
+    });
+    conclusionQuill = new Quill('#editorConclusion', {
+        theme: 'snow',
+        modules: { toolbar: quillToolbarOptions },
+        placeholder: 'Conclusion et pied de page...'
+    });
 }
 
 function setQuillContent(quillInstance, htmlContent) {
@@ -134,7 +115,14 @@ function setQuillContent(quillInstance, htmlContent) {
         quillInstance.setText(htmlContent);
     }
 }
-// ========== FIN : ÉDITEUR QUILL ==========
+
+function clearQuillEditors() {
+    if (missionQuill) missionQuill.setText('');
+    if (philosophieQuill) philosophieQuill.setText('');
+    if (engagementsQuill) engagementsQuill.setText('');
+    if (conclusionQuill) conclusionQuill.setText('');
+}
+// ========== FIN : INITIALISATION UNIQUE DES ÉDITEURS QUILL ==========
 
 // ========== DÉBUT : CHARGEMENT DES RÔLES ==========
 async function loadRoles() {
@@ -203,25 +191,23 @@ function renderTable() {
         const role = club.nosclub_roles || {};
         const quotaUtilise = club.quota_utilise || 0;
         const quotaMax = club.quota_max || 30;
-        const statutBadge = club.statut === 'actif' 
+        const statutBadge = club.statut === 'actif'
             ? '<span class="status-badge status-actif">Actif</span>'
             : '<span class="status-badge status-archive">Archivé</span>';
-        return `
-            <tr data-clubid="${club.id}">
-                <td class="id-cell">${club.id}</td>
-                <td>${escapeHtml(club.nom)}</td>
-                <td><i class="fas ${escapeHtml(role.icone || 'fa-users')}"></i> ${escapeHtml(role.nom || '')}</td>
-                <td>${escapeHtml(club.ville || '-')}</td>
-                <td>${quotaUtilise} / ${quotaMax}</td>
-                <td>${statutBadge}</td>
-                <td class="actions-cell">
-                    <button class="btn-icon btn-view" data-clubid="${club.id}" title="Visualiser"><i class="fas fa-eye"></i></button>
-                    <button class="btn-icon btn-edit" data-clubid="${club.id}" title="Modifier"><i class="fas fa-edit"></i></button>
-                    <button class="btn-icon btn-archive" data-clubid="${club.id}" data-statut="${club.statut}" title="${club.statut === 'actif' ? 'Archiver' : 'Désarchiver'}"><i class="fas fa-archive"></i></button>
-                    <button class="btn-icon btn-delete" data-clubid="${club.id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            </tr>
-        `;
+        return `<tr data-clubid="${club.id}">
+            <td class="id-cell">${club.id}</td>
+            <td>${escapeHtml(club.nom)}</td>
+            <td><i class="fas ${escapeHtml(role.icone || 'fa-users')}"></i> ${escapeHtml(role.nom || '')}</td>
+            <td>${escapeHtml(club.ville || '-')}</td>
+            <td>${quotaUtilise} / ${quotaMax}</td>
+            <td>${statutBadge}</td>
+            <td class="actions-cell">
+                <button class="btn-icon btn-view" data-clubid="${club.id}" title="Visualiser"><i class="fas fa-eye"></i></button>
+                <button class="btn-icon btn-edit" data-clubid="${club.id}" title="Modifier"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon btn-archive" data-clubid="${club.id}" data-statut="${club.statut}" title="${club.statut === 'actif' ? 'Archiver' : 'Désarchiver'}"><i class="fas fa-archive"></i></button>
+                <button class="btn-icon btn-delete" data-clubid="${club.id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        </tr>`;
     }).join('');
 
     tbody.querySelectorAll('.btn-view').forEach(btn => btn.addEventListener('click', () => openViewModal(btn.dataset.clubid)));
@@ -237,37 +223,47 @@ function openViewModal(clubId) {
     if (!club) return;
 
     const viewContent = document.getElementById('viewContent');
-    viewContent.innerHTML = `
-        <div class="view-details">
-            <div class="detail-section">
-                <h4><i class="fas fa-info-circle"></i> Identité</h4>
-                <p><strong>Nom :</strong> ${escapeHtml(club.nom)}</p>
-                <p><strong>Discipline :</strong> ${escapeHtml(club.nosclub_roles?.nom || '-')}</p>
-                <p><strong>Ville :</strong> ${escapeHtml(club.ville || '-')}</p>
-                <p><strong>Quartier :</strong> ${escapeHtml(club.quartier || '-')}</p>
-                <p><strong>Quota :</strong> ${club.quota_utilise || 0} / ${club.quota_max || 30}</p>
-                <p><strong>Statut :</strong> ${club.statut === 'actif' ? 'Actif' : 'Archivé'}</p>
-            </div>
-            <div class="detail-section">
-                <h4><i class="fas fa-users"></i> Encadrement</h4>
-                <p><strong>Coach :</strong> ${escapeHtml(club.coach_nom || 'À désigner')}</p>
-                <p><strong>Contact Coach :</strong> ${escapeHtml(club.coach_contact || '-')}</p>
-                <p><strong>Parrain :</strong> ${escapeHtml(club.parrain_nom || 'À désigner')}</p>
-                <p><strong>Contact Parrain :</strong> ${escapeHtml(club.parrain_contact || '-')}</p>
-            </div>
-            <div class="detail-section">
-                <h4><i class="fas fa-bullseye"></i> Mission & Philosophie</h4>
-                <div class="rich-content">${club.mission || 'Non renseigné.'}</div>
-                <hr>
-                <div class="rich-content">${club.philosophie || 'Non renseigné.'}</div>
-            </div>
-            <div class="detail-section">
-                <h4><i class="fas fa-image"></i> Médias</h4>
-                <p>Logo : ${club.logo_url ? `<img src="${escapeHtml(club.logo_url)}" class="preview-img">` : 'Aucun'}</p>
-                <p>Bannière : ${club.banniere_url ? `<img src="${escapeHtml(club.banniere_url)}" class="preview-img">` : 'Aucune'}</p>
-            </div>
+    viewContent.innerHTML = `<div class="view-details">
+        <div class="detail-section">
+            <h4><i class="fas fa-info-circle"></i> Identité</h4>
+            <p><strong>Nom :</strong> ${escapeHtml(club.nom)}</p>
+            <p><strong>Slogan :</strong> ${escapeHtml(club.slogan || '-')}</p>
+            <p><strong>Discipline :</strong> ${escapeHtml(club.nosclub_roles?.nom || '-')}</p>
+            <p><strong>Ville :</strong> ${escapeHtml(club.ville || '-')}</p>
+            <p><strong>Quartier :</strong> ${escapeHtml(club.quartier || '-')}</p>
+            <p><strong>Quota :</strong> ${club.quota_utilise || 0} / ${club.quota_max || 30}</p>
+            <p><strong>Statut :</strong> ${club.statut === 'actif' ? 'Actif' : 'Archivé'}</p>
+            <p><strong>Ambiance :</strong> ${escapeHtml(club.ambiance || '-')}</p>
         </div>
-    `;
+        <div class="detail-section">
+            <h4><i class="fas fa-users"></i> Encadrement</h4>
+            <p><strong>Coach :</strong> ${escapeHtml(club.coach_nom || 'À désigner')} ${club.coach_contact ? '(' + escapeHtml(club.coach_contact) + ')' : ''}</p>
+            <p><strong>Parrain :</strong> ${escapeHtml(club.parrain_nom || 'À désigner')}</p>
+            <p><strong>Contact Parrain :</strong> ${escapeHtml(club.parrain_contact || '-')}</p>
+            <p><strong>Citation :</strong> ${escapeHtml(club.parrain_citation || '-')}</p>
+        </div>
+        <div class="detail-section">
+            <h4><i class="fas fa-bullseye"></i> Mission</h4>
+            <div class="rich-content">${club.mission || 'Non renseigné.'}</div>
+        </div>
+        <div class="detail-section">
+            <h4><i class="fas fa-fire"></i> Philosophie</h4>
+            <div class="rich-content">${club.philosophie || 'Non renseigné.'}</div>
+        </div>
+        <div class="detail-section">
+            <h4><i class="fas fa-flag-checkered"></i> Engagements</h4>
+            <div class="rich-content">${club.engagements || 'Non renseigné.'}</div>
+        </div>
+        <div class="detail-section">
+            <h4><i class="fas fa-rocket"></i> Conclusion</h4>
+            <div class="rich-content">${club.conclusion || 'Non renseigné.'}</div>
+        </div>
+        <div class="detail-section">
+            <h4><i class="fas fa-image"></i> Médias</h4>
+            <p>Logo : ${club.logo_url ? `<img src="${escapeHtml(club.logo_url)}" class="preview-img">` : 'Aucun'}</p>
+            <p>Bannière : ${club.banniere_url ? `<img src="${escapeHtml(club.banniere_url)}" class="preview-img">` : 'Aucune'}</p>
+        </div>
+    </div>`;
 
     document.getElementById('viewModal').classList.add('active');
 }
@@ -280,11 +276,11 @@ function openCreateModal() {
     document.getElementById('clubForm').reset();
     document.getElementById('clubId').value = '';
     document.getElementById('clubQuotaMax').value = 30;
-    document.getElementById('clubQuotaUtilise').value = 0;
-    uploadedLogoUrl = null;
-    uploadedBanniereUrl = null;
-    resetUploadIndicators();
-    initEditors();
+    selectedLogoFile = null;
+    selectedBanniereFile = null;
+    document.getElementById('logoFileName').textContent = 'Cliquez pour choisir un fichier (JPG, PNG)';
+    document.getElementById('banniereFileName').textContent = 'Cliquez pour choisir un fichier (JPG, PNG)';
+    clearQuillEditors();
     document.getElementById('clubModal').classList.add('active');
 }
 
@@ -299,70 +295,55 @@ async function openEditModal(clubId) {
     document.getElementById('clubVille').value = club.ville || '';
     document.getElementById('clubQuartier').value = club.quartier || '';
     document.getElementById('clubQuotaMax').value = club.quota_max || 30;
-    document.getElementById('clubQuotaUtilise').value = club.quota_utilise || 0;
+    document.getElementById('clubSlogan').value = club.slogan || '';
+    document.getElementById('clubAmbiance').value = club.ambiance || '';
     document.getElementById('clubCoachNom').value = club.coach_nom || '';
     document.getElementById('clubCoachContact').value = club.coach_contact || '';
     document.getElementById('clubParrainNom').value = club.parrain_nom || '';
     document.getElementById('clubParrainContact').value = club.parrain_contact || '';
-    uploadedLogoUrl = club.logo_url || null;
-    uploadedBanniereUrl = club.banniere_url || null;
-    resetUploadIndicators();
-    initEditors();
+    document.getElementById('clubParrainCitation').value = club.parrain_citation || '';
+    selectedLogoFile = null;
+    selectedBanniereFile = null;
+    document.getElementById('logoFileName').textContent = club.logo_url ? 'Logo actuel (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
+    document.getElementById('banniereFileName').textContent = club.banniere_url ? 'Bannière actuelle (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
     setQuillContent(missionQuill, club.mission || '');
     setQuillContent(philosophieQuill, club.philosophie || '');
+    setQuillContent(engagementsQuill, club.engagements || '');
+    setQuillContent(conclusionQuill, club.conclusion || '');
     document.getElementById('clubModal').classList.add('active');
 }
 
-function resetUploadIndicators() {
-    document.getElementById('uploadStatusLogo').style.display = 'none';
-    document.getElementById('uploadSuccessLogo').style.display = 'none';
-    document.getElementById('uploadStatusBanniere').style.display = 'none';
-    document.getElementById('uploadSuccessBanniere').style.display = 'none';
+// Upload de fichier avec nommage correct
+async function uploadClubFile(file, clubName, type) {
+    const sanitized = sanitizeClubName(clubName);
+    const timestamp = Date.now();
+    const ext = file.name.split('.').pop();
+    const fileName = `${sanitized}/${type}_${timestamp}.${ext}`;
+    const bucket = 'nosclub_documents';
+
+    const { error } = await supabaseAdmin.storage.from(bucket).upload(fileName, file);
+    if (error) throw error;
+    const { data: urlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(fileName);
+    return urlData.publicUrl;
 }
 
-async function uploadFile(file, bucket, indicatorPrefix) {
-    const statusDiv = document.getElementById(`uploadStatus${indicatorPrefix}`);
-    const successDiv = document.getElementById(`uploadSuccess${indicatorPrefix}`);
-    if (statusDiv) statusDiv.style.display = 'flex';
-    if (successDiv) successDiv.style.display = 'none';
-
-    const safeName = `club_${Date.now()}_${indicatorPrefix.toLowerCase()}`;
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${safeName}.${fileExt}`;
-
-    try {
-        const { error } = await supabaseAdmin.storage.from(bucket).upload(fileName, file);
-        if (error) throw error;
-        const { data: urlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(fileName);
-        if (statusDiv) statusDiv.style.display = 'none';
-        if (successDiv) successDiv.style.display = 'flex';
-        return urlData.publicUrl;
-    } catch (err) {
-        if (statusDiv) statusDiv.style.display = 'none';
-        showToast('Erreur upload : ' + err.message, 'error');
-        throw err;
+// Sélection des fichiers (sans upload automatique)
+document.getElementById('clubLogoFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        selectedLogoFile = file;
+        document.getElementById('logoFileName').textContent = `Logo : ${file.name}`;
     }
-}
-
-// Écouteurs d'upload propres
-const logoFileInput = document.getElementById('clubLogoFile');
-const banniereFileInput = document.getElementById('clubBanniereFile');
-const uploadLogoBox = document.getElementById('uploadLogo');
-const uploadBanniereBox = document.getElementById('uploadBanniere');
-
-if (logoFileInput) logoFileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try { uploadedLogoUrl = await uploadFile(file, 'nosclub_documents', 'Logo'); } catch (err) {}
 });
-if (banniereFileInput) banniereFileInput.addEventListener('change', async (e) => {
+document.getElementById('clubBanniereFile').addEventListener('change', (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    try { uploadedBanniereUrl = await uploadFile(file, 'nosclub_documents', 'Banniere'); } catch (err) {}
+    if (file) {
+        selectedBanniereFile = file;
+        document.getElementById('banniereFileName').textContent = `Bannière : ${file.name}`;
+    }
 });
-if (uploadLogoBox) uploadLogoBox.addEventListener('click', () => document.getElementById('clubLogoFile').click());
-if (uploadBanniereBox) uploadBanniereBox.addEventListener('click', () => document.getElementById('clubBanniereFile').click());
 
+// Soumission du formulaire
 document.getElementById('clubForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nom = document.getElementById('clubNom').value.trim();
@@ -372,29 +353,40 @@ document.getElementById('clubForm').addEventListener('submit', async (e) => {
         return;
     }
 
-    const missionHTML = missionQuill ? missionQuill.root.innerHTML : '';
-    const philosophieHTML = philosophieQuill ? philosophieQuill.root.innerHTML : '';
-
-    const clubData = {
-        nom: nom,
-        discipline_id: parseInt(disciplineId),
-        ville: document.getElementById('clubVille').value.trim() || null,
-        quartier: document.getElementById('clubQuartier').value.trim() || null,
-        quota_max: parseInt(document.getElementById('clubQuotaMax').value) || 30,
-        quota_utilise: parseInt(document.getElementById('clubQuotaUtilise').value) || 0,
-        coach_nom: document.getElementById('clubCoachNom').value.trim() || null,
-        coach_contact: document.getElementById('clubCoachContact').value.trim() || null,
-        parrain_nom: document.getElementById('clubParrainNom').value.trim() || null,
-        parrain_contact: document.getElementById('clubParrainContact').value.trim() || null,
-        mission: missionHTML,
-        philosophie: philosophieHTML,
-        logo_url: uploadedLogoUrl,
-        banniere_url: uploadedBanniereUrl,
-        updated_at: new Date().toISOString()
-    };
-
     showLoader();
     try {
+        let logoUrl = currentClubId ? allClubs.find(c => c.id == currentClubId)?.logo_url : null;
+        let banniereUrl = currentClubId ? allClubs.find(c => c.id == currentClubId)?.banniere_url : null;
+
+        if (selectedLogoFile) {
+            logoUrl = await uploadClubFile(selectedLogoFile, nom, 'logo');
+        }
+        if (selectedBanniereFile) {
+            banniereUrl = await uploadClubFile(selectedBanniereFile, nom, 'banniere');
+        }
+
+        const clubData = {
+            nom: nom,
+            discipline_id: parseInt(disciplineId),
+            ville: document.getElementById('clubVille').value.trim() || null,
+            quartier: document.getElementById('clubQuartier').value.trim() || null,
+            quota_max: parseInt(document.getElementById('clubQuotaMax').value) || 30,
+            slogan: document.getElementById('clubSlogan').value.trim() || null,
+            ambiance: document.getElementById('clubAmbiance').value.trim() || null,
+            coach_nom: document.getElementById('clubCoachNom').value.trim() || null,
+            coach_contact: document.getElementById('clubCoachContact').value.trim() || null,
+            parrain_nom: document.getElementById('clubParrainNom').value.trim() || null,
+            parrain_contact: document.getElementById('clubParrainContact').value.trim() || null,
+            parrain_citation: document.getElementById('clubParrainCitation').value.trim() || null,
+            mission: missionQuill ? missionQuill.root.innerHTML : '',
+            philosophie: philosophieQuill ? philosophieQuill.root.innerHTML : '',
+            engagements: engagementsQuill ? engagementsQuill.root.innerHTML : '',
+            conclusion: conclusionQuill ? conclusionQuill.root.innerHTML : '',
+            logo_url: logoUrl,
+            banniere_url: banniereUrl,
+            updated_at: new Date().toISOString()
+        };
+
         if (currentClubId) {
             const { error } = await supabaseAdmin
                 .from('nosclub_clubs')
@@ -405,7 +397,7 @@ document.getElementById('clubForm').addEventListener('submit', async (e) => {
         } else {
             const { error } = await supabaseAdmin
                 .from('nosclub_clubs')
-                .insert([{ ...clubData, created_at: new Date().toISOString() }]);
+                .insert([{ ...clubData, created_at: new Date().toISOString(), statut: 'actif', quota_utilise: 0 }]);
             if (error) throw error;
             showToast('Club créé avec succès.', 'success');
         }
@@ -446,7 +438,10 @@ async function toggleArchive(clubId, currentStatut) {
 
 // ========== DÉBUT : SUPPRESSION ==========
 function openDeleteModal(clubId) {
+    const club = allClubs.find(c => c.id == clubId);
+    if (!club) return;
     currentClubId = clubId;
+    document.getElementById('deleteClubName').textContent = club.nom;
     document.getElementById('deleteModal').classList.add('active');
 }
 
@@ -526,6 +521,7 @@ if (logoutBtn) {
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
+    initQuillEditors();
     await loadRoles();
     loadClubs();
 });

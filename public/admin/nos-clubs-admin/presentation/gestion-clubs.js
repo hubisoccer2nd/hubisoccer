@@ -12,7 +12,6 @@ let currentClubId = null;
 let selectedLogoFile = null;
 let selectedBanniereFile = null;
 
-// Éditeurs Quill (initialisés une seule fois)
 let missionQuill = null;
 let philosophieQuill = null;
 let engagementsQuill = null;
@@ -50,7 +49,6 @@ function escapeHtml(str) {
 }
 
 function sanitizeHtml(html) {
-    // Supprime les scripts et les gestionnaires d'événements dangereux
     if (!html) return '';
     let cleaned = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
     cleaned = cleaned.replace(/ on\w+="[^"]*"/gi, '');
@@ -71,7 +69,7 @@ function sanitizeClubName(name) {
 }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : INITIALISATION UNIQUE DES ÉDITEURS QUILL ==========
+// ========== DÉBUT : GESTION DES ÉDITEURS QUILL ==========
 const quillToolbarOptions = [
     [{ 'font': [] }],
     [{ 'size': ['small', false, 'large', 'huge'] }],
@@ -84,7 +82,21 @@ const quillToolbarOptions = [
     ['clean']
 ];
 
+function destroyQuillEditors() {
+    if (missionQuill) { missionQuill.enable(false); missionQuill = null; }
+    if (philosophieQuill) { philosophieQuill.enable(false); philosophieQuill = null; }
+    if (engagementsQuill) { engagementsQuill.enable(false); engagementsQuill = null; }
+    if (conclusionQuill) { conclusionQuill.enable(false); conclusionQuill = null; }
+    const containers = ['editorMission', 'editorPhilosophie', 'editorEngagements', 'editorConclusion'];
+    containers.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '';
+    });
+}
+
 function initQuillEditors() {
+    // Toujours détruire d'abord pour éviter la duplication
+    destroyQuillEditors();
     missionQuill = new Quill('#editorMission', {
         theme: 'snow',
         modules: { toolbar: quillToolbarOptions },
@@ -131,7 +143,7 @@ function clearQuillEditors() {
     if (engagementsQuill) engagementsQuill.setText('');
     if (conclusionQuill) conclusionQuill.setText('');
 }
-// ========== FIN : INITIALISATION UNIQUE DES ÉDITEURS QUILL ==========
+// ========== FIN : GESTION DES ÉDITEURS QUILL ==========
 
 // ========== DÉBUT : CHARGEMENT DES RÔLES ==========
 async function loadRoles() {
@@ -289,14 +301,18 @@ function openCreateModal() {
     selectedBanniereFile = null;
     document.getElementById('logoFileName').textContent = 'Cliquez pour choisir un fichier (JPG, PNG)';
     document.getElementById('banniereFileName').textContent = 'Cliquez pour choisir un fichier (JPG, PNG)';
-    clearQuillEditors();
+
+    // Afficher la modale, puis initialiser Quill
     document.getElementById('clubModal').classList.add('active');
+    initQuillEditors();
+    clearQuillEditors();
 }
 
 async function openEditModal(clubId) {
     const club = allClubs.find(c => c.id == clubId);
     if (!club) return;
     currentClubId = club.id;
+
     document.getElementById('clubModalTitle').innerHTML = '<i class="fas fa-edit"></i> Modifier le club';
     document.getElementById('clubId').value = club.id;
     document.getElementById('clubNom').value = club.nom || '';
@@ -316,17 +332,19 @@ async function openEditModal(clubId) {
     document.getElementById('logoFileName').textContent = club.logo_url ? 'Logo actuel (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
     document.getElementById('banniereFileName').textContent = club.banniere_url ? 'Bannière actuelle (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
 
-    // --- CORRECTION : Afficher d'abord la modale, puis remplir Quill ---
+    // Afficher la modale d'abord, puis initialiser Quill et remplir
     document.getElementById('clubModal').classList.add('active');
-    requestAnimationFrame(() => {
+    initQuillEditors();
+
+    // Laisser le temps au DOM de se mettre en place, puis injecter le contenu
+    setTimeout(() => {
         setQuillContent(missionQuill, club.mission || '');
         setQuillContent(philosophieQuill, club.philosophie || '');
         setQuillContent(engagementsQuill, club.engagements || '');
         setQuillContent(conclusionQuill, club.conclusion || '');
-    });
+    }, 0);
 }
 
-// Upload de fichier avec nommage correct
 async function uploadClubFile(file, clubName, type) {
     const sanitized = sanitizeClubName(clubName);
     const timestamp = Date.now();
@@ -340,7 +358,6 @@ async function uploadClubFile(file, clubName, type) {
     return urlData.publicUrl;
 }
 
-// Sélection des fichiers (sans upload automatique)
 document.getElementById('clubLogoFile').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -356,7 +373,6 @@ document.getElementById('clubBanniereFile').addEventListener('change', (e) => {
     }
 });
 
-// Soumission du formulaire
 document.getElementById('clubForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nom = document.getElementById('clubNom').value.trim();
@@ -534,7 +550,7 @@ if (logoutBtn) {
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
-    initQuillEditors();
+    // Les éditeurs Quill seront initialisés à l'ouverture de la modale
     await loadRoles();
     loadClubs();
 });

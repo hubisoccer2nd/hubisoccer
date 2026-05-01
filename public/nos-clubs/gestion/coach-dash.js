@@ -98,11 +98,8 @@ function displayCalendrier() {
     const container = document.getElementById('calendrierContent');
     container.innerHTML = `
         <div class="calendrier-info">
-            <ul>
-                <li><strong>Mercredi</strong> 15h - 17h</li>
-                <li><strong>Samedi</strong> 8h - 10h</li>
-            </ul>
-            <p class="calendrier-note">Horaires modifiables depuis votre espace.</p>
+            <p>Aucune séance planifiée pour le moment.</p>
+            <p class="calendrier-note">Le coach peut créer des créneaux d'entraînement depuis son espace.</p>
         </div>
     `;
 }

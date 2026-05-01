@@ -143,6 +143,7 @@ async function loadMurMessages() {
             .from('nosclub_messages')
             .select('*')
             .eq('club_id', currentClub.id)
+            .is('destinataire_id', null)      // ← Seulement les messages publics
             .order('created_at', { ascending: false })
             .limit(5);
         if (error) throw error;

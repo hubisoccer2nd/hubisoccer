@@ -149,8 +149,6 @@ function setupPhotoUpload() {
     // Supprimer tout ancien écouteur pour éviter les doublons
     input.removeEventListener('change', handleFileSelect);
     input.addEventListener('change', handleFileSelect);
-
-    // Le clic sur la box ne fait rien : seul l'input capte le clic (couvre toute la box)
 }
 
 async function handleFileSelect() {
@@ -276,10 +274,13 @@ function displayClub(club) {
 
     // Coach
     document.getElementById('clubCoachNom').innerHTML = club.coach_nom ? `<strong><i class="fas fa-user-tie"></i> ${escapeHtml(club.coach_nom)}</strong>` : '';
-    document.getElementById('clubCoachContact').innerHTML = club.coach_contact ? `<i class="fas fa-phone-alt"></i> ${escapeHtml(club.coach_contact)}` : '';
+    document.getElementById('clubCoachContact').innerHTML = club.coach_contact ? `<i class="fas fa-phone-alt"></i> <a href="https://wa.me/${club.coach_contact.replace(/[^0-9]/g, '')}" target="_blank">${escapeHtml(club.coach_contact)}</a>` : '';
 
     // Mission (contenu riche)
     document.getElementById('clubMission').innerHTML = club.mission || '';
+
+    // Philosophie (contenu riche) – NOUVEAU
+    document.getElementById('clubPhilosophie').innerHTML = club.philosophie || '';
 
     // Engagements (contenu riche)
     document.getElementById('clubEngagements').innerHTML = club.engagements || '';
@@ -291,6 +292,9 @@ function displayClub(club) {
     document.getElementById('formRole').value = club.nosclub_roles?.nom || '';
     document.getElementById('formClubId').value = club.id;
     document.getElementById('attenteClubId').value = club.id;
+
+    // Configuration du bouton d'agrandissement de la bannière
+    initAgrandirBanniere(club);
 
     applyNosClubsTranslations();
 }
@@ -312,6 +316,66 @@ function updateButtons(club) {
     }
 }
 // ========== FIN : CHARGEMENT DU CLUB ==========
+
+// ========== DÉBUT : MODALE AGRANDIR BANNIÈRE ==========
+function initAgrandirBanniere(club) {
+    const bouton = document.getElementById('btnAgrandirBanniere');
+    if (!bouton) return;
+
+    // Déterminer l'URL à afficher : bannière, sinon logo, sinon rien
+    let mediaUrl = club.banniere_url || club.logo_url || null;
+    if (!mediaUrl) {
+        bouton.style.display = 'none'; // Rien à agrandir
+        return;
+    }
+    bouton.style.display = 'inline-block';
+
+    // Supprimer tout ancien écouteur pour éviter les doublons
+    const newBouton = bouton.cloneNode(true);
+    bouton.parentNode.replaceChild(newBouton, bouton);
+
+    newBouton.addEventListener('click', () => {
+        // Créer la modale si elle n'existe pas
+        let modale = document.getElementById('banniereModal');
+        if (!modale) {
+            modale = document.createElement('div');
+            modale.id = 'banniereModal';
+            modale.className = 'modal';
+            modale.innerHTML = `
+                <div class="modal-content banniere-modal-content" style="background: rgba(0,0,0,0.9); border-radius: 20px; padding: 0; overflow: hidden; max-width: 90vw; max-height: 90vh; display: flex; align-items: center; justify-content: center; position: relative;">
+                    <span class="close-modal close-banniere" style="position: absolute; top: 15px; right: 20px; font-size: 2rem; color: white; z-index: 10; cursor: pointer;">&times;</span>
+                    <img src="" alt="Bannière du club" id="banniereImg" style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 10px;">
+                </div>
+            `;
+            document.body.appendChild(modale);
+
+            // Bouton de fermeture
+            modale.querySelector('.close-banniere').addEventListener('click', () => {
+                modale.classList.remove('active');
+            });
+
+            // Fermeture en cliquant en dehors de l'image
+            modale.addEventListener('click', (e) => {
+                if (e.target === modale) {
+                    modale.classList.remove('active');
+                }
+            });
+
+            // Touche Échap
+            document.addEventListener('keydown', function escClose(e) {
+                if (e.key === 'Escape' && modale.classList.contains('active')) {
+                    modale.classList.remove('active');
+                }
+            });
+        }
+
+        // Définir la source et afficher
+        const img = modale.querySelector('#banniereImg');
+        img.src = mediaUrl;
+        modale.classList.add('active');
+    });
+}
+// ========== FIN : MODALE AGRANDIR BANNIÈRE ==========
 
 // ========== DÉBUT : SOUMISSION FORMULAIRE COMPLET ==========
 document.getElementById('formulaireInscription').addEventListener('submit', async (e) => {

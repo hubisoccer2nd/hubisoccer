@@ -1,4 +1,4 @@
-// ========== GESTION-CLUBS.JS – VERSION FINALE ==========
+// ========== GESTION-CLUBS.JS – VERSION FINALE CORRIGÉE ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -47,6 +47,15 @@ function showToast(message, type = 'info', duration = 15000) {
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
+}
+
+function sanitizeHtml(html) {
+    // Supprime les scripts et les gestionnaires d'événements dangereux
+    if (!html) return '';
+    let cleaned = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    cleaned = cleaned.replace(/ on\w+="[^"]*"/gi, '');
+    cleaned = cleaned.replace(/ on\w+='[^']*'/gi, '');
+    return cleaned;
 }
 
 function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
@@ -244,19 +253,19 @@ function openViewModal(clubId) {
         </div>
         <div class="detail-section">
             <h4><i class="fas fa-bullseye"></i> Mission</h4>
-            <div class="rich-content">${club.mission || 'Non renseigné.'}</div>
+            <div class="rich-content">${sanitizeHtml(club.mission || 'Non renseigné.')}</div>
         </div>
         <div class="detail-section">
             <h4><i class="fas fa-fire"></i> Philosophie</h4>
-            <div class="rich-content">${club.philosophie || 'Non renseigné.'}</div>
+            <div class="rich-content">${sanitizeHtml(club.philosophie || 'Non renseigné.')}</div>
         </div>
         <div class="detail-section">
             <h4><i class="fas fa-flag-checkered"></i> Engagements</h4>
-            <div class="rich-content">${club.engagements || 'Non renseigné.'}</div>
+            <div class="rich-content">${sanitizeHtml(club.engagements || 'Non renseigné.')}</div>
         </div>
         <div class="detail-section">
             <h4><i class="fas fa-rocket"></i> Conclusion</h4>
-            <div class="rich-content">${club.conclusion || 'Non renseigné.'}</div>
+            <div class="rich-content">${sanitizeHtml(club.conclusion || 'Non renseigné.')}</div>
         </div>
         <div class="detail-section">
             <h4><i class="fas fa-image"></i> Médias</h4>
@@ -306,11 +315,15 @@ async function openEditModal(clubId) {
     selectedBanniereFile = null;
     document.getElementById('logoFileName').textContent = club.logo_url ? 'Logo actuel (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
     document.getElementById('banniereFileName').textContent = club.banniere_url ? 'Bannière actuelle (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
-    setQuillContent(missionQuill, club.mission || '');
-    setQuillContent(philosophieQuill, club.philosophie || '');
-    setQuillContent(engagementsQuill, club.engagements || '');
-    setQuillContent(conclusionQuill, club.conclusion || '');
+
+    // --- CORRECTION : Afficher d'abord la modale, puis remplir Quill ---
     document.getElementById('clubModal').classList.add('active');
+    requestAnimationFrame(() => {
+        setQuillContent(missionQuill, club.mission || '');
+        setQuillContent(philosophieQuill, club.philosophie || '');
+        setQuillContent(engagementsQuill, club.engagements || '');
+        setQuillContent(conclusionQuill, club.conclusion || '');
+    });
 }
 
 // Upload de fichier avec nommage correct

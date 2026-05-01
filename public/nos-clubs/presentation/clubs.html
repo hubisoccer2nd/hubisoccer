@@ -10,9 +10,9 @@
     <link rel="stylesheet" href="clubs.css">
 </head>
 <body>
-    <!-- ========== DÉBUT : NAVBAR ========== -->
+    <!-- ========== DÉBUT : NAVBAR OFFICIELLE ========== -->
     <nav>
-        <a href="./" class="logo-link">
+        <a href="../../index.html" class="logo-link">
             <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
@@ -42,14 +42,26 @@
                 <option value="pl">🇵🇱 Polski</option>
                 <option value="vi">🇻🇳 Tiếng Việt</option>
             </select>
-            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <div class="nav-links" id="navLinks">
+                <a href="../../index.html" data-i18n="nav.home">Accueil</a>
+                <a href="../../premier-pas.html" data-i18n="nav.premier_pas">Premier Pas</a>
+                <a href="../../acteurs.html" data-i18n="nav.acteurs">Acteurs</a>
+                <a href="../../artiste-adhesion.html" data-i18n="nav.artistes">Artistes</a>
+                <a href="../../tournoi.html" data-i18n="nav.tournois">Tournois</a>
                 <a href="clubs.html" class="active" data-i18n="nav.clubs">Nos Clubs</a>
+                <a href="../../hub-community.html" data-i18n="nav.community">Communauté</a>
+                <a href="../../actualites.html" data-i18n="nav.actualites">Actualités</a>
+                <a href="../../contact.html" data-i18n="nav.contact">Contact</a>
                 <a href="../gestion/nos-clubs-login.html" data-i18n="nav.login">Connexion</a>
             </div>
         </div>
     </nav>
-    <!-- ========== FIN : NAVBAR ========== -->
+    <!-- ========== FIN : NAVBAR OFFICIELLE ========== -->
 
     <!-- ========== DÉBUT : HEADER ========== -->
     <header class="clubs-header">
@@ -66,7 +78,7 @@
                 <option value="all" data-i18n="filter.discipline_all">Toutes les disciplines</option>
                 <option value="sportif" data-i18n="filter.discipline_sport">Tous les sports</option>
                 <option value="artiste" data-i18n="filter.discipline_artiste">Tous les artistes</option>
-                <!-- Les rôles détaillés seront injectés par JavaScript -->
+                <!-- Les rôles détaillés (Football, Chant, etc.) seront injectés par JavaScript -->
             </select>
             <select id="villeFilter">
                 <option value="all" data-i18n="filter.ville_all">Toutes les villes</option>
@@ -84,8 +96,10 @@
     <!-- ========== DÉBUT : GRILLE DES CLUBS ========== -->
     <section class="clubs-grid-section">
         <div class="clubs-grid" id="clubsGrid">
-            <!-- Les cartes des clubs seront injectées par JavaScript -->
             <div class="loading-placeholder">Chargement des clubs...</div>
+        </div>
+        <div class="retry-container" style="display:none;">
+            <button id="retryLoad" class="btn-retry">Réessayer</button>
         </div>
     </section>
     <!-- ========== FIN : GRILLE DES CLUBS ========== -->

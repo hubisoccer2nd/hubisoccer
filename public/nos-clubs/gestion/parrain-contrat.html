@@ -18,10 +18,10 @@
         </div>
         <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
         <div class="nav-links" id="navLinks">
-            <a href="javascript:void(0)" class="nav-link" data-page="parrain-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
-            <a href="javascript:void(0)" class="nav-link" data-page="parrain-club.html"><i class="fas fa-bullhorn"></i> Mur du club</a>
-            <a href="javascript:void(0)" class="nav-link" data-page="parrain-messages.html"><i class="fas fa-envelope"></i> Messages</a>
-            <a href="javascript:void(0)" class="nav-link active" data-page="parrain-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
+            <a href="parrain-dash.html" data-nav-link="parrain-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+            <a href="parrain-club.html" data-nav-link="parrain-club.html"><i class="fas fa-bullhorn"></i> Mur du club</a>
+            <a href="parrain-messages.html" data-nav-link="parrain-messages.html"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="parrain-contrat.html" data-nav-link="parrain-contrat.html" class="active"><i class="fas fa-file-signature"></i> Contrat</a>
             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
         </div>
     </nav>
@@ -69,23 +69,8 @@
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Script d'adaptation des liens de navigation -->
-    <script>
-        // Récupère l'ID du club depuis l'URL actuelle et l'ajoute aux liens de navigation
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            const clubId = params.get('id');
-            if (clubId) {
-                document.querySelectorAll('.nav-link').forEach(link => {
-                    const page = link.getAttribute('data-page');
-                    if (page) {
-                        link.href = page + '?id=' + clubId;
-                    }
-                });
-            }
-        })();
-    </script>
-
+    <!-- Maintien de l'ID dans les liens -->
+    <script src="../nos-clubs-nav.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../nos-clubs-i18n.js"></script>
     <script src="parrain-contrat.js"></script>

@@ -31,21 +31,16 @@
     <main class="contrat-main">
         <div class="contrat-container">
             <h1><i class="fas fa-file-signature"></i> Contrat d'engagement du Parrain</h1>
-            <p class="subtitle">Veuillez lire attentivement le contrat ci-dessous, puis signer dans la zone prévue.</p>
+            <p class="subtitle">Veuillez lire attentivement chaque document, puis signer dans la zone prévue.</p>
 
-            <!-- Bloc du contrat -->
-            <div class="contrat-texte">
-                <h2>CONTRAT DE PARRAINAGE – PARRAIN HUBISOCCER</h2>
-                <p><strong>Article 1 – Mission du parrain</strong></p>
-                <p>Le parrain s'engage à soutenir financièrement et moralement les talents du club qui lui est confié. Il contribue à la motivation des jeunes et à la bonne marche du club.</p>
-                <p><strong>Article 2 – Obligations</strong></p>
-                <p>Le parrain doit veiller au suivi des cotisations des talents, publier des messages d'encouragement sur le mur du club, et signaler toute difficulté à l'administration.</p>
-                <p><strong>Article 3 – Comportement et éthique</strong></p>
-                <p>Le parrain s'engage à adopter un comportement exemplaire, à respecter les talents, les parents, le coach et les autres membres de l'encadrement. Toute forme de violence ou de discrimination est strictement interdite.</p>
-                <p><strong>Article 4 – Confidentialité</strong></p>
-                <p>Le parrain s'engage à ne divulguer aucune information confidentielle concernant les talents, les méthodes d'entraînement ou la stratégie du club.</p>
-                <p><strong>Article 5 – Résiliation</strong></p>
-                <p>En cas de manquement grave à ses obligations, le parrain peut être démis de ses fonctions par l'administration HubISoccer, sans préavis ni indemnité.</p>
+            <!-- Barre d'onglets des documents -->
+            <div id="contratTabs" class="contrat-tabs">
+                <!-- Rempli dynamiquement par le JS -->
+            </div>
+
+            <!-- Zone d'affichage du document sélectionné -->
+            <div id="contratContent" class="contrat-texte">
+                <p class="loading-placeholder">Chargement du document...</p>
             </div>
 
             <!-- Zone de signature -->

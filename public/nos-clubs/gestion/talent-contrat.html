@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contrat du Talent | HubISoccer</title>
-    <meta name="description" content="Lisez et signez le contrat d'adhésion et le règlement de votre club.">
+    <title>Tableau de bord Talent | HubISoccer</title>
+    <meta name="description" content="Espace personnel du talent – suivez votre club, votre progression et vos messages.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="talent-contrat.css">
+    <link rel="stylesheet" href="talent-dash.css">
 </head>
 <body>
     <!-- ========== DÉBUT : NAVBAR MEMBRE ========== -->
@@ -18,48 +18,35 @@
         </div>
         <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
         <div class="nav-links" id="navLinks">
-            <a href="talent-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
-            <a href="talent-messages.html"><i class="fas fa-envelope"></i> Messages</a>
-            <a href="talent-contrat.html" class="active"><i class="fas fa-file-signature"></i> Contrat</a>
+            <a href="talent-dash.html" class="active" data-nav-link="talent-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+            <a href="talent-messages.html" data-nav-link="talent-messages.html"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="talent-contrat.html" data-nav-link="talent-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
         </div>
     </nav>
     <!-- ========== FIN : NAVBAR MEMBRE ========== -->
 
-    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
-    <main class="contrat-main">
-        <div class="contrat-container">
-            <h1><i class="fas fa-file-signature"></i> Contrat d'adhésion et règlement</h1>
-            <p class="subtitle">Veuillez lire attentivement le contrat ci-dessous, puis signer dans la zone prévue.</p>
-
-            <!-- Bloc du contrat -->
-            <div class="contrat-texte">
-                <h2>RÈGLEMENT INTÉRIEUR – CLUB HUBISOCCER</h2>
-                <p><strong>Article 1 – Engagement du talent</strong></p>
-                <p>Le talent s'engage à respecter les horaires d'entraînement, les consignes du coach, et à adopter un comportement exemplaire sur et en dehors du terrain.</p>
-                <p><strong>Article 2 – Cotisation</strong></p>
-                <p>Une cotisation journalière de 55 FCFA est demandée pour l'accès aux séances. Le défaut de paiement répété peut entraîner la suspension du compte.</p>
-                <p><strong>Article 3 – Droit à l'image</strong></p>
-                <p>Le talent autorise HubISoccer à utiliser son image à des fins promotionnelles dans le cadre des activités du club.</p>
-                <p><strong>Article 4 – Résiliation</strong></p>
-                <p>Le non-respect du présent règlement expose le talent à une exclusion temporaire ou définitive prononcée par l'administration.</p>
-            </div>
-
-            <!-- Zone de signature -->
-            <div class="signature-section">
-                <h2><i class="fas fa-pen"></i> Votre signature</h2>
-                <canvas id="signatureCanvas" width="600" height="200"></canvas>
-                <div class="signature-actions">
-                    <button id="clearSignatureBtn" class="btn-clear"><i class="fas fa-eraser"></i> Effacer</button>
-                    <button id="saveSignatureBtn" class="btn-submit"><i class="fas fa-check"></i> Signer et enregistrer</button>
+    <main class="dashboard-main">
+        <div class="dashboard-container">
+            <section class="club-header" id="clubHeader">
+                <div class="club-logo-container" id="clubLogoContainer"></div>
+                <div class="club-info">
+                    <h1 id="clubNom"></h1>
+                    <p id="clubDiscipline"></p>
                 </div>
-                <p id="signatureStatus" class="signature-status"></p>
+                <div class="club-encadrement">
+                    <p id="clubCoach"></p>
+                    <p id="clubParrain"></p>
+                </div>
+            </section>
+            <div class="dashboard-grid">
+                <section class="card"><h2><i class="fas fa-calendar-alt"></i> Calendrier</h2><div id="calendrierContent"><p>Chargement...</p></div></section>
+                <section class="card"><h2><i class="fas fa-graduation-cap"></i> Suivi Trinité</h2><div id="triniteContent"><p>Chargement...</p></div></section>
+                <section class="card"><h2><i class="fas fa-bullhorn"></i> Mur du club</h2><div id="murContent"><p>Chargement...</p></div></section>
             </div>
         </div>
     </main>
-    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
 
-    <!-- ========== DÉBUT : FOOTER ========== -->
     <footer>
         <div class="legal">
             <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
@@ -67,12 +54,23 @@
             <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
         </div>
     </footer>
-    <!-- ========== FIN : FOOTER ========== -->
 
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Maintien de l'ID dans les liens -->
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+            document.querySelectorAll('a[data-nav-link]').forEach(link => {
+                const basePage = link.getAttribute('data-nav-link');
+                if (basePage) link.href = basePage + '?id=' + id;
+            });
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../nos-clubs-i18n.js"></script>
-    <script src="talent-contrat.js"></script>
+    <script src="talent-dash.js"></script>
 </body>
 </html>

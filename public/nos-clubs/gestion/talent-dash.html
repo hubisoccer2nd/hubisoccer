@@ -18,22 +18,18 @@
         </div>
         <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
         <div class="nav-links" id="navLinks">
-            <a href="talent-dash.html" class="active"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
-            <a href="talent-messages.html"><i class="fas fa-envelope"></i> Messages</a>
-            <a href="talent-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
+            <a href="talent-dash.html" class="active" data-nav-link="talent-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+            <a href="talent-messages.html" data-nav-link="talent-messages.html"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="talent-contrat.html" data-nav-link="talent-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
         </div>
     </nav>
     <!-- ========== FIN : NAVBAR MEMBRE ========== -->
 
-    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
     <main class="dashboard-main">
         <div class="dashboard-container">
-            <!-- En-tête du club -->
             <section class="club-header" id="clubHeader">
-                <div class="club-logo-container" id="clubLogoContainer">
-                    <!-- Injecté par JS : logo ou initiales -->
-                </div>
+                <div class="club-logo-container" id="clubLogoContainer"></div>
                 <div class="club-info">
                     <h1 id="clubNom"></h1>
                     <p id="clubDiscipline"></p>
@@ -43,38 +39,14 @@
                     <p id="clubParrain"></p>
                 </div>
             </section>
-
-            <!-- Grille principale -->
             <div class="dashboard-grid">
-                <!-- Calendrier -->
-                <section class="card">
-                    <h2><i class="fas fa-calendar-alt"></i> Calendrier</h2>
-                    <div id="calendrierContent">
-                        <p>Chargement...</p>
-                    </div>
-                </section>
-
-                <!-- Suivi Trinité -->
-                <section class="card">
-                    <h2><i class="fas fa-graduation-cap"></i> Suivi Trinité</h2>
-                    <div id="triniteContent">
-                        <p>Chargement...</p>
-                    </div>
-                </section>
-
-                <!-- Mur du club -->
-                <section class="card">
-                    <h2><i class="fas fa-bullhorn"></i> Mur du club</h2>
-                    <div id="murContent">
-                        <p>Chargement...</p>
-                    </div>
-                </section>
+                <section class="card"><h2><i class="fas fa-calendar-alt"></i> Calendrier</h2><div id="calendrierContent"><p>Chargement...</p></div></section>
+                <section class="card"><h2><i class="fas fa-graduation-cap"></i> Suivi Trinité</h2><div id="triniteContent"><p>Chargement...</p></div></section>
+                <section class="card"><h2><i class="fas fa-bullhorn"></i> Mur du club</h2><div id="murContent"><p>Chargement...</p></div></section>
             </div>
         </div>
     </main>
-    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
 
-    <!-- ========== DÉBUT : FOOTER ========== -->
     <footer>
         <div class="legal">
             <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
@@ -82,10 +54,21 @@
             <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
         </div>
     </footer>
-    <!-- ========== FIN : FOOTER ========== -->
 
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Maintien de l'ID dans les liens -->
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+            document.querySelectorAll('a[data-nav-link]').forEach(link => {
+                const basePage = link.getAttribute('data-nav-link');
+                if (basePage) link.href = basePage + '?id=' + id;
+            });
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../nos-clubs-i18n.js"></script>
     <script src="talent-dash.js"></script>

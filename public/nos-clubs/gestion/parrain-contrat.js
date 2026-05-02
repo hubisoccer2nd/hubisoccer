@@ -108,8 +108,17 @@ function switchDocument(template) {
         if (btn.dataset.id == template.id) btn.classList.add('active');
     });
 
+    let contenu = template.contenu_html;
+
+    // Remplacer les placeholders si le club est chargé
+    if (currentClub) {
+        contenu = contenu
+            .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
+            .replace(/{{parrain_nom}}/g, escapeHtml(currentClub.parrain_nom || 'Non désigné'));
+    }
+
     const container = document.getElementById('contratContent');
-    container.innerHTML = sanitizeHtml(template.contenu_html);
+    container.innerHTML = sanitizeHtml(contenu);
 }
 // ========== FIN : CHARGEMENT DES TEMPLATES ==========
 
@@ -118,13 +127,19 @@ async function loadParrainData(clubId) {
     try {
         const { data: club, error } = await supabasePublic
             .from('nosclub_clubs')
-            .select('id, nom')
+            .select('id, nom, parrain_nom')
             .eq('id', clubId)
             .single();
 
         if (error || !club) throw error || new Error('Club introuvable.');
 
         currentClub = club;
+
+        // Recharger le document courant pour mettre à jour les placeholders
+        if (activeTemplate) {
+            switchDocument(activeTemplate);
+        }
+
         await checkExistingSignature();
     } catch (err) {
         console.error(err);
@@ -158,7 +173,7 @@ function initCanvas() {
     canvas = document.getElementById('signatureCanvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#4B0082';
+    ctx.strokeStyle = '#000000';   // noir
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -176,25 +191,37 @@ function initCanvas() {
     document.getElementById('saveSignatureBtn').addEventListener('click', saveSignature);
 }
 
+function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    let x, y;
+    if (e.touches) {
+        // Événement tactile
+        x = e.touches[0].clientX - rect.left;
+        y = e.touches[0].clientY - rect.top;
+    } else {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+    }
+    return { x, y };
+}
+
 function startDrawing(e) {
     isDrawing = true;
-    const rect = canvas.getBoundingClientRect();
-    lastX = e.clientX - rect.left;
-    lastY = e.clientY - rect.top;
+    const coords = getCanvasCoords(e);
+    lastX = coords.x;
+    lastY = coords.y;
 }
 
 function draw(e) {
     if (!isDrawing) return;
     e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const coords = getCanvasCoords(e);
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
-    lastX = x;
-    lastY = y;
+    lastX = coords.x;
+    lastY = coords.y;
 }
 
 function stopDrawing() {
@@ -203,26 +230,22 @@ function stopDrawing() {
 
 function handleTouchStart(e) {
     e.preventDefault();
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    lastX = touch.clientX - rect.left;
-    lastY = touch.clientY - rect.top;
+    const coords = getCanvasCoords(e);
+    lastX = coords.x;
+    lastY = coords.y;
     isDrawing = true;
 }
 
 function handleTouchMove(e) {
     e.preventDefault();
     if (!isDrawing) return;
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    const coords = getCanvasCoords(e);
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
-    lastX = x;
-    lastY = y;
+    lastX = coords.x;
+    lastY = coords.y;
 }
 
 function clearCanvas() {
@@ -240,6 +263,11 @@ async function saveSignature() {
         return;
     }
 
+    // Remplacer les placeholders une dernière fois avant d'enregistrer
+    let contenuFinal = activeTemplate.contenu_html
+        .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
+        .replace(/{{parrain_nom}}/g, escapeHtml(currentClub.parrain_nom || 'Non désigné'));
+
     try {
         const { error } = await supabasePublic
             .from('nosclub_contrats')
@@ -247,7 +275,7 @@ async function saveSignature() {
                 club_id: currentClub.id,
                 inscription_id: currentClub.id,
                 type_signataire: 'parrain',
-                contenu_contrat: activeTemplate.contenu_html,
+                contenu_contrat: contenuFinal,
                 signature_data: signatureData,
                 signe_le: new Date().toISOString()
             }]);
@@ -292,22 +320,18 @@ if (logoutBtn) {
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Charger les documents (ne dépend pas du club)
     await loadTemplates();
 
-    // 2. Si un ID club est présent, charger les données du club et vérifier la signature
     const params = new URLSearchParams(window.location.search);
     const clubId = params.get('id');
     if (clubId) {
         await loadParrainData(clubId);
     } else {
-        // Désactiver la signature tant qu'aucun club n'est identifié
         document.getElementById('saveSignatureBtn').disabled = true;
         document.getElementById('clearSignatureBtn').disabled = true;
         document.getElementById('signatureStatus').innerHTML = 'Connectez-vous avec votre compte parrain pour pouvoir signer.';
     }
 
-    // 3. Initialiser le canvas de signature dans tous les cas
     initCanvas();
 });
 // ========== FIN DE PARRAIN-CONTRAT.JS ==========

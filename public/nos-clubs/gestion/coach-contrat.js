@@ -111,9 +111,11 @@ function switchDocument(template) {
     let contenu = template.contenu_html;
 
     if (currentClub) {
+        // Placeholders génériques pour le règlement
         contenu = contenu
             .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
-            .replace(/{{coach_nom}}/g, escapeHtml(currentClub.coach_nom || 'Non désigné'));
+            .replace(/{{signataire_nom}}/g, escapeHtml(currentClub.coach_nom || 'Non désigné'))
+            .replace(/{{signataire_role}}/g, 'Coach');
     }
 
     document.getElementById('contratContent').innerHTML = sanitizeHtml(contenu);
@@ -287,7 +289,8 @@ async function saveSignature() {
 
     let contenuFinal = activeTemplate.contenu_html
         .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
-        .replace(/{{coach_nom}}/g, escapeHtml(currentClub.coach_nom || 'Non désigné'));
+        .replace(/{{signataire_nom}}/g, escapeHtml(currentClub.coach_nom || 'Non désigné'))
+        .replace(/{{signataire_role}}/g, 'Coach');
 
     try {
         const { error } = await supabasePublic

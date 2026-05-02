@@ -58,7 +58,7 @@ function showToast(message, type = 'info', duration = 15000) {
 }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : CHARGEMENT DES TEMPLATES (indépendant du club) ==========
+// ========== DÉBUT : CHARGEMENT DES TEMPLATES ==========
 async function loadTemplates() {
     try {
         const { data, error } = await supabasePublic
@@ -110,19 +110,17 @@ function switchDocument(template) {
 
     let contenu = template.contenu_html;
 
-    // Remplacer les placeholders si le club est chargé
     if (currentClub) {
         contenu = contenu
             .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
             .replace(/{{parrain_nom}}/g, escapeHtml(currentClub.parrain_nom || 'Non désigné'));
     }
 
-    const container = document.getElementById('contratContent');
-    container.innerHTML = sanitizeHtml(contenu);
+    document.getElementById('contratContent').innerHTML = sanitizeHtml(contenu);
 }
 // ========== FIN : CHARGEMENT DES TEMPLATES ==========
 
-// ========== DÉBUT : CHARGEMENT DU CLUB ET SIGNATURE ==========
+// ========== DÉBUT : CHARGEMENT DU CLUB ==========
 async function loadParrainData(clubId) {
     try {
         const { data: club, error } = await supabasePublic
@@ -135,7 +133,6 @@ async function loadParrainData(clubId) {
 
         currentClub = club;
 
-        // Recharger le document courant pour mettre à jour les placeholders
         if (activeTemplate) {
             switchDocument(activeTemplate);
         }
@@ -166,14 +163,14 @@ async function checkExistingSignature() {
         console.error(err);
     }
 }
-// ========== FIN : CHARGEMENT DU CLUB ET SIGNATURE ==========
+// ========== FIN : CHARGEMENT DU CLUB ==========
 
 // ========== DÉBUT : GESTION DU CANVAS DE SIGNATURE ==========
 function initCanvas() {
     canvas = document.getElementById('signatureCanvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#000000';   // noir
+    ctx.strokeStyle = '#000000';
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -189,13 +186,28 @@ function initCanvas() {
 
     document.getElementById('clearSignatureBtn').addEventListener('click', clearCanvas);
     document.getElementById('saveSignatureBtn').addEventListener('click', saveSignature);
+
+    // Mise à jour de l'état du bouton de signature
+    const adresseInput = document.getElementById('adresseSignataire');
+    const luCheckbox = document.getElementById('luApprouve');
+    if (adresseInput) adresseInput.addEventListener('input', updateSignatureButtonState);
+    if (luCheckbox) luCheckbox.addEventListener('change', updateSignatureButtonState);
+
+    updateSignatureButtonState();
+}
+
+function updateSignatureButtonState() {
+    const btn = document.getElementById('saveSignatureBtn');
+    const adresse = document.getElementById('adresseSignataire')?.value.trim();
+    const lu = document.getElementById('luApprouve')?.checked;
+    const idPresent = currentClub !== null; // vrai si le club est chargé
+    btn.disabled = !idPresent || !adresse || !lu;
 }
 
 function getCanvasCoords(e) {
     const rect = canvas.getBoundingClientRect();
     let x, y;
     if (e.touches) {
-        // Événement tactile
         x = e.touches[0].clientX - rect.left;
         y = e.touches[0].clientY - rect.top;
     } else {
@@ -257,13 +269,23 @@ async function saveSignature() {
         showToast('La signature nécessite que vous soyez connecté via votre compte parrain.', 'warning');
         return;
     }
+    const adresse = document.getElementById('adresseSignataire').value.trim();
+    const lu = document.getElementById('luApprouve').checked;
+    if (!adresse) {
+        showToast('Veuillez renseigner votre adresse complète.', 'warning');
+        return;
+    }
+    if (!lu) {
+        showToast('Vous devez confirmer avoir lu et approuvé le contrat.', 'warning');
+        return;
+    }
+
     const signatureData = canvas.toDataURL('image/png');
     if (!signatureData || signatureData === 'data:,') {
         showToast('Veuillez dessiner votre signature.', 'warning');
         return;
     }
 
-    // Remplacer les placeholders une dernière fois avant d'enregistrer
     let contenuFinal = activeTemplate.contenu_html
         .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
         .replace(/{{parrain_nom}}/g, escapeHtml(currentClub.parrain_nom || 'Non désigné'));
@@ -277,6 +299,7 @@ async function saveSignature() {
                 type_signataire: 'parrain',
                 contenu_contrat: contenuFinal,
                 signature_data: signatureData,
+                adresse: adresse,
                 signe_le: new Date().toISOString()
             }]);
 
@@ -285,6 +308,8 @@ async function saveSignature() {
         showToast('Contrat signé avec succès !', 'success');
         document.getElementById('saveSignatureBtn').disabled = true;
         document.getElementById('clearSignatureBtn').disabled = true;
+        document.getElementById('adresseSignataire').disabled = true;
+        document.getElementById('luApprouve').disabled = true;
         document.getElementById('signatureStatus').innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i> Contrat enregistré.`;
     } catch (err) {
         console.error(err);

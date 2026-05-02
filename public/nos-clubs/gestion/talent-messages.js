@@ -93,7 +93,8 @@ async function loadMessages() {
             .from('nosclub_messages')
             .select('*')
             .eq('club_id', currentClub.id)
-            .or(`destinataire_id.eq.${currentTalent.id},destinataire_id.is.null,destinataire_id.eq.`)
+            // CORRECTION : inclure les messages envoyés par le talent
+            .or(`destinataire_id.eq.${currentTalent.id},destinataire_id.is.null,expediteur_id.eq.talent_${currentTalent.id}`)
             .order('created_at', { ascending: true });
 
         if (error) throw error;
@@ -103,7 +104,20 @@ async function loadMessages() {
         } else {
             container.innerHTML = data.map(msg => {
                 const isTalent = msg.expediteur_id === `talent_${currentTalent.id}` || msg.expediteur_id === currentTalent.id.toString();
-                const senderLabel = isTalent ? 'Vous' : (msg.expediteur_id === 'admin' ? 'Coach / Parrain' : 'Talent');
+
+                let senderLabel = '';
+                if (isTalent) {
+                    senderLabel = 'Vous';
+                } else if (msg.expediteur_id === 'coach') {
+                    senderLabel = 'Coach';
+                } else if (msg.expediteur_id === 'parrain') {
+                    senderLabel = 'Parrain';
+                } else if (msg.expediteur_id === 'admin') {
+                    senderLabel = 'Administration';
+                } else {
+                    senderLabel = 'Talent';
+                }
+
                 return `
                     <div class="message ${isTalent ? 'sent' : 'received'}">
                         <div class="message-bubble">

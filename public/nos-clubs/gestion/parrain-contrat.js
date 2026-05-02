@@ -7,17 +7,26 @@ const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 // ========== DÉBUT : VARIABLES GLOBALES ==========
 let currentClub = null;
+let allTemplates = [];
+let activeTemplate = null; // le document actuellement affiché
 let canvas = null;
 let ctx = null;
 let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
+let lastX = 0, lastY = 0;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+}
+
+function sanitizeHtml(html) {
+    if (!html) return '';
+    let cleaned = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    cleaned = cleaned.replace(/ on\w+="[^"]*"/gi, '');
+    cleaned = cleaned.replace(/ on\w+='[^']*'/gi, '');
+    return cleaned;
 }
 
 function showToast(message, type = 'info', duration = 15000) {
@@ -49,7 +58,65 @@ function showToast(message, type = 'info', duration = 15000) {
 }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : CHARGEMENT DES DONNÉES DU PARRAIN ==========
+// ========== DÉBUT : CHARGEMENT DES TEMPLATES ==========
+async function loadTemplates() {
+    try {
+        const { data, error } = await supabasePublic
+            .from('nosclub_contrats_templates')
+            .select('*')
+            .in('type_contrat', ['parrain', 'reglement'])
+            .eq('actif', true)
+            .order('id', { ascending: true });
+
+        if (error) throw error;
+        allTemplates = data || [];
+        if (allTemplates.length === 0) {
+            document.getElementById('contratContent').innerHTML = '<p class="error-message">Aucun document disponible pour le moment.</p>';
+            return;
+        }
+
+        renderTabs();
+        // Afficher le premier document par défaut
+        switchDocument(allTemplates[0]);
+    } catch (err) {
+        console.error(err);
+        document.getElementById('contratContent').innerHTML = '<p class="error-message">Erreur de chargement des documents.</p>';
+    }
+}
+
+function renderTabs() {
+    const tabsContainer = document.getElementById('contratTabs');
+    if (!tabsContainer) return;
+    tabsContainer.innerHTML = allTemplates.map((tpl, idx) => `
+        <button class="tab-btn ${idx === 0 ? 'active' : ''}" data-id="${tpl.id}">
+            <i class="fas fa-file-alt"></i> ${escapeHtml(tpl.titre)}
+        </button>
+    `).join('');
+
+    tabsContainer.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tpl = allTemplates.find(t => t.id == btn.dataset.id);
+            if (tpl) switchDocument(tpl);
+        });
+    });
+}
+
+function switchDocument(template) {
+    activeTemplate = template;
+
+    // Mettre à jour l'onglet actif
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.id == template.id) btn.classList.add('active');
+    });
+
+    // Afficher le contenu
+    const container = document.getElementById('contratContent');
+    container.innerHTML = sanitizeHtml(template.contenu_html);
+}
+// ========== FIN : CHARGEMENT DES TEMPLATES ==========
+
+// ========== DÉBUT : CHARGEMENT DU CLUB ==========
 async function loadParrainData() {
     const params = new URLSearchParams(window.location.search);
     const clubId = params.get('id');
@@ -68,6 +135,7 @@ async function loadParrainData() {
         if (error || !club) throw error || new Error('Club introuvable.');
 
         currentClub = club;
+        await loadTemplates();
         await checkExistingSignature();
     } catch (err) {
         console.error(err);
@@ -80,13 +148,13 @@ async function checkExistingSignature() {
     try {
         const { data, error } = await supabasePublic
             .from('nosclub_contrats')
-            .select('id, signe_le')
+            .select('id, signe_le, type_signataire')
             .eq('club_id', currentClub.id)
             .eq('type_signataire', 'parrain')
             .maybeSingle();
 
         if (data) {
-            document.getElementById('signatureStatus').innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i> Contrat signé le ${new Date(data.signe_le).toLocaleDateString('fr-FR')}.`;
+            document.getElementById('signatureStatus').innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i> Contrat parrain signé le ${new Date(data.signe_le).toLocaleDateString('fr-FR')}.`;
             document.getElementById('saveSignatureBtn').disabled = true;
             document.getElementById('clearSignatureBtn').disabled = true;
         }
@@ -94,7 +162,7 @@ async function checkExistingSignature() {
         console.error(err);
     }
 }
-// ========== FIN : CHARGEMENT DES DONNÉES ==========
+// ========== FIN : CHARGEMENT DU CLUB ==========
 
 // ========== DÉBUT : GESTION DU CANVAS DE SIGNATURE ==========
 function initCanvas() {
@@ -173,7 +241,7 @@ function clearCanvas() {
 }
 
 async function saveSignature() {
-    if (!currentClub) return;
+    if (!currentClub || !activeTemplate) return;
     const signatureData = canvas.toDataURL('image/png');
     if (!signatureData || signatureData === 'data:,') {
         showToast('Veuillez dessiner votre signature.', 'warning');
@@ -184,9 +252,10 @@ async function saveSignature() {
         const { error } = await supabasePublic
             .from('nosclub_contrats')
             .insert([{
-                inscription_id: currentClub.id,
+                club_id: currentClub.id,
+                inscription_id: currentClub.id, // on associe au club (car parrain)
                 type_signataire: 'parrain',
-                contenu_contrat: 'Contrat de parrainage – Parrain HubISoccer',
+                contenu_contrat: activeTemplate.contenu_html,
                 signature_data: signatureData,
                 signe_le: new Date().toISOString()
             }]);

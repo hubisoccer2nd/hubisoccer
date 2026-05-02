@@ -366,6 +366,48 @@ footer {
 }
 /* ========== FIN : FOOTER ========== */
 
+/* ========== DÉBUT : STYLES DES ONGLETS ========== */
+.contrat-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: var(--white);
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab-btn i {
+    color: var(--gold);
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.tab-btn.active i {
+    color: white;
+}
+
+.tab-btn:hover:not(.active) {
+    background: var(--primary-light);
+    color: white;
+}
+/* ========== FIN : STYLES DES ONGLETS ========== */
+
 /* ========== DÉBUT : RESPONSIVE ========== */
 @media (max-width: 1000px) {
     .menu-toggle {

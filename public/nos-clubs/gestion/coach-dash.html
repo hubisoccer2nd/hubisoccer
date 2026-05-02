@@ -18,11 +18,11 @@
         </div>
         <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
         <div class="nav-links" id="navLinks">
-            <a href="coach-dash.html" class="active"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
-            <a href="coach-presences.html"><i class="fas fa-clipboard-check"></i> Présences</a>
-            <a href="coach-performances.html"><i class="fas fa-chart-line"></i> Performances</a>
-            <a href="coach-messages.html"><i class="fas fa-envelope"></i> Messages</a>
-            <a href="coach-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
+            <a href="coach-dash.html" class="active" data-nav-link="coach-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+            <a href="coach-presences.html" data-nav-link="coach-presences.html"><i class="fas fa-clipboard-check"></i> Présences</a>
+            <a href="coach-performances.html" data-nav-link="coach-performances.html"><i class="fas fa-chart-line"></i> Performances</a>
+            <a href="coach-messages.html" data-nav-link="coach-messages.html"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="coach-contrat.html" data-nav-link="coach-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
         </div>
     </nav>
@@ -91,6 +91,19 @@
     <!-- ========== FIN : FOOTER ========== -->
 
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Script de navigation inline : conserve l'ID du club dans tous les liens -->
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+            document.querySelectorAll('a[data-nav-link]').forEach(link => {
+                const basePage = link.getAttribute('data-nav-link');
+                if (basePage) link.href = basePage + '?id=' + id;
+            });
+        })();
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../nos-clubs-i18n.js"></script>

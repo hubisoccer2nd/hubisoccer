@@ -8,7 +8,7 @@ const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 // ========== DÉBUT : VARIABLES GLOBALES ==========
 let currentClub = null;
 let allTemplates = [];
-let activeTemplate = null; // le document actuellement affiché
+let activeTemplate = null;
 let canvas = null;
 let ctx = null;
 let isDrawing = false;
@@ -58,7 +58,7 @@ function showToast(message, type = 'info', duration = 15000) {
 }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : CHARGEMENT DES TEMPLATES ==========
+// ========== DÉBUT : CHARGEMENT DES TEMPLATES (indépendant du club) ==========
 async function loadTemplates() {
     try {
         const { data, error } = await supabasePublic
@@ -76,7 +76,6 @@ async function loadTemplates() {
         }
 
         renderTabs();
-        // Afficher le premier document par défaut
         switchDocument(allTemplates[0]);
     } catch (err) {
         console.error(err);
@@ -104,27 +103,18 @@ function renderTabs() {
 function switchDocument(template) {
     activeTemplate = template;
 
-    // Mettre à jour l'onglet actif
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.id == template.id) btn.classList.add('active');
     });
 
-    // Afficher le contenu
     const container = document.getElementById('contratContent');
     container.innerHTML = sanitizeHtml(template.contenu_html);
 }
 // ========== FIN : CHARGEMENT DES TEMPLATES ==========
 
-// ========== DÉBUT : CHARGEMENT DU CLUB ==========
-async function loadParrainData() {
-    const params = new URLSearchParams(window.location.search);
-    const clubId = params.get('id');
-    if (!clubId) {
-        showToast('Aucun identifiant de club fourni.', 'error');
-        return;
-    }
-
+// ========== DÉBUT : CHARGEMENT DU CLUB ET SIGNATURE ==========
+async function loadParrainData(clubId) {
     try {
         const { data: club, error } = await supabasePublic
             .from('nosclub_clubs')
@@ -135,11 +125,10 @@ async function loadParrainData() {
         if (error || !club) throw error || new Error('Club introuvable.');
 
         currentClub = club;
-        await loadTemplates();
         await checkExistingSignature();
     } catch (err) {
         console.error(err);
-        showToast('Erreur de chargement des données.', 'error');
+        showToast('Erreur de chargement des données du club.', 'error');
     }
 }
 
@@ -162,7 +151,7 @@ async function checkExistingSignature() {
         console.error(err);
     }
 }
-// ========== FIN : CHARGEMENT DU CLUB ==========
+// ========== FIN : CHARGEMENT DU CLUB ET SIGNATURE ==========
 
 // ========== DÉBUT : GESTION DU CANVAS DE SIGNATURE ==========
 function initCanvas() {
@@ -241,7 +230,10 @@ function clearCanvas() {
 }
 
 async function saveSignature() {
-    if (!currentClub || !activeTemplate) return;
+    if (!currentClub || !activeTemplate) {
+        showToast('La signature nécessite que vous soyez connecté via votre compte parrain.', 'warning');
+        return;
+    }
     const signatureData = canvas.toDataURL('image/png');
     if (!signatureData || signatureData === 'data:,') {
         showToast('Veuillez dessiner votre signature.', 'warning');
@@ -253,7 +245,7 @@ async function saveSignature() {
             .from('nosclub_contrats')
             .insert([{
                 club_id: currentClub.id,
-                inscription_id: currentClub.id, // on associe au club (car parrain)
+                inscription_id: currentClub.id,
                 type_signataire: 'parrain',
                 contenu_contrat: activeTemplate.contenu_html,
                 signature_data: signatureData,
@@ -299,8 +291,23 @@ if (logoutBtn) {
 // ========== FIN : MENU MOBILE ET DÉCONNEXION ==========
 
 // ========== INITIALISATION ==========
-document.addEventListener('DOMContentLoaded', () => {
-    loadParrainData();
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Charger les documents (ne dépend pas du club)
+    await loadTemplates();
+
+    // 2. Si un ID club est présent, charger les données du club et vérifier la signature
+    const params = new URLSearchParams(window.location.search);
+    const clubId = params.get('id');
+    if (clubId) {
+        await loadParrainData(clubId);
+    } else {
+        // Désactiver la signature tant qu'aucun club n'est identifié
+        document.getElementById('saveSignatureBtn').disabled = true;
+        document.getElementById('clearSignatureBtn').disabled = true;
+        document.getElementById('signatureStatus').innerHTML = 'Connectez-vous avec votre compte parrain pour pouvoir signer.';
+    }
+
+    // 3. Initialiser le canvas de signature dans tous les cas
     initCanvas();
 });
 // ========== FIN DE PARRAIN-CONTRAT.JS ==========

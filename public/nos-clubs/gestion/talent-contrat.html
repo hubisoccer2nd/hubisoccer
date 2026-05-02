@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord Talent | HubISoccer</title>
-    <meta name="description" content="Espace personnel du talent – suivez votre club, votre progression et vos messages.">
+    <title>Contrat du Talent | HubISoccer</title>
+    <meta name="description" content="Lisez et signez votre contrat d'engagement en tant que talent.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="talent-dash.css">
+    <link rel="stylesheet" href="talent-contrat.css">
 </head>
 <body>
     <!-- ========== DÉBUT : NAVBAR MEMBRE ========== -->
@@ -18,35 +18,59 @@
         </div>
         <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
         <div class="nav-links" id="navLinks">
-            <a href="talent-dash.html" class="active" data-nav-link="talent-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+            <a href="talent-dash.html" data-nav-link="talent-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
             <a href="talent-messages.html" data-nav-link="talent-messages.html"><i class="fas fa-envelope"></i> Messages</a>
-            <a href="talent-contrat.html" data-nav-link="talent-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
+            <a href="talent-contrat.html" class="active" data-nav-link="talent-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
         </div>
     </nav>
     <!-- ========== FIN : NAVBAR MEMBRE ========== -->
 
-    <main class="dashboard-main">
-        <div class="dashboard-container">
-            <section class="club-header" id="clubHeader">
-                <div class="club-logo-container" id="clubLogoContainer"></div>
-                <div class="club-info">
-                    <h1 id="clubNom"></h1>
-                    <p id="clubDiscipline"></p>
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
+    <main class="contrat-main">
+        <div class="contrat-container">
+            <h1><i class="fas fa-file-signature"></i> Contrat d'engagement du Talent</h1>
+            <p class="subtitle">Veuillez lire attentivement chaque document, puis signer dans la zone prévue.</p>
+
+            <!-- Barre d'onglets des documents -->
+            <div id="contratTabs" class="contrat-tabs">
+                <!-- Rempli dynamiquement par le JS -->
+            </div>
+
+            <!-- Zone d'affichage du document sélectionné -->
+            <div id="contratContent" class="contrat-texte">
+                <p class="loading-placeholder">Chargement du document...</p>
+            </div>
+
+            <!-- Zone de signature -->
+            <div class="signature-section">
+                <h2><i class="fas fa-pen"></i> Votre signature</h2>
+
+                <!-- Champ adresse -->
+                <div class="form-group">
+                    <label for="adresseSignataire"><i class="fas fa-map-marker-alt"></i> Votre adresse complète *</label>
+                    <input type="text" id="adresseSignataire" placeholder="Ex. : Lot 123, Quartier Zongo, Cotonou" required>
                 </div>
-                <div class="club-encadrement">
-                    <p id="clubCoach"></p>
-                    <p id="clubParrain"></p>
+
+                <!-- Case "Lu et approuvé" -->
+                <div class="checkbox-group">
+                    <input type="checkbox" id="luApprouve" required>
+                    <label for="luApprouve">J'ai lu et j'approuve le présent contrat</label>
                 </div>
-            </section>
-            <div class="dashboard-grid">
-                <section class="card"><h2><i class="fas fa-calendar-alt"></i> Calendrier</h2><div id="calendrierContent"><p>Chargement...</p></div></section>
-                <section class="card"><h2><i class="fas fa-graduation-cap"></i> Suivi Trinité</h2><div id="triniteContent"><p>Chargement...</p></div></section>
-                <section class="card"><h2><i class="fas fa-bullhorn"></i> Mur du club</h2><div id="murContent"><p>Chargement...</p></div></section>
+
+                <!-- Canvas -->
+                <canvas id="signatureCanvas" width="600" height="200"></canvas>
+                <div class="signature-actions">
+                    <button id="clearSignatureBtn" class="btn-clear"><i class="fas fa-eraser"></i> Effacer</button>
+                    <button id="saveSignatureBtn" class="btn-submit"><i class="fas fa-check"></i> Signer et enregistrer</button>
+                </div>
+                <p id="signatureStatus" class="signature-status"></p>
             </div>
         </div>
     </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
 
+    <!-- ========== DÉBUT : FOOTER ========== -->
     <footer>
         <div class="legal">
             <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
@@ -54,6 +78,7 @@
             <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
         </div>
     </footer>
+    <!-- ========== FIN : FOOTER ========== -->
 
     <div id="toastContainer" class="toast-container"></div>
 
@@ -71,6 +96,6 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../nos-clubs-i18n.js"></script>
-    <script src="talent-dash.js"></script>
+    <script src="talent-contrat.js"></script>
 </body>
 </html>

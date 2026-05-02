@@ -7,7 +7,6 @@ const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 // ========== DÉBUT : VARIABLES GLOBALES ==========
 let currentClub = null;
-let replyQuill = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
@@ -118,9 +117,9 @@ async function loadMessages() {
 
 // ========== DÉBUT : ENVOI DE MESSAGE ==========
 async function sendReply() {
-    if (!currentClub || !replyQuill) return;
-    const contenu = replyQuill.root.innerHTML.trim();
-    if (!contenu || contenu === '<p><br></p>') {
+    if (!currentClub) return;
+    const contenu = document.getElementById('replyEditor').value.trim();
+    if (!contenu) {
         showToast('Message vide.', 'warning');
         return;
     }
@@ -139,7 +138,7 @@ async function sendReply() {
 
         if (error) throw error;
 
-        replyQuill.root.innerHTML = '';
+        document.getElementById('replyEditor').value = '';
         await loadMessages();
         showToast('Message envoyé.', 'success');
     } catch (err) {
@@ -149,51 +148,38 @@ async function sendReply() {
 }
 // ========== FIN : ENVOI DE MESSAGE ==========
 
-// ========== DÉBUT : INITIALISATION QUILL ET ÉVÉNEMENTS ==========
-document.addEventListener('DOMContentLoaded', () => {
-    const replyEditor = document.getElementById('replyEditor');
-    if (replyEditor) {
-        replyQuill = new Quill(replyEditor, {
-            theme: 'snow',
-            placeholder: 'Écrivez votre message...',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    ['link', 'blockquote'],
-                    [{ list: 'ordered' }, { list: 'bullet' }],
-                    ['clean']
-                ]
-            }
-        });
-    }
+// ========== DÉBUT : MENU MOBILE ET DÉCONNEXION ==========
+const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
+if (menuToggle && navLinks) {
+    menuToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+        menuToggle.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+            navLinks.classList.remove('active');
+            menuToggle.classList.remove('open');
+        }
+    });
+}
 
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = 'nos-clubs-login.html';
+    });
+}
+// ========== FIN : MENU MOBILE ET DÉCONNEXION ==========
+
+// ========== INITIALISATION ==========
+document.addEventListener('DOMContentLoaded', () => {
+    // Bouton d'envoi
     const sendBtn = document.getElementById('sendReplyBtn');
     if (sendBtn) sendBtn.addEventListener('click', sendReply);
 
-    // Menu mobile
-    const menuToggle = document.getElementById('menuToggle');
-    const navLinks = document.getElementById('navLinks');
-    if (menuToggle && navLinks) {
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            menuToggle.classList.toggle('open');
-        });
-        document.addEventListener('click', (e) => {
-            if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
-                navLinks.classList.remove('active');
-                menuToggle.classList.remove('open');
-            }
-        });
-    }
-
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.location.href = 'nos-clubs-login.html';
-        });
-    }
-
+    // Chargement des données
     loadParrainData();
 });
 // ========== FIN DE PARRAIN-MESSAGES.JS ==========

@@ -69,8 +69,18 @@
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Maintien de l'ID dans les liens -->
-    <script src="../nos-clubs-nav.js"></script>
+    <!-- Maintien de l'ID du club dans les liens -->
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+            document.querySelectorAll('a[data-nav-link]').forEach(link => {
+                const basePage = link.getAttribute('data-nav-link');
+                if (basePage) link.href = basePage + '?id=' + id;
+            });
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../nos-clubs-i18n.js"></script>
     <script src="parrain-contrat.js"></script>

@@ -7,17 +7,26 @@ const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 // ========== DÉBUT : VARIABLES GLOBALES ==========
 let currentClub = null;
+let allTemplates = [];
+let activeTemplate = null;
 let canvas = null;
 let ctx = null;
 let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
+let lastX = 0, lastY = 0;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+}
+
+function sanitizeHtml(html) {
+    if (!html) return '';
+    let cleaned = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    cleaned = cleaned.replace(/ on\w+="[^"]*"/gi, '');
+    cleaned = cleaned.replace(/ on\w+='[^']*'/gi, '');
+    return cleaned;
 }
 
 function showToast(message, type = 'info', duration = 15000) {
@@ -49,29 +58,89 @@ function showToast(message, type = 'info', duration = 15000) {
 }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : CHARGEMENT DES DONNÉES DU COACH ==========
-async function loadCoachData() {
-    const params = new URLSearchParams(window.location.search);
-    const clubId = params.get('id');
-    if (!clubId) {
-        showToast('Aucun identifiant de club fourni.', 'error');
-        return;
+// ========== DÉBUT : CHARGEMENT DES TEMPLATES ==========
+async function loadTemplates() {
+    try {
+        const { data, error } = await supabasePublic
+            .from('nosclub_contrats_templates')
+            .select('*')
+            .in('type_contrat', ['coach', 'reglement'])
+            .eq('actif', true)
+            .order('id', { ascending: true });
+
+        if (error) throw error;
+        allTemplates = data || [];
+        if (allTemplates.length === 0) {
+            document.getElementById('contratContent').innerHTML = '<p class="error-message">Aucun document disponible pour le moment.</p>';
+            return;
+        }
+
+        renderTabs();
+        switchDocument(allTemplates[0]);
+    } catch (err) {
+        console.error(err);
+        document.getElementById('contratContent').innerHTML = '<p class="error-message">Erreur de chargement des documents.</p>';
+    }
+}
+
+function renderTabs() {
+    const tabsContainer = document.getElementById('contratTabs');
+    if (!tabsContainer) return;
+    tabsContainer.innerHTML = allTemplates.map((tpl, idx) => `
+        <button class="tab-btn ${idx === 0 ? 'active' : ''}" data-id="${tpl.id}">
+            <i class="fas fa-file-alt"></i> ${escapeHtml(tpl.titre)}
+        </button>
+    `).join('');
+
+    tabsContainer.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tpl = allTemplates.find(t => t.id == btn.dataset.id);
+            if (tpl) switchDocument(tpl);
+        });
+    });
+}
+
+function switchDocument(template) {
+    activeTemplate = template;
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.id == template.id) btn.classList.add('active');
+    });
+
+    let contenu = template.contenu_html;
+
+    if (currentClub) {
+        contenu = contenu
+            .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
+            .replace(/{{coach_nom}}/g, escapeHtml(currentClub.coach_nom || 'Non désigné'));
     }
 
+    document.getElementById('contratContent').innerHTML = sanitizeHtml(contenu);
+}
+// ========== FIN : CHARGEMENT DES TEMPLATES ==========
+
+// ========== DÉBUT : CHARGEMENT DU CLUB ==========
+async function loadCoachData(clubId) {
     try {
         const { data: club, error } = await supabasePublic
             .from('nosclub_clubs')
-            .select('id, nom')
+            .select('id, nom, coach_nom')
             .eq('id', clubId)
             .single();
 
         if (error || !club) throw error || new Error('Club introuvable.');
 
         currentClub = club;
+
+        if (activeTemplate) {
+            switchDocument(activeTemplate);
+        }
+
         await checkExistingSignature();
     } catch (err) {
         console.error(err);
-        showToast('Erreur de chargement des données.', 'error');
+        showToast('Erreur de chargement des données du club.', 'error');
     }
 }
 
@@ -80,13 +149,13 @@ async function checkExistingSignature() {
     try {
         const { data, error } = await supabasePublic
             .from('nosclub_contrats')
-            .select('id, signe_le')
+            .select('id, signe_le, type_signataire')
             .eq('club_id', currentClub.id)
             .eq('type_signataire', 'coach')
             .maybeSingle();
 
         if (data) {
-            document.getElementById('signatureStatus').innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i> Contrat signé le ${new Date(data.signe_le).toLocaleDateString('fr-FR')}.`;
+            document.getElementById('signatureStatus').innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i> Contrat coach signé le ${new Date(data.signe_le).toLocaleDateString('fr-FR')}.`;
             document.getElementById('saveSignatureBtn').disabled = true;
             document.getElementById('clearSignatureBtn').disabled = true;
         }
@@ -94,14 +163,14 @@ async function checkExistingSignature() {
         console.error(err);
     }
 }
-// ========== FIN : CHARGEMENT DES DONNÉES ==========
+// ========== FIN : CHARGEMENT DU CLUB ==========
 
 // ========== DÉBUT : GESTION DU CANVAS DE SIGNATURE ==========
 function initCanvas() {
     canvas = document.getElementById('signatureCanvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#4B0082';
+    ctx.strokeStyle = '#000000';
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -117,27 +186,53 @@ function initCanvas() {
 
     document.getElementById('clearSignatureBtn').addEventListener('click', clearCanvas);
     document.getElementById('saveSignatureBtn').addEventListener('click', saveSignature);
+
+    const adresseInput = document.getElementById('adresseSignataire');
+    const luCheckbox = document.getElementById('luApprouve');
+    if (adresseInput) adresseInput.addEventListener('input', updateSignatureButtonState);
+    if (luCheckbox) luCheckbox.addEventListener('change', updateSignatureButtonState);
+
+    updateSignatureButtonState();
+}
+
+function updateSignatureButtonState() {
+    const btn = document.getElementById('saveSignatureBtn');
+    const adresse = document.getElementById('adresseSignataire')?.value.trim();
+    const lu = document.getElementById('luApprouve')?.checked;
+    const idPresent = currentClub !== null;
+    btn.disabled = !idPresent || !adresse || !lu;
+}
+
+function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    let x, y;
+    if (e.touches) {
+        x = e.touches[0].clientX - rect.left;
+        y = e.touches[0].clientY - rect.top;
+    } else {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+    }
+    return { x, y };
 }
 
 function startDrawing(e) {
     isDrawing = true;
-    const rect = canvas.getBoundingClientRect();
-    lastX = e.clientX - rect.left;
-    lastY = e.clientY - rect.top;
+    const coords = getCanvasCoords(e);
+    lastX = coords.x;
+    lastY = coords.y;
 }
 
 function draw(e) {
     if (!isDrawing) return;
     e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const coords = getCanvasCoords(e);
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
-    lastX = x;
-    lastY = y;
+    lastX = coords.x;
+    lastY = coords.y;
 }
 
 function stopDrawing() {
@@ -146,26 +241,22 @@ function stopDrawing() {
 
 function handleTouchStart(e) {
     e.preventDefault();
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    lastX = touch.clientX - rect.left;
-    lastY = touch.clientY - rect.top;
+    const coords = getCanvasCoords(e);
+    lastX = coords.x;
+    lastY = coords.y;
     isDrawing = true;
 }
 
 function handleTouchMove(e) {
     e.preventDefault();
     if (!isDrawing) return;
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    const coords = getCanvasCoords(e);
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
-    lastX = x;
-    lastY = y;
+    lastX = coords.x;
+    lastY = coords.y;
 }
 
 function clearCanvas() {
@@ -173,21 +264,41 @@ function clearCanvas() {
 }
 
 async function saveSignature() {
-    if (!currentClub) return;
+    if (!currentClub || !activeTemplate) {
+        showToast('La signature nécessite que vous soyez connecté via votre compte coach.', 'warning');
+        return;
+    }
+    const adresse = document.getElementById('adresseSignataire').value.trim();
+    const lu = document.getElementById('luApprouve').checked;
+    if (!adresse) {
+        showToast('Veuillez renseigner votre adresse complète.', 'warning');
+        return;
+    }
+    if (!lu) {
+        showToast('Vous devez confirmer avoir lu et approuvé le contrat.', 'warning');
+        return;
+    }
+
     const signatureData = canvas.toDataURL('image/png');
     if (!signatureData || signatureData === 'data:,') {
         showToast('Veuillez dessiner votre signature.', 'warning');
         return;
     }
 
+    let contenuFinal = activeTemplate.contenu_html
+        .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
+        .replace(/{{coach_nom}}/g, escapeHtml(currentClub.coach_nom || 'Non désigné'));
+
     try {
         const { error } = await supabasePublic
             .from('nosclub_contrats')
             .insert([{
+                club_id: currentClub.id,
                 inscription_id: currentClub.id,
                 type_signataire: 'coach',
-                contenu_contrat: 'Contrat de prestation de services – Coach HubISoccer',
+                contenu_contrat: contenuFinal,
                 signature_data: signatureData,
+                adresse: adresse,
                 signe_le: new Date().toISOString()
             }]);
 
@@ -196,6 +307,8 @@ async function saveSignature() {
         showToast('Contrat signé avec succès !', 'success');
         document.getElementById('saveSignatureBtn').disabled = true;
         document.getElementById('clearSignatureBtn').disabled = true;
+        document.getElementById('adresseSignataire').disabled = true;
+        document.getElementById('luApprouve').disabled = true;
         document.getElementById('signatureStatus').innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i> Contrat enregistré.`;
     } catch (err) {
         console.error(err);
@@ -230,8 +343,19 @@ if (logoutBtn) {
 // ========== FIN : MENU MOBILE ET DÉCONNEXION ==========
 
 // ========== INITIALISATION ==========
-document.addEventListener('DOMContentLoaded', () => {
-    loadCoachData();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadTemplates();
+
+    const params = new URLSearchParams(window.location.search);
+    const clubId = params.get('id');
+    if (clubId) {
+        await loadCoachData(clubId);
+    } else {
+        document.getElementById('saveSignatureBtn').disabled = true;
+        document.getElementById('clearSignatureBtn').disabled = true;
+        document.getElementById('signatureStatus').innerHTML = 'Connectez-vous avec votre compte coach pour pouvoir signer.';
+    }
+
     initCanvas();
 });
 // ========== FIN DE COACH-CONTRAT.JS ==========

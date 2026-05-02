@@ -7,7 +7,6 @@ const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 // ========== DÉBUT : VARIABLES GLOBALES ==========
 let currentClub = null;
-let postQuill = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
@@ -85,7 +84,7 @@ async function loadMurPosts() {
             .from('nosclub_messages')
             .select('*')
             .eq('club_id', currentClub.id)
-            .is('destinataire_id', null)      // messages publics (mur)
+            .is('destinataire_id', null)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -115,9 +114,9 @@ async function loadMurPosts() {
 
 // ========== DÉBUT : PUBLICATION SUR LE MUR ==========
 async function publishPost() {
-    if (!currentClub || !postQuill) return;
-    const contenu = postQuill.root.innerHTML.trim();
-    if (!contenu || contenu === '<p><br></p>') {
+    if (!currentClub) return;
+    const contenu = document.getElementById('postEditor').value.trim();
+    if (!contenu) {
         showToast('Message vide.', 'warning');
         return;
     }
@@ -128,7 +127,7 @@ async function publishPost() {
             .insert([{
                 club_id: currentClub.id,
                 expediteur_id: 'parrain',
-                destinataire_id: null,         // message public sur le mur
+                destinataire_id: null,
                 contenu: contenu,
                 lu: true,
                 created_at: new Date().toISOString()
@@ -136,7 +135,7 @@ async function publishPost() {
 
         if (error) throw error;
 
-        postQuill.root.innerHTML = '';
+        document.getElementById('postEditor').value = '';
         await loadMurPosts();
         showToast('Publication ajoutée au mur.', 'success');
     } catch (err) {
@@ -146,50 +145,35 @@ async function publishPost() {
 }
 // ========== FIN : PUBLICATION SUR LE MUR ==========
 
-// ========== DÉBUT : INITIALISATION QUILL ET ÉVÉNEMENTS ==========
-document.addEventListener('DOMContentLoaded', () => {
-    const editor = document.getElementById('postEditor');
-    if (editor) {
-        postQuill = new Quill(editor, {
-            theme: 'snow',
-            placeholder: 'Écrivez votre annonce...',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    ['link', 'blockquote'],
-                    [{ list: 'ordered' }, { list: 'bullet' }],
-                    ['clean']
-                ]
-            }
-        });
-    }
+// ========== DÉBUT : MENU MOBILE ET DÉCONNEXION ==========
+const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
+if (menuToggle && navLinks) {
+    menuToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+        menuToggle.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+            navLinks.classList.remove('active');
+            menuToggle.classList.remove('open');
+        }
+    });
+}
 
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = 'nos-clubs-login.html';
+    });
+}
+// ========== FIN : MENU MOBILE ET DÉCONNEXION ==========
+
+// ========== INITIALISATION ==========
+document.addEventListener('DOMContentLoaded', () => {
     const publishBtn = document.getElementById('publishBtn');
     if (publishBtn) publishBtn.addEventListener('click', publishPost);
-
-    // Menu mobile
-    const menuToggle = document.getElementById('menuToggle');
-    const navLinks = document.getElementById('navLinks');
-    if (menuToggle && navLinks) {
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            menuToggle.classList.toggle('open');
-        });
-        document.addEventListener('click', (e) => {
-            if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
-                navLinks.classList.remove('active');
-                menuToggle.classList.remove('open');
-            }
-        });
-    }
-
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.location.href = 'nos-clubs-login.html';
-        });
-    }
 
     loadParrainData();
 });

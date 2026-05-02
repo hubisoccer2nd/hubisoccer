@@ -173,7 +173,48 @@ body {
     font-size: 0.95rem;
 }
 
-/* Bloc du contrat */
+/* ========== STYLES DES ONGLETS ========== */
+.contrat-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: var(--white);
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab-btn i {
+    color: var(--gold);
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.tab-btn.active i {
+    color: white;
+}
+
+.tab-btn:hover:not(.active) {
+    background: var(--primary-light);
+    color: white;
+}
+
+/* ========== BLOC DU DOCUMENT ========== */
 .contrat-texte {
     background: #f8fafc;
     border-radius: 16px;
@@ -200,7 +241,7 @@ body {
     color: var(--primary);
 }
 
-/* Section signature */
+/* ========== SECTION SIGNATURE ========== */
 .signature-section {
     border-top: 2px solid var(--light-gray);
     padding-top: 25px;
@@ -219,6 +260,62 @@ body {
     color: var(--gold);
 }
 
+/* Champ adresse et case à cocher */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--dark);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--light-gray);
+    border-radius: 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    transition: var(--transition);
+    background: white;
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(75,0,130,0.1);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 20px;
+    height: 20px;
+    margin-top: 3px;
+    cursor: pointer;
+}
+
+.checkbox-group label {
+    font-size: 0.9rem;
+    color: var(--dark);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Canvas */
 #signatureCanvas {
     display: block;
     width: 100%;
@@ -296,9 +393,8 @@ body {
 .signature-status i {
     margin-right: 8px;
 }
-/* ========== FIN : CONTENU PRINCIPAL ========== */
 
-/* ========== DÉBUT : TOASTS ========== */
+/* ========== TOASTS ========== */
 .toast-container {
     position: fixed;
     bottom: 30px;
@@ -323,8 +419,8 @@ body {
 }
 
 .toast.success { border-left-color: var(--success); }
-.toast.error { border-left-color: var(--danger); }
-.toast.info { border-left-color: var(--primary); }
+.toast.error   { border-left-color: var(--danger); }
+.toast.info    { border-left-color: var(--primary); }
 .toast.warning { border-left-color: var(--warning); }
 
 .toast-content {
@@ -343,14 +439,13 @@ body {
 
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(0); opacity: 1; }
 }
 @keyframes fadeOut {
     to { opacity: 0; transform: translateX(100%); }
 }
-/* ========== FIN : TOASTS ========== */
 
-/* ========== DÉBUT : FOOTER ========== */
+/* ========== FOOTER ========== */
 footer {
     background: #0a0a0a;
     color: var(--white);
@@ -364,51 +459,8 @@ footer {
     color: rgba(255,255,255,0.5);
     margin: 5px 0;
 }
-/* ========== FIN : FOOTER ========== */
 
-/* ========== DÉBUT : STYLES DES ONGLETS ========== */
-.contrat-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-.tab-btn {
-    background: var(--white);
-    border: 2px solid var(--primary);
-    color: var(--primary);
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.tab-btn i {
-    color: var(--gold);
-}
-
-.tab-btn.active {
-    background: var(--primary);
-    color: white;
-}
-
-.tab-btn.active i {
-    color: white;
-}
-
-.tab-btn:hover:not(.active) {
-    background: var(--primary-light);
-    color: white;
-}
-/* ========== FIN : STYLES DES ONGLETS ========== */
-
-/* ========== DÉBUT : RESPONSIVE ========== */
+/* ========== RESPONSIVE ========== */
 @media (max-width: 1000px) {
     .menu-toggle {
         display: flex;
@@ -464,5 +516,4 @@ footer {
         font-size: 0.85rem;
     }
 }
-/* ========== FIN : RESPONSIVE ========== */
 /* ========== FIN DE PARRAIN-CONTRAT.CSS ========== */

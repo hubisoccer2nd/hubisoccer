@@ -1,4 +1,4 @@
-// ========== GESTION-CLUBS.JS – VERSION FINALE CORRIGÉE ==========
+// ========== GESTION-CLUBS.JS – VERSION FINALE SANS QUILL ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -11,11 +11,6 @@ let allRoles = [];
 let currentClubId = null;
 let selectedLogoFile = null;
 let selectedBanniereFile = null;
-
-let missionQuill = null;
-let philosophieQuill = null;
-let engagementsQuill = null;
-let conclusionQuill = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
@@ -68,82 +63,6 @@ function sanitizeClubName(name) {
         .substring(0, 50);
 }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
-
-// ========== DÉBUT : GESTION DES ÉDITEURS QUILL ==========
-const quillToolbarOptions = [
-    [{ 'font': [] }],
-    [{ 'size': ['small', false, 'large', 'huge'] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ 'color': [] }, { 'background': [] }],
-    [{ 'align': [] }],
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-    ['link', 'image', 'video'],
-    ['blockquote', 'code-block'],
-    ['clean']
-];
-
-function destroyQuillEditors() {
-    if (missionQuill) { missionQuill.enable(false); missionQuill = null; }
-    if (philosophieQuill) { philosophieQuill.enable(false); philosophieQuill = null; }
-    if (engagementsQuill) { engagementsQuill.enable(false); engagementsQuill = null; }
-    if (conclusionQuill) { conclusionQuill.enable(false); conclusionQuill = null; }
-    const containers = ['editorMission', 'editorPhilosophie', 'editorEngagements', 'editorConclusion'];
-    containers.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = '';
-    });
-}
-
-function initQuillEditors() {
-    // Toujours détruire d'abord pour éviter la duplication
-    destroyQuillEditors();
-    missionQuill = new Quill('#editorMission', {
-        theme: 'snow',
-        modules: { toolbar: quillToolbarOptions },
-        placeholder: 'Décrivez la mission et les objectifs du club...'
-    });
-    philosophieQuill = new Quill('#editorPhilosophie', {
-        theme: 'snow',
-        modules: { toolbar: quillToolbarOptions },
-        placeholder: 'Décrivez l\'ambiance et la philosophie du club...'
-    });
-    engagementsQuill = new Quill('#editorEngagements', {
-        theme: 'snow',
-        modules: { toolbar: quillToolbarOptions },
-        placeholder: 'Tableau des engagements stratégiques...'
-    });
-    conclusionQuill = new Quill('#editorConclusion', {
-        theme: 'snow',
-        modules: { toolbar: quillToolbarOptions },
-        placeholder: 'Conclusion et pied de page...'
-    });
-}
-
-function setQuillContent(quillInstance, htmlContent) {
-    if (!quillInstance) return;
-    if (!htmlContent || htmlContent === '<p><br></p>') {
-        quillInstance.setText('');
-        return;
-    }
-    if (!/<[a-z][\s\S]*>/i.test(htmlContent)) {
-        quillInstance.setText(htmlContent);
-        return;
-    }
-    try {
-        const delta = quillInstance.clipboard.convert({ html: htmlContent });
-        quillInstance.setContents(delta, 'silent');
-    } catch (e) {
-        quillInstance.setText(htmlContent);
-    }
-}
-
-function clearQuillEditors() {
-    if (missionQuill) missionQuill.setText('');
-    if (philosophieQuill) philosophieQuill.setText('');
-    if (engagementsQuill) engagementsQuill.setText('');
-    if (conclusionQuill) conclusionQuill.setText('');
-}
-// ========== FIN : GESTION DES ÉDITEURS QUILL ==========
 
 // ========== DÉBUT : CHARGEMENT DES RÔLES ==========
 async function loadRoles() {
@@ -268,7 +187,7 @@ function openViewModal(clubId) {
             <div class="rich-content">${sanitizeHtml(club.mission || 'Non renseigné.')}</div>
         </div>
         <div class="detail-section">
-            <h4><i class="fas fa-fire"></i> Philosophie</h4>
+            <h4><i class="fas fa-lightbulb"></i> Philosophie</h4>
             <div class="rich-content">${sanitizeHtml(club.philosophie || 'Non renseigné.')}</div>
         </div>
         <div class="detail-section">
@@ -302,10 +221,13 @@ function openCreateModal() {
     document.getElementById('logoFileName').textContent = 'Cliquez pour choisir un fichier (JPG, PNG)';
     document.getElementById('banniereFileName').textContent = 'Cliquez pour choisir un fichier (JPG, PNG)';
 
-    // Afficher la modale, puis initialiser Quill
+    // Vider les textarea HTML
+    document.getElementById('clubMission').value = '';
+    document.getElementById('clubPhilosophie').value = '';
+    document.getElementById('clubEngagements').value = '';
+    document.getElementById('clubConclusion').value = '';
+
     document.getElementById('clubModal').classList.add('active');
-    initQuillEditors();
-    clearQuillEditors();
 }
 
 async function openEditModal(clubId) {
@@ -332,17 +254,13 @@ async function openEditModal(clubId) {
     document.getElementById('logoFileName').textContent = club.logo_url ? 'Logo actuel (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
     document.getElementById('banniereFileName').textContent = club.banniere_url ? 'Bannière actuelle (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
 
-    // Afficher la modale d'abord, puis initialiser Quill et remplir
-    document.getElementById('clubModal').classList.add('active');
-    initQuillEditors();
+    // Remplir les textarea avec le HTML brut
+    document.getElementById('clubMission').value = club.mission || '';
+    document.getElementById('clubPhilosophie').value = club.philosophie || '';
+    document.getElementById('clubEngagements').value = club.engagements || '';
+    document.getElementById('clubConclusion').value = club.conclusion || '';
 
-    // Laisser le temps au DOM de se mettre en place, puis injecter le contenu
-    setTimeout(() => {
-        setQuillContent(missionQuill, club.mission || '');
-        setQuillContent(philosophieQuill, club.philosophie || '');
-        setQuillContent(engagementsQuill, club.engagements || '');
-        setQuillContent(conclusionQuill, club.conclusion || '');
-    }, 0);
+    document.getElementById('clubModal').classList.add('active');
 }
 
 async function uploadClubFile(file, clubName, type) {
@@ -407,10 +325,10 @@ document.getElementById('clubForm').addEventListener('submit', async (e) => {
             parrain_nom: document.getElementById('clubParrainNom').value.trim() || null,
             parrain_contact: document.getElementById('clubParrainContact').value.trim() || null,
             parrain_citation: document.getElementById('clubParrainCitation').value.trim() || null,
-            mission: missionQuill ? missionQuill.root.innerHTML : '',
-            philosophie: philosophieQuill ? philosophieQuill.root.innerHTML : '',
-            engagements: engagementsQuill ? engagementsQuill.root.innerHTML : '',
-            conclusion: conclusionQuill ? conclusionQuill.root.innerHTML : '',
+            mission: document.getElementById('clubMission').value,
+            philosophie: document.getElementById('clubPhilosophie').value,
+            engagements: document.getElementById('clubEngagements').value,
+            conclusion: document.getElementById('clubConclusion').value,
             logo_url: logoUrl,
             banniere_url: banniereUrl,
             updated_at: new Date().toISOString()
@@ -550,7 +468,6 @@ if (logoutBtn) {
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
-    // Les éditeurs Quill seront initialisés à l'ouverture de la modale
     await loadRoles();
     loadClubs();
 });

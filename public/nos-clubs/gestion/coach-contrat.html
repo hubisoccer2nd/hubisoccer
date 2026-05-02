@@ -18,11 +18,11 @@
         </div>
         <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
         <div class="nav-links" id="navLinks">
-            <a href="coach-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
-            <a href="coach-presences.html"><i class="fas fa-clipboard-check"></i> Présences</a>
-            <a href="coach-performances.html"><i class="fas fa-chart-line"></i> Performances</a>
-            <a href="coach-messages.html"><i class="fas fa-envelope"></i> Messages</a>
-            <a href="coach-contrat.html" class="active"><i class="fas fa-file-signature"></i> Contrat</a>
+            <a href="coach-dash.html" data-nav-link="coach-dash.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+            <a href="coach-presences.html" data-nav-link="coach-presences.html"><i class="fas fa-clipboard-check"></i> Présences</a>
+            <a href="coach-performances.html" data-nav-link="coach-performances.html"><i class="fas fa-chart-line"></i> Performances</a>
+            <a href="coach-messages.html" data-nav-link="coach-messages.html"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="coach-contrat.html" class="active" data-nav-link="coach-contrat.html"><i class="fas fa-file-signature"></i> Contrat</a>
             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
         </div>
     </nav>
@@ -32,26 +32,35 @@
     <main class="contrat-main">
         <div class="contrat-container">
             <h1><i class="fas fa-file-signature"></i> Contrat d'engagement du Coach</h1>
-            <p class="subtitle">Veuillez lire attentivement le contrat ci-dessous, puis signer dans la zone prévue.</p>
+            <p class="subtitle">Veuillez lire attentivement chaque document, puis signer dans la zone prévue.</p>
 
-            <!-- Bloc du contrat -->
-            <div class="contrat-texte">
-                <h2>CONTRAT DE PRESTATION DE SERVICES – COACH HUBISOCCER</h2>
-                <p><strong>Article 1 – Mission du coach</strong></p>
-                <p>Le coach s'engage à encadrer techniquement et pédagogiquement les talents du club qui lui est confié. Il doit préparer et animer les séances d'entraînement selon les horaires définis, et suivre la progression individuelle des joueurs.</p>
-                <p><strong>Article 2 – Obligations administratives</strong></p>
-                <p>Le coach doit remplir les feuilles de présence à chaque séance et évaluer régulièrement les performances des talents via la plateforme HubISoccer.</p>
-                <p><strong>Article 3 – Comportement et éthique</strong></p>
-                <p>Le coach s'engage à adopter un comportement exemplaire, à respecter les talents, les parents et les autres membres de l'encadrement. Toute forme de violence ou de discrimination est strictement interdite.</p>
-                <p><strong>Article 4 – Confidentialité</strong></p>
-                <p>Le coach s'engage à ne divulguer aucune information confidentielle concernant les talents, les méthodes d'entraînement ou la stratégie du club.</p>
-                <p><strong>Article 5 – Résiliation</strong></p>
-                <p>En cas de manquement grave à ses obligations, le coach peut être démis de ses fonctions par l'administration HubISoccer, sans préavis ni indemnité.</p>
+            <!-- Barre d'onglets des documents -->
+            <div id="contratTabs" class="contrat-tabs">
+                <!-- Rempli dynamiquement par le JS -->
+            </div>
+
+            <!-- Zone d'affichage du document sélectionné -->
+            <div id="contratContent" class="contrat-texte">
+                <p class="loading-placeholder">Chargement du document...</p>
             </div>
 
             <!-- Zone de signature -->
             <div class="signature-section">
                 <h2><i class="fas fa-pen"></i> Votre signature</h2>
+
+                <!-- Champ adresse -->
+                <div class="form-group">
+                    <label for="adresseSignataire"><i class="fas fa-map-marker-alt"></i> Votre adresse complète *</label>
+                    <input type="text" id="adresseSignataire" placeholder="Ex. : Lot 123, Quartier Zongo, Cotonou" required>
+                </div>
+
+                <!-- Case "Lu et approuvé" -->
+                <div class="checkbox-group">
+                    <input type="checkbox" id="luApprouve" required>
+                    <label for="luApprouve">J'ai lu et j'approuve le présent contrat</label>
+                </div>
+
+                <!-- Canvas -->
                 <canvas id="signatureCanvas" width="600" height="200"></canvas>
                 <div class="signature-actions">
                     <button id="clearSignatureBtn" class="btn-clear"><i class="fas fa-eraser"></i> Effacer</button>
@@ -75,6 +84,18 @@
 
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Maintien de l'ID dans les liens -->
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+            document.querySelectorAll('a[data-nav-link]').forEach(link => {
+                const basePage = link.getAttribute('data-nav-link');
+                if (basePage) link.href = basePage + '?id=' + id;
+            });
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../nos-clubs-i18n.js"></script>
     <script src="coach-contrat.js"></script>

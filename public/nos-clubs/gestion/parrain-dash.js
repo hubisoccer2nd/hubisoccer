@@ -161,7 +161,7 @@ function renderEffectif() {
         `;
     }).join('');
 }
-// ========== FIN : CHARGEMENT DES DONNÉES ==========
+// ========== FIN : CHARGEMENT DES DONNÉES DU PARRAIN ==========
 
 // ========== DÉBUT : MENU MOBILE ET DÉCONNEXION ==========
 const menuToggle = document.getElementById('menuToggle');

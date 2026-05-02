@@ -113,7 +113,8 @@ function switchDocument(template) {
     if (currentClub) {
         contenu = contenu
             .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
-            .replace(/{{parrain_nom}}/g, escapeHtml(currentClub.parrain_nom || 'Non désigné'));
+            .replace(/{{signataire_nom}}/g, escapeHtml(currentClub.parrain_nom || 'Non désigné'))
+            .replace(/{{signataire_role}}/g, 'Parrain');
     }
 
     document.getElementById('contratContent').innerHTML = sanitizeHtml(contenu);
@@ -187,7 +188,6 @@ function initCanvas() {
     document.getElementById('clearSignatureBtn').addEventListener('click', clearCanvas);
     document.getElementById('saveSignatureBtn').addEventListener('click', saveSignature);
 
-    // Mise à jour de l'état du bouton de signature
     const adresseInput = document.getElementById('adresseSignataire');
     const luCheckbox = document.getElementById('luApprouve');
     if (adresseInput) adresseInput.addEventListener('input', updateSignatureButtonState);
@@ -200,7 +200,7 @@ function updateSignatureButtonState() {
     const btn = document.getElementById('saveSignatureBtn');
     const adresse = document.getElementById('adresseSignataire')?.value.trim();
     const lu = document.getElementById('luApprouve')?.checked;
-    const idPresent = currentClub !== null; // vrai si le club est chargé
+    const idPresent = currentClub !== null;
     btn.disabled = !idPresent || !adresse || !lu;
 }
 
@@ -288,7 +288,8 @@ async function saveSignature() {
 
     let contenuFinal = activeTemplate.contenu_html
         .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
-        .replace(/{{parrain_nom}}/g, escapeHtml(currentClub.parrain_nom || 'Non désigné'));
+        .replace(/{{signataire_nom}}/g, escapeHtml(currentClub.parrain_nom || 'Non désigné'))
+        .replace(/{{signataire_role}}/g, 'Parrain');
 
     try {
         const { error } = await supabasePublic

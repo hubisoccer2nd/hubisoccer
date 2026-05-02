@@ -46,6 +46,20 @@
             <!-- Zone de signature -->
             <div class="signature-section">
                 <h2><i class="fas fa-pen"></i> Votre signature</h2>
+
+                <!-- Champ adresse -->
+                <div class="form-group">
+                    <label for="adresseSignataire"><i class="fas fa-map-marker-alt"></i> Votre adresse complète *</label>
+                    <input type="text" id="adresseSignataire" placeholder="Ex. : Lot 123, Quartier Zongo, Cotonou" required>
+                </div>
+
+                <!-- Case "Lu et approuvé" -->
+                <div class="checkbox-group">
+                    <input type="checkbox" id="luApprouve" required>
+                    <label for="luApprouve">J'ai lu et j'approuve le présent contrat</label>
+                </div>
+
+                <!-- Canvas -->
                 <canvas id="signatureCanvas" width="600" height="200"></canvas>
                 <div class="signature-actions">
                     <button id="clearSignatureBtn" class="btn-clear"><i class="fas fa-eraser"></i> Effacer</button>
@@ -69,7 +83,7 @@
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Maintien de l'ID du club dans les liens -->
+    <!-- Maintien de l'ID dans les liens -->
     <script>
         (function() {
             const params = new URLSearchParams(window.location.search);

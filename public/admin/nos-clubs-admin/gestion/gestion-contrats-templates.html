@@ -38,7 +38,13 @@
         <div class="admin-container">
             <div class="page-header">
                 <h1 class="page-title"><i class="fas fa-file-contract"></i> Gestion des templates de contrats</h1>
-                <p class="page-subtitle">Modifiez le contenu des contrats et du règlement intérieur. Activez ou désactivez les versions.</p>
+                <p class="page-subtitle">Modifiez le contenu des contrats et du règlement intérieur. Activez, désactivez, créez ou supprimez des versions.</p>
+            </div>
+
+            <!-- ========== BARRE D'ACTIONS ========== -->
+            <div class="filters-bar">
+                <button id="newTemplateBtn" class="btn-primary"><i class="fas fa-plus-circle"></i> Nouveau template</button>
+                <button id="refreshTemplatesBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
             </div>
 
             <!-- ========== TABLEAU DES TEMPLATES ========== -->
@@ -64,6 +70,45 @@
     </main>
     <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
 
+    <!-- ========== DÉBUT : MODALE DE VISUALISATION ========== -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-eye"></i> Visualisation du template</h3>
+            <div id="viewContent" class="rich-content" style="background:#f8fafc; padding:20px; border-radius:16px; max-height:60vh; overflow-y:auto;"></div>
+        </div>
+    </div>
+    <!-- ========== FIN : MODALE DE VISUALISATION ========== -->
+
+    <!-- ========== DÉBUT : MODALE DE CRÉATION ========== -->
+    <div id="createModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-plus-circle"></i> Nouveau template</h3>
+            <form id="createTemplateForm">
+                <div class="form-group">
+                    <label>Titre *</label>
+                    <input type="text" id="createTemplateTitre" required>
+                </div>
+                <div class="form-group">
+                    <label>Type *</label>
+                    <select id="createTemplateType" required>
+                        <option value="talent">Talent</option>
+                        <option value="coach">Coach</option>
+                        <option value="parrain">Parrain</option>
+                        <option value="reglement">Règlement</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Contenu HTML *</label>
+                    <textarea id="createTemplateContenu" rows="20" style="font-family: monospace;" required></textarea>
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Créer</button>
+            </form>
+        </div>
+    </div>
+    <!-- ========== FIN : MODALE DE CRÉATION ========== -->
+
     <!-- ========== DÉBUT : MODALE D'ÉDITION ========== -->
     <div id="editTemplateModal" class="modal">
         <div class="modal-content large">
@@ -72,11 +117,11 @@
             <form id="editTemplateForm">
                 <input type="hidden" id="editTemplateId">
                 <div class="form-group">
-                    <label>Titre</label>
+                    <label>Titre *</label>
                     <input type="text" id="editTemplateTitre" required>
                 </div>
                 <div class="form-group">
-                    <label>Type</label>
+                    <label>Type *</label>
                     <select id="editTemplateType" required>
                         <option value="talent">Talent</option>
                         <option value="coach">Coach</option>

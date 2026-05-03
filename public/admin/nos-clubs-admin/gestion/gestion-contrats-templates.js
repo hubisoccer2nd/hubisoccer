@@ -43,6 +43,14 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
 }
 
+function sanitizeHtml(html) {
+    if (!html) return '';
+    let cleaned = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    cleaned = cleaned.replace(/ on\w+="[^"]*"/gi, '');
+    cleaned = cleaned.replace(/ on\w+='[^']*'/gi, '');
+    return cleaned;
+}
+
 function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
 function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 
@@ -90,20 +98,67 @@ function renderTemplatesTable() {
                 <td>${actifBadge}</td>
                 <td>${formatDate(tpl.updated_at || tpl.created_at)}</td>
                 <td class="actions-cell">
+                    <button class="btn-icon btn-view" data-id="${tpl.id}" title="Visualiser"><i class="fas fa-eye"></i></button>
                     <button class="btn-icon btn-edit" data-id="${tpl.id}" title="Modifier"><i class="fas fa-edit"></i></button>
                     <button class="btn-icon btn-toggle" data-id="${tpl.id}" data-actif="${tpl.actif}" title="${tpl.actif ? 'Désactiver' : 'Activer'}"><i class="fas ${tpl.actif ? 'fa-toggle-on' : 'fa-toggle-off'}"></i></button>
+                    <button class="btn-icon btn-delete" data-id="${tpl.id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
                 </td>
             </tr>
         `;
     }).join('');
+    tbody.querySelectorAll('.btn-view').forEach(b => b.addEventListener('click', () => openViewModal(b.dataset.id)));
     tbody.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', () => openEditModal(b.dataset.id)));
     tbody.querySelectorAll('.btn-toggle').forEach(b => b.addEventListener('click', () => toggleTemplate(b.dataset.id, b.dataset.actif === 'true')));
+    tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => deleteTemplate(b.dataset.id)));
 }
 // ========== FIN : CHARGEMENT DES TEMPLATES ==========
 
-// ========== DÉBUT : GESTION MODALE ÉDITION ==========
-function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
+// ========== DÉBUT : MODALE VISUALISATION ==========
+function openViewModal(id) {
+    const tpl = allTemplates.find(t => t.id == id);
+    if (!tpl) return;
+    document.getElementById('viewContent').innerHTML = sanitizeHtml(tpl.contenu_html);
+    document.getElementById('viewModal').classList.add('active');
+}
+// ========== FIN : MODALE VISUALISATION ==========
 
+// ========== DÉBUT : CRÉATION D'UN TEMPLATE ==========
+function openCreateModal() {
+    document.getElementById('createTemplateForm').reset();
+    document.getElementById('createModal').classList.add('active');
+}
+
+document.getElementById('createTemplateForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        titre: document.getElementById('createTemplateTitre').value.trim(),
+        type_contrat: document.getElementById('createTemplateType').value,
+        contenu_html: document.getElementById('createTemplateContenu').value,
+        actif: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    };
+    if (!data.titre || !data.contenu_html) {
+        showToast('Titre et contenu obligatoires.', 'warning');
+        return;
+    }
+    showLoader();
+    try {
+        const { error } = await supabaseAdmin.from('nosclub_contrats_templates').insert([data]);
+        if (error) throw error;
+        showToast('Template créé avec succès.', 'success');
+        closeAllModals();
+        loadTemplates();
+    } catch (err) {
+        console.error(err);
+        showToast('Erreur création template.', 'error');
+    } finally {
+        hideLoader();
+    }
+});
+// ========== FIN : CRÉATION ==========
+
+// ========== DÉBUT : ÉDITION ==========
 function openEditModal(id) {
     const tpl = allTemplates.find(t => t.id == id);
     if (!tpl) return;
@@ -143,7 +198,7 @@ document.getElementById('editTemplateForm').addEventListener('submit', async (e)
         hideLoader();
     }
 });
-// ========== FIN : GESTION MODALE ÉDITION ==========
+// ========== FIN : ÉDITION ==========
 
 // ========== DÉBUT : ACTIVER / DÉSACTIVER ==========
 async function toggleTemplate(id, currentlyActive) {
@@ -168,10 +223,40 @@ async function toggleTemplate(id, currentlyActive) {
 }
 // ========== FIN : ACTIVATION / DÉSACTIVATION ==========
 
+// ========== DÉBUT : SUPPRESSION ==========
+async function deleteTemplate(id) {
+    if (!confirm('Voulez-vous vraiment supprimer ce template ? Cette action est irréversible.')) return;
+    showLoader();
+    try {
+        const { error } = await supabaseAdmin
+            .from('nosclub_contrats_templates')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+        showToast('Template supprimé avec succès.', 'success');
+        loadTemplates();
+    } catch (err) {
+        console.error(err);
+        showToast('Erreur suppression template.', 'error');
+    } finally {
+        hideLoader();
+    }
+}
+// ========== FIN : SUPPRESSION ==========
+
 // ========== DÉBUT : FERMETURE MODALES ==========
+function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
 document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', closeAllModals));
 window.addEventListener('click', (e) => { if (e.target.classList.contains('modal')) closeAllModals(); });
 // ========== FIN : FERMETURE MODALES ==========
+
+// ========== DÉBUT : ÉVÉNEMENTS ==========
+document.getElementById('newTemplateBtn').addEventListener('click', openCreateModal);
+document.getElementById('refreshTemplatesBtn').addEventListener('click', () => {
+    loadTemplates();
+    showToast('Liste rafraîchie.', 'success');
+});
+// ========== FIN : ÉVÉNEMENTS ==========
 
 // ========== DÉBUT : MENU MOBILE ==========
 const menuToggle = document.getElementById('menuToggle');

@@ -722,18 +722,6 @@ tbody tr:last-child td {
 .btn-send:hover {
     background: var(--primary-light);
 }
-
-/* Éditeur Quill dans la modale */
-#viewMessageEditor .ql-toolbar {
-    border-radius: 12px 12px 0 0;
-    background: white;
-}
-#viewMessageEditor .ql-container {
-    border-radius: 0 0 12px 12px;
-    background: white;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.9rem;
-}
 /* ========== FIN : MODALE VISUALISATION ========== */
 
 /* ========== DÉBUT : TOASTS ========== */

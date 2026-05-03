@@ -11,7 +11,6 @@ let allAttentes = [];
 let allClubs = [];
 let currentInscription = null;
 let currentAttente = null;
-let viewQuill = null;
 let uploadedPreuveUrl = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
@@ -201,24 +200,16 @@ async function openViewModal(id) {
             <div class="detail-section"><h4><i class="fas fa-comments"></i> Messagerie</h4>
                 <div id="adminMessagesContainer" class="messages-container"></div>
                 <div class="message-compose">
-                    <div id="viewMessageEditor" style="height:120px;"></div>
+                    <textarea id="viewMessageEditor" rows="4" placeholder="Votre message..." style="width:100%; padding:12px; border-radius:12px; border:2px solid var(--light-gray); font-family:'Poppins',sans-serif; font-size:0.9rem; resize:vertical;"></textarea>
                     <button id="sendViewMsgBtn" class="btn-send"><i class="fas fa-paper-plane"></i> Envoyer</button>
                 </div>
             </div>
         </div>
     `;
 
-    if (viewQuill) { viewQuill = null; }
-    viewQuill = new Quill('#viewMessageEditor', {
-        theme: 'snow',
-        placeholder: 'Votre message...',
-        modules: {
-            toolbar: [['bold','italic','underline'],['link','blockquote'],[{list:'ordered'},{list:'bullet'}],['clean']]
-        }
-    });
+    document.getElementById('sendViewMsgBtn').addEventListener('click', sendViewMessage);
 
     loadMessages(ins.id);
-    document.getElementById('sendViewMsgBtn').addEventListener('click', sendViewMessage);
     document.getElementById('viewModal').classList.add('active');
 }
 
@@ -245,9 +236,9 @@ async function loadMessages(inscriptionId) {
 }
 
 async function sendViewMessage() {
-    if (!currentInscription || !viewQuill) return;
-    const contenu = viewQuill.root.innerHTML.trim();
-    if (!contenu || contenu === '<p><br></p>') { showToast('Message vide', 'warning'); return; }
+    if (!currentInscription) return;
+    const contenu = document.getElementById('viewMessageEditor').value.trim();
+    if (!contenu) { showToast('Message vide', 'warning'); return; }
     showLoader();
     try {
         const { error } = await supabaseAdmin
@@ -260,7 +251,7 @@ async function sendViewMessage() {
                 created_at: new Date().toISOString()
             }]);
         if (error) throw error;
-        viewQuill.root.innerHTML = '';
+        document.getElementById('viewMessageEditor').value = '';
         await loadMessages(currentInscription.id);
         showToast('Message envoyé', 'success');
     } catch (err) { showToast('Erreur envoi', 'error'); }
@@ -602,7 +593,7 @@ function openConvertModal(id) {
     currentAttente = allAttentes.find(a => a.id == id);
     if (!currentAttente) return;
     const container = document.getElementById('convertFormContainer');
-    container.innerHTML = ''; // on va générer un formulaire complet pré-rempli
+    container.innerHTML = '';
     const formHtml = `
         <form id="convertForm">
             <input type="hidden" id="convertAttenteId" value="${currentAttente.id}">

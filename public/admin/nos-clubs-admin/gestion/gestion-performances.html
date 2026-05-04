@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Performances des talents | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="gestion-performances.css">
+</head>
+<body>
+    <!-- ========== DÉBUT : LOADER GLOBAL ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+    <!-- ========== FIN : LOADER GLOBAL ========== -->
+
+    <!-- ========== DÉBUT : NAVIGATION ========== -->
+    <nav>
+        <a href="../../../index.html" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="admin-badge"><i class="fas fa-chart-line"></i> Administration Performances</span>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="../administration.html"><i class="fas fa-th-large"></i> Portail</a>
+                <a href="../acteurs-admin/acteurs-admin.html"><i class="fas fa-users"></i> Acteurs</a>
+                <a href="../tournoi-admin/tournoi-admin.html"><i class="fas fa-trophy"></i> Tournois</a>
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+    <!-- ========== FIN : NAVIGATION ========== -->
+
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
+    <main class="admin-main">
+        <div class="admin-container">
+            <div class="page-header">
+                <h1 class="page-title"><i class="fas fa-chart-line"></i> Performances des talents</h1>
+                <p class="page-subtitle">Consultez, filtrez et gérez les évaluations réalisées par les coachs.</p>
+            </div>
+
+            <!-- FILTRES -->
+            <div class="filters-bar">
+                <select id="clubFilter">
+                    <option value="all">Tous les clubs</option>
+                </select>
+                <select id="talentFilter">
+                    <option value="all">Tous les talents</option>
+                </select>
+                <button id="refreshBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+            </div>
+
+            <!-- TABLEAU DES PERFORMANCES -->
+            <div class="table-container">
+                <table id="performancesTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Talent</th>
+                            <th>Club</th>
+                            <th>Vitesse</th>
+                            <th>Technique</th>
+                            <th>Discipline</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="performancesBody">
+                        <tr><td colspan="7" class="loading-placeholder">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
+
+    <!-- ========== DÉBUT : MODALE DE VISUALISATION ========== -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-eye"></i> Détail de l'évaluation</h3>
+            <div id="viewContent" style="background: #f8fafc; padding: 20px; border-radius: 16px; max-height: 60vh; overflow-y: auto;"></div>
+        </div>
+    </div>
+    <!-- ========== FIN : MODALE DE VISUALISATION ========== -->
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="gestion-performances.js"></script>
+</body>
+</html>

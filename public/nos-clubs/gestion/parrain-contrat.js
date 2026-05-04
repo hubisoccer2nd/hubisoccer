@@ -296,7 +296,7 @@ async function saveSignature() {
             .from('nosclub_contrats')
             .insert([{
                 club_id: currentClub.id,
-                inscription_id: currentClub.id,
+                inscription_id: null,
                 type_signataire: 'parrain',
                 contenu_contrat: contenuFinal,
                 signature_data: signatureData,

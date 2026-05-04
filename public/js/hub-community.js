@@ -5,138 +5,14 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ========== FIN : CONFIGURATION SUPABASE ==========
 
-// ========== DÉBUT : TRADUCTIONS (FRANÇAIS & ANGLAIS) ==========
-const translations = {
-    fr: {
-        'loader.message': 'Chargement...',
-        'hub_market': 'MARKET',
-        'hub_community': 'HUB COMMUNITY',
-        'scouting': 'SCOUTING',
-        'processus': 'PROCESSUS',
-        'affiliation': 'AFFILIATION',
-        'premier_pas': 'PREMIER-PAS',
-        'acteurs': 'DEVENEZ UN ACTEUR',
-        'artiste': 'DEVENEZ UN ARTISTE',
-        'nos_clubs': 'NOS CLUBS',
-        'tournoi_public': 'TOURNOI PUBLIC',
-        'esp': 'SAVOIR+',
-        'connexion': 'Connexion',
-        'inscrire': 'S\'inscrire',
-        'community.title': 'Hub Community',
-        'community.subtitle': 'Découvrez les talents du monde entier. Interagissez sans limite (100 commentaires max sans compte).',
-        'post.like': 'J\'aime',
-        'post.dislike': 'Je n\'aime pas',
-        'post.share': 'Partager',
-        'post.reply': 'Répondre',
-        'post.report': 'Signaler',
-        'post.see_more': 'Voir plus',
-        'post.see_less': 'Voir moins',
-        'post.entity_link': 'Accéder à {entity}',
-        'toast.error_load': 'Erreur chargement des posts',
-        'toast.error_like': 'Erreur lors du like',
-        'toast.error_comment': 'Erreur lors de l\'ajout du commentaire',
-        'toast.error_report': 'Erreur lors du signalement',
-        'toast.limit_reached': 'Limite de 100 commentaires atteinte. Connectez-vous pour continuer.',
-        'toast.need_login': 'Veuillez vous connecter pour commenter',
-        'toast.comment_success': 'Commentaire ajouté',
-        'toast.report_success': 'Signalement envoyé',
-        'toast.share_success': 'Lien copié !',
-        'toast.share_error': 'Erreur lors du partage',
-        'footer_conformite': 'Conformité APDP Bénin',
-        'footer_reglementation': 'Règlementation FIFA',
-        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
-        'contact_tel': '📞 +229 01 95 97 31 57',
-        'contact_email': '📧 contacthubisoccer@gmail.com',
-        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
-        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
-    },
-    en: {
-        'loader.message': 'Loading...',
-        'hub_market': 'MARKET',
-        'hub_community': 'HUB COMMUNITY',
-        'scouting': 'SCOUTING',
-        'processus': 'PROCESS',
-        'affiliation': 'AFFILIATION',
-        'premier_pas': 'FIRST STEP',
-        'acteurs': 'BECOME AN ACTOR',
-        'artiste': 'BECOME AN ARTIST',
-        'nos_clubs': 'OUR CLUBS',
-        'tournoi_public': 'PUBLIC TOURNAMENT',
-        'esp': 'LEARN MORE',
-        'connexion': 'Login',
-        'inscrire': 'Sign up',
-        'community.title': 'Hub Community',
-        'community.subtitle': 'Discover talents from around the world. Interact without limits (100 comments max without account).',
-        'post.like': 'Like',
-        'post.dislike': 'Dislike',
-        'post.share': 'Share',
-        'post.reply': 'Reply',
-        'post.report': 'Report',
-        'post.see_more': 'See more',
-        'post.see_less': 'See less',
-        'post.entity_link': 'Go to {entity}',
-        'toast.error_load': 'Error loading posts',
-        'toast.error_like': 'Error liking post',
-        'toast.error_comment': 'Error adding comment',
-        'toast.error_report': 'Error reporting',
-        'toast.limit_reached': 'Limit of 100 comments reached. Please login to continue.',
-        'toast.need_login': 'Please login to comment',
-        'toast.comment_success': 'Comment added',
-        'toast.report_success': 'Report sent',
-        'toast.share_success': 'Link copied!',
-        'toast.share_error': 'Error sharing',
-        'footer_conformite': 'APDP Benin Compliance',
-        'footer_reglementation': 'FIFA Regulations',
-        'footer_double_projet': 'Triple Sport-Studies-Career Project',
-        'contact_tel': '📞 +229 01 95 97 31 57',
-        'contact_email': '📧 contacthubisoccer@gmail.com',
-        'rccm': 'RCCM : RB/ABC/24 A 111814 | TIN : 0201910800236',
-        'copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.'
-    }
-};
-
-let currentLang = localStorage.getItem('hubiLang') || navigator.language.split('-')[0];
-if (!translations[currentLang]) currentLang = 'fr';
-
-function t(key, params = {}) {
-    let text = translations[currentLang]?.[key] || translations.fr[key] || key;
-    for (const [k, v] of Object.entries(params)) text = text.replace(`{${k}}`, v);
-    return text;
-}
-
-function applyTranslations() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (key) {
-            if (el.tagName === 'INPUT' && el.getAttribute('data-i18n-placeholder')) {
-                el.placeholder = t(key);
-            } else {
-                el.innerHTML = t(key);
-            }
-        }
-    });
-    document.querySelectorAll('select option').forEach(opt => {
-        const key = opt.getAttribute('data-i18n');
-        if (key) opt.textContent = t(key);
-    });
-}
-
-function changeLanguage(lang) {
-    if (translations[lang]) {
-        currentLang = lang;
-        localStorage.setItem('hubiLang', lang);
-        applyTranslations();
-        loadPosts();
-    }
-}
-// ========== FIN : TRADUCTIONS ==========
-
 // ========== DÉBUT : ÉTAT ==========
 let currentUserId = null;
 let currentUserNom = 'Visiteur';
 let commentCount = parseInt(localStorage.getItem('visitor_comment_count_hub')) || 0;
+let actionCount = parseInt(localStorage.getItem('visitor_action_count_hub')) || 0;
 let isLoggedIn = false;
 const MAX_COMMENTS = 100;
+const MAX_ACTIONS = 100;
 // ========== FIN : ÉTAT ==========
 
 // ========== DÉBUT : VÉRIFICATION CONNEXION ==========
@@ -160,23 +36,16 @@ async function loadPosts() {
     try {
         const { data: posts, error } = await supabasePublic
             .from('public_community_posts')
-            .select(`
-                *,
-                profiles:user_id (id, nom, avatar_url),
-                comments:public_community_comments(
-                    id, content, created_at, parent_id, user_id,
-                    profiles:user_id (id, nom, avatar_url)
-                ),
-                likes:public_community_likes(user_id)
-            `)
+            .select('*, comments:public_community_comments(id,content,created_at,parent_id,user_id), likes:public_community_likes(user_id)')
             .eq('is_public', true)
+            .order('epingle', { ascending: false })
             .order('created_at', { ascending: false });
         if (error) throw error;
         renderPosts(posts || []);
     } catch (err) {
         console.error(err);
-        showToast(t('toast.error_load'), 'error');
-        document.getElementById('postsFeed').innerHTML = '<p class="error-message">' + t('toast.error_load') + '</p>';
+        showToast(hubiT('toast.error_load'), 'error');
+        document.getElementById('postsFeed').innerHTML = '<p class="error-message">' + hubiT('toast.error_load') + '</p>';
     } finally {
         hideLoader();
     }
@@ -195,9 +64,9 @@ function renderPosts(posts) {
         html += `
             <div class="post-card" data-id="${post.id}">
                 <div class="post-header">
-                    <img src="${post.profiles?.avatar_url || 'img/user-default.jpg'}" alt="Avatar">
+                    <img src="img/user-default.jpg" alt="Avatar">
                     <div class="post-author">
-                        <h4>${escapeHtml(post.profiles?.nom || 'Anonyme')}</h4>
+                        <h4>HubISoccer</h4>
                         <small>${new Date(post.created_at).toLocaleDateString()}</small>
                     </div>
                 </div>
@@ -211,7 +80,7 @@ function renderPosts(posts) {
                 ${post.entity_type && post.entity_name ? `
                 <div class="post-entity-link">
                     <a href="${getEntityLink(post.entity_type, post.entity_id)}" class="btn-entity">
-                        <i class="fas fa-external-link-alt"></i> ${t('post.entity_link', { entity: post.entity_name })}
+                        <i class="fas fa-external-link-alt"></i> ${hubiT('post.entity_link', { entity: post.entity_name })}
                     </a>
                 </div>` : ''}
                 <div class="post-stats">
@@ -221,10 +90,10 @@ function renderPosts(posts) {
                     <span><i class="fas fa-share"></i> ${post.shares_count || 0}</span>
                 </div>
                 <div class="post-actions">
-                    <button class="like-btn ${userLiked ? 'liked' : ''}" data-id="${post.id}"><i class="fas fa-thumbs-up"></i> ${t('post.like')}</button>
-                    <button class="dislike-btn" data-id="${post.id}"><i class="fas fa-thumbs-down"></i> ${t('post.dislike')}</button>
-                    <button class="share-btn" data-id="${post.id}"><i class="fas fa-share"></i> ${t('post.share')}</button>
-                    <button class="report-btn" data-id="${post.id}" data-type="post"><i class="fas fa-flag"></i> ${t('post.report')}</button>
+                    <button class="like-btn ${userLiked ? 'liked' : ''}" data-id="${post.id}"><i class="fas fa-thumbs-up"></i> ${hubiT('post.like')}</button>
+                    <button class="dislike-btn" data-id="${post.id}"><i class="fas fa-thumbs-down"></i> ${hubiT('post.dislike')}</button>
+                    <button class="share-btn" data-id="${post.id}"><i class="fas fa-share"></i> ${hubiT('post.share')}</button>
+                    <button class="report-btn" data-id="${post.id}" data-type="post"><i class="fas fa-flag"></i> ${hubiT('post.report')}</button>
                 </div>
                 <div class="comments-section">
                     ${renderComments(commentsTree, post.id)}
@@ -236,33 +105,26 @@ function renderPosts(posts) {
     container.innerHTML = html;
 }
 
-// ========== DÉBUT : RENDU AVEC HTML NON ÉCHAPPÉ ==========
 function renderPostContent(content) {
     if (!content) return '';
     const maxLength = 300;
-    // Comptage du texte visible en supprimant les balises
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = content;
     const textContent = tempDiv.textContent || tempDiv.innerText || '';
-    if (textContent.length <= maxLength) {
-        return content; // pas de troncature
-    }
-    // Tronquer le HTML en conservant les balises
+    if (textContent.length <= maxLength) return content;
     const truncated = truncateHtml(content, maxLength);
     return `
         <span class="post-text-short">${truncated}...</span>
         <span class="post-text-full" style="display: none;">${content}</span>
-        <button class="btn-see-more" data-action="more">${t('post.see_more')}</button>
+        <button class="btn-see-more" data-action="more">${hubiT('post.see_more')}</button>
     `;
 }
 
-// Troncature sécurisée de HTML
 function truncateHtml(html, length) {
     const div = document.createElement('div');
     div.innerHTML = html;
     let textCount = 0;
     let result = '';
-
     function processNodes(nodes) {
         for (const node of nodes) {
             if (textCount >= length) return;
@@ -278,20 +140,16 @@ function truncateHtml(html, length) {
                     return;
                 }
             } else if (node.nodeType === Node.ELEMENT_NODE) {
-                // Récupérer le tag de base sans ses attributs
                 const tag = node.tagName.toLowerCase();
-                // On ne garde que le tag, pas les attributs (pour éviter les styles/quill classes indésirables dans le tronqué)
                 result += `<${tag}>`;
                 processNodes(node.childNodes);
                 result += `</${tag}>`;
             }
         }
     }
-
     processNodes(div.childNodes);
     return result;
 }
-// ========== FIN : RENDU AVEC HTML NON ÉCHAPPÉ ==========
 
 function getMediaType(url) {
     if (!url) return 'image';
@@ -302,9 +160,7 @@ function getMediaType(url) {
 
 function getMediaPreview(url) {
     const type = getMediaType(url);
-    if (type === 'video') {
-        return `<video src="${escapeHtml(url)}" muted preload="metadata" controls></video>`;
-    }
+    if (type === 'video') return `<video src="${escapeHtml(url)}" muted preload="metadata" controls></video>`;
     return `<img src="${escapeHtml(url)}" alt="media" loading="lazy">`;
 }
 
@@ -337,15 +193,15 @@ function renderComments(comments, postId) {
         html += `
             <div class="comment" data-id="${c.id}">
                 <div class="comment-main">
-                    <img src="${c.profiles?.avatar_url || 'img/user-default.jpg'}" alt="Avatar">
+                    <img src="img/user-default.jpg" alt="Avatar">
                     <div class="comment-content">
-                        <span class="comment-author">${escapeHtml(c.profiles?.nom || 'Anonyme')}</span>
+                        <span class="comment-author">Anonyme</span>
                         <span class="comment-text">${escapeHtml(c.content)}</span>
                     </div>
                 </div>
                 <div class="comment-footer">
-                    <button class="reply-btn" data-id="${c.id}" data-post="${postId}">${t('post.reply')}</button>
-                    <button class="report-btn" data-id="${c.id}" data-type="comment">${t('post.report')}</button>
+                    <button class="reply-btn" data-id="${c.id}" data-post="${postId}">${hubiT('post.reply')}</button>
+                    <button class="report-btn" data-id="${c.id}" data-type="comment">${hubiT('post.report')}</button>
                 </div>
                 ${renderReplies(c.replies, postId)}
             </div>
@@ -361,15 +217,15 @@ function renderReplies(replies, postId) {
         html += `
             <div class="comment">
                 <div class="comment-main">
-                    <img src="${r.profiles?.avatar_url || 'img/user-default.jpg'}" alt="Avatar">
+                    <img src="img/user-default.jpg" alt="Avatar">
                     <div class="comment-content">
-                        <span class="comment-author">${escapeHtml(r.profiles?.nom || 'Anonyme')}</span>
+                        <span class="comment-author">Anonyme</span>
                         <span class="comment-text">${escapeHtml(r.content)}</span>
                     </div>
                 </div>
                 <div class="comment-footer">
-                    <button class="reply-btn" data-id="${r.id}" data-post="${postId}">${t('post.reply')}</button>
-                    <button class="report-btn" data-id="${r.id}" data-type="comment">${t('post.report')}</button>
+                    <button class="reply-btn" data-id="${r.id}" data-post="${postId}">${hubiT('post.reply')}</button>
+                    <button class="report-btn" data-id="${r.id}" data-type="comment">${hubiT('post.report')}</button>
                 </div>
             </div>
         `;
@@ -391,18 +247,16 @@ function renderAddComment(postId) {
 function renderLimitMessage() {
     return `
         <div class="comment-limit-message">
-            <p>${t('toast.limit_reached')}</p>
-            <a href="public/auth/login.html" class="btn-auth">${t('connexion')}</a>
-            <a href="public/auth/signup.html" class="btn-auth gold">${t('inscrire')}</a>
+            <p>${hubiT('toast.limit_reached')}</p>
+            <a href="public/auth/login.html" class="btn-auth">${hubiT('connexion')}</a>
+            <a href="public/auth/signup.html" class="btn-auth gold">${hubiT('inscrire')}</a>
         </div>
     `;
 }
 
 function countAllComments(comments) {
     let total = comments.length;
-    for (const c of comments) {
-        if (c.replies) total += c.replies.length;
-    }
+    for (const c of comments) if (c.replies) total += c.replies.length;
     return total;
 }
 // ========== FIN : RENDU ==========
@@ -410,7 +264,7 @@ function countAllComments(comments) {
 // ========== DÉBUT : AJOUT DE COMMENTAIRE ==========
 async function addComment(postId, content, parentId = null) {
     if (!isLoggedIn && commentCount >= MAX_COMMENTS) {
-        showToast(t('toast.limit_reached'), 'warning');
+        showToast(hubiT('toast.limit_reached'), 'warning');
         return false;
     }
     if (!content.trim()) return false;
@@ -431,67 +285,116 @@ async function addComment(postId, content, parentId = null) {
         return true;
     } catch (err) {
         console.error(err);
-        showToast(t('toast.error_comment'), 'error');
+        showToast(hubiT('toast.error_comment'), 'error');
         return false;
     }
 }
 // ========== FIN : COMMENTAIRE ==========
 
-// ========== DÉBUT : LIKES / DISLIKES / SHARES / REPORTS ==========
+// ========== DÉBUT : LIKES / DISLIKES (OUVERTS AUX VISITEURS) ==========
+function checkVisitorActionLimit() {
+    if (isLoggedIn) return true;
+    if (actionCount >= MAX_ACTIONS) {
+        showToast(hubiT('toast.limit_actions_reached'), 'warning');
+        return false;
+    }
+    return true;
+}
+
+function hasVisitorVoted(postId, type) {
+    const key = `visitor_votes_hub_${type}`;
+    const votes = JSON.parse(localStorage.getItem(key) || '[]');
+    return votes.includes(postId);
+}
+
+function addVisitorVote(postId, type) {
+    const key = `visitor_votes_hub_${type}`;
+    const votes = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!votes.includes(postId)) {
+        votes.push(postId);
+        localStorage.setItem(key, JSON.stringify(votes));
+    }
+}
+
+function removeVisitorVote(postId, type) {
+    const key = `visitor_votes_hub_${type}`;
+    let votes = JSON.parse(localStorage.getItem(key) || '[]');
+    votes = votes.filter(id => id !== postId);
+    localStorage.setItem(key, JSON.stringify(votes));
+}
+
 async function toggleLike(postId) {
-    if (!currentUserId || currentUserId === 'visitor') {
-        showToast(t('toast.need_login'), 'warning');
+    if (!checkVisitorActionLimit()) return;
+
+    if (!isLoggedIn) {
+        if (hasVisitorVoted(postId, 'like')) {
+            await supabasePublic.from('public_community_posts').update({ likes_count: Math.max(0, (allPosts.find(p => p.id == postId)?.likes_count || 1) - 1) }).eq('id', postId);
+            removeVisitorVote(postId, 'like');
+            actionCount = Math.max(0, actionCount - 1);
+            localStorage.setItem('visitor_action_count_hub', actionCount);
+            loadPosts();
+            return;
+        }
+        const { data: post } = await supabasePublic.from('public_community_posts').select('likes_count').eq('id', postId).single();
+        const newCount = (post?.likes_count || 0) + 1;
+        await supabasePublic.from('public_community_posts').update({ likes_count: newCount }).eq('id', postId);
+        addVisitorVote(postId, 'like');
+        actionCount++;
+        localStorage.setItem('visitor_action_count_hub', actionCount);
+        loadPosts();
         return;
     }
-    try {
-        const { data: existingLike } = await supabasePublic
-            .from('public_community_likes')
-            .select('id')
-            .eq('post_id', postId)
-            .eq('user_id', currentUserId)
-            .maybeSingle();
 
+    try {
+        const { data: existingLike } = await supabasePublic.from('public_community_likes').select('id').eq('post_id', postId).eq('user_id', currentUserId).maybeSingle();
         if (existingLike) {
             await supabasePublic.from('public_community_likes').delete().eq('id', existingLike.id);
             const { data: post } = await supabasePublic.from('public_community_posts').select('likes_count').eq('id', postId).single();
-            const newCount = Math.max(0, (post?.likes_count || 0) - 1);
-            await supabasePublic.from('public_community_posts').update({ likes_count: newCount }).eq('id', postId);
+            await supabasePublic.from('public_community_posts').update({ likes_count: Math.max(0, (post?.likes_count || 1) - 1) }).eq('id', postId);
         } else {
             await supabasePublic.from('public_community_likes').insert([{ post_id: postId, user_id: currentUserId }]);
             const { data: post } = await supabasePublic.from('public_community_posts').select('likes_count').eq('id', postId).single();
-            const newCount = (post?.likes_count || 0) + 1;
-            await supabasePublic.from('public_community_posts').update({ likes_count: newCount }).eq('id', postId);
+            await supabasePublic.from('public_community_posts').update({ likes_count: (post?.likes_count || 0) + 1 }).eq('id', postId);
         }
         loadPosts();
     } catch (err) {
         console.error(err);
-        showToast(t('toast.error_like'), 'error');
+        showToast(hubiT('toast.error_like'), 'error');
     }
 }
 
 async function addDislike(postId) {
-    if (!currentUserId || currentUserId === 'visitor') {
-        showToast(t('toast.need_login'), 'warning');
+    if (!checkVisitorActionLimit()) return;
+
+    if (!isLoggedIn) {
+        if (hasVisitorVoted(postId, 'dislike')) {
+            await supabasePublic.from('public_community_posts').update({ dislikes_count: Math.max(0, (allPosts.find(p => p.id == postId)?.dislikes_count || 1) - 1) }).eq('id', postId);
+            removeVisitorVote(postId, 'dislike');
+            actionCount = Math.max(0, actionCount - 1);
+            localStorage.setItem('visitor_action_count_hub', actionCount);
+            loadPosts();
+            return;
+        }
+        const { data: post } = await supabasePublic.from('public_community_posts').select('dislikes_count').eq('id', postId).single();
+        const newCount = (post?.dislikes_count || 0) + 1;
+        await supabasePublic.from('public_community_posts').update({ dislikes_count: newCount }).eq('id', postId);
+        addVisitorVote(postId, 'dislike');
+        actionCount++;
+        localStorage.setItem('visitor_action_count_hub', actionCount);
+        loadPosts();
         return;
     }
-    try {
-        const { data: existingDislike } = await supabasePublic
-            .from('public_community_dislikes')
-            .select('id')
-            .eq('post_id', postId)
-            .eq('user_id', currentUserId)
-            .maybeSingle();
 
+    try {
+        const { data: existingDislike } = await supabasePublic.from('public_community_dislikes').select('id').eq('post_id', postId).eq('user_id', currentUserId).maybeSingle();
         if (existingDislike) {
             await supabasePublic.from('public_community_dislikes').delete().eq('id', existingDislike.id);
             const { data: post } = await supabasePublic.from('public_community_posts').select('dislikes_count').eq('id', postId).single();
-            const newCount = Math.max(0, (post?.dislikes_count || 0) - 1);
-            await supabasePublic.from('public_community_posts').update({ dislikes_count: newCount }).eq('id', postId);
+            await supabasePublic.from('public_community_posts').update({ dislikes_count: Math.max(0, (post?.dislikes_count || 1) - 1) }).eq('id', postId);
         } else {
             await supabasePublic.from('public_community_dislikes').insert([{ post_id: postId, user_id: currentUserId }]);
             const { data: post } = await supabasePublic.from('public_community_posts').select('dislikes_count').eq('id', postId).single();
-            const newCount = (post?.dislikes_count || 0) + 1;
-            await supabasePublic.from('public_community_posts').update({ dislikes_count: newCount }).eq('id', postId);
+            await supabasePublic.from('public_community_posts').update({ dislikes_count: (post?.dislikes_count || 0) + 1 }).eq('id', postId);
         }
         loadPosts();
     } catch (err) {
@@ -502,34 +405,19 @@ async function addDislike(postId) {
 
 async function sharePost(postId) {
     const shareUrl = window.location.origin + '/hubisoccer/public/hub-community.html?post=' + postId;
-
     if (navigator.share) {
-        try {
-            await navigator.share({
-                title: 'HubISoccer Community',
-                text: 'Découvrez ce post sur la communauté HubISoccer !',
-                url: shareUrl,
-            });
-        } catch (err) {
-            // Annulation par l'utilisateur, on ne fait rien
-        }
+        try { await navigator.share({ title: 'HubISoccer Community', text: 'Découvrez ce post sur la communauté HubISoccer !', url: shareUrl }); } catch (err) {}
     } else {
         try {
             await navigator.clipboard.writeText(shareUrl);
-            showToast(t('toast.share_success'), 'success');
-        } catch (err) {
-            showToast(t('toast.share_error'), 'error');
-        }
+            showToast(hubiT('toast.share_success'), 'success');
+        } catch (err) { showToast(hubiT('toast.share_error'), 'error'); }
     }
-
     try {
         const { data: post } = await supabasePublic.from('public_community_posts').select('shares_count').eq('id', postId).single();
-        const newCount = (post?.shares_count || 0) + 1;
-        await supabasePublic.from('public_community_posts').update({ shares_count: newCount }).eq('id', postId);
+        await supabasePublic.from('public_community_posts').update({ shares_count: (post?.shares_count || 0) + 1 }).eq('id', postId);
         loadPosts();
-    } catch (err) {
-        console.error(err);
-    }
+    } catch (err) { console.error(err); }
 }
 
 async function reportContent(type, id) {
@@ -540,10 +428,10 @@ async function reportContent(type, id) {
         else payload.comment_id = id;
         const { error } = await supabasePublic.from('public_community_reports').insert([payload]);
         if (error) throw error;
-        showToast(t('toast.report_success'), 'success');
+        showToast(hubiT('toast.report_success'), 'success');
     } catch (err) {
         console.error(err);
-        showToast(t('toast.error_report'), 'error');
+        showToast(hubiT('toast.error_report'), 'error');
     }
 }
 // ========== FIN : ACTIONS ==========
@@ -553,20 +441,12 @@ function openMediaViewer(mediaUrl, mediaType) {
     const viewer = document.getElementById('mediaViewer');
     const img = document.getElementById('viewerImage');
     const video = document.getElementById('viewerVideo');
-
     img.style.display = 'none';
     video.style.display = 'none';
-
-    if (mediaType === 'video') {
-        video.src = mediaUrl;
-        video.style.display = 'block';
-    } else {
-        img.src = mediaUrl;
-        img.style.display = 'block';
-    }
+    if (mediaType === 'video') { video.src = mediaUrl; video.style.display = 'block'; }
+    else { img.src = mediaUrl; img.style.display = 'block'; }
     viewer.style.display = 'flex';
 }
-
 function closeMediaViewer() {
     document.getElementById('mediaViewer').style.display = 'none';
     const video = document.getElementById('viewerVideo');
@@ -575,31 +455,16 @@ function closeMediaViewer() {
 // ========== FIN : VISIONNEUSE ==========
 
 // ========== DÉBUT : GESTION DES ÉVÉNEMENTS ==========
+let allPosts = [];
 document.addEventListener('click', async (e) => {
     const likeBtn = e.target.closest('.like-btn');
-    if (likeBtn) {
-        e.preventDefault();
-        await toggleLike(likeBtn.dataset.id);
-        return;
-    }
+    if (likeBtn) { e.preventDefault(); await toggleLike(likeBtn.dataset.id); return; }
     const dislikeBtn = e.target.closest('.dislike-btn');
-    if (dislikeBtn) {
-        e.preventDefault();
-        await addDislike(dislikeBtn.dataset.id);
-        return;
-    }
+    if (dislikeBtn) { e.preventDefault(); await addDislike(dislikeBtn.dataset.id); return; }
     const shareBtn = e.target.closest('.share-btn');
-    if (shareBtn) {
-        e.preventDefault();
-        await sharePost(shareBtn.dataset.id);
-        return;
-    }
+    if (shareBtn) { e.preventDefault(); await sharePost(shareBtn.dataset.id); return; }
     const reportBtn = e.target.closest('.report-btn');
-    if (reportBtn) {
-        e.preventDefault();
-        await reportContent(reportBtn.dataset.type, reportBtn.dataset.id);
-        return;
-    }
+    if (reportBtn) { e.preventDefault(); await reportContent(reportBtn.dataset.type, reportBtn.dataset.id); return; }
     const replyBtn = e.target.closest('.reply-btn');
     if (replyBtn) {
         e.preventDefault();
@@ -607,17 +472,10 @@ document.addEventListener('click', async (e) => {
         const postId = replyBtn.dataset.post;
         const commentId = replyBtn.dataset.id;
         const existingForm = parent.querySelector('.reply-form');
-        if (existingForm) {
-            existingForm.remove();
-            replyBtn.style.display = 'inline-block';
-            return;
-        }
+        if (existingForm) { existingForm.remove(); replyBtn.style.display = 'inline-block'; return; }
         const form = document.createElement('div');
         form.className = 'reply-form';
-        form.innerHTML = `
-            <input type="text" placeholder="Votre réponse...">
-            <button data-post="${postId}" data-parent="${commentId}">Répondre</button>
-        `;
+        form.innerHTML = `<input type="text" placeholder="Votre réponse..."><button data-post="${postId}" data-parent="${commentId}">Répondre</button>`;
         parent.appendChild(form);
         replyBtn.style.display = 'none';
         return;
@@ -632,10 +490,7 @@ document.addEventListener('click', async (e) => {
             await addComment(replyFormBtn.dataset.post, content, replyFormBtn.dataset.parent);
             form.remove();
             const parentComment = form.closest('.comment');
-            if (parentComment) {
-                const replyBtn = parentComment.querySelector('.reply-btn');
-                if (replyBtn) replyBtn.style.display = 'inline-block';
-            }
+            if (parentComment) { const rb = parentComment.querySelector('.reply-btn'); if (rb) rb.style.display = 'inline-block'; }
             loadPosts();
         }
         return;
@@ -644,10 +499,7 @@ document.addEventListener('click', async (e) => {
     if (sendCommentBtn) {
         e.preventDefault();
         const input = document.querySelector(`.comment-input[data-id="${sendCommentBtn.dataset.id}"]`);
-        if (input && input.value.trim()) {
-            await addComment(sendCommentBtn.dataset.id, input.value.trim());
-            input.value = '';
-        }
+        if (input && input.value.trim()) { await addComment(sendCommentBtn.dataset.id, input.value.trim()); input.value = ''; }
         return;
     }
     const seeMoreBtn = e.target.closest('.btn-see-more');
@@ -656,64 +508,27 @@ document.addEventListener('click', async (e) => {
         const parentDiv = seeMoreBtn.parentElement;
         const shortText = parentDiv.querySelector('.post-text-short');
         const fullText = parentDiv.querySelector('.post-text-full');
-        if (seeMoreBtn.dataset.action === 'more') {
-            shortText.style.display = 'none';
-            fullText.style.display = 'inline';
-            seeMoreBtn.textContent = t('post.see_less');
-            seeMoreBtn.dataset.action = 'less';
-        } else {
-            shortText.style.display = 'inline';
-            fullText.style.display = 'none';
-            seeMoreBtn.textContent = t('post.see_more');
-            seeMoreBtn.dataset.action = 'more';
-        }
+        if (seeMoreBtn.dataset.action === 'more') { shortText.style.display = 'none'; fullText.style.display = 'inline'; seeMoreBtn.textContent = hubiT('post.see_less'); seeMoreBtn.dataset.action = 'less'; }
+        else { shortText.style.display = 'inline'; fullText.style.display = 'none'; seeMoreBtn.textContent = hubiT('post.see_more'); seeMoreBtn.dataset.action = 'more'; }
         return;
     }
     const mediaElement = e.target.closest('.post-media');
-    if (mediaElement) {
-        const url = mediaElement.dataset.mediaUrl;
-        const type = mediaElement.dataset.mediaType;
-        openMediaViewer(url, type);
-        return;
-    }
-    if (e.target.id === 'mediaViewer' || e.target.classList.contains('close-viewer')) {
-        closeMediaViewer();
-        return;
-    }
+    if (mediaElement) { openMediaViewer(mediaElement.dataset.mediaUrl, mediaElement.dataset.mediaType); return; }
+    if (e.target.id === 'mediaViewer' || e.target.classList.contains('close-viewer')) { closeMediaViewer(); return; }
 });
 // ========== FIN : ÉVÉNEMENTS ==========
 
 // ========== DÉBUT : UTILITAIRES ==========
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
-}
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 function showToast(message, type = 'info', duration = 15000) {
     let container = document.getElementById('toastContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toastContainer';
-        container.className = 'toast-container';
-        document.body.appendChild(container);
-    }
+    if (!container) { container = document.createElement('div'); container.id = 'toastContainer'; container.className = 'toast-container'; document.body.appendChild(container); }
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <div class="toast-icon"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i></div>
-        <div class="toast-content">${escapeHtml(message)}</div>
-        <button class="toast-close"><i class="fas fa-times"></i></button>
-    `;
+    toast.innerHTML = `<div class="toast-icon"><i class="fas ${type==='success'?'fa-check-circle':type==='error'?'fa-exclamation-circle':type==='warning'?'fa-exclamation-triangle':'fa-info-circle'}"></i></div><div class="toast-content">${escapeHtml(message)}</div><button class="toast-close"><i class="fas fa-times"></i></button>`;
     container.appendChild(toast);
-    toast.querySelector('.toast-close').addEventListener('click', () => {
-        toast.style.animation = 'fadeOut 0.3s forwards';
-        setTimeout(() => toast.remove(), 300);
-    });
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.style.animation = 'fadeOut 0.3s forwards';
-            setTimeout(() => toast.remove(), 300);
-        }
-    }, duration);
+    toast.querySelector('.toast-close').addEventListener('click', () => { toast.style.animation = 'fadeOut 0.3s forwards'; setTimeout(() => toast.remove(), 300); });
+    setTimeout(() => { if (toast.parentNode) { toast.style.animation = 'fadeOut 0.3s forwards'; setTimeout(() => toast.remove(), 300); } }, duration);
 }
 function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
 function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
@@ -728,14 +543,35 @@ function initMenuMobile() {
         document.addEventListener('click', (e) => { if (!links.contains(e.target) && !toggle.contains(e.target)) { links.classList.remove('active'); toggle.classList.remove('open'); } });
     }
 }
+function applyTranslations() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key) { if (el.tagName === 'INPUT' && el.hasAttribute('data-i18n-placeholder')) el.placeholder = hubiT(key); else el.innerHTML = hubiT(key); }
+    });
+    document.querySelectorAll('select option').forEach(opt => { const key = opt.getAttribute('data-i18n'); if (key) opt.textContent = hubiT(key); });
+}
 function initLangSelector() {
     const sel = document.getElementById('langSelect');
-    if (sel) { sel.value = currentLang; sel.addEventListener('change', (e) => changeLanguage(e.target.value)); }
+    if (sel) { sel.value = hubiCurrentLang; sel.addEventListener('change', (e) => { hubiSetLanguage(e.target.value); applyTranslations(); loadPosts(); }); }
 }
 // ========== FIN : MENU MOBILE & LANGUE ==========
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+    applyTranslations();
+    initLangSelector();
+    initMenuMobile();
+    loadPosts();
+    // rafraîchir allPosts dans le callback de loadPosts
+    const originalLoad = loadPosts;
+    window.loadPosts = async function() {
+        await originalLoad();
+        allPosts = Array.from(document.querySelectorAll('.post-card')).map(card => ({ id: card.dataset.id }));
+    };
+    await window.loadPosts();
+});
+// ========== FIN DE HUB-COMMUNITY.JS ==========OMContentLoaded', async () => {
     await checkAuth();
     applyTranslations();
     initLangSelector();

@@ -111,7 +111,6 @@ function switchDocument(template) {
     let contenu = template.contenu_html;
 
     if (currentClub) {
-        // Placeholders génériques pour le règlement
         contenu = contenu
             .replace(/{{president_nom_complet}}/g, 'Sètondji Léonce Régis DOSSOU-YOVO')
             .replace(/{{signataire_nom}}/g, escapeHtml(currentClub.coach_nom || 'Non désigné'))
@@ -297,7 +296,7 @@ async function saveSignature() {
             .from('nosclub_contrats')
             .insert([{
                 club_id: currentClub.id,
-                inscription_id: currentClub.id,
+                inscription_id: null,
                 type_signataire: 'coach',
                 contenu_contrat: contenuFinal,
                 signature_data: signatureData,

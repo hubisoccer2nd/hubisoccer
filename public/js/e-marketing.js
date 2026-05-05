@@ -4,7 +4,7 @@ const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseMarket = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== TRADUCTIONS (FR + EN) ==========
+// ========== TRADUCTIONS (FR + EN + FON + ES) ==========
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
@@ -17,6 +17,7 @@ const translations = {
         'nav.market': 'E-Market',
         'nav.login': 'Connexion',
         'nav.signup': 'Inscription',
+        'nav.logout': 'Déconnexion',
         'emarket.hero.title': 'Le Marché',
         'emarket.hero.highlight': 'HubISoccer',
         'emarket.hero.subtitle': 'Flânez entre les étals, découvrez des produits uniques pour champions, et laissez-vous tenter par les saveurs du football.',
@@ -89,7 +90,8 @@ const translations = {
         'toast.checkout_empty': 'Votre panier est vide',
         'toast.order_created': 'Commande créée, redirection vers le paiement...',
         'toast.message_sent': 'Message envoyé',
-        'toast.profile_updated': 'Profil mis à jour'
+        'toast.profile_updated': 'Profil mis à jour',
+        'toast.forgot_disabled': 'Fonctionnalité de réinitialisation à venir.'
     },
     en: {
         'loader.message': 'Loading...',
@@ -102,6 +104,7 @@ const translations = {
         'nav.market': 'E-Market',
         'nav.login': 'Login',
         'nav.signup': 'Sign up',
+        'nav.logout': 'Logout',
         'emarket.hero.title': 'The Market',
         'emarket.hero.highlight': 'HubISoccer',
         'emarket.hero.subtitle': 'Stroll through the stalls, discover unique products for champions, and indulge in the flavors of football.',
@@ -174,7 +177,182 @@ const translations = {
         'toast.checkout_empty': 'Your cart is empty',
         'toast.order_created': 'Order created, redirecting to payment...',
         'toast.message_sent': 'Message sent',
-        'toast.profile_updated': 'Profile updated'
+        'toast.profile_updated': 'Profile updated',
+        'toast.forgot_disabled': 'Password reset feature coming soon.'
+    },
+    fon: {
+        'loader.message': 'Chargement...',
+        'nav.scouting': 'SCOUTING',
+        'nav.process': 'PROCESSUS',
+        'nav.affiliation': 'AFFILIATION',
+        'nav.actors': 'DEVENIR ACTEUR',
+        'nav.tournoi': 'TOURNOIS PUBLIC',
+        'nav.community': 'HUB COMMUNITY',
+        'nav.market': 'E-Market',
+        'nav.login': 'Kɔnɛksiɔn',
+        'nav.signup': 'Inskripsion',
+        'nav.logout': 'Dekɔnɛksiɔn',
+        'emarket.hero.title': 'Ahimɛ',
+        'emarket.hero.highlight': 'HubISoccer',
+        'emarket.hero.subtitle': 'Flânez entre les étals, découvrez des produits uniques pour champions, et laissez-vous tenter par les saveurs du football.',
+        'emarket.packs.title': '🔥 Packs exclusifs du moment',
+        'emarket.all.title': '🛍️ Tous nos articles',
+        'emarket.cart.title': 'Panier',
+        'emarket.cart.empty': 'Votre panier est vide.',
+        'emarket.cart.total_ht': 'Total HT :',
+        'emarket.cart.tva': 'TVA (18%) :',
+        'emarket.cart.total_ttc': 'Total TTC :',
+        'emarket.cart.continue': 'Continuer les achats',
+        'emarket.cart.checkout': 'Passer la commande',
+        'emarket.auth.login_title': 'Kɔnɛksiɔn',
+        'emarket.auth.email': 'Email',
+        'emarket.auth.password': 'Mot de passe',
+        'emarket.auth.login_btn': 'Se connecter',
+        'emarket.auth.forgot': 'Mot de passe oublié ?',
+        'emarket.auth.register_link': 'Pas encore de compte ? Inscrivez-vous',
+        'emarket.auth.register_title': 'Nouveau client',
+        'emarket.auth.firstname': 'Prénom',
+        'emarket.auth.lastname': 'Nom',
+        'emarket.auth.phone': 'Téléphone',
+        'emarket.auth.confirm_password': 'Confirmer le mot de passe',
+        'emarket.auth.register_btn': 'S\'inscrire',
+        'emarket.auth.login_link': 'Déjà inscrit ? Connectez-vous',
+        'emarket.auth.forgot_title': 'Réinitialisation du mot de passe',
+        'emarket.auth.forgot_text': 'Entrez votre email, nous vous enverrons un lien pour réinitialiser votre mot de passe.',
+        'emarket.auth.forgot_btn': 'Envoyer',
+        'emarket.auth.back_login': 'Retour à la connexion',
+        'emarket.checkout.title': 'Finaliser la commande',
+        'emarket.checkout.fullname': 'Nom complet',
+        'emarket.checkout.email': 'Email',
+        'emarket.checkout.phone': 'Téléphone',
+        'emarket.checkout.total_ht': 'Total HT :',
+        'emarket.checkout.tva': 'TVA (18%) :',
+        'emarket.checkout.total_ttc': 'Total TTC :',
+        'emarket.checkout.pay': 'Payer avec FedaPay',
+        'emarket.account.title': 'Mon compte',
+        'emarket.account.orders': 'Mes commandes',
+        'emarket.account.messages': 'Mes messages',
+        'emarket.account.profile': 'Mon profil',
+        'emarket.account.orders_title': 'Mes commandes',
+        'emarket.account.messages_title': 'Mes messages',
+        'emarket.account.new_message': 'Nouveau message',
+        'emarket.account.profile_title': 'Mon profil',
+        'emarket.account.edit': 'Modifier',
+        'emarket.account.save': 'Enregistrer',
+        'emarket.message.title': 'Envoyer un message',
+        'emarket.message.content': 'Votre message',
+        'emarket.message.send': 'Envoyer',
+        'emarket.order.detail_title': 'Détail de la commande',
+        'emarket.order.close': 'Fermer',
+        'footer.badge1': 'Conformité APDP Bénin',
+        'footer.badge2': 'Règlementation FIFA',
+        'footer.badge3': 'Triple Projet Sport-Études-Carrière',
+        'footer.tel': '📞 +229 01 95 97 31 57',
+        'footer.email': '📧 contacthubisoccer@gmail.com',
+        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'footer.copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+        'toast.error_load': 'Erreur chargement des produits',
+        'toast.cart_added': 'Produit ajouté au panier',
+        'toast.cart_updated': 'Panier mis à jour',
+        'toast.cart_removed': 'Produit retiré',
+        'toast.login_success': 'Connexion réussie',
+        'toast.login_error': 'Email ou mot de passe incorrect',
+        'toast.register_success': 'Inscription réussie',
+        'toast.register_error': 'Erreur lors de l\'inscription',
+        'toast.fill_fields': 'Veuillez remplir tous les champs',
+        'toast.passwords_mismatch': 'Les mots de passe ne correspondent pas',
+        'toast.checkout_empty': 'Votre panier est vide',
+        'toast.order_created': 'Commande créée, redirection vers le paiement...',
+        'toast.message_sent': 'Message envoyé',
+        'toast.profile_updated': 'Profil mis à jour',
+        'toast.forgot_disabled': 'Fonctionnalité de réinitialisation à venir.'
+    },
+    es: {
+        'loader.message': 'Cargando...',
+        'nav.scouting': 'SCOUTING',
+        'nav.process': 'PROCESO',
+        'nav.affiliation': 'AFILIACIÓN',
+        'nav.actors': 'CONVIÉRTETE EN ACTOR',
+        'nav.tournoi': 'TORNEO PÚBLICO',
+        'nav.community': 'HUB COMMUNITY',
+        'nav.market': 'E-Market',
+        'nav.login': 'Iniciar sesión',
+        'nav.signup': 'Registrarse',
+        'nav.logout': 'Cerrar sesión',
+        'emarket.hero.title': 'El Mercado',
+        'emarket.hero.highlight': 'HubISoccer',
+        'emarket.hero.subtitle': 'Pasee entre los estantes, descubra productos únicos para campeones y déjese tentar por los sabores del fútbol.',
+        'emarket.packs.title': '🔥 Paquetes exclusivos',
+        'emarket.all.title': '🛍️ Todos nuestros productos',
+        'emarket.cart.title': 'Su carrito',
+        'emarket.cart.empty': 'Su carrito está vacío.',
+        'emarket.cart.total_ht': 'Total sin IVA:',
+        'emarket.cart.tva': 'IVA (18%):',
+        'emarket.cart.total_ttc': 'Total con IVA:',
+        'emarket.cart.continue': 'Seguir comprando',
+        'emarket.cart.checkout': 'Pagar',
+        'emarket.auth.login_title': 'Iniciar sesión',
+        'emarket.auth.email': 'Correo electrónico',
+        'emarket.auth.password': 'Contraseña',
+        'emarket.auth.login_btn': 'Iniciar sesión',
+        'emarket.auth.forgot': '¿Olvidó su contraseña?',
+        'emarket.auth.register_link': '¿No tiene cuenta? Regístrese',
+        'emarket.auth.register_title': 'Nuevo cliente',
+        'emarket.auth.firstname': 'Nombre',
+        'emarket.auth.lastname': 'Apellido',
+        'emarket.auth.phone': 'Teléfono',
+        'emarket.auth.confirm_password': 'Confirmar contraseña',
+        'emarket.auth.register_btn': 'Registrarse',
+        'emarket.auth.login_link': '¿Ya tiene cuenta? Inicie sesión',
+        'emarket.auth.forgot_title': 'Restablecer contraseña',
+        'emarket.auth.forgot_text': 'Ingrese su correo electrónico, le enviaremos un enlace para restablecer su contraseña.',
+        'emarket.auth.forgot_btn': 'Enviar',
+        'emarket.auth.back_login': 'Volver al inicio de sesión',
+        'emarket.checkout.title': 'Finalizar pedido',
+        'emarket.checkout.fullname': 'Nombre completo',
+        'emarket.checkout.email': 'Correo electrónico',
+        'emarket.checkout.phone': 'Teléfono',
+        'emarket.checkout.total_ht': 'Total sin IVA:',
+        'emarket.checkout.tva': 'IVA (18%):',
+        'emarket.checkout.total_ttc': 'Total con IVA:',
+        'emarket.checkout.pay': 'Pagar con FedaPay',
+        'emarket.account.title': 'Mi cuenta',
+        'emarket.account.orders': 'Mis pedidos',
+        'emarket.account.messages': 'Mis mensajes',
+        'emarket.account.profile': 'Mi perfil',
+        'emarket.account.orders_title': 'Mis pedidos',
+        'emarket.account.messages_title': 'Mis mensajes',
+        'emarket.account.new_message': 'Nuevo mensaje',
+        'emarket.account.profile_title': 'Mi perfil',
+        'emarket.account.edit': 'Modificar',
+        'emarket.account.save': 'Guardar',
+        'emarket.message.title': 'Enviar un mensaje',
+        'emarket.message.content': 'Su mensaje',
+        'emarket.message.send': 'Enviar',
+        'emarket.order.detail_title': 'Detalle del pedido',
+        'emarket.order.close': 'Cerrar',
+        'footer.badge1': 'Conformidad APDP Benin',
+        'footer.badge2': 'Regulación FIFA',
+        'footer.badge3': 'Triple Proyecto Deporte-Estudios-Carrera',
+        'footer.tel': '📞 +229 01 95 97 31 57',
+        'footer.email': '📧 contacthubisoccer@gmail.com',
+        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'footer.copyright': '© 2026 HubISoccer - Ozawa. Todos los derechos reservados.',
+        'toast.error_load': 'Error al cargar productos',
+        'toast.cart_added': 'Producto añadido al carrito',
+        'toast.cart_updated': 'Carrito actualizado',
+        'toast.cart_removed': 'Producto eliminado',
+        'toast.login_success': 'Inicio de sesión exitoso',
+        'toast.login_error': 'Correo o contraseña incorrectos',
+        'toast.register_success': 'Registro exitoso',
+        'toast.register_error': 'Error en el registro',
+        'toast.fill_fields': 'Por favor complete todos los campos',
+        'toast.passwords_mismatch': 'Las contraseñas no coinciden',
+        'toast.checkout_empty': 'Su carrito está vacío',
+        'toast.order_created': 'Pedido creado, redirigiendo al pago...',
+        'toast.message_sent': 'Mensaje enviado',
+        'toast.profile_updated': 'Perfil actualizado',
+        'toast.forgot_disabled': 'Función de restablecimiento de contraseña próximamente.'
     }
 };
 
@@ -246,7 +424,7 @@ const regPassword = document.getElementById('regPassword');
 const regPasswordConfirm = document.getElementById('regPasswordConfirm');
 const forgotEmail = document.getElementById('forgotEmail');
 
-// Éléments de navigation
+// Éléments de navigation (maintenant présents dans le HTML)
 const customerGreeting = document.getElementById('customerGreeting');
 const logoutCustomerLink = document.getElementById('logoutCustomerLink');
 const myAccountLink = document.getElementById('myAccountLink');
@@ -346,10 +524,20 @@ function emarketRenderCartModal() {
 
 function emarketAddToCart(productId) {
     const product = products.find(p => p.id === productId);
-    if (!product) return;
+    if (!product || product.stock < 1) {
+        showToast(t('toast.checkout_empty') + ' (stock insuffisant)', 'warning');
+        return;
+    }
     const existing = cart.find(item => item.id === productId);
-    if (existing) existing.quantity++;
-    else cart.push({ id: productId, quantity: 1 });
+    if (existing) {
+        if (existing.quantity < product.stock) existing.quantity++;
+        else {
+            showToast('Stock maximum atteint', 'warning');
+            return;
+        }
+    } else {
+        cart.push({ id: productId, quantity: 1 });
+    }
     emarketUpdateCartCount();
     emarketRenderCartModal();
     showToast(t('toast.cart_added'), 'success');
@@ -359,8 +547,13 @@ function emarketUpdateCartItem(productId, delta) {
     const index = cart.findIndex(item => item.id === productId);
     if (index === -1) return;
     const newQty = cart[index].quantity + delta;
+    const product = products.find(p => p.id === productId);
     if (newQty <= 0) cart.splice(index, 1);
-    else cart[index].quantity = newQty;
+    else if (product && newQty <= product.stock) cart[index].quantity = newQty;
+    else {
+        showToast('Stock insuffisant', 'warning');
+        return;
+    }
     emarketUpdateCartCount();
     emarketRenderCartModal();
     showToast(t('toast.cart_updated'), 'info');
@@ -407,8 +600,9 @@ function emarketRenderProducts() {
 }
 
 function emarketRenderProductCard(product) {
-    const stockClass = product.stock ? '' : 'out-of-stock';
-    const stockText = product.stock ? (currentLang === 'fr' ? 'En stock' : 'In stock') : (currentLang === 'fr' ? 'Épuisé' : 'Out of stock');
+    const inStock = product.stock > 0;
+    const stockClass = inStock ? 'in-stock' : 'out-of-stock';
+    const stockText = inStock ? (currentLang === 'fr' ? 'En stock' : currentLang === 'en' ? 'In stock' : currentLang === 'es' ? 'En stock' : 'En stock') : (currentLang === 'fr' ? 'Épuisé' : currentLang === 'en' ? 'Out of stock' : currentLang === 'es' ? 'Agotado' : 'Épuisé');
     return `
         <div class="product-card" data-id="${product.id}">
             <div class="product-image">
@@ -423,8 +617,8 @@ function emarketRenderProductCard(product) {
                     <span class="product-stock ${stockClass}">${stockText}</span>
                 </div>
                 <div class="product-actions">
-                    <button class="btn-add-cart" data-id="${product.id}" ${!product.stock ? 'disabled' : ''}>
-                        <i class="fas fa-cart-plus"></i> ${currentLang === 'fr' ? 'Ajouter' : 'Add'}
+                    <button class="btn-add-cart" data-id="${product.id}" ${!inStock ? 'disabled' : ''}>
+                        <i class="fas fa-cart-plus"></i> ${currentLang === 'fr' ? 'Ajouter' : currentLang === 'en' ? 'Add' : currentLang === 'es' ? 'Añadir' : 'Ajouter'}
                     </button>
                     <button class="btn-details" data-id="${product.id}">
                         <i class="fas fa-eye"></i> Détails
@@ -444,8 +638,9 @@ function emarketOpenProductDetail(productId) {
     detailDescription.textContent = product.description || '';
     detailPrice.textContent = product.price + ' FCFA';
 
-    detailStockBadge.textContent = product.stock ? (currentLang === 'fr' ? 'En stock' : 'In stock') : (currentLang === 'fr' ? 'Épuisé' : 'Out of stock');
-    detailStockBadge.className = 'stock-badge ' + (product.stock ? 'in-stock' : 'out-of-stock');
+    const inStock = product.stock > 0;
+    detailStockBadge.textContent = inStock ? (currentLang === 'fr' ? 'En stock' : currentLang === 'en' ? 'In stock' : currentLang === 'es' ? 'En stock' : 'En stock') : (currentLang === 'fr' ? 'Épuisé' : currentLang === 'en' ? 'Out of stock' : currentLang === 'es' ? 'Agotado' : 'Épuisé');
+    detailStockBadge.className = 'stock-badge ' + (inStock ? 'in-stock' : 'out-of-stock');
 
     detailImage.style.display = 'none';
     detailVideo.style.display = 'none';
@@ -459,7 +654,7 @@ function emarketOpenProductDetail(productId) {
     }
 
     detailAddToCart.dataset.id = product.id;
-    detailAddToCart.disabled = !product.stock;
+    detailAddToCart.disabled = !inStock;
 
     productDetailModal.classList.add('active');
 }
@@ -480,6 +675,10 @@ async function emarketWaitForBcrypt() {
 }
 
 async function emarketRegisterCustomer(firstName, lastName, email, phone, password) {
+    if (!firstName || !lastName || !email || !password) {
+        showToast(t('toast.fill_fields'), 'error');
+        return null;
+    }
     await emarketWaitForBcrypt();
     if (typeof dcodeIO === 'undefined' || typeof dcodeIO.bcrypt === 'undefined') {
         showToast('Erreur de chargement de la sécurité', 'error');
@@ -505,6 +704,10 @@ async function emarketRegisterCustomer(firstName, lastName, email, phone, passwo
 }
 
 async function emarketLoginCustomer(email, password) {
+    if (!email || !password) {
+        showToast(t('toast.fill_fields'), 'error');
+        return null;
+    }
     await emarketWaitForBcrypt();
     if (typeof dcodeIO === 'undefined' || typeof dcodeIO.bcrypt === 'undefined') {
         showToast('Erreur de chargement de la sécurité', 'error');
@@ -552,15 +755,15 @@ function emarketUpdateCustomerUI() {
         customerGreeting.style.display = 'none';
         logoutCustomerLink.style.display = 'none';
         myAccountLink.style.display = 'none';
-        loginBtn.style.display = 'inline';
-        signupBtn.style.display = 'inline';
+        loginBtn.style.display = 'inline-block';
+        signupBtn.style.display = 'inline-block';
     }
 }
 
 // ===== MODALES =====
-function emarketOpenCartModal() { if (cartModal) cartModal.classList.add('active'); }
+function emarketOpenCartModal() { if (cartModal) cartModal.classList.add('active'); emarketRenderCartModal(); }
 function emarketCloseCartModal() { if (cartModal) cartModal.classList.remove('active'); }
-function emarketOpenAuthModal() { if (authModal) authModal.classList.add('active'); }
+function emarketOpenAuthModal() { if (authModal) authModal.classList.add('active'); emarketShowLoginForm(); }
 function emarketCloseAuthModal() { if (authModal) authModal.classList.remove('active'); }
 function emarketShowLoginForm() {
     if (loginForm) loginForm.style.display = 'block';
@@ -769,7 +972,7 @@ async function emarketHandleCheckout(e) {
     emarketUpdateCartCount();
     emarketCloseCheckoutModal();
     emarketCloseCartModal();
-    // Redirection vers FedaPay (à implémenter)
+    // Redirection vers FedaPay (à implémenter après intégration API)
     // window.location.href = 'https://fedapay.com?orderId=' + order.id;
 }
 
@@ -907,7 +1110,10 @@ if (registerForm) registerForm.addEventListener('submit', async (e) => {
     await emarketRegisterCustomer(regFirstName.value, regLastName.value, regEmail.value, regPhone.value, regPassword.value);
 });
 if (forgotForm) forgotForm.addEventListener('submit', (e) => {
-    e.preventDefault(); showToast('Lien de réinitialisation envoyé (simulé)', 'info'); emarketShowLoginForm();
+    e.preventDefault();
+    // Fonctionnalité non encore disponible – ne pas simuler
+    showToast(t('toast.forgot_disabled'), 'info');
+    emarketShowLoginForm();
 });
 if (logoutCustomerLink) logoutCustomerLink.addEventListener('click', (e) => { e.preventDefault(); emarketHandleLogoutCustomer(); });
 if (myAccountLink) myAccountLink.addEventListener('click', (e) => { e.preventDefault(); emarketOpenAccountModal(); });

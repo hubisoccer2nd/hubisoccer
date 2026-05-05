@@ -571,11 +571,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     await window.loadPosts();
 });
-// ========== FIN DE HUB-COMMUNITY.JS ==========OMContentLoaded', async () => {
-    await checkAuth();
-    applyTranslations();
-    initLangSelector();
-    initMenuMobile();
-    loadPosts();
-});
 // ========== FIN DE HUB-COMMUNITY.JS ==========

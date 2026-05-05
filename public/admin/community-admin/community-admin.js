@@ -1,4 +1,4 @@
-// ========== COMMUNITY-ADMIN.JS (CORRIGÉ – VERSION FINALE) ==========
+// ========== COMMUNITY-ADMIN.JS (SANS QUILL) ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -10,7 +10,6 @@ let allPosts = [];
 let allComments = [];
 let allReports = [];
 let currentPostId = null;
-let postQuill = null;
 let uploadedMediaUrl = null;
 let deleteTarget = { type: null, id: null };
 // ========== FIN : VARIABLES GLOBALES ==========
@@ -53,30 +52,50 @@ function showLoader() { document.getElementById('globalLoader').style.display = 
 function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : ÉDITEUR QUILL ==========
-function initPostEditor() {
-    if (postQuill) {
-        postQuill = null;
-    }
-    document.getElementById('postEditor').innerHTML = '';
-    postQuill = new Quill('#postEditor', {
-        theme: 'snow',
-        placeholder: 'Contenu de la publication...',
-        modules: {
-            toolbar: [
-                [{ 'font': [] }],
-                [{ 'size': ['small', false, 'large', 'huge'] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'color': [] }, { 'background': [] }],
-                [{ 'align': [] }],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['link'],
-                ['clean']
-            ]
-        }
-    });
+// ========== DÉBUT : UPLOAD MÉDIA ==========
+function resetMediaUpload() {
+    document.getElementById('uploadStatusPostMedia').style.display = 'none';
+    document.getElementById('uploadSuccessPostMedia').style.display = 'none';
+    document.getElementById('postMediaFile').value = '';
 }
-// ========== FIN : ÉDITEUR QUILL ==========
+
+document.getElementById('uploadPostMedia').addEventListener('click', function(e) {
+    if (e.target !== document.getElementById('postMediaFile')) {
+        document.getElementById('postMediaFile').click();
+    }
+});
+
+document.getElementById('postMediaFile').addEventListener('change', async function(e) {
+    const file = this.files[0];
+    if (!file) return;
+
+    const span = document.querySelector('#uploadPostMedia span:not(.upload-spinner):not(.progress-text)');
+    if (span) span.textContent = file.name;
+
+    document.getElementById('uploadStatusPostMedia').style.display = 'flex';
+    document.getElementById('uploadSuccessPostMedia').style.display = 'none';
+
+    try {
+        const safeName = `post_${currentPostId || 'new'}_${Date.now()}`;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${safeName}.${fileExt}`;
+
+        const { error } = await supabaseAdmin.storage.from('community_medias').upload(fileName, file);
+        if (error) throw error;
+
+        const { data: urlData } = supabaseAdmin.storage.from('community_medias').getPublicUrl(fileName);
+        uploadedMediaUrl = urlData.publicUrl;
+
+        document.getElementById('uploadStatusPostMedia').style.display = 'none';
+        document.getElementById('uploadSuccessPostMedia').style.display = 'flex';
+        showToast('Média téléversé avec succès.', 'success');
+    } catch (err) {
+        document.getElementById('uploadStatusPostMedia').style.display = 'none';
+        showToast('Erreur upload : ' + err.message, 'error');
+        this.value = '';
+    }
+});
+// ========== FIN : UPLOAD MÉDIA ==========
 
 // ========== DÉBUT : CHARGEMENT DYNAMIQUE DES ENTITÉS ==========
 async function loadEntitiesByType(type) {
@@ -132,11 +151,11 @@ async function populateEntitySelect() {
     const nameField = document.getElementById('entityName');
 
     if (!type) {
-    select.innerHTML = "<option value=''>-- Sélectionnez d'abord un type --</option>";
-    select.disabled = true;
-    nameField.value = '';
-    return;
-}
+        select.innerHTML = "<option value=''>-- Sélectionnez d'abord un type --</option>";
+        select.disabled = true;
+        nameField.value = '';
+        return;
+    }
 
     select.disabled = false;
     select.innerHTML = '<option value="">Chargement...</option>';
@@ -174,7 +193,6 @@ async function populateEntitySelect() {
         select.appendChild(option);
     });
 
-    // Déclencher manuellement pour remplir le nom si une option est déjà sélectionnée (cas édition)
     if (select.value) {
         select.dispatchEvent(new Event('change'));
     }
@@ -183,52 +201,7 @@ async function populateEntitySelect() {
 document.getElementById('entityType').addEventListener('change', populateEntitySelect);
 // ========== FIN : CHARGEMENT DYNAMIQUE DES ENTITÉS ==========
 
-// ========== DÉBUT : UPLOAD MÉDIA CORRIGÉ ==========
-function resetMediaUpload() {
-    document.getElementById('uploadStatusPostMedia').style.display = 'none';
-    document.getElementById('uploadSuccessPostMedia').style.display = 'none';
-    document.getElementById('postMediaFile').value = '';
-}
-
-document.getElementById('uploadPostMedia').addEventListener('click', function(e) {
-    if (e.target !== document.getElementById('postMediaFile')) {
-        document.getElementById('postMediaFile').click();
-    }
-});
-
-document.getElementById('postMediaFile').addEventListener('change', async function(e) {
-    const file = this.files[0];
-    if (!file) return;
-
-    const span = document.querySelector('#uploadPostMedia span:not(.upload-spinner):not(.progress-text)');
-    if (span) span.textContent = file.name;
-
-    document.getElementById('uploadStatusPostMedia').style.display = 'flex';
-    document.getElementById('uploadSuccessPostMedia').style.display = 'none';
-
-    try {
-        const safeName = `post_${currentPostId || 'new'}_${Date.now()}`;
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${safeName}.${fileExt}`;
-
-        const { error } = await supabaseAdmin.storage.from('community_medias').upload(fileName, file);
-        if (error) throw error;
-
-        const { data: urlData } = supabaseAdmin.storage.from('community_medias').getPublicUrl(fileName);
-        uploadedMediaUrl = urlData.publicUrl;
-
-        document.getElementById('uploadStatusPostMedia').style.display = 'none';
-        document.getElementById('uploadSuccessPostMedia').style.display = 'flex';
-        showToast('Média téléversé avec succès.', 'success');
-    } catch (err) {
-        document.getElementById('uploadStatusPostMedia').style.display = 'none';
-        showToast('Erreur upload : ' + err.message, 'error');
-        this.value = '';
-    }
-});
-// ========== FIN : UPLOAD MÉDIA CORRIGÉ ==========
-
-// ========== DÉBUT : CHARGEMENT DES POSTS ==========
+// ========== DÉBUT : CHARGEMENT DES DONNÉES ==========
 async function loadPosts() {
     showLoader();
     try {
@@ -295,7 +268,7 @@ function updateStats() {
 }
 // ========== FIN : CHARGEMENT DES DONNÉES ==========
 
-// ========== DÉBUT : RENDU TABLEAU POSTS ==========
+// ========== DÉBUT : RENDU DES TABLEAUX ==========
 function renderPostsTable() {
     const tbody = document.getElementById('postsBody');
     if (!tbody) return;
@@ -338,188 +311,6 @@ function renderPostsTable() {
     tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => openDeleteModal('post', b.dataset.postid)));
 }
 
-async function togglePin(postId) {
-    const post = allPosts.find(p => p.id == postId);
-    if (!post) return;
-    const newVal = !post.epingle;
-    const { error } = await supabaseAdmin
-        .from('public_community_posts')
-        .update({ epingle: newVal, updated_at: new Date().toISOString() })
-        .eq('id', postId);
-    if (!error) {
-        post.epingle = newVal;
-        renderPostsTable();
-        showToast(newVal ? 'Post épinglé' : 'Post désépinglé', 'success');
-    } else {
-        showToast('Erreur', 'error');
-    }
-}
-
-async function toggleComments(postId) {
-    const post = allPosts.find(p => p.id == postId);
-    if (!post) return;
-    const newVal = !post.commentaires_actifs;
-    const { error } = await supabaseAdmin
-        .from('public_community_posts')
-        .update({ commentaires_actifs: newVal, updated_at: new Date().toISOString() })
-        .eq('id', postId);
-    if (!error) {
-        post.commentaires_actifs = newVal;
-        renderPostsTable();
-        showToast(newVal ? 'Commentaires activés' : 'Commentaires bloqués', 'success');
-    } else {
-        showToast('Erreur', 'error');
-    }
-}
-// ========== FIN : TABLEAU POSTS ==========
-
-// ========== DÉBUT : MODALE CRÉATION / MODIFICATION POST ==========
-function openCreatePostModal() {
-    currentPostId = null;
-    uploadedMediaUrl = null;
-    document.getElementById('postModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Nouvelle publication';
-    document.getElementById('postId').value = '';
-    document.getElementById('entityType').value = '';
-    document.getElementById('entitySelect').innerHTML = "<option value=''>-- Sélectionnez d'abord un type --</option>";    
-    document.getElementById('entitySelect').disabled = true;
-    document.getElementById('entityName').value = '';
-    document.getElementById('postEpingle').checked = false;
-    document.getElementById('postCommentairesActifs').checked = true;
-    resetMediaUpload();
-    initPostEditor();
-    document.getElementById('postModal').classList.add('active');
-}
-
-async function openEditPostModal(postId) {
-    const post = allPosts.find(p => p.id == postId);
-    if (!post) return;
-    currentPostId = post.id;
-    uploadedMediaUrl = post.media_url || null;
-    document.getElementById('postModalTitle').innerHTML = '<i class="fas fa-edit"></i> Modifier la publication';
-    document.getElementById('postId').value = post.id;
-    document.getElementById('entityType').value = post.entity_type || '';
-    document.getElementById('entityName').value = post.entity_name || '';
-    document.getElementById('postEpingle').checked = post.epingle || false;
-    document.getElementById('postCommentairesActifs').checked = post.commentaires_actifs !== false;
-    resetMediaUpload();
-    initPostEditor();
-    if (post.content) {
-        postQuill.root.innerHTML = post.content;
-    }
-    // Charger les entités et présélectionner
-    if (post.entity_type) {
-        await populateEntitySelect();
-        document.getElementById('entitySelect').value = post.entity_id || '';
-        // Déclencher le change pour remplir le nom
-        document.getElementById('entitySelect').dispatchEvent(new Event('change'));
-    }
-    document.getElementById('postModal').classList.add('active');
-}
-
-// Soumission du formulaire
-document.getElementById('postForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const content = postQuill ? postQuill.root.innerHTML : '';
-    const entityType = document.getElementById('entityType').value || null;
-    const entitySelect = document.getElementById('entitySelect');
-    const entityId = entitySelect.value || null;
-    const entityName = document.getElementById('entityName').value?.trim() || null;
-    const epingle = document.getElementById('postEpingle').checked;
-    const commentairesActifs = document.getElementById('postCommentairesActifs').checked;
-
-    const postData = {
-        content: content,
-        entity_type: entityType,
-        entity_id: entityId,
-        entity_name: entityName,
-        media_url: uploadedMediaUrl,
-        epingle: epingle,
-        commentaires_actifs: commentairesActifs,
-        is_public: true,
-        updated_at: new Date().toISOString()
-    };
-
-    showLoader();
-    try {
-        if (currentPostId) {
-            const { error } = await supabaseAdmin.from('public_community_posts').update(postData).eq('id', currentPostId);
-            if (error) throw error;
-            showToast('Publication modifiée.', 'success');
-        } else {
-            const { error } = await supabaseAdmin.from('public_community_posts').insert([{
-                ...postData,
-                user_id: 'admin',
-                created_at: new Date().toISOString()
-            }]);
-            if (error) throw error;
-            showToast('Publication créée.', 'success');
-        }
-        closeAllModals();
-        loadPosts();
-    } catch (err) {
-        showToast('Erreur : ' + err.message, 'error');
-    } finally {
-        hideLoader();
-    }
-});
-// ========== FIN : MODALE POST ==========
-
-// ========== DÉBUT : MODALE VISUALISATION ==========
-async function openViewPostModal(postId) {
-    const post = allPosts.find(p => p.id == postId);
-    if (!post) return;
-
-    const { data: comments } = await supabaseAdmin
-        .from('public_community_comments')
-        .select('*')
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-
-    let html = `
-        <div class="view-post-detail">
-            <div class="post-content-full">${post.content || 'Aucun contenu.'}</div>
-            ${post.media_url ? `<div class="post-media-large">${post.media_url.match(/\.(mp4|webm|ogg|mov|avi)$/i) ? `<video src="${escapeHtml(post.media_url)}" controls style="max-width:100%;"></video>` : `<img src="${escapeHtml(post.media_url)}" alt="media" style="max-width:100%;">`}</div>` : ''}
-            <div class="comments-admin-list">
-                <h4><i class="fas fa-comments"></i> Commentaires (${comments?.length || 0})</h4>
-                ${comments?.map(c => `<div class="comment-admin-item"><strong>${escapeHtml(c.user_id)}</strong>: ${escapeHtml(c.content)} <small>${new Date(c.created_at).toLocaleString()}</small></div>`).join('') || '<p>Aucun commentaire.</p>'}
-            </div>
-        </div>
-    `;
-    document.getElementById('viewPostContent').innerHTML = html;
-    document.getElementById('viewPostModal').classList.add('active');
-}
-// ========== FIN : MODALE VISUALISATION ==========
-
-// ========== DÉBUT : SUPPRESSION ==========
-function openDeleteModal(type, id) {
-    deleteTarget = { type, id };
-    document.getElementById('deleteModalText').textContent = type === 'post' ? 'Supprimer ce post et tous ses commentaires ?' : 'Supprimer ce commentaire ?';
-    document.getElementById('deleteModal').classList.add('active');
-}
-
-document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
-    if (!deleteTarget.id) return;
-    showLoader();
-    try {
-        if (deleteTarget.type === 'post') {
-            await supabaseAdmin.from('public_community_posts').delete().eq('id', deleteTarget.id);
-        } else if (deleteTarget.type === 'comment') {
-            await supabaseAdmin.from('public_community_comments').delete().eq('id', deleteTarget.id);
-        }
-        showToast('Supprimé avec succès.', 'success');
-        closeAllModals();
-        loadPosts();
-        loadComments();
-        loadReports();
-    } catch (err) {
-        showToast('Erreur suppression', 'error');
-    } finally {
-        hideLoader();
-    }
-});
-// ========== FIN : SUPPRESSION ==========
-
-// ========== DÉBUT : TABLEAUX DÉPENDANTS ==========
 function renderCommentsTable() {
     const tbody = document.getElementById('commentsBody');
     if (!tbody) return;
@@ -580,11 +371,8 @@ function renderReportsTable() {
     tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', async () => {
         const type = b.dataset.type;
         const targetId = b.dataset.targetid;
-        if (type === 'post') {
-            await supabaseAdmin.from('public_community_posts').delete().eq('id', targetId);
-        } else if (type === 'comment') {
-            await supabaseAdmin.from('public_community_comments').delete().eq('id', targetId);
-        }
+        if (type === 'post') await supabaseAdmin.from('public_community_posts').delete().eq('id', targetId);
+        else if (type === 'comment') await supabaseAdmin.from('public_community_comments').delete().eq('id', targetId);
         await supabaseAdmin.from('public_community_reports').delete().eq('id', b.dataset.reportid);
         loadReports();
         loadPosts();
@@ -592,7 +380,173 @@ function renderReportsTable() {
         showToast('Contenu supprimé', 'success');
     }));
 }
-// ========== FIN : TABLEAUX DÉPENDANTS ==========
+
+async function togglePin(postId) {
+    const post = allPosts.find(p => p.id == postId);
+    if (!post) return;
+    const newVal = !post.epingle;
+    const { error } = await supabaseAdmin.from('public_community_posts').update({ epingle: newVal, updated_at: new Date().toISOString() }).eq('id', postId);
+    if (!error) {
+        post.epingle = newVal;
+        renderPostsTable();
+        showToast(newVal ? 'Post épinglé' : 'Post désépinglé', 'success');
+    } else showToast('Erreur', 'error');
+}
+
+async function toggleComments(postId) {
+    const post = allPosts.find(p => p.id == postId);
+    if (!post) return;
+    const newVal = !post.commentaires_actifs;
+    const { error } = await supabaseAdmin.from('public_community_posts').update({ commentaires_actifs: newVal, updated_at: new Date().toISOString() }).eq('id', postId);
+    if (!error) {
+        post.commentaires_actifs = newVal;
+        renderPostsTable();
+        showToast(newVal ? 'Commentaires activés' : 'Commentaires bloqués', 'success');
+    } else showToast('Erreur', 'error');
+}
+// ========== FIN : TABLEAUX ==========
+
+// ========== DÉBUT : MODALE CRÉATION / MODIFICATION ==========
+function openCreatePostModal() {
+    currentPostId = null;
+    uploadedMediaUrl = null;
+    document.getElementById('postModalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Nouvelle publication';
+    document.getElementById('postId').value = '';
+    document.getElementById('postEditor').value = '';
+    document.getElementById('entityType').value = '';
+    document.getElementById('entitySelect').innerHTML = "<option value=''>-- Sélectionnez d'abord un type --</option>";
+    document.getElementById('entitySelect').disabled = true;
+    document.getElementById('entityName').value = '';
+    document.getElementById('postEpingle').checked = false;
+    document.getElementById('postCommentairesActifs').checked = true;
+    resetMediaUpload();
+    document.getElementById('postModal').classList.add('active');
+}
+
+function openEditPostModal(postId) {
+    const post = allPosts.find(p => p.id == postId);
+    if (!post) return;
+    currentPostId = post.id;
+    uploadedMediaUrl = post.media_url || null;
+    document.getElementById('postModalTitle').innerHTML = '<i class="fas fa-edit"></i> Modifier la publication';
+    document.getElementById('postId').value = post.id;
+    document.getElementById('postEditor').value = post.content || '';
+    document.getElementById('entityType').value = post.entity_type || '';
+    document.getElementById('entityName').value = post.entity_name || '';
+    document.getElementById('postEpingle').checked = post.epingle || false;
+    document.getElementById('postCommentairesActifs').checked = post.commentaires_actifs !== false;
+    resetMediaUpload();
+
+    if (post.entity_type) {
+        populateEntitySelect().then(() => {
+            document.getElementById('entitySelect').value = post.entity_id || '';
+            document.getElementById('entitySelect').dispatchEvent(new Event('change'));
+        });
+    }
+    document.getElementById('postModal').classList.add('active');
+}
+
+document.getElementById('postForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const content = document.getElementById('postEditor').value;
+    const entityType = document.getElementById('entityType').value || null;
+    const entitySelect = document.getElementById('entitySelect');
+    const entityId = entitySelect.value || null;
+    const entityName = document.getElementById('entityName').value?.trim() || null;
+    const epingle = document.getElementById('postEpingle').checked;
+    const commentairesActifs = document.getElementById('postCommentairesActifs').checked;
+
+    const postData = {
+        content: content,
+        entity_type: entityType,
+        entity_id: entityId,
+        entity_name: entityName,
+        media_url: uploadedMediaUrl,
+        epingle: epingle,
+        commentaires_actifs: commentairesActifs,
+        is_public: true,
+        updated_at: new Date().toISOString()
+    };
+
+    showLoader();
+    try {
+        if (currentPostId) {
+            const { error } = await supabaseAdmin.from('public_community_posts').update(postData).eq('id', currentPostId);
+            if (error) throw error;
+            showToast('Publication modifiée.', 'success');
+        } else {
+            const { error } = await supabaseAdmin.from('public_community_posts').insert([{
+                ...postData,
+                user_id: 'admin',
+                created_at: new Date().toISOString()
+            }]);
+            if (error) throw error;
+            showToast('Publication créée.', 'success');
+        }
+        closeAllModals();
+        loadPosts();
+    } catch (err) {
+        showToast('Erreur : ' + err.message, 'error');
+    } finally {
+        hideLoader();
+    }
+});
+// ========== FIN : MODALE CREATION/MODIFICATION ==========
+
+// ========== DÉBUT : MODALE VISUALISATION ==========
+async function openViewPostModal(postId) {
+    const post = allPosts.find(p => p.id == postId);
+    if (!post) return;
+
+    const { data: comments } = await supabaseAdmin
+        .from('public_community_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+    let html = `
+        <div class="view-post-detail">
+            <div class="post-content-full">${post.content || 'Aucun contenu.'}</div>
+            ${post.media_url ? `<div class="post-media-large">${post.media_url.match(/\.(mp4|webm|ogg|mov|avi)$/i) ? `<video src="${escapeHtml(post.media_url)}" controls style="max-width:100%;"></video>` : `<img src="${escapeHtml(post.media_url)}" alt="media" style="max-width:100%;">`}</div>` : ''}
+            <div class="comments-admin-list">
+                <h4><i class="fas fa-comments"></i> Commentaires (${comments?.length || 0})</h4>
+                ${comments?.map(c => `<div class="comment-admin-item"><strong>${escapeHtml(c.user_id)}</strong>: ${escapeHtml(c.content)} <small>${new Date(c.created_at).toLocaleString()}</small></div>`).join('') || '<p>Aucun commentaire.</p>'}
+            </div>
+        </div>
+    `;
+    document.getElementById('viewPostContent').innerHTML = html;
+    document.getElementById('viewPostModal').classList.add('active');
+}
+// ========== FIN : MODALE VISUALISATION ==========
+
+// ========== DÉBUT : SUPPRESSION ==========
+function openDeleteModal(type, id) {
+    deleteTarget = { type, id };
+    document.getElementById('deleteModalText').textContent = type === 'post' ? 'Supprimer ce post et tous ses commentaires ?' : 'Supprimer ce commentaire ?';
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+    if (!deleteTarget.id) return;
+    showLoader();
+    try {
+        if (deleteTarget.type === 'post') {
+            await supabaseAdmin.from('public_community_posts').delete().eq('id', deleteTarget.id);
+        } else if (deleteTarget.type === 'comment') {
+            await supabaseAdmin.from('public_community_comments').delete().eq('id', deleteTarget.id);
+        }
+        showToast('Supprimé avec succès.', 'success');
+        closeAllModals();
+        loadPosts();
+        loadComments();
+        loadReports();
+    } catch (err) {
+        showToast('Erreur suppression', 'error');
+    } finally {
+        hideLoader();
+    }
+});
+// ========== FIN : SUPPRESSION ==========
 
 // ========== DÉBUT : FERMETURE DES MODALES ==========
 function closeAllModals() {
@@ -600,7 +554,6 @@ function closeAllModals() {
 }
 document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', closeAllModals));
 window.addEventListener('click', (e) => { if (e.target.classList.contains('modal')) closeAllModals(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllModals(); });
 // ========== FIN : FERMETURE DES MODALES ==========
 
 // ========== DÉBUT : ÉVÉNEMENTS ==========
@@ -644,7 +597,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadComments();
     loadReports();
 
-    // Gestionnaire unique pour le champ entityName lorsqu'on sélectionne une entité
     const entitySelect = document.getElementById('entitySelect');
     if (entitySelect) {
         entitySelect.addEventListener('change', function() {

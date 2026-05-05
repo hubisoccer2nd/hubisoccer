@@ -121,16 +121,66 @@ nav {
 }
 .nav-links a:hover { color: var(--gold); }
 .nav-links a.active { color: var(--gold); }
-.nav-links a.btn-auth {
+
+/* Boutons d'authentification (button pour qu'ils déclenchent des actions JS) */
+.nav-links .btn-auth,
+.nav-links button.btn-auth {
     padding: 8px 18px;
     border-radius: 30px;
     border: 1px solid var(--primary);
     background: transparent;
     color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Poppins', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
 }
-.nav-links a.btn-auth:hover { background: var(--primary); color: white; }
-.nav-links a.btn-auth.gold { background: var(--gold); color: black; border: none; }
-.nav-links a.btn-auth.gold:hover { background: var(--gold-dark); }
+
+.nav-links .btn-auth:hover,
+.nav-links button.btn-auth:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.nav-links .btn-auth.gold,
+.nav-links button.btn-auth.gold {
+    background: var(--gold);
+    color: black;
+    border: none;
+}
+
+.nav-links .btn-auth.gold:hover,
+.nav-links button.btn-auth.gold:hover {
+    background: var(--gold-dark);
+}
+
+/* Espace client connecté */
+#customerGreeting {
+    font-weight: 600;
+    color: var(--primary);
+    margin: 0 5px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+#myAccountLink, #logoutCustomerLink {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 30px;
+    transition: var(--transition);
+}
+#myAccountLink:hover, #logoutCustomerLink:hover {
+    color: var(--gold);
+}
 
 /* ========== HERO ========== */
 .market-hero {

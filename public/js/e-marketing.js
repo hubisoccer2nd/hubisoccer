@@ -1,21 +1,20 @@
-// ========== E-MARKETING.JS ==========
-// Configuration Supabase (projet public)
+// ========== E-MARKETING.JS – VERSION FINALE COMPLÈTE ==========
+// ========== CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseMarket = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== TRADUCTIONS (24 langues – extrait pour les textes principaux) ==========
+// ========== TRADUCTIONS (FR + EN) ==========
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
-        'nav.home': 'Accueil',
-        'nav.scouting': 'Scouting',
-        'nav.process': 'Processus',
-        'nav.affiliation': 'Affiliation',
-        'nav.actors': 'Devenir acteur',
-        'nav.tournoi': 'Tournois',
-        'nav.community': 'Community',
-        'nav.market': 'Market',
+        'nav.scouting': 'SCOUTING',
+        'nav.process': 'PROCESSUS',
+        'nav.affiliation': 'AFFILIATION',
+        'nav.actors': 'DEVENIR ACTEUR',
+        'nav.tournoi': 'TOURNOIS PUBLIC',
+        'nav.community': 'HUB COMMUNITY',
+        'nav.market': 'E-Market',
         'nav.login': 'Connexion',
         'nav.signup': 'Inscription',
         'emarket.hero.title': 'Le Marché',
@@ -24,6 +23,7 @@ const translations = {
         'emarket.packs.title': '🔥 Packs exclusifs du moment',
         'emarket.all.title': '🛍️ Tous nos articles',
         'emarket.cart.title': 'Votre panier',
+        'emarket.cart.empty': 'Votre panier est vide.',
         'emarket.cart.total_ht': 'Total HT :',
         'emarket.cart.tva': 'TVA (18%) :',
         'emarket.cart.total_ttc': 'Total TTC :',
@@ -93,14 +93,13 @@ const translations = {
     },
     en: {
         'loader.message': 'Loading...',
-        'nav.home': 'Home',
-        'nav.scouting': 'Scouting',
-        'nav.process': 'Process',
-        'nav.affiliation': 'Affiliation',
-        'nav.actors': 'Become an actor',
-        'nav.tournoi': 'Tournaments',
-        'nav.community': 'Community',
-        'nav.market': 'Market',
+        'nav.scouting': 'SCOUTING',
+        'nav.process': 'PROCESS',
+        'nav.affiliation': 'AFFILIATION',
+        'nav.actors': 'BECOME AN ACTOR',
+        'nav.tournoi': 'PUBLIC TOURNAMENT',
+        'nav.community': 'HUB COMMUNITY',
+        'nav.market': 'E-Market',
         'nav.login': 'Login',
         'nav.signup': 'Sign up',
         'emarket.hero.title': 'The Market',
@@ -109,6 +108,7 @@ const translations = {
         'emarket.packs.title': '🔥 Exclusive packs',
         'emarket.all.title': '🛍️ All our products',
         'emarket.cart.title': 'Your cart',
+        'emarket.cart.empty': 'Your cart is empty.',
         'emarket.cart.total_ht': 'Total excl. tax:',
         'emarket.cart.tva': 'VAT (18%):',
         'emarket.cart.total_ttc': 'Total incl. tax:',
@@ -159,7 +159,7 @@ const translations = {
         'footer.badge3': 'Triple Project Sport-Studies-Career',
         'footer.tel': '📞 +229 01 95 97 31 57',
         'footer.email': '📧 contacthubisoccer@gmail.com',
-        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | TIN : 0201910800236',
         'footer.copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.',
         'toast.error_load': 'Error loading products',
         'toast.cart_added': 'Product added to cart',
@@ -206,7 +206,7 @@ function changeLanguage(lang) {
         currentLang = lang;
         localStorage.setItem('emarket_lang', lang);
         applyTranslations();
-        emarketRenderProducts(); // rafraîchir les cartes (textes statiques)
+        emarketRenderProducts();
         if (currentCustomer) emarketUpdateCustomerUI();
     }
 }
@@ -227,6 +227,7 @@ const checkoutModal = document.getElementById('checkoutModal');
 const accountModal = document.getElementById('accountModal');
 const sendMessageModal = document.getElementById('sendMessageModal');
 const orderDetailModal = document.getElementById('orderDetailModal');
+const productDetailModal = document.getElementById('productDetailModal');
 
 // Formulaires auth
 const loginForm = document.getElementById('loginForm');
@@ -283,6 +284,15 @@ const sendMessageForm = document.getElementById('sendMessageForm');
 // Élément détail commande
 const orderDetailContent = document.getElementById('orderDetailContent');
 
+// Éléments détail produit
+const detailName = document.getElementById('detailName');
+const detailDescription = document.getElementById('detailDescription');
+const detailPrice = document.getElementById('detailPrice');
+const detailStockBadge = document.getElementById('detailStockBadge');
+const detailImage = document.getElementById('detailImage');
+const detailVideo = document.getElementById('detailVideo');
+const detailAddToCart = document.getElementById('detailAddToCart');
+
 // ===== ÉTAT GLOBAL =====
 let currentCustomer = null;
 let cart = JSON.parse(localStorage.getItem('emarket_cart')) || [];
@@ -298,7 +308,7 @@ function emarketUpdateCartCount() {
 function emarketRenderCartModal() {
     if (!cartItemsDiv) return;
     if (cart.length === 0) {
-        cartItemsDiv.innerHTML = '<p>' + t('emarket.cart.empty', {}) + '</p>';
+        cartItemsDiv.innerHTML = '<p>' + t('emarket.cart.empty') + '</p>';
         if (cartTotalHTSpan) cartTotalHTSpan.textContent = '0';
         if (cartTVASpan) cartTVASpan.textContent = '0';
         if (cartTotalTTCSpan) cartTotalTTCSpan.textContent = '0';
@@ -409,15 +419,15 @@ function emarketRenderProductCard(product) {
                 <h3>${escapeHtml(product.name)}</h3>
                 <p class="product-desc">${escapeHtml(product.description || '')}</p>
                 <div class="product-meta">
-                    <span class="product-price">${product.price}</span>
+                    <span class="product-price">${product.price} FCFA</span>
                     <span class="product-stock ${stockClass}">${stockText}</span>
                 </div>
                 <div class="product-actions">
                     <button class="btn-add-cart" data-id="${product.id}" ${!product.stock ? 'disabled' : ''}>
                         <i class="fas fa-cart-plus"></i> ${currentLang === 'fr' ? 'Ajouter' : 'Add'}
                     </button>
-                    <button class="btn-details" data-id="${product.id}" title="${currentLang === 'fr' ? 'Détails' : 'Details'}">
-                        <i class="fas fa-eye"></i>
+                    <button class="btn-details" data-id="${product.id}">
+                        <i class="fas fa-eye"></i> Détails
                     </button>
                 </div>
             </div>
@@ -425,28 +435,58 @@ function emarketRenderProductCard(product) {
     `;
 }
 
+// ===== MODALE DÉTAIL PRODUIT =====
+function emarketOpenProductDetail(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    detailName.textContent = product.name;
+    detailDescription.textContent = product.description || '';
+    detailPrice.textContent = product.price + ' FCFA';
+
+    detailStockBadge.textContent = product.stock ? (currentLang === 'fr' ? 'En stock' : 'In stock') : (currentLang === 'fr' ? 'Épuisé' : 'Out of stock');
+    detailStockBadge.className = 'stock-badge ' + (product.stock ? 'in-stock' : 'out-of-stock');
+
+    detailImage.style.display = 'none';
+    detailVideo.style.display = 'none';
+
+    if (product.video_url) {
+        detailVideo.src = product.video_url;
+        detailVideo.style.display = 'block';
+    } else if (product.image_url) {
+        detailImage.src = product.image_url;
+        detailImage.style.display = 'block';
+    }
+
+    detailAddToCart.dataset.id = product.id;
+    detailAddToCart.disabled = !product.stock;
+
+    productDetailModal.classList.add('active');
+}
+
+function emarketCloseProductDetail() {
+    productDetailModal.classList.remove('active');
+}
+
 // ===== AUTHENTIFICATION (avec bcrypt) =====
 async function emarketWaitForBcrypt() {
     return new Promise((resolve) => {
-        if (typeof bcrypt !== 'undefined') { resolve(); return; }
+        if (typeof dcodeIO !== 'undefined' && typeof dcodeIO.bcrypt !== 'undefined') { resolve(); return; }
         const interval = setInterval(() => {
-            if (typeof bcrypt !== 'undefined') { clearInterval(interval); clearTimeout(timeout); resolve(); }
+            if (typeof dcodeIO !== 'undefined' && typeof dcodeIO.bcrypt !== 'undefined') { clearInterval(interval); clearTimeout(timeout); resolve(); }
         }, 100);
         const timeout = setTimeout(() => { clearInterval(interval); resolve(); }, 5000);
-        const script = document.querySelector('script[src*="bcrypt"]');
-        if (script) script.addEventListener('load', () => { clearInterval(interval); clearTimeout(timeout); resolve(); });
-        else { clearInterval(interval); resolve(); }
     });
 }
 
 async function emarketRegisterCustomer(firstName, lastName, email, phone, password) {
     await emarketWaitForBcrypt();
-    if (typeof bcrypt === 'undefined') {
+    if (typeof dcodeIO === 'undefined' || typeof dcodeIO.bcrypt === 'undefined') {
         showToast('Erreur de chargement de la sécurité', 'error');
         return null;
     }
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(password, salt);
+    const salt = dcodeIO.bcrypt.genSaltSync(10);
+    const hash = dcodeIO.bcrypt.hashSync(password, salt);
     const { data, error } = await supabaseMarket
         .from('public_emarket_customers')
         .insert([{ first_name: firstName, last_name: lastName, email, phone, password: hash }])
@@ -466,7 +506,7 @@ async function emarketRegisterCustomer(firstName, lastName, email, phone, passwo
 
 async function emarketLoginCustomer(email, password) {
     await emarketWaitForBcrypt();
-    if (typeof bcrypt === 'undefined') {
+    if (typeof dcodeIO === 'undefined' || typeof dcodeIO.bcrypt === 'undefined') {
         showToast('Erreur de chargement de la sécurité', 'error');
         return null;
     }
@@ -479,7 +519,7 @@ async function emarketLoginCustomer(email, password) {
         showToast(t('toast.login_error'), 'error');
         return null;
     }
-    const valid = bcrypt.compareSync(password, data.password);
+    const valid = dcodeIO.bcrypt.compareSync(password, data.password);
     if (!valid) {
         showToast(t('toast.login_error'), 'error');
         return null;
@@ -704,7 +744,6 @@ async function emarketCreateOrder() {
 }
 
 async function emarketGenerateProformaInvoice(order, customer) {
-    // Simulé – en production, utiliser html2pdf et upload vers bucket
     const element = document.createElement('div');
     element.innerHTML = `<h1>Facture Proforma</h1><p>Commande #${order.id}</p><p>Client : ${customer.first_name} ${customer.last_name}</p>`;
     const opt = { margin: 0.5, filename: `proforma_${order.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4' } };
@@ -725,13 +764,12 @@ async function emarketHandleCheckout(e) {
     if (proformaUrl) {
         await supabaseMarket.from('public_emarket_orders').update({ invoice_proforma_url: proformaUrl }).eq('id', order.id);
     }
-    // Redirection vers FedaPay (simulée)
     showToast(t('toast.order_created'), 'success');
     cart = [];
     emarketUpdateCartCount();
     emarketCloseCheckoutModal();
     emarketCloseCartModal();
-    // Optionnel : rediriger vers l'URL de paiement
+    // Redirection vers FedaPay (à implémenter)
     // window.location.href = 'https://fedapay.com?orderId=' + order.id;
 }
 
@@ -836,7 +874,9 @@ document.addEventListener('click', (e) => {
     const addBtn = e.target.closest('.btn-add-cart');
     if (addBtn && !addBtn.disabled) { emarketAddToCart(parseInt(addBtn.dataset.id)); return; }
     const detailsBtn = e.target.closest('.btn-details');
-    if (detailsBtn) { alert('Détails produit (à venir)'); return; }
+    if (detailsBtn) { emarketOpenProductDetail(parseInt(detailsBtn.dataset.id)); return; }
+    const detailAddBtn = e.target.closest('#detailAddToCart');
+    if (detailAddBtn && !detailAddBtn.disabled) { emarketAddToCart(parseInt(detailAddBtn.dataset.id)); emarketCloseProductDetail(); return; }
     const minusBtn = e.target.closest('.cart-qty-minus');
     if (minusBtn) { emarketUpdateCartItem(parseInt(minusBtn.dataset.id), -1); return; }
     const plusBtn = e.target.closest('.cart-qty-plus');
@@ -848,12 +888,14 @@ document.querySelectorAll('.close-modal').forEach(btn => {
     btn.addEventListener('click', () => {
         emarketCloseCartModal(); emarketCloseAuthModal(); emarketCloseCheckoutModal();
         emarketCloseAccountModal(); emarketCloseSendMessageModal(); emarketCloseOrderDetailModal();
+        emarketCloseProductDetail();
     });
 });
 window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal')) {
         emarketCloseCartModal(); emarketCloseAuthModal(); emarketCloseCheckoutModal();
         emarketCloseAccountModal(); emarketCloseSendMessageModal(); emarketCloseOrderDetailModal();
+        emarketCloseProductDetail();
     }
 });
 if (loginForm) loginForm.addEventListener('submit', async (e) => {

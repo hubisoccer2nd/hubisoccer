@@ -15,7 +15,7 @@
 
     <nav>
         <a href="../../../index.html" class="logo-link">
-            <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
             <span class="admin-badge">Espace Administration - E‑Market</span>
@@ -90,12 +90,12 @@
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Modale produit (ajout / modification) avec upload d'image -->
+    <!-- Modale produit (ajout / modification) avec médias multiples -->
     <div id="productModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h3 id="productModalTitle">Nouveau produit</h3>
-            <form id="productForm" enctype="multipart/form-data">
+            <form id="productForm">
                 <input type="hidden" id="productId">
                 <div class="form-group">
                     <label>Nom *</label>
@@ -115,19 +115,21 @@
                         <input type="number" id="productStock" min="0" value="0">
                     </div>
                 </div>
+                <!-- NOUVELLE ZONE : Gestion des médias multiples -->
                 <div class="form-group">
-                    <label>Image du produit</label>
-                    <div class="file-upload-box" id="imageUploadBox">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span>Cliquez pour télécharger une image (JPG, PNG)</span>
-                        <input type="file" id="productImageFile" accept="image/jpeg,image/png">
-                        <div class="progress-indicator" style="display: none;">
-                            <div class="progress-bar"></div>
-                            <span class="progress-text">0%</span>
+                    <label>Médias du produit</label>
+                    <div class="media-manager">
+                        <div class="media-actions">
+                            <button type="button" id="addImageBtn" class="btn-secondary"><i class="fas fa-image"></i> Ajouter une image</button>
+                            <button type="button" id="addVideoBtn" class="btn-secondary"><i class="fas fa-video"></i> Ajouter une vidéo</button>
+                        </div>
+                        <input type="file" id="mediaFileInput" accept="image/jpeg,image/png,video/mp4,video/webm" style="display: none;">
+                        <div id="mediaList" class="media-list">
+                            <!-- Les médias ajoutés apparaissent ici dynamiquement -->
                         </div>
                     </div>
-                    <div id="imagePreview" style="margin-top: 10px;"></div>
                 </div>
+                <!-- Fin zone médias -->
                 <div class="form-group">
                     <label>URL de paiement FedaPay (optionnel)</label>
                     <input type="text" id="productPaymentUrl" placeholder="https://fedapay.com/...">
@@ -140,7 +142,7 @@
         </div>
     </div>
 
-    <!-- Modale détail commande (inchangée) -->
+    <!-- Modale détail commande -->
     <div id="orderDetailModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -165,7 +167,7 @@
         </div>
     </div>
 
-    <!-- Modale réponse message client (inchangée) -->
+    <!-- Modale réponse message client -->
     <div id="messageReplyModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>

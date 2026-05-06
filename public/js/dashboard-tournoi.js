@@ -1,9 +1,7 @@
-// ========== DASHBOARD-TOURNOI.JS ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== TRADUCTIONS ==========
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
@@ -87,20 +85,16 @@ function changeLanguage(lang) {
     }
 }
 
-// ========== SESSION ==========
 const userId = sessionStorage.getItem('tournoi_user_id');
 const userLogin = sessionStorage.getItem('tournoi_login');
 const userRole = sessionStorage.getItem('tournoi_role');
 const userNom = sessionStorage.getItem('tournoi_nom');
 const tournoiId = sessionStorage.getItem('tournoi_tournoi_id');
 
-if (!userId) {
-    window.location.href = 'connexion-tournoi.html';
-}
+if (!userId) window.location.href = 'connexion-tournoi.html';
 
 document.getElementById('userName').textContent = userNom || userLogin;
 
-// ========== VARIABLES GLOBALES ==========
 let equipeId = null;
 let participantId = null;
 let typeTournoi = null;
@@ -127,16 +121,9 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
 }
 
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+function showLoader() { const loader = document.getElementById('globalLoader'); if (loader) loader.style.display = 'flex'; }
+function hideLoader() { const loader = document.getElementById('globalLoader'); if (loader) loader.style.display = 'none'; }
 
-// ========== DÉTERMINER LE TYPE DE TOURNOI ET L'IDENTIFIANT ==========
 async function getTypeEtIdentifiant() {
     const { data: tournoi, error: tErr } = await supabasePublic
         .from('public_tournois')
@@ -145,6 +132,7 @@ async function getTypeEtIdentifiant() {
         .single();
     if (tErr) { console.error(tErr); return; }
     typeTournoi = tournoi.type_tournoi;
+    sessionStorage.setItem('tournoi_type', typeTournoi);
 
     if (typeTournoi === 'collectif') {
         let { data: equipe, error: eqErr } = await supabasePublic
@@ -156,22 +144,20 @@ async function getTypeEtIdentifiant() {
         if (equipe) {
             equipeId = equipe.id;
             monIdentifiant = equipeId;
-            const equipeLink = document.getElementById('gererEquipeLink');
-            if (equipeLink) equipeLink.style.display = 'inline-block';
-            return;
-        }
-        const { data: user, error: uErr } = await supabasePublic
-            .from('public_utilisateurs_tournoi')
-            .select('equipe_id')
-            .eq('id', userId)
-            .single();
-        if (uErr && uErr.code !== 'PGRST116') console.error(uErr);
-        if (user && user.equipe_id) {
-            equipeId = user.equipe_id;
-            monIdentifiant = equipeId;
-            const equipeLink = document.getElementById('gererEquipeLink');
-            if (equipeLink) equipeLink.style.display = 'none';
-            return;
+            sessionStorage.setItem('tournoi_equipe_id', equipeId);
+            document.getElementById('gererEquipeLink').style.display = 'inline-block';
+        } else {
+            const { data: user, error: uErr } = await supabasePublic
+                .from('public_utilisateurs_tournoi')
+                .select('equipe_id')
+                .eq('id', userId)
+                .single();
+            if (uErr && uErr.code !== 'PGRST116') console.error(uErr);
+            if (user && user.equipe_id) {
+                equipeId = user.equipe_id;
+                monIdentifiant = equipeId;
+                sessionStorage.setItem('tournoi_equipe_id', equipeId);
+            }
         }
     } else {
         const { data: user, error: uErr } = await supabasePublic
@@ -190,15 +176,13 @@ async function getTypeEtIdentifiant() {
             if (participant) {
                 participantId = participant.id;
                 monIdentifiant = participantId;
+                sessionStorage.setItem('tournoi_participant_id', participantId);
             }
         }
-        const equipeLink = document.getElementById('gererEquipeLink');
-        if (equipeLink) equipeLink.style.display = 'none';
-        document.getElementById('prochainsTitle').textContent = t('dashboard.prochains_matchs');
+        document.getElementById('gererEquipeLink').style.display = 'none';
     }
 }
 
-// ========== CHARGEMENT DES DONNÉES ==========
 async function chargerDonnees() {
     showLoader();
     try {
@@ -240,8 +224,8 @@ async function chargerDonnees() {
     }
 }
 
-// ========== COLLECTIF ==========
 async function chargerMatchsCollectif() {
+    if (!monIdentifiant) return;
     const { data: aVenir, error: err1 } = await supabasePublic
         .from('public_matchs')
         .select('id, date_match, equipe_domicile_id, equipe_exterieur_id, score_domicile, score_exterieur, statut')
@@ -307,8 +291,8 @@ async function chargerClassementCollectif() {
     renderClassement(data);
 }
 
-// ========== INDIVIDUEL ==========
 async function chargerMatchsIndividuel() {
+    if (!monIdentifiant) return;
     const { data: aVenir, error: err1 } = await supabasePublic
         .from('public_matchs_individuels')
         .select('id, date_match, participant_domicile_id, participant_exterieur_id, score_domicile, score_exterieur, statut')
@@ -418,8 +402,8 @@ function renderClassementIndividuel(classement) {
     container.innerHTML = html;
 }
 
-// ========== LIVE ==========
 async function chargerLiveCollectif() {
+    if (!monIdentifiant) return;
     const { data: liveMatch, error } = await supabasePublic
         .from('public_matchs')
         .select('id, live_url, equipe_domicile_id, equipe_exterieur_id, score_domicile, score_exterieur')
@@ -430,6 +414,7 @@ async function chargerLiveCollectif() {
 }
 
 async function chargerLiveIndividuel() {
+    if (!monIdentifiant) return;
     const { data: liveMatch, error } = await supabasePublic
         .from('public_matchs_individuels')
         .select('id, live_url, participant_domicile_id, participant_exterieur_id, score_domicile, score_exterieur')
@@ -467,13 +452,11 @@ async function afficherLive(liveMatch, error) {
     }
 }
 
-// ========== DÉCONNEXION ==========
 document.getElementById('logoutBtn').addEventListener('click', () => {
     sessionStorage.clear();
     window.location.href = 'connexion-tournoi.html';
 });
 
-// ========== MENU MOBILE ET LANGUE ==========
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
@@ -498,7 +481,6 @@ function initLangSelector() {
     }
 }
 
-// ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
     applyTranslations();
     initLangSelector();

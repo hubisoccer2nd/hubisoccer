@@ -20,11 +20,37 @@
         </a>
         <div class="nav-right">
             <span class="user-badge"><i class="fas fa-user"></i> <span id="userName"></span></span>
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
             <button id="logoutBtn" class="btn-logout" data-i18n="match.logout">Déconnexion</button>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
                 <a href="dashboard-tournoi.html" data-i18n="match.dashboard">Tableau de bord</a>
-                <a href="gerer-equipe.html" id="gererEquipeLink" data-i18n="match.equipe">Mon équipe</a>
+                <a href="gerer-equipe.html" id="gererEquipeLink" data-i18n="match.equipe" style="display: none;">Mon équipe</a>
                 <a href="matchs.html" data-i18n="match.matchs">Matchs</a>
                 <a href="classement.html" data-i18n="match.classement">Classement</a>
                 <a href="messagerie-privee.html" data-i18n="match.messagerie">Messages</a>

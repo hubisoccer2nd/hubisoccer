@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== ÉLÉMENTS DOM ==========
+// ========== ÉLÉMENTS DOM GÉNÉRAUX ==========
 const globalLoader = document.getElementById('globalLoader');
 function showLoader() { if (globalLoader) globalLoader.style.display = 'flex'; }
 function hideLoader() { if (globalLoader) globalLoader.style.display = 'none'; }
@@ -45,9 +45,12 @@ tabBtns.forEach(btn => {
     });
 });
 
-// ========== PRODUITS (avec upload d'image) ==========
+// ========== PRODUITS ==========
 let currentProductId = null;
-let currentImageFile = null;
+let existingMediaIds = [];
+let deletedMediaIds = [];
+let pendingMediaFiles = [];
+
 const productsList = document.getElementById('productsList');
 const newProductBtn = document.getElementById('newProductBtn');
 const refreshProductsBtn = document.getElementById('refreshProductsBtn');
@@ -58,11 +61,12 @@ const productName = document.getElementById('productName');
 const productDescription = document.getElementById('productDescription');
 const productPrice = document.getElementById('productPrice');
 const productStock = document.getElementById('productStock');
-const productImageFile = document.getElementById('productImageFile');
 const productPaymentUrl = document.getElementById('productPaymentUrl');
 const productFeatured = document.getElementById('productFeatured');
-const imageUploadBox = document.getElementById('imageUploadBox');
-const imagePreview = document.getElementById('imagePreview');
+const mediaList = document.getElementById('mediaList');
+const addImageBtn = document.getElementById('addImageBtn');
+const addVideoBtn = document.getElementById('addVideoBtn');
+const mediaFileInput = document.getElementById('mediaFileInput');
 const closeModalBtns = document.querySelectorAll('.close-modal');
 
 async function loadProducts() {
@@ -76,6 +80,7 @@ async function loadProducts() {
         renderProducts(data || []);
     } catch (err) { showToast('Erreur chargement produits', 'error'); } finally { hideLoader(); }
 }
+
 function renderProducts(products) {
     if (!productsList) return;
     if (!products.length) { productsList.innerHTML = '<p>Aucun produit.</p>'; return; }
@@ -86,7 +91,6 @@ function renderProducts(products) {
                 <h3>${escapeHtml(p.name)}</h3>
                 <p><strong>Prix:</strong> ${p.price} FCFA</p>
                 <p><strong>Stock:</strong> ${p.stock} unités</p>
-                ${p.image_url ? `<img src="${p.image_url}" style="max-width:100%; height:100px; object-fit:cover; border-radius:8px; margin-bottom:8px;">` : ''}
                 <p>${p.featured ? '<span class="badge" style="background:var(--gold);">Vedette</span>' : ''}</p>
                 <div class="card-actions">
                     <button class="btn-edit" data-id="${p.id}">✏️ Modifier</button>
@@ -99,6 +103,65 @@ function renderProducts(products) {
     document.querySelectorAll('#productsList .btn-edit').forEach(btn => btn.addEventListener('click', () => editProduct(btn.dataset.id)));
     document.querySelectorAll('#productsList .btn-delete').forEach(btn => btn.addEventListener('click', () => deleteProduct(btn.dataset.id)));
 }
+
+async function loadProductMedia(productId) {
+    const { data, error } = await supabaseAdmin
+        .from('public_emarket_product_media')
+        .select('*')
+        .eq('product_id', productId)
+        .order('position');
+    if (error) return [];
+    return data || [];
+}
+
+function renderMediaList(mediaItems, existingIds) {
+    if (!mediaList) return;
+    let html = '';
+    for (const m of mediaItems) {
+        html += `
+            <div class="media-item" data-media-id="${m.id}">
+                ${m.media_type === 'image'
+                    ? `<img src="${m.media_url}" alt="Image produit">`
+                    : `<video src="${m.media_url}" controls></video>`}
+                <button type="button" class="btn-delete-media" data-id="${m.id}"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+    }
+    for (const pf of pendingMediaFiles) {
+        const isImage = pf.type === 'image';
+        const url = URL.createObjectURL(pf.file);
+        html += `
+            <div class="media-item pending">
+                ${isImage
+                    ? `<img src="${url}" alt="Nouveau média">`
+                    : `<video src="${url}" controls></video>`}
+                <button type="button" class="btn-remove-pending"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+    }
+    mediaList.innerHTML = html;
+
+    // Suppression d'un média existant
+    document.querySelectorAll('.btn-delete-media').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mediaId = parseInt(btn.dataset.id);
+            deletedMediaIds.push(mediaId);
+            existingMediaIds = existingMediaIds.filter(id => id !== mediaId);
+            renderMediaList(
+                mediaItems.filter(m => m.id !== mediaId),
+                existingMediaIds
+            );
+        });
+    });
+    // Suppression d'un média en attente
+    document.querySelectorAll('.btn-remove-pending').forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            pendingMediaFiles.splice(index, 1);
+            renderMediaList(mediaItems, existingMediaIds);
+        });
+    });
+}
+
 async function editProduct(id) {
     showLoader();
     try {
@@ -116,18 +179,20 @@ async function editProduct(id) {
         productStock.value = data.stock || 0;
         productPaymentUrl.value = data.payment_url || '';
         productFeatured.checked = data.featured || false;
-        if (data.image_url) {
-            imagePreview.innerHTML = `<img src="${data.image_url}" style="max-width:100%; max-height:150px; border-radius:10px;">`;
-        } else {
-            imagePreview.innerHTML = '<p>Aucune image</p>';
-        }
-        currentImageFile = null;
+
+        const mediaItems = await loadProductMedia(data.id);
+        existingMediaIds = mediaItems.map(m => m.id);
+        deletedMediaIds = [];
+        pendingMediaFiles = [];
+        renderMediaList(mediaItems, existingMediaIds);
+
         document.getElementById('productModalTitle').textContent = 'Modifier le produit';
         productModal.classList.add('active');
     } catch (err) { showToast('Erreur chargement produit', 'error'); } finally { hideLoader(); }
 }
+
 async function deleteProduct(id) {
-    if (!confirm('Supprimer définitivement ce produit ?')) return;
+    if (!confirm('Supprimer définitivement ce produit et tous ses médias ?')) return;
     showLoader();
     try {
         const { error } = await supabaseAdmin
@@ -139,6 +204,7 @@ async function deleteProduct(id) {
         loadProducts();
     } catch (err) { showToast('Erreur suppression', 'error'); } finally { hideLoader(); }
 }
+
 newProductBtn.addEventListener('click', () => {
     currentProductId = null;
     productIdField.value = '';
@@ -148,34 +214,45 @@ newProductBtn.addEventListener('click', () => {
     productStock.value = '0';
     productPaymentUrl.value = '';
     productFeatured.checked = false;
-    currentImageFile = null;
-    imagePreview.innerHTML = '<p>Aucune image</p>';
-    const span = imageUploadBox.querySelector('span:not(.progress-text)');
-    if (span) span.textContent = 'Cliquez pour télécharger une image (JPG, PNG)';
-    imageUploadBox.classList.remove('success', 'uploading');
+    existingMediaIds = [];
+    deletedMediaIds = [];
+    pendingMediaFiles = [];
+    renderMediaList([], []);
     document.getElementById('productModalTitle').textContent = 'Nouveau produit';
     productModal.classList.add('active');
 });
-// Gestion upload image
-imageUploadBox.addEventListener('click', () => {
-    productImageFile.value = '';
-    productImageFile.click();
+
+addImageBtn.addEventListener('click', () => {
+    mediaFileInput.accept = 'image/jpeg,image/png';
+    mediaFileInput.click();
 });
-productImageFile.addEventListener('change', () => {
-    if (productImageFile.files.length) {
-        currentImageFile = productImageFile.files[0];
-        const fileName = currentImageFile.name;
-        const span = imageUploadBox.querySelector('span:not(.progress-text)');
-        if (span) span.textContent = fileName;
-        imagePreview.innerHTML = `<p>Fichier sélectionné : ${escapeHtml(fileName)}</p>`;
-        imageUploadBox.style.borderColor = 'var(--primary)';
+addVideoBtn.addEventListener('click', () => {
+    mediaFileInput.accept = 'video/mp4,video/webm';
+    mediaFileInput.click();
+});
+
+mediaFileInput.addEventListener('change', () => {
+    if (mediaFileInput.files.length) {
+        const file = mediaFileInput.files[0];
+        const isVideo = file.type.startsWith('video/');
+        const type = isVideo ? 'video' : 'image';
+        pendingMediaFiles.push({ file, type });
+        if (currentProductId) {
+            loadProductMedia(currentProductId).then(mediaItems => {
+                existingMediaIds = mediaItems.map(m => m.id);
+                renderMediaList(mediaItems, existingMediaIds);
+            });
+        } else {
+            renderMediaList([], []);
+        }
+        mediaFileInput.value = '';
     }
 });
-async function uploadProductImage(file) {
-    if (!file) return null;
+
+async function uploadMediaFile(file, productId) {
     const timestamp = Date.now();
     const safeName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-    const filePath = `products/${safeName}`;
+    const filePath = `products/media/${productId}/${safeName}`;
     const { error } = await supabaseAdmin.storage
         .from('emarket_invoices')
         .upload(filePath, file);
@@ -185,6 +262,7 @@ async function uploadProductImage(file) {
         .getPublicUrl(filePath);
     return urlData.publicUrl;
 }
+
 productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = productName.value.trim();
@@ -193,57 +271,87 @@ productForm.addEventListener('submit', async (e) => {
     const stock = parseInt(productStock.value) || 0;
     const paymentUrl = productPaymentUrl.value.trim() || null;
     const featured = productFeatured.checked;
+
     if (!name || isNaN(price)) {
         showToast('Nom et prix requis', 'warning');
         return;
     }
+
     showLoader();
     try {
-        let imageUrl = null;
-        if (currentImageFile) {
-            imageUrl = await uploadProductImage(currentImageFile);
-        } else if (currentProductId) {
-            const { data: old } = await supabaseAdmin
-                .from('public_emarket_products')
-                .select('image_url')
-                .eq('id', currentProductId)
-                .single();
-            if (old) imageUrl = old.image_url;
-        }
-        const data = {
-            name,
-            description,
-            price,
-            stock,
-            image_url: imageUrl,
-            payment_url: paymentUrl,
-            featured
-        };
-        if (currentProductId) {
+        let productId = currentProductId;
+        const productData = { name, description, price, stock, payment_url: paymentUrl, featured };
+
+        if (productId) {
             const { error } = await supabaseAdmin
                 .from('public_emarket_products')
-                .update(data)
-                .eq('id', currentProductId);
+                .update(productData)
+                .eq('id', productId);
             if (error) throw error;
-            showToast('Produit modifié', 'success');
         } else {
-            const { error } = await supabaseAdmin
+            const { data: newProduct, error } = await supabaseAdmin
                 .from('public_emarket_products')
-                .insert([data]);
+                .insert([productData])
+                .select()
+                .single();
             if (error) throw error;
-            showToast('Produit ajouté', 'success');
+            productId = newProduct.id;
+            currentProductId = productId;
         }
+
+        // Supprimer les médias marqués
+        if (deletedMediaIds.length > 0) {
+            const { error: delError } = await supabaseAdmin
+                .from('public_emarket_product_media')
+                .delete()
+                .in('id', deletedMediaIds);
+            if (delError) throw delError;
+        }
+
+        // Ajouter les nouveaux médias
+        for (const pf of pendingMediaFiles) {
+            const url = await uploadMediaFile(pf.file, productId);
+            const { error: insError } = await supabaseAdmin
+                .from('public_emarket_product_media')
+                .insert([{
+                    product_id: productId,
+                    media_url: url,
+                    media_type: pf.type,
+                    position: 0
+                }]);
+            if (insError) throw insError;
+        }
+
+        // Réindexer les positions
+        const { data: allMedia } = await supabaseAdmin
+            .from('public_emarket_product_media')
+            .select('id')
+            .eq('product_id', productId)
+            .order('id');
+        if (allMedia) {
+            for (let i = 0; i < allMedia.length; i++) {
+                await supabaseAdmin
+                    .from('public_emarket_product_media')
+                    .update({ position: i + 1 })
+                    .eq('id', allMedia[i].id);
+            }
+        }
+
+        showToast('Produit sauvegardé avec succès', 'success');
         productModal.classList.remove('active');
         loadProducts();
     } catch (err) {
         console.error(err);
-        showToast('Erreur sauvegarde', 'error');
+        showToast('Erreur lors de la sauvegarde', 'error');
     } finally {
         hideLoader();
+        pendingMediaFiles = [];
+        deletedMediaIds = [];
+        existingMediaIds = [];
     }
 });
 
-// ========== COMMANDES (inchangées) ==========
+// ========== COMMANDES ==========
 const ordersList = document.getElementById('ordersList');
 const refreshOrdersBtn = document.getElementById('refreshOrdersBtn');
 const orderStatusFilter = document.getElementById('orderStatusFilter');
@@ -269,6 +377,7 @@ async function loadOrders() {
         renderOrders(data || []);
     } catch (err) { showToast('Erreur chargement commandes', 'error'); } finally { hideLoader(); }
 }
+
 function renderOrders(orders) {
     if (!ordersList) return;
     if (!orders.length) { ordersList.innerHTML = '<p>Aucune commande.</p>'; return; }
@@ -290,6 +399,7 @@ function renderOrders(orders) {
     ordersList.innerHTML = html;
     document.querySelectorAll('#ordersList .btn-view').forEach(btn => btn.addEventListener('click', () => openOrderDetail(btn.dataset.id)));
 }
+
 function getStatusLabel(status) {
     switch(status) {
         case 'en_attente': return 'En attente';
@@ -300,6 +410,7 @@ function getStatusLabel(status) {
         default: return status;
     }
 }
+
 async function openOrderDetail(orderId) {
     currentOrderId = orderId;
     showLoader();
@@ -333,6 +444,7 @@ async function openOrderDetail(orderId) {
         orderDetailModal.classList.add('active');
     } catch (err) { showToast('Erreur chargement détails', 'error'); } finally { hideLoader(); }
 }
+
 updateOrderStatusBtn.addEventListener('click', async () => {
     const newStatus = orderStatusUpdate.value;
     showLoader();
@@ -347,6 +459,7 @@ updateOrderStatusBtn.addEventListener('click', async () => {
         loadOrders();
     } catch (err) { showToast('Erreur mise à jour', 'error'); } finally { hideLoader(); }
 });
+
 sendAdminReplyBtn.addEventListener('click', async () => {
     const reply = adminReplyMessage.value.trim();
     if (!reply) { showToast('Message vide', 'warning'); return; }
@@ -376,7 +489,7 @@ sendAdminReplyBtn.addEventListener('click', async () => {
 refreshOrdersBtn.addEventListener('click', loadOrders);
 orderStatusFilter.addEventListener('change', loadOrders);
 
-// ========== CLIENTS (inchangés) ==========
+// ========== CLIENTS ==========
 const customersList = document.getElementById('customersList');
 const refreshCustomersBtn = document.getElementById('refreshCustomersBtn');
 async function loadCustomers() {
@@ -408,7 +521,7 @@ function renderCustomers(customers) {
 }
 refreshCustomersBtn.addEventListener('click', loadCustomers);
 
-// ========== MESSAGES (inchangés) ==========
+// ========== MESSAGES ==========
 const messagesList = document.getElementById('messagesList');
 const refreshMessagesBtn = document.getElementById('refreshMessagesBtn');
 const messageReplyModal = document.getElementById('messageReplyModal');

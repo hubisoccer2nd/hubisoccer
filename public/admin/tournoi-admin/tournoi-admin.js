@@ -1,9 +1,11 @@
-// ========== TOURNOI-ADMIN.JS ==========
+// ========== TOURNOI-ADMIN.JS – CORRIGÉ ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== ÉLÉMENTS DOM ==========
+/* ============================================================
+   ÉLÉMENTS DOM & UTILITAIRES
+   ============================================================ */
 const globalLoader = document.getElementById('globalLoader');
 function showLoader() { if (globalLoader) globalLoader.style.display = 'flex'; }
 function hideLoader() { if (globalLoader) globalLoader.style.display = 'none'; }
@@ -27,11 +29,38 @@ function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
 }
-function hashPassword(password) {
-    return btoa(password); // ⚠️ À remplacer par bcrypt en production
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('fr-FR');
 }
+/* FIN UTILITAIRES */
 
-// ========== ONGLETS ==========
+/* ============================================================
+   HACHAGE MOT DE PASSE (BCRYPT)
+   ============================================================ */
+async function waitForBcrypt() {
+    return new Promise((resolve) => {
+        if (typeof dcodeIO !== 'undefined' && typeof dcodeIO.bcrypt !== 'undefined') { resolve(); return; }
+        const interval = setInterval(() => {
+            if (typeof dcodeIO !== 'undefined' && typeof dcodeIO.bcrypt !== 'undefined') { clearInterval(interval); clearTimeout(timeout); resolve(); }
+        }, 100);
+        const timeout = setTimeout(() => { clearInterval(interval); resolve(); }, 5000);
+    });
+}
+async function hashPassword(password) {
+    await waitForBcrypt();
+    if (typeof dcodeIO === 'undefined' || typeof dcodeIO.bcrypt === 'undefined') {
+        showToast('Erreur de chargement de la sécurité', 'error');
+        return null;
+    }
+    const salt = dcodeIO.bcrypt.genSaltSync(10);
+    return dcodeIO.bcrypt.hashSync(password, salt);
+}
+/* FIN HACHAGE */
+
+/* ============================================================
+   ONGLETS
+   ============================================================ */
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 tabBtns.forEach(btn => {
@@ -47,9 +76,16 @@ tabBtns.forEach(btn => {
         else if (tabId === 'lives') loadLives();
     });
 });
+/* FIN ONGLETS */
 
-// ========== GESTION DES TOURNOIS (CRUD) ==========
+/* ============================================================
+   GESTION DES TOURNOIS (CRUD + MÉDIAS)
+   ============================================================ */
 let currentTournoiId = null;
+let existingMediaIds = [];
+let deletedMediaIds = [];
+let pendingMediaFiles = [];
+
 const tournoisList = document.getElementById('tournoisList');
 const newTournoiBtn = document.getElementById('newTournoiBtn');
 const tournoiModal = document.getElementById('tournoiModal');
@@ -62,9 +98,12 @@ const tournoiVille = document.getElementById('tournoiVille');
 const tournoiQuartier = document.getElementById('tournoiQuartier');
 const tournoiDateDebut = document.getElementById('tournoiDateDebut');
 const tournoiDateFin = document.getElementById('tournoiDateFin');
-const tournoiImageUrl = document.getElementById('tournoiImageUrl');
 const tournoiReglements = document.getElementById('tournoiReglements');
 const tournoiType = document.getElementById('tournoiType');
+const mediaList = document.getElementById('mediaList');
+const addImageBtn = document.getElementById('addImageBtn');
+const addVideoBtn = document.getElementById('addVideoBtn');
+const mediaFileInput = document.getElementById('mediaFileInput');
 const closeModalBtns = document.querySelectorAll('.close-modal');
 
 async function loadTournois() {
@@ -107,9 +146,16 @@ async function editTournoi(id) {
         tournoiQuartier.value = data.quartier || '';
         tournoiDateDebut.value = data.date_debut;
         tournoiDateFin.value = data.date_fin;
-        tournoiImageUrl.value = data.image_url || '';
         tournoiReglements.value = data.reglements || '';
         tournoiType.value = data.type_tournoi || 'collectif';
+
+        // Charger les médias existants
+        const mediaItems = await loadTournoiMedia(data.id);
+        existingMediaIds = mediaItems.map(m => m.id);
+        deletedMediaIds = [];
+        pendingMediaFiles = [];
+        renderMediaList(mediaItems, existingMediaIds);
+
         document.getElementById('tournoiModalTitle').textContent = 'Modifier le tournoi';
         tournoiModal.classList.add('active');
     } catch (err) { showToast('Erreur chargement', 'error'); } finally { hideLoader(); }
@@ -136,12 +182,107 @@ newTournoiBtn.addEventListener('click', () => {
     tournoiQuartier.value = '';
     tournoiDateDebut.value = '';
     tournoiDateFin.value = '';
-    tournoiImageUrl.value = '';
     tournoiReglements.value = '';
     tournoiType.value = 'collectif';
+    existingMediaIds = [];
+    deletedMediaIds = [];
+    pendingMediaFiles = [];
+    renderMediaList([], []);
     document.getElementById('tournoiModalTitle').textContent = 'Nouveau tournoi';
     tournoiModal.classList.add('active');
 });
+
+// ========== GESTION DES MÉDIAS (IMAGES/VIDÉOS) ==========
+async function loadTournoiMedia(tournoiId) {
+    const { data, error } = await supabaseAdmin
+        .from('public_tournoi_media')
+        .select('*')
+        .eq('tournoi_id', tournoiId)
+        .order('position');
+    if (error) return [];
+    return data || [];
+}
+function renderMediaList(mediaItems, existingIds) {
+    if (!mediaList) return;
+    let html = '';
+    for (const m of mediaItems) {
+        html += `
+            <div class="media-item" data-media-id="${m.id}">
+                ${m.media_type === 'image'
+                    ? `<img src="${m.media_url}" alt="Média tournoi">`
+                    : `<video src="${m.media_url}" controls></video>`}
+                <button type="button" class="btn-delete-media" data-id="${m.id}"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+    }
+    for (const pf of pendingMediaFiles) {
+        const isImage = pf.type === 'image';
+        const url = URL.createObjectURL(pf.file);
+        html += `
+            <div class="media-item pending">
+                ${isImage
+                    ? `<img src="${url}" alt="Nouveau média">`
+                    : `<video src="${url}" controls></video>`}
+                <button type="button" class="btn-remove-pending"><i class="fas fa-times"></i></button>
+            </div>
+        `;
+    }
+    mediaList.innerHTML = html;
+    document.querySelectorAll('.btn-delete-media').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mediaId = parseInt(btn.dataset.id);
+            deletedMediaIds.push(mediaId);
+            existingMediaIds = existingMediaIds.filter(id => id !== mediaId);
+            renderMediaList(mediaItems.filter(m => m.id !== mediaId), existingMediaIds);
+        });
+    });
+    document.querySelectorAll('.btn-remove-pending').forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            pendingMediaFiles.splice(index, 1);
+            renderMediaList(mediaItems, existingMediaIds);
+        });
+    });
+}
+addImageBtn.addEventListener('click', () => {
+    mediaFileInput.accept = 'image/jpeg,image/png';
+    mediaFileInput.click();
+});
+addVideoBtn.addEventListener('click', () => {
+    mediaFileInput.accept = 'video/mp4,video/webm';
+    mediaFileInput.click();
+});
+mediaFileInput.addEventListener('change', () => {
+    if (mediaFileInput.files.length) {
+        const file = mediaFileInput.files[0];
+        const isVideo = file.type.startsWith('video/');
+        const type = isVideo ? 'video' : 'image';
+        pendingMediaFiles.push({ file, type });
+        if (currentTournoiId) {
+            loadTournoiMedia(currentTournoiId).then(mediaItems => {
+                existingMediaIds = mediaItems.map(m => m.id);
+                renderMediaList(mediaItems, existingMediaIds);
+            });
+        } else {
+            renderMediaList([], []);
+        }
+        mediaFileInput.value = '';
+    }
+});
+async function uploadMediaFile(file, tournoiId) {
+    const timestamp = Date.now();
+    const safeName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+    const filePath = `tournois/${tournoiId}/${safeName}`;
+    const { error } = await supabaseAdmin.storage
+        .from('tournois_media')
+        .upload(filePath, file);
+    if (error) throw error;
+    const { data: urlData } = supabaseAdmin.storage
+        .from('tournois_media')
+        .getPublicUrl(filePath);
+    return urlData.publicUrl;
+}
+// ========== FIN GESTION MÉDIAS ==========
+
 tournoiForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
@@ -152,29 +293,61 @@ tournoiForm.addEventListener('submit', async (e) => {
         quartier: tournoiQuartier.value,
         date_debut: tournoiDateDebut.value,
         date_fin: tournoiDateFin.value,
-        image_url: tournoiImageUrl.value,
         reglements: tournoiReglements.value,
         type_tournoi: tournoiType.value,
         updated_at: new Date().toISOString()
     };
     showLoader();
     try {
-        if (currentTournoiId) {
-            const { error } = await supabaseAdmin.from('public_tournois').update(data).eq('id', currentTournoiId);
+        let productId = currentTournoiId;
+        if (productId) {
+            const { error } = await supabaseAdmin.from('public_tournois').update(data).eq('id', productId);
             if (error) throw error;
-            showToast('Tournoi modifié', 'success');
         } else {
-            const { error } = await supabaseAdmin.from('public_tournois').insert([data]);
+            const { data: newTournoi, error } = await supabaseAdmin.from('public_tournois').insert([data]).select().single();
             if (error) throw error;
-            showToast('Tournoi créé', 'success');
+            productId = newTournoi.id;
+            currentTournoiId = productId;
         }
+        // Supprimer les médias marqués
+        if (deletedMediaIds.length > 0) {
+            const { error: delErr } = await supabaseAdmin.from('public_tournoi_media').delete().in('id', deletedMediaIds);
+            if (delErr) throw delErr;
+        }
+        // Ajouter les nouveaux médias
+        for (const pf of pendingMediaFiles) {
+            const url = await uploadMediaFile(pf.file, productId);
+            const { error: insErr } = await supabaseAdmin.from('public_tournoi_media').insert([{
+                tournoi_id: productId,
+                media_url: url,
+                media_type: pf.type,
+                position: 0
+            }]);
+            if (insErr) throw insErr;
+        }
+        // Réindexer les positions
+        const { data: allMedia } = await supabaseAdmin.from('public_tournoi_media').select('id').eq('tournoi_id', productId).order('id');
+        if (allMedia) {
+            for (let i = 0; i < allMedia.length; i++) {
+                await supabaseAdmin.from('public_tournoi_media').update({ position: i + 1 }).eq('id', allMedia[i].id);
+            }
+        }
+        showToast('Tournoi sauvegardé', 'success');
         tournoiModal.classList.remove('active');
         loadTournois();
         loadCodes();
-    } catch (err) { showToast('Erreur sauvegarde', 'error'); } finally { hideLoader(); }
+    } catch (err) { showToast('Erreur sauvegarde', 'error'); } finally {
+        hideLoader();
+        pendingMediaFiles = [];
+        deletedMediaIds = [];
+        existingMediaIds = [];
+    }
 });
+/* FIN TOURNOIS */
 
-// ========== GESTION DES CODES ==========
+/* ============================================================
+   GESTION DES CODES
+   ============================================================ */
 let currentCodeId = null;
 const codesList = document.getElementById('codesList');
 const newCodeBtn = document.getElementById('newCodeBtn');
@@ -191,11 +364,15 @@ const codeActif = document.getElementById('codeActif');
 async function loadCodes() {
     showLoader();
     try {
-        const { data, error } = await supabaseAdmin.from('public_codes_tournoi').select('*, public_tournois(titre, type_tournoi)').order('created_at', { ascending: false });
+        const { data, error } = await supabaseAdmin
+            .from('public_codes_tournoi')
+            .select('*, public_tournois(titre, type_tournoi)')
+            .order('created_at', { ascending: false });
         if (error) throw error;
         renderCodes(data || []);
     } catch (err) { showToast('Erreur chargement codes', 'error'); } finally { hideLoader(); }
 }
+
 function renderCodes(codes) {
     if (!codesList) return;
     if (!codes.length) { codesList.innerHTML = '<p>Aucun code.</p>'; return; }
@@ -215,6 +392,7 @@ function renderCodes(codes) {
     document.querySelectorAll('#codesList .btn-edit').forEach(btn => btn.addEventListener('click', () => editCode(btn.dataset.id)));
     document.querySelectorAll('#codesList .btn-delete').forEach(btn => btn.addEventListener('click', () => deleteCode(btn.dataset.id)));
 }
+
 async function editCode(id) {
     showLoader();
     try {
@@ -232,6 +410,7 @@ async function editCode(id) {
         codeModal.classList.add('active');
     } catch (err) { showToast('Erreur chargement', 'error'); } finally { hideLoader(); }
 }
+
 async function deleteCode(id) {
     if (!confirm('Supprimer ce code ?')) return;
     showLoader();
@@ -242,6 +421,7 @@ async function deleteCode(id) {
         loadCodes();
     } catch (err) { showToast('Erreur suppression', 'error'); } finally { hideLoader(); }
 }
+
 async function populateTournoiSelect(selectElement, selectedId = null) {
     const { data, error } = await supabaseAdmin.from('public_tournois').select('id, titre, type_tournoi').order('titre');
     if (error) return;
@@ -254,6 +434,7 @@ async function populateTournoiSelect(selectElement, selectedId = null) {
         selectElement.appendChild(option);
     });
 }
+
 newCodeBtn.addEventListener('click', async () => {
     currentCodeId = null;
     codeIdField.value = '';
@@ -266,6 +447,7 @@ newCodeBtn.addEventListener('click', async () => {
     document.getElementById('codeModalTitle').textContent = 'Nouveau code';
     codeModal.classList.add('active');
 });
+
 codeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
@@ -291,8 +473,11 @@ codeForm.addEventListener('submit', async (e) => {
         loadCodes();
     } catch (err) { showToast('Erreur sauvegarde', 'error'); } finally { hideLoader(); }
 });
+/* FIN CODES */
 
-// ========== GESTION DES INSCRIPTIONS (AVEC SPORTS INDIVIDUELS) ==========
+/* ============================================================
+   GESTION DES INSCRIPTIONS
+   ============================================================ */
 const inscriptionsList = document.getElementById('inscriptionsList');
 const statusFilter = document.getElementById('statusFilter');
 const refreshBtn = document.getElementById('refreshBtn');
@@ -307,7 +492,10 @@ let currentInscriptionId = null;
 async function loadInscriptions() {
     showLoader();
     try {
-        let query = supabaseAdmin.from('public_inscriptions_tournoi').select('*, public_codes_tournoi(code, tournoi_id, public_tournois(titre, type_tournoi))').order('date_soumission', { ascending: false });
+        let query = supabaseAdmin
+            .from('public_inscriptions_tournoi')
+            .select('*, public_codes_tournoi(code, tournoi_id, public_tournois(titre, type_tournoi))')
+            .order('date_soumission', { ascending: false });
         const status = statusFilter.value;
         if (status !== 'all') query = query.eq('statut', status);
         const { data, error } = await query;
@@ -315,6 +503,7 @@ async function loadInscriptions() {
         renderInscriptions(data || []);
     } catch (err) { showToast('Erreur chargement inscriptions', 'error'); } finally { hideLoader(); }
 }
+
 function renderInscriptions(inscriptions) {
     if (!inscriptionsList) return;
     if (!inscriptions.length) { inscriptionsList.innerHTML = '<p>Aucune inscription.</p>'; return; }
@@ -338,6 +527,7 @@ function renderInscriptions(inscriptions) {
     document.querySelectorAll('.btn-validate').forEach(btn => btn.addEventListener('click', () => openValidationModal(btn.dataset.id)));
     document.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => deleteInscription(btn.dataset.id)));
 }
+
 async function deleteInscription(id) {
     if (!confirm('Supprimer cette inscription ?')) return;
     showLoader();
@@ -348,6 +538,7 @@ async function deleteInscription(id) {
         loadInscriptions();
     } catch (err) { showToast('Erreur suppression', 'error'); } finally { hideLoader(); }
 }
+
 async function openValidationModal(inscriptionId) {
     currentInscriptionId = inscriptionId;
     showLoader();
@@ -367,7 +558,6 @@ async function openValidationModal(inscriptionId) {
             <p><strong>Code:</strong> ${ins.public_codes_tournoi?.code || '?'}</p>
             ${!estIndividuel && ins.nom_club ? `<p><strong>Club:</strong> ${escapeHtml(ins.nom_club)}</p>` : ''}
         `;
-        // Pour un tournoi individuel, on force le rôle "joueur" et on masque le choix du rôle
         if (estIndividuel) {
             validationRole.value = 'joueur';
             validationRole.disabled = true;
@@ -379,6 +569,7 @@ async function openValidationModal(inscriptionId) {
         validationModal.classList.add('active');
     } catch (err) { showToast('Erreur chargement inscription', 'error'); } finally { hideLoader(); }
 }
+
 saveValidationBtn.addEventListener('click', async () => {
     const login = validationLogin.value.trim();
     const password = validationPassword.value.trim();
@@ -386,7 +577,6 @@ saveValidationBtn.addEventListener('click', async () => {
     if (!login || !password) { showToast('Login et mot de passe requis', 'warning'); return; }
     showLoader();
     try {
-        // 1. Récupérer l'inscription et les infos du code/tournoi
         const { data: ins, error: insErr } = await supabaseAdmin
             .from('public_inscriptions_tournoi')
             .select('*, public_codes_tournoi(tournoi_id, code, type_inscription, entite)')
@@ -395,7 +585,6 @@ saveValidationBtn.addEventListener('click', async () => {
         if (insErr) throw insErr;
         const codeInfo = ins.public_codes_tournoi;
         const tournoiId = codeInfo.tournoi_id;
-        // Récupérer le type de tournoi
         const { data: tournoi, error: tournoiErr } = await supabaseAdmin
             .from('public_tournois')
             .select('type_tournoi')
@@ -404,15 +593,22 @@ saveValidationBtn.addEventListener('click', async () => {
         if (tournoiErr) throw tournoiErr;
         const estIndividuel = tournoi.type_tournoi === 'individuel';
 
-        // 2. Mettre à jour le statut de l'inscription
+        // Mettre à jour le statut de l'inscription
         const { error: updateErr } = await supabaseAdmin
             .from('public_inscriptions_tournoi')
             .update({ statut: 'valide', date_traitement: new Date().toISOString() })
             .eq('id', currentInscriptionId);
         if (updateErr) throw updateErr;
 
-        // 3. Créer l'utilisateur
-        const passwordHash = hashPassword(password);
+        // Hacher le mot de passe
+        const passwordHash = await hashPassword(password);
+        if (!passwordHash) {
+            showToast('Erreur de sécurité', 'error');
+            hideLoader();
+            return;
+        }
+
+        // Créer l'utilisateur
         const { data: newUser, error: userErr } = await supabaseAdmin
             .from('public_utilisateurs_tournoi')
             .insert([{
@@ -425,9 +621,8 @@ saveValidationBtn.addEventListener('click', async () => {
             .single();
         if (userErr) throw userErr;
 
-        // 4. Selon le type de tournoi : créer une équipe (collectif) ou un participant individuel
+        // Créer l'équipe (collectif) ou le participant individuel
         if (estIndividuel) {
-            // Inscription individuelle : créer un participant dans public_participants_individuels
             const { error: partErr } = await supabaseAdmin
                 .from('public_participants_individuels')
                 .insert([{
@@ -440,7 +635,6 @@ saveValidationBtn.addEventListener('click', async () => {
                 }]);
             if (partErr) throw partErr;
         } else {
-            // Tournoi collectif : créer une équipe
             const nomEquipe = ins.nom_club || codeInfo.entite || `Equipe de ${ins.nom_complet}`;
             const { error: teamErr } = await supabaseAdmin
                 .from('public_equipes')
@@ -453,7 +647,7 @@ saveValidationBtn.addEventListener('click', async () => {
             if (teamErr) throw teamErr;
         }
 
-        // 5. Incrémenter le quota du code
+        // Incrémenter le quota
         const { data: codeData, error: codeErr } = await supabaseAdmin
             .from('public_codes_tournoi')
             .select('quota_utilise, quota_max')
@@ -466,7 +660,7 @@ saveValidationBtn.addEventListener('click', async () => {
                 .eq('id', codeInfo.id);
         }
 
-        // 6. Envoyer une notification au candidat
+        // Envoyer une notification
         await supabaseAdmin.from('public_messages_prives').insert([{
             expediteur_id: 'admin',
             destinataire_id: newUser.id,
@@ -476,10 +670,10 @@ saveValidationBtn.addEventListener('click', async () => {
             created_at: new Date().toISOString()
         }]);
 
-        showToast('Inscription validée, compte créé et ' + (estIndividuel ? 'participant ajouté' : 'équipe créée'), 'success');
+        showToast('Inscription validée', 'success');
         validationModal.classList.remove('active');
         loadInscriptions();
-        loadCodes(); // mettre à jour le quota affiché
+        loadCodes();
     } catch (err) {
         console.error(err);
         showToast('Erreur lors de la validation', 'error');
@@ -489,8 +683,11 @@ saveValidationBtn.addEventListener('click', async () => {
 });
 refreshBtn.addEventListener('click', loadInscriptions);
 statusFilter.addEventListener('change', loadInscriptions);
+/* FIN INSCRIPTIONS */
 
-// ========== GESTION DES LIVES ==========
+/* ============================================================
+   GESTION DES LIVES
+   ============================================================ */
 let currentLiveId = null;
 const livesList = document.getElementById('livesList');
 const newLiveBtn = document.getElementById('newLiveBtn');
@@ -586,8 +783,11 @@ liveForm.addEventListener('submit', async (e) => {
         loadLives();
     } catch (err) { showToast('Erreur sauvegarde', 'error'); } finally { hideLoader(); }
 });
+/* FIN LIVES */
 
-// ========== FERMETURE DES MODALES ==========
+/* ============================================================
+   FERMETURE DES MODALES
+   ============================================================ */
 closeModalBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         tournoiModal.classList.remove('active');
@@ -602,8 +802,11 @@ window.addEventListener('click', (e) => {
     if (e.target === validationModal) validationModal.classList.remove('active');
     if (e.target === liveModal) liveModal.classList.remove('active');
 });
+/* FIN MODALES */
 
-// ========== MENU MOBILE ==========
+/* ============================================================
+   MENU MOBILE
+   ============================================================ */
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 if (menuToggle && navLinks) {
@@ -617,15 +820,13 @@ if (menuToggle && navLinks) {
 }
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); showToast('Déconnexion (à venir)', 'info'); });
+/* FIN MENU MOBILE */
 
-// ========== UTILITAIRES ==========
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('fr-FR');
-}
-
-// ========== INITIALISATION ==========
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
 loadInscriptions();
 loadTournois();
 loadCodes();
 loadLives();
+/* FIN INITIALISATION */

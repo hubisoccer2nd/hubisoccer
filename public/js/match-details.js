@@ -1,9 +1,11 @@
-// ========== MATCH-DETAILS.JS ==========
+// ========== MATCH-DETAILS.JS – CORRIGÉ ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== TRADUCTIONS ==========
+/* ============================================================
+   TRADUCTIONS
+   ============================================================ */
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
@@ -16,6 +18,10 @@ const translations = {
         'match.portefeuille': 'Portefeuille',
         'match.composition': 'Composition',
         'match.actions': 'Actions du match',
+        'match.aucun_sportif': 'Aucun sportif enregistré',
+        'match.aucune_action': 'Aucune action enregistrée pour ce match.',
+        'match.erreur_chargement': 'Erreur chargement des données',
+        'match.match_introuvable': 'Match introuvable',
         'footer.badge1': 'Conformité APDP Bénin',
         'footer.badge2': 'Règlementation FIFA',
         'footer.badge3': 'Triple Projet Sport-Études-Carrière',
@@ -37,6 +43,10 @@ const translations = {
         'match.portefeuille': 'Wallet',
         'match.composition': 'Lineup',
         'match.actions': 'Match actions',
+        'match.aucun_sportif': 'No players registered',
+        'match.aucune_action': 'No actions recorded for this match.',
+        'match.erreur_chargement': 'Error loading data',
+        'match.match_introuvable': 'Match not found',
         'footer.badge1': 'APDP Benin Compliance',
         'footer.badge2': 'FIFA Regulations',
         'footer.badge3': 'Triple Project Sport-Studies-Career',
@@ -76,115 +86,165 @@ function changeLanguage(lang) {
         chargerDetails();
     }
 }
+/* FIN TRADUCTIONS */
 
-// ========== SESSION ==========
+/* ============================================================
+   SESSION
+   ============================================================ */
 const userId = sessionStorage.getItem('tournoi_user_id');
 const userNom = sessionStorage.getItem('tournoi_nom');
+const userLogin = sessionStorage.getItem('tournoi_login');
+const typeTournoi = sessionStorage.getItem('tournoi_type');
+
 if (!userId) {
     window.location.href = 'connexion-tournoi.html';
 }
-document.getElementById('userName').textContent = userNom || sessionStorage.getItem('tournoi_login');
+document.getElementById('userName').textContent = userNom || userLogin;
 
-// ========== RÉCUPÉRATION ID MATCH ==========
+// Gérer le lien "Mon équipe" selon le type de tournoi
+const gererEquipeLink = document.getElementById('gererEquipeLink');
+if (gererEquipeLink) {
+    gererEquipeLink.style.display = (typeTournoi === 'collectif') ? 'inline-block' : 'none';
+}
+/* FIN SESSION */
+
+/* ============================================================
+   RÉCUPÉRATION ID MATCH
+   ============================================================ */
 const urlParams = new URLSearchParams(window.location.search);
 const matchId = urlParams.get('id');
 if (!matchId) {
     window.location.href = 'matchs.html';
 }
+/* FIN ID MATCH */
 
+/* ============================================================
+   VARIABLES GLOBALES
+   ============================================================ */
 let matchData = null;
 let isCollectif = false;
+/* FIN VARIABLES */
 
-// ========== CHARGEMENT DES DÉTAILS ==========
+/* ============================================================
+   CHARGEMENT DES DÉTAILS
+   ============================================================ */
 async function chargerDetails() {
     showLoader();
     try {
-        // Essayer collectif
-        let { data: matchCollectif, error: errColl } = await supabasePublic
-            .from('public_matchs')
-            .select('*, equipe_domicile:equipe_domicile_id (id, nom_equipe), equipe_exterieur:equipe_exterieur_id (id, nom_equipe)')
-            .eq('id', matchId)
-            .single();
-        if (errColl && errColl.code !== 'PGRST116') throw errColl;
-        if (matchCollectif) {
-            isCollectif = true;
-            matchData = matchCollectif;
+        if (typeTournoi === 'collectif') {
+            await chargerMatchCollectif();
         } else {
-            let { data: matchIndiv, error: errInd } = await supabasePublic
-                .from('public_matchs_individuels')
-                .select('*, participant_domicile:participant_domicile_id (id, nom_complet), participant_exterieur:participant_exterieur_id (id, nom_complet)')
-                .eq('id', matchId)
-                .single();
-            if (errInd && errInd.code !== 'PGRST116') throw errInd;
-            if (matchIndiv) {
-                isCollectif = false;
-                matchData = matchIndiv;
-            } else {
-                throw new Error('Match non trouvé');
-            }
+            await chargerMatchIndividuel();
         }
-        afficherHeader();
-        await afficherComposition();
-        await chargerActions();
     } catch (err) {
         console.error(err);
-        showToast(t('toast.chargement_erreur'), 'error');
-        document.getElementById('matchHeader').innerHTML = '<div class="error-message">Match introuvable</div>';
+        showToast(t('match.erreur_chargement'), 'error');
+        document.getElementById('matchHeader').innerHTML = '<div class="error-message">' + t('match.match_introuvable') + '</div>';
     } finally {
         hideLoader();
     }
 }
 
-function afficherHeader() {
-    const headerDiv = document.getElementById('matchHeader');
-    if (isCollectif) {
-        const domicile = matchData.equipe_domicile?.nom_equipe || '?';
-        const exterieur = matchData.equipe_exterieur?.nom_equipe || '?';
-        const score = (matchData.score_domicile !== null && matchData.score_exterieur !== null) ? `${matchData.score_domicile} - ${matchData.score_exterieur}` : '-';
-        const dateMatch = new Date(matchData.date_match).toLocaleDateString();
-        headerDiv.innerHTML = `
-            <h2>${escapeHtml(domicile)} vs ${escapeHtml(exterieur)}</h2>
-            <div class="score">${score}</div>
-            <div class="date">${dateMatch}</div>
-        `;
-    } else {
-        const domicile = matchData.participant_domicile?.nom_complet || '?';
-        const exterieur = matchData.participant_exterieur?.nom_complet || '?';
-        const score = (matchData.score_domicile !== null && matchData.score_exterieur !== null) ? `${matchData.score_domicile} - ${matchData.score_exterieur}` : '-';
-        const dateMatch = new Date(matchData.date_match).toLocaleDateString();
-        headerDiv.innerHTML = `
-            <h2>${escapeHtml(domicile)} vs ${escapeHtml(exterieur)}</h2>
-            <div class="score">${score}</div>
-            <div class="date">${dateMatch}</div>
-        `;
-    }
+async function chargerMatchCollectif() {
+    const { data, error } = await supabasePublic
+        .from('public_matchs')
+        .select('*, equipe_domicile:equipe_domicile_id (id, nom_equipe), equipe_exterieur:equipe_exterieur_id (id, nom_equipe)')
+        .eq('id', matchId)
+        .single();
+    if (error) throw error;
+    if (!data) throw new Error('Match introuvable');
+    isCollectif = true;
+    matchData = data;
+    afficherHeader();
+    await afficherComposition();
+    await chargerActions();
 }
 
+async function chargerMatchIndividuel() {
+    const { data, error } = await supabasePublic
+        .from('public_matchs_individuels')
+        .select('*, participant_domicile:participant_domicile_id (id, nom_complet), participant_exterieur:participant_exterieur_id (id, nom_complet)')
+        .eq('id', matchId)
+        .single();
+    if (error) throw error;
+    if (!data) throw new Error('Match introuvable');
+    isCollectif = false;
+    matchData = data;
+    afficherHeader();
+    await afficherComposition();
+    await chargerActions();
+}
+/* FIN CHARGEMENT */
+
+/* ============================================================
+   AFFICHAGE EN-TÊTE
+   ============================================================ */
+function afficherHeader() {
+    const headerDiv = document.getElementById('matchHeader');
+    if (!matchData) return;
+    let nom1, nom2, score1, score2, dateMatch;
+    if (isCollectif) {
+        nom1 = matchData.equipe_domicile?.nom_equipe || '?';
+        nom2 = matchData.equipe_exterieur?.nom_equipe || '?';
+        score1 = matchData.score_domicile;
+        score2 = matchData.score_exterieur;
+    } else {
+        nom1 = matchData.participant_domicile?.nom_complet || '?';
+        nom2 = matchData.participant_exterieur?.nom_complet || '?';
+        score1 = matchData.score_domicile;
+        score2 = matchData.score_exterieur;
+    }
+    const score = (score1 !== null && score2 !== null) ? `${score1} - ${score2}` : '-';
+    dateMatch = new Date(matchData.date_match).toLocaleDateString();
+    headerDiv.innerHTML = `
+        <h2>${escapeHtml(nom1)} vs ${escapeHtml(nom2)}</h2>
+        <div class="score">${score}</div>
+        <div class="date">${dateMatch}</div>
+    `;
+}
+/* FIN EN-TÊTE */
+
+/* ============================================================
+   AFFICHAGE COMPOSITION
+   ============================================================ */
 async function afficherComposition() {
     const compDiv = document.getElementById('composition');
+    if (!matchData) return;
     if (isCollectif) {
         const equipeDomicileId = matchData.equipe_domicile_id;
         const equipeExterieurId = matchData.equipe_exterieur_id;
+        if (!equipeDomicileId || !equipeExterieurId) {
+            compDiv.innerHTML = '<div class="empty-message">Données incomplètes</div>';
+            return;
+        }
         const { data: sportifs, error } = await supabasePublic
             .from('public_sportifs_equipe')
-            .select('*, public_equipes(nom_equipe)')
+            .select('*')
             .in('equipe_id', [equipeDomicileId, equipeExterieurId])
             .order('numero_maillot', { ascending: true });
-        if (error) throw error;
-        const domList = sportifs.filter(s => s.equipe_id === equipeDomicileId);
-        const extList = sportifs.filter(s => s.equipe_id === equipeExterieurId);
+        if (error) {
+            compDiv.innerHTML = '<div class="empty-message">Erreur chargement</div>';
+            return;
+        }
         const domicileNom = matchData.equipe_domicile?.nom_equipe || '?';
         const exterieurNom = matchData.equipe_exterieur?.nom_equipe || '?';
-        compDiv.innerHTML = `
+        const domList = sportifs.filter(s => s.equipe_id === equipeDomicileId);
+        const extList = sportifs.filter(s => s.equipe_id === equipeExterieurId);
+        let html = `
             <div class="team-composition">
                 <h3>${escapeHtml(domicileNom)}</h3>
-                ${domList.map(s => `<div class="joueur-item"><span>${s.numero_maillot ? `#${s.numero_maillot} ` : ''}${escapeHtml(s.prenom)} ${escapeHtml(s.nom)}</span>${s.role_sportif ? `<span class="joueur-numero">${escapeHtml(s.role_sportif)}</span>` : ''}</div>`).join('') || '<div class="empty-message">Aucun sportif enregistré</div>'}
+                ${domList.length > 0 ?
+                    domList.map(s => `<div class="joueur-item"><span>${s.numero_maillot ? `#${s.numero_maillot} ` : ''}${escapeHtml(s.prenom)} ${escapeHtml(s.nom)}</span>${s.role_sportif ? `<span class="joueur-numero">${escapeHtml(s.role_sportif)}</span>` : ''}</div>`).join('')
+                    : '<div class="empty-message">' + t('match.aucun_sportif') + '</div>'}
             </div>
             <div class="team-composition">
                 <h3>${escapeHtml(exterieurNom)}</h3>
-                ${extList.map(s => `<div class="joueur-item"><span>${s.numero_maillot ? `#${s.numero_maillot} ` : ''}${escapeHtml(s.prenom)} ${escapeHtml(s.nom)}</span>${s.role_sportif ? `<span class="joueur-numero">${escapeHtml(s.role_sportif)}</span>` : ''}</div>`).join('') || '<div class="empty-message">Aucun sportif enregistré</div>'}
+                ${extList.length > 0 ?
+                    extList.map(s => `<div class="joueur-item"><span>${s.numero_maillot ? `#${s.numero_maillot} ` : ''}${escapeHtml(s.prenom)} ${escapeHtml(s.nom)}</span>${s.role_sportif ? `<span class="joueur-numero">${escapeHtml(s.role_sportif)}</span>` : ''}</div>`).join('')
+                    : '<div class="empty-message">' + t('match.aucun_sportif') + '</div>'}
             </div>
         `;
+        compDiv.innerHTML = html;
     } else {
         compDiv.innerHTML = `
             <div class="team-composition">
@@ -195,9 +255,14 @@ async function afficherComposition() {
         `;
     }
 }
+/* FIN COMPOSITION */
 
+/* ============================================================
+   AFFICHAGE ACTIONS
+   ============================================================ */
 async function chargerActions() {
     const actionsDiv = document.getElementById('actions');
+    if (!matchData) return;
     try {
         const { data, error } = await supabasePublic
             .from('public_actions_match')
@@ -206,21 +271,25 @@ async function chargerActions() {
             .order('minute', { ascending: true });
         if (error) throw error;
         if (!data || data.length === 0) {
-            actionsDiv.innerHTML = '<div class="empty-message">Aucune action enregistrée pour ce match.</div>';
+            actionsDiv.innerHTML = '<div class="empty-message">' + t('match.aucune_action') + '</div>';
             return;
         }
         let html = '';
         for (const a of data) {
-            const joueurNom = a.joueur ? `${a.joueur.prenom} ${a.joueur.nom}` : '?';
+            const joueurNom = a.joueur ? `${escapeHtml(a.joueur.prenom)} ${escapeHtml(a.joueur.nom)}` : '?';
             let equipeNom = a.equipe?.nom_equipe || '?';
-            if (!isCollectif && !equipeNom) {
-                if (a.equipe_id === matchData.participant_domicile_id) equipeNom = matchData.participant_domicile?.nom_complet || '?';
-                else if (a.equipe_id === matchData.participant_exterieur_id) equipeNom = matchData.participant_exterieur?.nom_complet || '?';
+            // Si le match est individuel, l'équipe peut ne pas avoir de nom, on essaie de résoudre via les participants
+            if (!isCollectif && a.equipe_id) {
+                if (a.equipe_id === matchData.participant_domicile_id) {
+                    equipeNom = matchData.participant_domicile?.nom_complet || '?';
+                } else if (a.equipe_id === matchData.participant_exterieur_id) {
+                    equipeNom = matchData.participant_exterieur?.nom_complet || '?';
+                }
             }
             html += `
                 <div class="action-item">
                     <span class="action-minute">${a.minute}'</span>
-                    <span>${escapeHtml(joueurNom)} (${escapeHtml(equipeNom)})</span>
+                    <span>${joueurNom} (${escapeHtml(equipeNom)})</span>
                     <span class="action-type">${escapeHtml(a.type_action)}</span>
                 </div>
             `;
@@ -231,14 +300,20 @@ async function chargerActions() {
         actionsDiv.innerHTML = '<div class="empty-message">Erreur chargement des actions.</div>';
     }
 }
+/* FIN ACTIONS */
 
-// ========== DÉCONNEXION ==========
+/* ============================================================
+   DÉCONNEXION
+   ============================================================ */
 document.getElementById('logoutBtn').addEventListener('click', () => {
     sessionStorage.clear();
     window.location.href = 'connexion-tournoi.html';
 });
+/* FIN DÉCONNEXION */
 
-// ========== MENU MOBILE ET LANGUE ==========
+/* ============================================================
+   MENU MOBILE ET LANGUE
+   ============================================================ */
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
@@ -262,7 +337,11 @@ function initLangSelector() {
         langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
     }
 }
+/* FIN MENU ET LANGUE */
 
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -292,11 +371,15 @@ function hideLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'none';
 }
+/* FIN UTILITAIRES */
 
-// ========== INITIALISATION ==========
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
     applyTranslations();
     initLangSelector();
     initMenuMobile();
     chargerDetails();
 });
+/* FIN INITIALISATION */

@@ -1,8 +1,8 @@
-/* ========== TOURNOI-ADMIN.CSS ========== */
+/* ========== TOURNOI-ADMIN.CSS – ULTRA RESPONSIVE ========== */
 /* ========== DÉBUT : VARIABLES ET RÉINITIALISATION ========== */
 :root {
     /* Couleurs principales - Violet profond HubISoccer */
-    --primary: #4B0082;          /* Indigo foncé */
+    --primary: #4B0082;
     --primary-light: #7B2FBE;
     --primary-dark: #2E004F;
     --gold: #FFCC00;
@@ -271,7 +271,7 @@ nav {
     gap: 25px;
 }
 
-/* ========== DÉBUT : CARTES ========== */
+/* Cartes */
 .item-card {
     background: white;
     border-radius: 20px;
@@ -330,23 +330,30 @@ nav {
     font-size: 0.8rem;
 }
 
-.btn-edit {
-    background: var(--primary-light);
-    color: white;
-}
-.btn-edit:hover { background: var(--primary); transform: scale(1.02); }
+.btn-edit,
+.btn-edit-inscription { background: var(--primary-light); color: white; }
+.btn-edit:hover,
+.btn-edit-inscription:hover { background: var(--primary); transform: scale(1.02); }
 
-.btn-delete {
-    background: var(--danger);
-    color: white;
-}
-.btn-delete:hover { background: var(--danger-dark); }
+.btn-delete,
+.btn-delete-inscription { background: var(--danger); color: white; }
+.btn-delete:hover,
+.btn-delete-inscription:hover { background: var(--danger-dark); }
 
-.btn-validate {
-    background: var(--success);
-    color: white;
-}
+.btn-validate { background: var(--success); color: white; }
 .btn-validate:hover { background: var(--success-dark); }
+
+.btn-reject { background: var(--warning); color: #856404; }
+.btn-reject:hover { background: #e0a800; color: white; }
+
+.btn-view { background: var(--info); color: white; }
+.btn-view:hover { background: #138496; }
+
+.btn-resend { background: var(--primary); color: white; }
+.btn-resend:hover { background: var(--primary-light); }
+
+.btn-comment { background: var(--gray); color: white; }
+.btn-comment:hover { background: #5a6268; }
 
 .btn-secondary {
     background: var(--light-gray);
@@ -362,7 +369,6 @@ nav {
     gap: 5px;
 }
 .btn-secondary:hover { background: var(--primary); color: white; }
-/* ========== FIN : CARTES ET BOUTONS ========== */
 /* ========== FIN : LISTES ET BOUTONS ========== */
 
 /* ========== DÉBUT : MODALES ========== */
@@ -657,6 +663,14 @@ footer {
     }
     .modal-content {
         padding: 20px;
+    }
+    .card-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .card-actions button {
+        width: 100%;
+        justify-content: center;
     }
 }
 /* FIN MOBILES */

@@ -3,7 +3,9 @@ const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== TRADUCTIONS ==========
+/* ============================================================
+   TRADUCTIONS
+   ============================================================ */
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
@@ -12,6 +14,8 @@ const translations = {
         'gerer.title': 'Mon équipe',
         'gerer.matchs': 'Matchs',
         'gerer.classement': 'Classement',
+        'gerer.messagerie': 'Messages',
+        'gerer.portefeuille': 'Portefeuille',
         'gerer.ajouter': 'Ajouter un sportif',
         'gerer.modal.titre': 'Ajouter un sportif',
         'gerer.modal.nom': 'Nom *',
@@ -20,6 +24,9 @@ const translations = {
         'gerer.modal.poste': 'Poste / Rôle sportif',
         'gerer.modal.pied': 'Pied fort',
         'gerer.modal.ajouter': 'Ajouter',
+        'gerer.aucun_sportif': 'Aucun sportif dans votre équipe.',
+        'gerer.equipe_non_trouvee': 'Équipe non trouvée',
+        'gerer.supprimer_confirm': 'Supprimer ce sportif ?',
         'footer.badge1': 'Conformité APDP Bénin',
         'footer.badge2': 'Règlementation FIFA',
         'footer.badge3': 'Triple Projet Sport-Études-Carrière',
@@ -32,7 +39,8 @@ const translations = {
         'toast.ajout_erreur': 'Erreur lors de l\'ajout',
         'toast.suppr_ok': 'Sportif supprimé',
         'toast.suppr_erreur': 'Erreur lors de la suppression',
-        'toast.non_autorise': 'Vous n\'êtes pas autorisé à gérer cette équipe'
+        'toast.non_autorise': 'Vous n\'êtes pas autorisé à gérer cette équipe',
+        'toast.champs_obligatoires': 'Nom et prénom requis'
     },
     en: {
         'loader.message': 'Loading...',
@@ -41,6 +49,8 @@ const translations = {
         'gerer.title': 'My team',
         'gerer.matchs': 'Matches',
         'gerer.classement': 'Ranking',
+        'gerer.messagerie': 'Messages',
+        'gerer.portefeuille': 'Wallet',
         'gerer.ajouter': 'Add a player',
         'gerer.modal.titre': 'Add a player',
         'gerer.modal.nom': 'Last name *',
@@ -49,6 +59,9 @@ const translations = {
         'gerer.modal.poste': 'Position / Role',
         'gerer.modal.pied': 'Preferred foot',
         'gerer.modal.ajouter': 'Add',
+        'gerer.aucun_sportif': 'No players in your team.',
+        'gerer.equipe_non_trouvee': 'Team not found',
+        'gerer.supprimer_confirm': 'Delete this player?',
         'footer.badge1': 'APDP Benin Compliance',
         'footer.badge2': 'FIFA Regulations',
         'footer.badge3': 'Triple Project Sport-Studies-Career',
@@ -61,7 +74,8 @@ const translations = {
         'toast.ajout_erreur': 'Error adding player',
         'toast.suppr_ok': 'Player deleted',
         'toast.suppr_erreur': 'Error deleting player',
-        'toast.non_autorise': 'You are not authorized to manage this team'
+        'toast.non_autorise': 'You are not authorized to manage this team',
+        'toast.champs_obligatoires': 'First name and last name are required'
     }
 };
 
@@ -98,42 +112,65 @@ function changeLanguage(lang) {
         currentLang = lang;
         localStorage.setItem('gerer_lang', lang);
         applyTranslations();
-        chargerSportifs();
+        if (equipeId) chargerSportifs();
     }
 }
+/* FIN TRADUCTIONS */
 
-// ========== SESSION ==========
+/* ============================================================
+   SESSION
+   ============================================================ */
 const userId = sessionStorage.getItem('tournoi_user_id');
 const userRole = sessionStorage.getItem('tournoi_role');
 const userNom = sessionStorage.getItem('tournoi_nom');
+const tournoiId = sessionStorage.getItem('tournoi_tournoi_id');
 
 if (!userId) {
     window.location.href = 'connexion-tournoi.html';
 }
 
+document.getElementById('userName').textContent = userNom || sessionStorage.getItem('tournoi_login');
+
+// Blocage non-capitaine : on cache le bouton et on empêche l'ajout
 if (userRole !== 'capitaine') {
     document.getElementById('ajouterSportifBtn').style.display = 'none';
     document.getElementById('sportifsList').innerHTML = '<p class="empty-message">' + t('toast.non_autorise') + '</p>';
+    // On désactive le formulaire dans la modale (au cas où)
+    const ajoutForm = document.getElementById('ajoutForm');
+    if (ajoutForm) ajoutForm.style.display = 'none';
 }
+/* FIN SESSION */
 
-document.getElementById('userName').textContent = userNom || sessionStorage.getItem('tournoi_login');
-
-// ========== VARIABLES GLOBALES ==========
+/* ============================================================
+   VARIABLES GLOBALES
+   ============================================================ */
 let equipeId = null;
+/* FIN VARIABLES */
 
-// ========== CHARGEMENT DE L'ÉQUIPE ET DES SPORTIFS ==========
+/* ============================================================
+   CHARGEMENT DE L'ÉQUIPE ET DES SPORTIFS
+   ============================================================ */
 async function chargerEquipe() {
+    if (!userId) return;
     const { data: equipe, error } = await supabasePublic
         .from('public_equipes')
-        .select('id, nom_equipe, type_equipe')
+        .select('id, nom_equipe, type_equipe, tournoi_id')
         .eq('capitaine_id', userId)
         .single();
     if (error || !equipe) {
         console.error('Erreur équipe:', error);
-        document.getElementById('equipeInfo').innerHTML = '<p>Équipe non trouvée</p>';
+        document.getElementById('equipeInfo').innerHTML = '<p>' + t('gerer.equipe_non_trouvee') + '</p>';
+        equipeId = null;
+        return;
+    }
+    // Vérifier que le tournoi de l'équipe correspond au tournoi en session
+    if (equipe.tournoi_id && tournoiId && equipe.tournoi_id != tournoiId) {
+        document.getElementById('equipeInfo').innerHTML = '<p>Cette équipe n\'appartient pas au tournoi en cours.</p>';
+        equipeId = null;
         return;
     }
     equipeId = equipe.id;
+    sessionStorage.setItem('tournoi_equipe_id', equipeId);
     document.getElementById('equipeInfo').innerHTML = `
         <h2>${escapeHtml(equipe.nom_equipe)}</h2>
         <p>Type : ${equipe.type_equipe === 'club' ? 'Club' : 'Fan club'}</p>
@@ -163,7 +200,7 @@ async function chargerSportifs() {
 function renderSportifs(sportifs) {
     const container = document.getElementById('sportifsList');
     if (!sportifs.length) {
-        container.innerHTML = '<p class="empty-message">Aucun sportif dans votre équipe.</p>';
+        container.innerHTML = '<p class="empty-message">' + t('gerer.aucun_sportif') + '</p>';
         return;
     }
     let html = '';
@@ -184,7 +221,7 @@ function renderSportifs(sportifs) {
     document.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const id = btn.dataset.id;
-            if (confirm('Supprimer ce sportif ?')) {
+            if (confirm(t('gerer.supprimer_confirm'))) {
                 await supprimerSportif(id);
             }
         });
@@ -208,8 +245,11 @@ async function supprimerSportif(id) {
         hideLoader();
     }
 }
+/* FIN CHARGEMENT */
 
-// ========== AJOUT SPORTIF ==========
+/* ============================================================
+   AJOUT SPORTIF
+   ============================================================ */
 const modal = document.getElementById('ajoutModal');
 const ajoutBtn = document.getElementById('ajouterSportifBtn');
 const closeModal = document.querySelectorAll('.close-modal');
@@ -242,7 +282,7 @@ ajoutForm.addEventListener('submit', async (e) => {
     const pied = document.getElementById('pied').value || null;
 
     if (!nom || !prenom) {
-        showToast('Nom et prénom requis', 'warning');
+        showToast(t('toast.champs_obligatoires'), 'warning');
         return;
     }
 
@@ -269,14 +309,20 @@ ajoutForm.addEventListener('submit', async (e) => {
         hideLoader();
     }
 });
+/* FIN AJOUT SPORTIF */
 
-// ========== DÉCONNEXION ==========
+/* ============================================================
+   DÉCONNEXION
+   ============================================================ */
 document.getElementById('logoutBtn').addEventListener('click', () => {
     sessionStorage.clear();
     window.location.href = 'connexion-tournoi.html';
 });
+/* FIN DÉCONNEXION */
 
-// ========== MENU MOBILE ET LANGUE ==========
+/* ============================================================
+   MENU MOBILE ET LANGUE
+   ============================================================ */
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
@@ -300,7 +346,11 @@ function initLangSelector() {
         langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
     }
 }
+/* FIN MENU ET LANGUE */
 
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -330,11 +380,17 @@ function hideLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'none';
 }
+/* FIN UTILITAIRES */
 
-// ========== INITIALISATION ==========
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
     applyTranslations();
     initLangSelector();
     initMenuMobile();
-    chargerEquipe();
+    if (userRole === 'capitaine') {
+        chargerEquipe();
+    }
 });
+/* FIN INITIALISATION */

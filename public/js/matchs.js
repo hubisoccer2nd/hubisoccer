@@ -1,9 +1,11 @@
-// ========== MATCHS.JS ==========
+// ========== MATCHS.JS – CORRIGÉ ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== TRADUCTIONS ==========
+/* ============================================================
+   TRADUCTIONS
+   ============================================================ */
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
@@ -17,6 +19,9 @@ const translations = {
         'matchs.filtre.all': 'Tous',
         'matchs.filtre.a_venir': 'À venir',
         'matchs.filtre.termine': 'Terminés',
+        'matchs.aucun_match': 'Aucun match trouvé.',
+        'matchs.aucun_match_filtre': 'Aucun match pour ce filtre.',
+        'matchs.details': 'Détails',
         'footer.badge1': 'Conformité APDP Bénin',
         'footer.badge2': 'Règlementation FIFA',
         'footer.badge3': 'Triple Projet Sport-Études-Carrière',
@@ -39,6 +44,9 @@ const translations = {
         'matchs.filtre.all': 'All',
         'matchs.filtre.a_venir': 'Upcoming',
         'matchs.filtre.termine': 'Finished',
+        'matchs.aucun_match': 'No matches found.',
+        'matchs.aucun_match_filtre': 'No matches for this filter.',
+        'matchs.details': 'Details',
         'footer.badge1': 'APDP Benin Compliance',
         'footer.badge2': 'FIFA Regulations',
         'footer.badge3': 'Triple Project Sport-Studies-Career',
@@ -82,8 +90,11 @@ function changeLanguage(lang) {
         chargerMatchs();
     }
 }
+/* FIN TRADUCTIONS */
 
-// ========== SESSION ==========
+/* ============================================================
+   SESSION
+   ============================================================ */
 const userId = sessionStorage.getItem('tournoi_user_id');
 const userNom = sessionStorage.getItem('tournoi_nom');
 const tournoiId = sessionStorage.getItem('tournoi_tournoi_id');
@@ -93,12 +104,24 @@ if (!userId) {
     window.location.href = 'connexion-tournoi.html';
 }
 document.getElementById('userName').textContent = userNom || sessionStorage.getItem('tournoi_login');
+/* FIN SESSION */
 
-// ========== VARIABLES GLOBALES ==========
-let typeTournoi = null;   // 'collectif' ou 'individuel'
+/* ============================================================
+   VARIABLES GLOBALES
+   ============================================================ */
+let typeTournoi = sessionStorage.getItem('tournoi_type') || null;
+/* FIN VARIABLES */
 
-// ========== DÉTERMINER LE TYPE DE TOURNOI ==========
+/* ============================================================
+   DÉTERMINER LE TYPE DE TOURNOI
+   ============================================================ */
 async function getTypeTournoi() {
+    if (typeTournoi) {
+        // déjà en session
+        afficherOuMasquerLienEquipe();
+        return typeTournoi;
+    }
+
     const { data, error } = await supabasePublic
         .from('public_tournois')
         .select('type_tournoi')
@@ -106,24 +129,36 @@ async function getTypeTournoi() {
         .single();
     if (error) { console.error(error); return null; }
     typeTournoi = data.type_tournoi;
-    // Cacher le lien "Mon équipe" pour les individuels
-    const equipeLink = document.getElementById('gererEquipeLink');
-    if (equipeLink) {
-        if (typeTournoi === 'individuel') equipeLink.style.display = 'none';
-        else equipeLink.style.display = 'inline-block';
-    }
+    sessionStorage.setItem('tournoi_type', typeTournoi);
+    afficherOuMasquerLienEquipe();
     return typeTournoi;
 }
 
-// ========== CHARGEMENT DES MATCHS ==========
+function afficherOuMasquerLienEquipe() {
+    const equipeLink = document.getElementById('gererEquipeLink');
+    if (equipeLink) {
+        equipeLink.style.display = (typeTournoi === 'collectif') ? 'inline-block' : 'none';
+    }
+}
+/* FIN DÉTERMINATION */
+
+/* ============================================================
+   CHARGEMENT DES MATCHS
+   ============================================================ */
 async function chargerMatchs() {
     if (!tournoiId) return;
     showLoader();
     try {
+        const filtre = document.getElementById('filtreStatut').value;
+
         if (typeTournoi === 'collectif') {
-            await chargerMatchsCollectif();
+            await chargerMatchsCollectif(filtre);
+        } else if (typeTournoi === 'individuel') {
+            await chargerMatchsIndividuel(filtre);
         } else {
-            await chargerMatchsIndividuel();
+            // Type non défini, on recharge
+            await getTypeTournoi();
+            await chargerMatchs();
         }
     } catch (err) {
         console.error(err);
@@ -133,36 +168,38 @@ async function chargerMatchs() {
     }
 }
 
-async function chargerMatchsCollectif() {
+async function chargerMatchsCollectif(filtre) {
     let query = supabasePublic
         .from('public_matchs')
         .select('*, equipe_domicile:equipe_domicile_id (nom_equipe), equipe_exterieur:equipe_exterieur_id (nom_equipe)')
         .eq('tournoi_id', tournoiId)
         .order('date_match', { ascending: true });
-    const filtre = document.getElementById('filtreStatut').value;
     if (filtre !== 'all') query = query.eq('statut', filtre);
     const { data, error } = await query;
     if (error) throw error;
-    renderMatchsCollectif(data || []);
+    renderMatchsCollectif(data || [], filtre);
 }
 
-async function chargerMatchsIndividuel() {
+async function chargerMatchsIndividuel(filtre) {
     let query = supabasePublic
         .from('public_matchs_individuels')
         .select('*, participant_domicile:participant_domicile_id (nom_complet), participant_exterieur:participant_exterieur_id (nom_complet)')
         .eq('tournoi_id', tournoiId)
         .order('date_match', { ascending: true });
-    const filtre = document.getElementById('filtreStatut').value;
     if (filtre !== 'all') query = query.eq('statut', filtre);
     const { data, error } = await query;
     if (error) throw error;
-    renderMatchsIndividuel(data || []);
+    renderMatchsIndividuel(data || [], filtre);
 }
+/* FIN CHARGEMENT */
 
-function renderMatchsCollectif(matchs) {
+/* ============================================================
+   RENDU DES MATCHS
+   ============================================================ */
+function renderMatchsCollectif(matchs, filtre) {
     const container = document.getElementById('matchsList');
     if (!matchs.length) {
-        container.innerHTML = '<div class="empty-message">' + t('matchs.filtre.all') === 'all' ? 'Aucun match.' : 'Aucun match pour ce filtre.' + '</div>';
+        container.innerHTML = `<div class="empty-message">${filtre === 'all' ? t('matchs.aucun_match') : t('matchs.aucun_match_filtre')}</div>`;
         return;
     }
     let html = '';
@@ -182,7 +219,7 @@ function renderMatchsCollectif(matchs) {
                 <div class="match-score">${score}</div>
                 <div class="match-status ${statutClass}">${statutLabel}</div>
                 <div class="match-actions">
-                    <a href="match-details.html?id=${m.id}" class="btn-details">Détails</a>
+                    <a href="match-details.html?id=${m.id}" class="btn-details">${t('matchs.details')}</a>
                 </div>
             </div>
         `;
@@ -190,10 +227,10 @@ function renderMatchsCollectif(matchs) {
     container.innerHTML = html;
 }
 
-function renderMatchsIndividuel(matchs) {
+function renderMatchsIndividuel(matchs, filtre) {
     const container = document.getElementById('matchsList');
     if (!matchs.length) {
-        container.innerHTML = '<div class="empty-message">' + t('matchs.filtre.all') === 'all' ? 'Aucun match.' : 'Aucun match pour ce filtre.' + '</div>';
+        container.innerHTML = `<div class="empty-message">${filtre === 'all' ? t('matchs.aucun_match') : t('matchs.aucun_match_filtre')}</div>`;
         return;
     }
     let html = '';
@@ -213,26 +250,35 @@ function renderMatchsIndividuel(matchs) {
                 <div class="match-score">${score}</div>
                 <div class="match-status ${statutClass}">${statutLabel}</div>
                 <div class="match-actions">
-                    <a href="match-details.html?id=${m.id}" class="btn-details">Détails</a>
+                    <a href="match-details.html?id=${m.id}" class="btn-details">${t('matchs.details')}</a>
                 </div>
             </div>
         `;
     }
     container.innerHTML = html;
 }
+/* FIN RENDU */
 
-// ========== FILTRES ==========
+/* ============================================================
+   FILTRES
+   ============================================================ */
 document.getElementById('filtreStatut').addEventListener('change', () => {
     chargerMatchs();
 });
+/* FIN FILTRES */
 
-// ========== DÉCONNEXION ==========
+/* ============================================================
+   DÉCONNEXION
+   ============================================================ */
 document.getElementById('logoutBtn').addEventListener('click', () => {
     sessionStorage.clear();
     window.location.href = 'connexion-tournoi.html';
 });
+/* FIN DÉCONNEXION */
 
-// ========== MENU MOBILE ET LANGUE ==========
+/* ============================================================
+   MENU MOBILE ET LANGUE
+   ============================================================ */
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
@@ -256,7 +302,11 @@ function initLangSelector() {
         langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
     }
 }
+/* FIN MENU ET LANGUE */
 
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -286,8 +336,11 @@ function hideLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'none';
 }
+/* FIN UTILITAIRES */
 
-// ========== INITIALISATION ==========
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
     applyTranslations();
     initLangSelector();
@@ -295,3 +348,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     await getTypeTournoi();
     await chargerMatchs();
 });
+/* FIN INITIALISATION */

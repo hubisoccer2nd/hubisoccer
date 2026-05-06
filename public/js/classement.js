@@ -3,7 +3,9 @@ const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== TRADUCTIONS ==========
+/* ============================================================
+   TRADUCTIONS
+   ============================================================ */
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
@@ -16,6 +18,7 @@ const translations = {
         'classement.portefeuille': 'Portefeuille',
         'classement.rank': 'Rang',
         'classement.equipe_nom': 'Équipe',
+        'classement.participant': 'Participant',
         'classement.points': 'Pts',
         'classement.matchs_joues': 'MJ',
         'classement.victoires': 'V',
@@ -24,6 +27,8 @@ const translations = {
         'classement.buts_pour': 'BP',
         'classement.buts_contre': 'BC',
         'classement.diff': 'Diff',
+        'classement.sets_pour': 'SP',
+        'classement.sets_contre': 'SC',
         'classement.aucune': 'Aucun classement disponible pour ce tournoi.',
         'footer.badge1': 'Conformité APDP Bénin',
         'footer.badge2': 'Règlementation FIFA',
@@ -46,6 +51,7 @@ const translations = {
         'classement.portefeuille': 'Wallet',
         'classement.rank': 'Rank',
         'classement.equipe_nom': 'Team',
+        'classement.participant': 'Participant',
         'classement.points': 'Pts',
         'classement.matchs_joues': 'MP',
         'classement.victoires': 'W',
@@ -54,6 +60,8 @@ const translations = {
         'classement.buts_pour': 'GF',
         'classement.buts_contre': 'GA',
         'classement.diff': 'GD',
+        'classement.sets_pour': 'SW',
+        'classement.sets_contre': 'SL',
         'classement.aucune': 'No ranking available for this tournament.',
         'footer.badge1': 'APDP Benin Compliance',
         'footer.badge2': 'FIFA Regulations',
@@ -94,25 +102,73 @@ function changeLanguage(lang) {
         chargerClassement();
     }
 }
+/* FIN TRADUCTIONS */
 
-// ========== SESSION ==========
+/* ============================================================
+   GESTION SESSION
+   ============================================================ */
 const userId = sessionStorage.getItem('tournoi_user_id');
 const userNom = sessionStorage.getItem('tournoi_nom');
+const userLogin = sessionStorage.getItem('tournoi_login');
 const tournoiId = sessionStorage.getItem('tournoi_tournoi_id');
+const userRole = sessionStorage.getItem('tournoi_role');
 
 if (!userId) {
     window.location.href = 'connexion-tournoi.html';
 }
-document.getElementById('userName').textContent = userNom || sessionStorage.getItem('tournoi_login');
+document.getElementById('userName').textContent = userNom || userLogin;
 
-// ========== VARIABLES GLOBALES ==========
-let typeTournoi = null;
+let typeTournoi = sessionStorage.getItem('tournoi_type') || null;
 let monIdentifiant = null;  // equipe_id ou participant_id
-let equipeId = null;
-let participantId = null;
+let equipeId = sessionStorage.getItem('tournoi_equipe_id') || null;
+let participantId = sessionStorage.getItem('tournoi_participant_id') || null;
 
-// ========== DÉTERMINER LE TYPE DE TOURNOI ET L'IDENTIFIANT ==========
+// Affichage conditionnel du lien "Mon équipe"
+const gererEquipeLink = document.getElementById('gererEquipeLink');
+if (equipeId) {
+    gererEquipeLink.style.display = 'inline-block';
+} else {
+    gererEquipeLink.style.display = 'none';
+}
+/* FIN SESSION */
+
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+function showToast(message, type = 'info', duration = 3000) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-content">${escapeHtml(message)}</div><button class="toast-close">×</button>`;
+    container.appendChild(toast);
+    toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+    setTimeout(() => toast.remove(), duration);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+}
+
+function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
+function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
+/* FIN UTILITAIRES */
+
+/* ============================================================
+   DÉTERMINATION TYPE TOURNOI & IDENTIFIANT
+   ============================================================ */
 async function getTypeEtIdentifiant() {
+    if (typeTournoi && (equipeId || participantId)) {
+        monIdentifiant = equipeId || participantId;
+        return;
+    }
+
     const { data: tournoi, error: tErr } = await supabasePublic
         .from('public_tournois')
         .select('type_tournoi')
@@ -120,9 +176,9 @@ async function getTypeEtIdentifiant() {
         .single();
     if (tErr) { console.error(tErr); return; }
     typeTournoi = tournoi.type_tournoi;
+    sessionStorage.setItem('tournoi_type', typeTournoi);
 
     if (typeTournoi === 'collectif') {
-        // Chercher l'équipe (capitaine ou membre)
         let { data: equipe, error: eqErr } = await supabasePublic
             .from('public_equipes')
             .select('id')
@@ -131,7 +187,9 @@ async function getTypeEtIdentifiant() {
         if (eqErr && eqErr.code !== 'PGRST116') console.error(eqErr);
         if (equipe) {
             equipeId = equipe.id;
+            sessionStorage.setItem('tournoi_equipe_id', equipeId);
             monIdentifiant = equipeId;
+            gererEquipeLink.style.display = 'inline-block';
             return;
         }
         const { data: user, error: uErr } = await supabasePublic
@@ -142,10 +200,11 @@ async function getTypeEtIdentifiant() {
         if (uErr && uErr.code !== 'PGRST116') console.error(uErr);
         if (user && user.equipe_id) {
             equipeId = user.equipe_id;
+            sessionStorage.setItem('tournoi_equipe_id', equipeId);
             monIdentifiant = equipeId;
+            gererEquipeLink.style.display = 'inline-block';
         }
     } else {
-        // Individuel : récupérer participant_id
         const { data: user, error: uErr } = await supabasePublic
             .from('public_utilisateurs_tournoi')
             .select('inscription_id')
@@ -161,17 +220,23 @@ async function getTypeEtIdentifiant() {
             if (pErr && pErr.code !== 'PGRST116') console.error(pErr);
             if (participant) {
                 participantId = participant.id;
+                sessionStorage.setItem('tournoi_participant_id', participantId);
                 monIdentifiant = participantId;
             }
         }
+        gererEquipeLink.style.display = 'none';
     }
 }
+/* FIN DÉTERMINATION */
 
-// ========== CHARGEMENT DU CLASSEMENT ==========
+/* ============================================================
+   CHARGEMENT DU CLASSEMENT
+   ============================================================ */
 async function chargerClassement() {
     if (!tournoiId) return;
     showLoader();
     try {
+        await getTypeEtIdentifiant();
         if (typeTournoi === 'collectif') {
             await chargerClassementCollectif();
         } else {
@@ -241,11 +306,7 @@ function renderClassementCollectif(classement) {
             </tr>
         `;
     }
-    html += `
-                </tbody>
-            </table>
-        </div>
-    `;
+    html += '</tbody></table></div>';
     container.innerHTML = html;
 }
 
@@ -273,15 +334,17 @@ function renderClassementIndividuel(classement) {
                 <thead>
                     <tr>
                         <th>${t('classement.rank')}</th>
-                        <th>${t('classement.equipe_nom')}</th>
+                        <th>${t('classement.participant')}</th>
                         <th>${t('classement.points')}</th>
                         <th>${t('classement.matchs_joues')}</th>
                         <th>${t('classement.victoires')}</th>
                         <th>${t('classement.nuls')}</th>
                         <th>${t('classement.defaites')}</th>
-                        <th>BP</th>
-                        <th>BC</th>
-                        <th>Diff</th>
+                        <th>${t('classement.buts_pour')}</th>
+                        <th>${t('classement.buts_contre')}</th>
+                        <th>${t('classement.diff')}</th>
+                        <th>${t('classement.sets_pour')}</th>
+                        <th>${t('classement.sets_contre')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -293,7 +356,7 @@ function renderClassementIndividuel(classement) {
         html += `
             <tr class="${rowClass}">
                 <td>${i+1}</td>
-                <td class="equipe-col">${escapeHtml(c.public_participants_individuels?.nom_complet || '?')}</td>
+                <td>${escapeHtml(c.public_participants_individuels?.nom_complet || '?')}</td>
                 <td><strong>${c.points}</strong></td>
                 <td>${c.matchs_joues}</td>
                 <td>${c.victoires}</td>
@@ -302,24 +365,28 @@ function renderClassementIndividuel(classement) {
                 <td>${c.buts_pour}</td>
                 <td>${c.buts_contre}</td>
                 <td>${c.difference}</td>
+                <td>${c.sets_pour || 0}</td>
+                <td>${c.sets_contre || 0}</td>
             </tr>
         `;
     }
-    html += `
-                </tbody>
-            </table>
-        </div>
-    `;
+    html += '</tbody></table></div>';
     container.innerHTML = html;
 }
+/* FIN CLASSEMENT */
 
-// ========== DÉCONNEXION ==========
+/* ============================================================
+   DÉCONNEXION
+   ============================================================ */
 document.getElementById('logoutBtn').addEventListener('click', () => {
     sessionStorage.clear();
     window.location.href = 'connexion-tournoi.html';
 });
+/* FIN DÉCONNEXION */
 
-// ========== MENU MOBILE ET LANGUE ==========
+/* ============================================================
+   MENU MOBILE & LANGUE
+   ============================================================ */
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
@@ -336,6 +403,7 @@ function initMenuMobile() {
         });
     }
 }
+
 function initLangSelector() {
     const langSelect = document.getElementById('langSelect');
     if (langSelect) {
@@ -343,38 +411,11 @@ function initLangSelector() {
         langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
     }
 }
+/* FIN MENU & LANGUE */
 
-function showToast(message, type = 'info', duration = 3000) {
-    let container = document.getElementById('toastContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toastContainer';
-        container.className = 'toast-container';
-        document.body.appendChild(container);
-    }
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<div class="toast-content">${escapeHtml(message)}</div><button class="toast-close">×</button>`;
-    container.appendChild(toast);
-    toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
-    setTimeout(() => toast.remove(), duration);
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
-}
-
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
-
-// ========== INITIALISATION ==========
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
     applyTranslations();
     initLangSelector();
@@ -382,3 +423,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     await getTypeEtIdentifiant();
     await chargerClassement();
 });
+/* FIN INITIALISATION */

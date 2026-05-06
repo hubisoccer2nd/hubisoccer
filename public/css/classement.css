@@ -1,374 +1,95 @@
-/* ========== CLASSEMENT.CSS ========== */
-:root {
-    --primary: #6a1b9a;
-    --primary-light: #9c4dcc;
-    --primary-dark: #4a0072;
-    --gold: #ffc107;
-    --gold-dark: #e0a800;
-    --bg-light: #f8f9fa;
-    --white: #ffffff;
-    --dark: #212529;
-    --gray: #6c757d;
-    --light-gray: #e9ecef;
-    --success: #28a745;
-    --warning: #ffc107;
-    --danger: #dc3545;
-    --shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-    --shadow-hover: 0 1rem 2rem rgba(0,0,0,0.2);
-    --transition: all 0.3s ease;
-}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classement – Espace tournoi | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/classement.css">
+</head>
+<body>
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div>
+        <span data-i18n="loader.message">Chargement...</span>
+    </div>
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+    <nav>
+        <a href="../index.html" class="logo-link">
+            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <span class="user-badge"><i class="fas fa-user"></i> <span id="userName"></span></span>
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <button id="logoutBtn" class="btn-logout" data-i18n="classement.logout">Déconnexion</button>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="dashboard-tournoi.html" data-i18n="classement.dashboard">Tableau de bord</a>
+                <a href="gerer-equipe.html" id="gererEquipeLink" data-i18n="classement.equipe" style="display: none;">Mon équipe</a>
+                <a href="matchs.html" data-i18n="classement.matchs">Matchs</a>
+                <a href="classement.html" class="active" data-i18n="classement.title">Classement</a>
+                <a href="messagerie-privee.html" data-i18n="classement.messagerie">Messages</a>
+                <a href="portefeuille.html" data-i18n="classement.portefeuille">Portefeuille</a>
+            </div>
+        </div>
+    </nav>
 
-body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-    color: var(--dark);
-    line-height: 1.6;
-    overflow-x: hidden;
-}
+    <main class="classement-main">
+        <div class="container">
+            <h1 class="page-title">
+                <i class="fas fa-trophy"></i>
+                <span data-i18n="classement.title">Classement</span>
+            </h1>
 
-.spinner {
-    border: 4px solid rgba(255,255,255,0.3);
-    border-top: 4px solid var(--gold);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 10px;
-}
+            <div id="classementTable" class="classement-table"></div>
+        </div>
+    </main>
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+    <footer>
+        <div class="compliance-badges">
+            <div class="badge-item" data-i18n="footer.badge1">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer.badge2">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer.badge3">Triple Projet Sport-Études-Carrière</div>
+        </div>
+        <div class="contact-box">
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="footer.tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="footer.email">📧 contacthubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
 
-/* navbar */
-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 5%;
-    background: var(--white);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: var(--shadow);
-    border-bottom: 1px solid var(--light-gray);
-}
+    <div id="toastContainer" class="toast-container"></div>
 
-.logo-link {
-    display: inline-block;
-}
-
-.logo-nav {
-    height: 50px;
-    transition: var(--transition);
-}
-
-.logo-nav:hover {
-    opacity: 0.8;
-    transform: scale(1.02);
-}
-
-.nav-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.user-badge {
-    background: var(--primary-light);
-    color: white;
-    padding: 6px 15px;
-    border-radius: 30px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.btn-logout {
-    background: none;
-    border: none;
-    color: var(--primary);
-    cursor: pointer;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 30px;
-    transition: var(--transition);
-}
-
-.btn-logout:hover {
-    background: rgba(106,27,154,0.1);
-}
-
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 30px;
-    height: 21px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    z-index: 1001;
-}
-
-.menu-toggle span {
-    display: block;
-    width: 100%;
-    height: 3px;
-    background-color: var(--primary);
-    border-radius: 3px;
-    transition: var(--transition);
-}
-
-.menu-toggle.open span:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px);
-}
-.menu-toggle.open span:nth-child(2) {
-    opacity: 0;
-}
-.menu-toggle.open span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -7px);
-}
-
-.nav-links {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.nav-links a {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: var(--transition);
-    padding: 5px 10px;
-    border-radius: 30px;
-}
-
-.nav-links a.active {
-    background: var(--primary);
-    color: white;
-}
-
-.nav-links a:hover {
-    background: var(--primary-light);
-    color: white;
-}
-
-/* main */
-.classement-main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 40px 20px;
-}
-
-.page-title {
-    font-size: 2rem;
-    color: var(--primary);
-    margin-bottom: 30px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.classement-table {
-    background: white;
-    border-radius: 20px;
-    overflow-x: auto;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--light-gray);
-}
-
-.classement-table table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 600px;
-}
-
-.classement-table th,
-.classement-table td {
-    padding: 14px 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--light-gray);
-}
-
-.classement-table th {
-    background: var(--primary);
-    color: white;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.classement-table td {
-    font-size: 0.9rem;
-    color: var(--dark);
-}
-
-.classement-table tr:hover {
-    background: var(--bg-light);
-}
-
-.classement-table .equipe-col {
-    font-weight: 600;
-    color: var(--primary);
-}
-
-.classement-table .my-team {
-    background: rgba(255,204,0,0.15);
-    font-weight: 700;
-    border-left: 3px solid var(--gold);
-}
-
-.empty-message {
-    text-align: center;
-    padding: 40px;
-    color: var(--gray);
-}
-
-/* toasts */
-.toast-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.toast {
-    background: white;
-    border-radius: 12px;
-    padding: 12px 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-left: 4px solid;
-    animation: slideIn 0.3s forwards;
-}
-
-.toast.success { border-left-color: var(--success); }
-.toast.error { border-left-color: var(--danger); }
-.toast.info { border-left-color: var(--primary); }
-.toast.warning { border-left-color: var(--warning); }
-
-.toast-content {
-    flex: 1;
-    font-size: 0.9rem;
-}
-
-.toast-close {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--gray);
-}
-
-@keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-/* footer */
-footer {
-    background: #0a0a0a;
-    color: white;
-    padding: 40px 5% 20px;
-    text-align: center;
-    margin-top: 40px;
-}
-
-.compliance-badges {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-bottom: 30px;
-}
-
-.badge-item {
-    background: rgba(255,255,255,0.05);
-    padding: 8px 20px;
-    border-radius: 40px;
-    font-size: 0.8rem;
-    color: var(--gold);
-    border: 1px solid rgba(255,204,0,0.3);
-}
-
-.contact-box {
-    margin-bottom: 20px;
-}
-
-.contact-item {
-    color: var(--gold);
-    text-decoration: none;
-    margin: 0 15px;
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.contact-item:hover {
-    color: white;
-}
-
-.legal p {
-    font-size: 0.8rem;
-    color: rgba(255,255,255,0.5);
-    margin: 5px 0;
-}
-
-/* responsive */
-@media (max-width: 1008px) {
-    .menu-toggle {
-        display: flex;
-    }
-    .nav-links {
-        display: none;
-        flex-direction: column;
-        position: absolute;
-        top: 80px;
-        right: 5%;
-        background: white;
-        padding: 15px;
-        border-radius: 15px;
-        width: 90%;
-        max-width: 300px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        border: 1px solid var(--light-gray);
-        z-index: 999;
-    }
-    .nav-links.active {
-        display: flex;
-    }
-    .nav-links a {
-        margin: 8px 0;
-        text-align: center;
-    }
-    .classement-table th,
-    .classement-table td {
-        padding: 10px 8px;
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 600px) {
-    .classement-main {
-        padding: 20px 15px;
-    }
-    .classement-table th,
-    .classement-table td {
-        padding: 8px 6px;
-        font-size: 0.75rem;
-    }
-}
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/classement.js"></script>
+</body>
+</html>

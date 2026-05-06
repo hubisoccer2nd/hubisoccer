@@ -20,12 +20,37 @@
         </a>
         <div class="nav-right">
             <span class="user-badge"><i class="fas fa-user"></i> <span id="userName"></span></span>
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
             <button id="logoutBtn" class="btn-logout" data-i18n="dashboard.logout">Déconnexion</button>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
                 <a href="dashboard-tournoi.html" class="active" data-i18n="dashboard.title">Tableau de bord</a>
-                <!-- Pour les sports collectifs : lien vers la gestion d'équipe (caché pour les individuels) -->
-                <a href="gerer-equipe.html" id="gererEquipeLink" data-i18n="dashboard.equipe">Mon équipe</a>
+                <a href="gerer-equipe.html" id="gererEquipeLink" data-i18n="dashboard.equipe" style="display: none;">Mon équipe</a>
                 <a href="matchs.html" data-i18n="dashboard.matchs">Matchs</a>
                 <a href="classement.html" data-i18n="dashboard.classement">Classement</a>
                 <a href="messagerie-privee.html" data-i18n="dashboard.messagerie">Messages</a>
@@ -46,20 +71,17 @@
             </div>
 
             <div class="dashboard-grid">
-                <!-- Calendrier des matchs / prochains rendez-vous -->
                 <div class="card">
                     <h2><i class="fas fa-calendar-alt"></i> <span id="prochainsTitle" data-i18n="dashboard.prochains_matchs">Prochains matchs</span></h2>
                     <div id="prochainsMatchs" class="matchs-list"></div>
                 </div>
 
-                <!-- Classement -->
                 <div class="card">
                     <h2><i class="fas fa-trophy"></i> <span data-i18n="dashboard.classement">Classement</span></h2>
                     <div id="classementList" class="classement-list"></div>
                 </div>
             </div>
 
-            <!-- Derniers résultats -->
             <div class="card full-width">
                 <h2><i class="fas fa-history"></i> <span data-i18n="dashboard.derniers_resultats">Derniers résultats</span></h2>
                 <div id="derniersResultats" class="matchs-list"></div>

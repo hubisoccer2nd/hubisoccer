@@ -20,6 +20,32 @@
         </a>
         <div class="nav-right">
             <span class="user-badge"><i class="fas fa-user"></i> <span id="userName"></span></span>
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
             <button id="logoutBtn" class="btn-logout" data-i18n="composer.logout">Déconnexion</button>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
@@ -37,7 +63,9 @@
         <div class="container">
             <h1 class="page-title"><i class="fas fa-users"></i> <span data-i18n="composer.title">Composition d'équipe</span></h1>
             <div id="matchInfo" class="match-info-card"></div>
-            <div id="compositionForm" class="composition-form"></div>
+            <div id="compositionForm" class="composition-form">
+                <div id="joueursList"></div>
+            </div>
             <button id="saveCompositionBtn" class="btn-save">Enregistrer la composition</button>
         </div>
     </main>

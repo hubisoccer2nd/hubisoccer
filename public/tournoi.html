@@ -60,8 +60,6 @@
                 <a href="tournoi.html" class="active" data-i18n="nav.tournoi">TOURNOIS</a>
                 <a href="hub-community.html" data-i18n="nav.community">COMMUNITY</a>
                 <a href="e-marketing-hubisoccer.html" data-i18n="nav.market">MARKET</a>
-                <a href="public/auth/login.html" class="btn-auth" data-i18n="nav.login">Connexion</a>
-                <a href="public/auth/signup.html" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
             </div>
         </div>
     </nav>
@@ -111,15 +109,12 @@
                 <input type="hidden" id="modalCodeId">
                 <input type="hidden" id="modalTournoiId">
                 
-                <!-- ========== SECTION 1 : IDENTITÉ ET CONTACTS ========== -->
                 <fieldset class="form-section">
                     <legend><i class="fas fa-user"></i> 1. Identité et contacts</legend>
-                    
                     <div class="form-group">
                         <label data-i18n="tournoi.modal.nom">Nom complet *</label>
                         <input type="text" id="inscriptionNom" required>
                     </div>
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label data-i18n="tournoi.modal.date_naissance">Date de naissance *</label>
@@ -130,7 +125,6 @@
                             <input type="text" id="inscriptionVilleQuartier" required>
                         </div>
                     </div>
-                    
                     <div class="form-row">
                         <div class="form-group">
                             <label data-i18n="tournoi.modal.telephone">Téléphone (WhatsApp) *</label>
@@ -141,17 +135,14 @@
                             <input type="email" id="inscriptionEmail" required>
                         </div>
                     </div>
-                    
                     <div class="form-group">
                         <label data-i18n="tournoi.modal.reseaux">Réseaux sociaux (Facebook / Instagram / TikTok)</label>
                         <input type="text" id="inscriptionReseauxSociaux" placeholder="@pseudo ou URL">
                     </div>
                 </fieldset>
                 
-                <!-- ========== SECTION 2 : PROFIL DU TALENT ========== -->
                 <fieldset class="form-section">
                     <legend><i class="fas fa-star"></i> 2. Profil du talent</legend>
-                    
                     <div class="form-group">
                         <label data-i18n="tournoi.modal.categorie">Catégorie principale *</label>
                         <select id="inscriptionCategorie" required>
@@ -160,7 +151,6 @@
                             <option value="artiste">Artiste</option>
                         </select>
                     </div>
-                    
                     <div class="form-group" id="disciplineSportGroup" style="display: none;">
                         <label data-i18n="tournoi.modal.discipline_sport">Discipline sportive *</label>
                         <select id="inscriptionDisciplineSport">
@@ -173,7 +163,6 @@
                             <option value="autre_sport">Autre</option>
                         </select>
                     </div>
-                    
                     <div class="form-group" id="disciplineArtisteGroup" style="display: none;">
                         <label data-i18n="tournoi.modal.discipline_artiste">Discipline artistique *</label>
                         <select id="inscriptionDisciplineArtiste">
@@ -186,17 +175,14 @@
                             <option value="autre_artiste">Autre</option>
                         </select>
                     </div>
-                    
                     <div class="form-group" id="autreDisciplineGroup" style="display: none;">
                         <label data-i18n="tournoi.modal.autre_discipline">Précisez *</label>
                         <input type="text" id="inscriptionAutreDiscipline">
                     </div>
                 </fieldset>
                 
-                <!-- ========== SECTION 3 : STATUT ACTUEL ========== -->
                 <fieldset class="form-section">
                     <legend><i class="fas fa-users"></i> 3. Statut actuel</legend>
-                    
                     <div class="form-group">
                         <label data-i18n="tournoi.modal.statut_talent">Vous êtes *</label>
                         <select id="inscriptionStatutTalent" required>
@@ -204,7 +190,6 @@
                             <option value="en_club">Membre d'un Club / Association</option>
                         </select>
                     </div>
-                    
                     <div id="clubFieldsGroup" style="display: none;">
                         <div class="form-group">
                             <label data-i18n="tournoi.modal.nom_club_actuel">Nom du Club / Association *</label>
@@ -215,29 +200,23 @@
                             <input type="text" id="inscriptionContactResponsable">
                         </div>
                     </div>
-                    <input type="hidden" id="inscriptionClub" value="">
                 </fieldset>
                 
-                <!-- ========== SECTION 4 : VOLET TRINITÉ ========== -->
                 <fieldset class="form-section">
                     <legend><i class="fas fa-graduation-cap"></i> 4. Volet "Trinité" (Études & Métiers)</legend>
-                    
                     <div class="form-group">
                         <label data-i18n="tournoi.modal.niveau_etudes">Niveau d'études actuel</label>
                         <input type="text" id="inscriptionNiveauEtudes" placeholder="Ex: Bac, Licence, CAP...">
                     </div>
-                    
                     <div class="form-group">
                         <label data-i18n="tournoi.modal.metier_souhaite">Métier souhaité ou compétence secondaire</label>
                         <input type="text" id="inscriptionMetierSouhaite" placeholder="Ex: Informaticien, Commerçant...">
                     </div>
                 </fieldset>
                 
-                <!-- ========== SECTION 5 : DISPONIBILITÉS ========== -->
                 <fieldset class="form-section">
                     <legend><i class="fas fa-calendar-alt"></i> 5. Disponibilités pour les sélections</legend>
                     <p class="fieldset-hint">Cochez les créneaux où vous êtes généralement libre.</p>
-                    
                     <div class="dispo-table">
                         <table>
                             <thead>
@@ -284,7 +263,6 @@
     </div>
     <!-- ========== FIN : MODALE D'INSCRIPTION V2 ========== -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/tournoi-i18n.js"></script>
     <script src="js/tournoi.js"></script>
 </body>
 </html>

@@ -33,7 +33,9 @@ const translations = {
         'footer.copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
         'toast.fill_fields': 'Veuillez remplir tous les champs.',
         'toast.login_error': 'Login ou mot de passe incorrect.',
-        'toast.connexion_error': 'Erreur lors de la connexion.'
+        'toast.connexion_error': 'Erreur lors de la connexion.',
+        'toast.compte_inactif': 'Votre compte n\'est pas encore activé.',
+        'toast.connexion_reussie': 'Connexion réussie, redirection...'
     },
     en: {
         'loader.message': 'Loading...',
@@ -63,7 +65,9 @@ const translations = {
         'footer.copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.',
         'toast.fill_fields': 'Please fill in all fields.',
         'toast.login_error': 'Incorrect login or password.',
-        'toast.connexion_error': 'Connection error.'
+        'toast.connexion_error': 'Connection error.',
+        'toast.compte_inactif': 'Your account is not yet activated.',
+        'toast.connexion_reussie': 'Login successful, redirecting...'
     }
 };
 
@@ -132,11 +136,6 @@ function hideLoader() {
     if (loader) loader.style.display = 'none';
 }
 
-// Hash simple (identique à celui utilisé dans l'admin)
-function hashPassword(password) {
-    return btoa(password); // ⚠️ À remplacer par bcrypt en production
-}
-
 // ========== GESTION DE LA CONNEXION ==========
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
@@ -152,40 +151,65 @@ if (loginForm) {
 
         showLoader();
         try {
-            const passwordHash = hashPassword(password);
-            const { data, error } = await supabasePublic
+            // 1. Récupérer l'utilisateur par login
+            const { data: user, error: userError } = await supabasePublic
                 .from('public_utilisateurs_tournoi')
-                .select('id, inscription_id, role, public_inscriptions_tournoi(statut, nom_complet, public_codes_tournoi(tournoi_id))')
+                .select('id, inscription_id, role, mot_de_passe_hash')
                 .eq('login', login)
-                .eq('mot_de_passe_hash', passwordHash)
                 .single();
 
-            if (error || !data) {
+            if (userError || !user) {
                 showToast(t('toast.login_error'), 'error');
                 return;
             }
 
-            // Vérifier que l'inscription est bien validée (statut = 'valide')
-            const inscription = data.public_inscriptions_tournoi;
-            if (!inscription || inscription.statut !== 'valide') {
-                showToast('Votre compte n\'est pas encore activé.', 'warning');
+            // 2. Vérifier le mot de passe avec bcrypt
+            const valid = dcodeIO.bcrypt.compareSync(password, user.mot_de_passe_hash);
+            if (!valid) {
+                showToast(t('toast.login_error'), 'error');
                 return;
             }
 
-            // Stocker les informations de session
-            sessionStorage.setItem('tournoi_user_id', data.id);
-            sessionStorage.setItem('tournoi_login', login);
-            sessionStorage.setItem('tournoi_role', data.role);
-            sessionStorage.setItem('tournoi_inscription_id', data.inscription_id);
-            sessionStorage.setItem('tournoi_nom', inscription.nom_complet);
-            if (inscription.public_codes_tournoi && inscription.public_codes_tournoi.tournoi_id) {
-                sessionStorage.setItem('tournoi_tournoi_id', inscription.public_codes_tournoi.tournoi_id);
+            // 3. Récupérer l'inscription associée pour obtenir tournoi_id et statut
+            const { data: inscription, error: inscriptionError } = await supabasePublic
+                .from('public_inscriptions_tournoi')
+                .select('statut, nom_complet, code_id')
+                .eq('id', user.inscription_id)
+                .single();
+
+            if (inscriptionError || !inscription) {
+                showToast('Erreur lors de la vérification du compte.', 'error');
+                return;
             }
 
-            showToast('Connexion réussie, redirection...', 'success');
-            setTimeout(() => {
-                window.location.href = 'dashboard-tournoi.html';
-            }, 1500);
+            if (inscription.statut !== 'valide') {
+                showToast(t('toast.compte_inactif'), 'warning');
+                return;
+            }
+
+            // 4. Obtenir le tournoi_id via la table des codes
+            const { data: code, error: codeError } = await supabasePublic
+                .from('public_codes_tournoi')
+                .select('tournoi_id')
+                .eq('id', inscription.code_id)
+                .single();
+
+            if (codeError || !code) {
+                showToast('Erreur lors de la récupération du tournoi.', 'error');
+                return;
+            }
+
+            // 5. Stocker en session
+            sessionStorage.setItem('tournoi_user_id', user.id);
+            sessionStorage.setItem('tournoi_login', login);
+            sessionStorage.setItem('tournoi_role', user.role);
+            sessionStorage.setItem('tournoi_inscription_id', user.inscription_id);
+            sessionStorage.setItem('tournoi_nom', inscription.nom_complet);
+            sessionStorage.setItem('tournoi_tournoi_id', code.tournoi_id);
+
+            showToast(t('toast.connexion_reussie'), 'success');
+            // Redirection immédiate
+            window.location.href = 'dashboard-tournoi.html';
         } catch (err) {
             console.error(err);
             showToast(t('toast.connexion_error'), 'error');

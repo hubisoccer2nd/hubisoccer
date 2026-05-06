@@ -6,8 +6,6 @@
     <title>Admin - Gestion des tournois | HubISoccer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Bibliothèque bcrypt pour le hachage sécurisé des mots de passe -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.4/bcrypt.min.js"></script>
     <link rel="stylesheet" href="tournoi-admin.css">
 </head>
 <body>
@@ -41,7 +39,6 @@
                 <button class="tab-btn" data-tab="lives">Lives</button>
             </div>
 
-            <!-- Onglet Tournois -->
             <div id="tournois" class="tab-content active">
                 <div class="list-header">
                     <button id="newTournoiBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau tournoi</button>
@@ -49,7 +46,6 @@
                 <div id="tournoisList" class="items-list"></div>
             </div>
 
-            <!-- Onglet Codes -->
             <div id="codes" class="tab-content">
                 <div class="list-header">
                     <button id="newCodeBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau code</button>
@@ -57,7 +53,6 @@
                 <div id="codesList" class="items-list"></div>
             </div>
 
-            <!-- Onglet Inscriptions -->
             <div id="inscriptions" class="tab-content">
                 <div class="filters">
                     <select id="statusFilter" class="filter-select">
@@ -71,7 +66,6 @@
                 <div id="inscriptionsList" class="items-list"></div>
             </div>
 
-            <!-- Onglet Lives -->
             <div id="lives" class="tab-content">
                 <div class="list-header">
                     <button id="newLiveBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau live</button>
@@ -89,7 +83,7 @@
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- ========== MODALE TOURNOI (AVEC UPLOAD DE MÉDIAS) ========== -->
+    <!-- MODALE TOURNOI -->
     <div id="tournoiModal" class="modal">
         <div class="modal-content large">
             <span class="close-modal">&times;</span>
@@ -137,7 +131,7 @@
                         <input type="date" id="tournoiDateFin" required>
                     </div>
                 </div>
-                <!-- ========== GESTION DES MÉDIAS (IMAGE/VIDÉO) ========== -->
+                <!-- Médias -->
                 <div class="form-group">
                     <label>Médias du tournoi</label>
                     <div class="media-manager">
@@ -146,12 +140,9 @@
                             <button type="button" id="addVideoBtn" class="btn-secondary"><i class="fas fa-video"></i> Ajouter une vidéo</button>
                         </div>
                         <input type="file" id="mediaFileInput" accept="image/jpeg,image/png,video/mp4,video/webm" style="display: none;">
-                        <div id="mediaList" class="media-list">
-                            <!-- Les médias ajoutés apparaissent ici dynamiquement -->
-                        </div>
+                        <div id="mediaList" class="media-list"></div>
                     </div>
                 </div>
-                <!-- ========== FIN MÉDIAS ========== -->
                 <div class="form-group">
                     <label>Règlements</label>
                     <textarea id="tournoiReglements" rows="4"></textarea>
@@ -167,9 +158,8 @@
             </form>
         </div>
     </div>
-    <!-- ========== FIN MODALE TOURNOI ========== -->
 
-    <!-- Modale Code -->
+    <!-- MODALE CODE -->
     <div id="codeModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -207,7 +197,7 @@
         </div>
     </div>
 
-    <!-- Modale Live -->
+    <!-- MODALE LIVE -->
     <div id="liveModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -234,7 +224,7 @@
         </div>
     </div>
 
-    <!-- Modale de validation d'inscription -->
+    <!-- MODALE VALIDATION -->
     <div id="validationModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -259,6 +249,8 @@
         </div>
     </div>
 
+    <!-- bcrypt chargé en fin de body pour être immédiatement disponible -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.4/bcrypt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="tournoi-admin.js"></script>
 </body>

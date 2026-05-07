@@ -1,4 +1,4 @@
-// ========== 404.JS ==========
+// ========== DEBUT : 404.js ==========
 // ========== GESTION DU MENU MOBILE ==========
 document.addEventListener('click', function(e) {
     const menuToggle = e.target.closest('#menuToggle');
@@ -46,6 +46,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "NOS CLUBS",
         esp: "SAVOIR+"
     },
     // Anglais
@@ -71,6 +72,7 @@ const translations = {
         acteurs: "BECOME AN ACTOR",
         artiste: "BECOME AN ARTIST",
         tournoi_public: "Public Tournament",
+        nos_clubs: "OUR CLUBS",
         esp: "LEARN MORE"
     },
     // Yoruba
@@ -96,6 +98,7 @@ const translations = {
         acteurs: "DI Oṣere",
         artiste: "DI Oṣere",
         tournoi_public: "Idije Gbogbo eniyan",
+        nos_clubs: "AWON ẸGBẸ WA",
         esp: "KỌ ẸKỌ SIWAJU"
     },
     // Fon
@@ -121,6 +124,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "MÍTƆN CLUBS",
         esp: "SAVOIR+"
     },
     // Mina
@@ -146,6 +150,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "MÍA CLUBS",
         esp: "SAVOIR+"
     },
     // Lingala
@@ -171,6 +176,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "BA CLUBS NA BISO",
         esp: "SAVOIR+"
     },
     // Wolof
@@ -196,6 +202,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "SUNU CLUBS",
         esp: "SAVOIR+"
     },
     // Dioula
@@ -221,6 +228,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "ÀN CLUBS",
         esp: "SAVOIR+"
     },
     // Hausa
@@ -246,6 +254,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "KULAFA",
         esp: "SAVOIR+"
     },
     // Kiswahili
@@ -271,6 +280,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "VYOMBO VYETU",
         esp: "SAVOIR+"
     },
     // Espagnol
@@ -296,6 +306,7 @@ const translations = {
         acteurs: "CONVIÉRTETE EN ACTOR",
         artiste: "CONVIÉRTETE EN ARTISTA",
         tournoi_public: "TORNEO PÚBLICO",
+        nos_clubs: "NUESTROS CLUBES",
         esp: "SABER MÁS"
     },
     // Portugais
@@ -321,6 +332,7 @@ const translations = {
         acteurs: "TORNE-SE UM ATOR",
         artiste: "TORNE-SE UM ARTISTA",
         tournoi_public: "TORNEIO PÚBLICO",
+        nos_clubs: "NOSSOS CLUBES",
         esp: "SAIBA MAIS"
     },
     // Allemand
@@ -346,6 +358,7 @@ const translations = {
         acteurs: "WERDE AKTEUR",
         artiste: "WERDE KÜNSTLER",
         tournoi_public: "ÖFFENTLICHES TURNIER",
+        nos_clubs: "UNSERE KLUBS",
         esp: "MEHR ERFAHREN"
     },
     // Italien
@@ -371,6 +384,7 @@ const translations = {
         acteurs: "DIVENTA ATTORE",
         artiste: "DIVENTA ARTISTA",
         tournoi_public: "TORNEO PUBBLICO",
+        nos_clubs: "I NOSTRI CLUB",
         esp: "SCOPRI DI PIÙ"
     },
     // Arabe
@@ -396,6 +410,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "أنديتنا",
         esp: "SAVOIR+"
     },
     // Chinois
@@ -421,6 +436,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "我们的俱乐部",
         esp: "SAVOIR+"
     },
     // Russe
@@ -446,6 +462,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "НАШИ КЛУБЫ",
         esp: "SAVOIR+"
     },
     // Japonais
@@ -471,6 +488,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "私たちのクラブ",
         esp: "SAVOIR+"
     },
     // Turc
@@ -496,6 +514,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "KULÜPLERİMİZ",
         esp: "SAVOIR+"
     },
     // Coréen
@@ -521,6 +540,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "우리 클럽",
         esp: "SAVOIR+"
     },
     // Hindi
@@ -546,6 +566,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "हमारे क्लब",
         esp: "SAVOIR+"
     },
     // Néerlandais
@@ -571,6 +592,7 @@ const translations = {
         acteurs: "WORD ACTEUR",
         artiste: "WORD ARTIST",
         tournoi_public: "OPENBAAR TOERNOOI",
+        nos_clubs: "ONZE CLUBS",
         esp: "MEER WETEN"
     },
     // Polonais
@@ -596,6 +618,7 @@ const translations = {
         acteurs: "ZOSTAŃ AKTOREM",
         artiste: "ZOSTAŃ ARTYSTĄ",
         tournoi_public: "TURNIEJ PUBLICZNY",
+        nos_clubs: "NASZE KLUBY",
         esp: "DOWIEDZ SIĘ WIĘCEJ"
     },
     // Vietnamien
@@ -621,6 +644,7 @@ const translations = {
         acteurs: "DEVENEZ UN ACTEUR",
         artiste: "DEVENEZ UN ARTISTE",
         tournoi_public: "TOURNOI PUBLIC",
+        nos_clubs: "CÂU LẠC BỘ CỦA CHÚNG TÔI",
         esp: "SAVOIR+"
     }
 };

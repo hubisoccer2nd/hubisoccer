@@ -272,9 +272,158 @@
         </div>
     </div>
 
+    <!-- ========== NOUVEAU MODAL D'ÉDITION COMPLÈTE D'INSCRIPTION ========== -->
+    <div id="editInscriptionModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close-modal">&times;</span>
+            <h3>Modifier l'inscription</h3>
+            <form id="editInscriptionForm">
+                <input type="hidden" id="editInscriptionId">
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-user"></i> Identité et contacts</legend>
+                    <div class="form-group">
+                        <label>Nom complet *</label>
+                        <input type="text" id="editNomComplet" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date de naissance *</label>
+                            <input type="date" id="editDateNaissance" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ville / Quartier *</label>
+                            <input type="text" id="editVilleQuartier" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Téléphone (WhatsApp) *</label>
+                            <input type="tel" id="editTelephone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="editEmail" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Réseaux sociaux</label>
+                        <input type="text" id="editReseauxSociaux">
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-star"></i> Profil du talent</legend>
+                    <div class="form-group">
+                        <label>Catégorie principale *</label>
+                        <select id="editCategorie" required>
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="sportif">Sportif</option>
+                            <option value="artiste">Artiste</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="editDisciplineSportGroup">
+                        <label>Discipline sportive *</label>
+                        <select id="editDisciplineSport">
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="football">Football</option>
+                            <option value="basketball">Basketball</option>
+                            <option value="tennis">Tennis</option>
+                            <option value="athletisme">Athlétisme</option>
+                            <option value="arts_martiaux">Arts Martiaux</option>
+                            <option value="autre_sport">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="editDisciplineArtisteGroup">
+                        <label>Discipline artistique *</label>
+                        <select id="editDisciplineArtiste">
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="chant">Chant</option>
+                            <option value="danse">Danse</option>
+                            <option value="slam">Slam</option>
+                            <option value="humour">Humour</option>
+                            <option value="art_visuel">Art Visuel</option>
+                            <option value="autre_artiste">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="editAutreDisciplineGroup" style="display:none;">
+                        <label>Précisez *</label>
+                        <input type="text" id="editAutreDiscipline">
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-users"></i> Statut actuel</legend>
+                    <div class="form-group">
+                        <label>Vous êtes *</label>
+                        <select id="editStatutTalent" required>
+                            <option value="libre">Talent Libre (Individuel)</option>
+                            <option value="en_club">Membre d'un Club / Association</option>
+                        </select>
+                    </div>
+                    <div id="editClubFieldsGroup" style="display:none;">
+                        <div class="form-group">
+                            <label>Nom du Club / Association *</label>
+                            <input type="text" id="editNomClubActuel">
+                        </div>
+                        <div class="form-group">
+                            <label>Nom et Contact du Responsable *</label>
+                            <input type="text" id="editContactResponsable">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-graduation-cap"></i> Études & Métiers</legend>
+                    <div class="form-group">
+                        <label>Niveau d'études actuel</label>
+                        <input type="text" id="editNiveauEtudes">
+                    </div>
+                    <div class="form-group">
+                        <label>Métier souhaité ou compétence secondaire</label>
+                        <input type="text" id="editMetierSouhaite">
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-calendar-alt"></i> Disponibilités</legend>
+                    <p class="fieldset-hint">Cochez les créneaux où vous êtes généralement libre.</p>
+                    <div class="dispo-table">
+                        <table>
+                            <thead><tr><th>Heures</th><th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>06h - 10h</td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="lundi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="mardi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="mercredi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="jeudi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="vendredi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="samedi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="dimanche" data-slot="matin"></td>
+                                </tr>
+                                <tr>
+                                    <td>14h - 18h</td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="lundi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="mardi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="mercredi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="jeudi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="vendredi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="samedi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="dimanche" data-slot="apresmidi"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+            </form>
+        </div>
+    </div>
+
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Librairie bcrypt pour le hachage des mots de passe -->
+    <!-- Librairie bcryptjs CORRIGÉE -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.4/bcrypt.min.js"></script>
     <script src="tournoi-admin.js"></script>
 </body>

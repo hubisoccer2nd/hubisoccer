@@ -1,7 +1,10 @@
 // ========== DEBUT : sw.js – URL Propres + Redirections ==========
 const URL_MAP = {
+  // ========== RACINE ==========
   '/': '/index.html',
   '/index': '/index.html',
+
+  // ========== PAGES PUBLIQUES ==========
   '/actualites': '/public/actualites.html',
   '/processus': '/public/processus.html',
   '/affiliation': '/public/affiliation.html',
@@ -45,6 +48,8 @@ const URL_MAP = {
   '/affilie-login': '/public/affilie-login.html',
   '/artistes-login': '/public/artistes-login.html',
   '/artiste-suivi': '/public/artiste-suivi.html',
+
+  // ========== GESTION CLUBS (PUBLIC) ==========
   '/coach-contrat': '/public/nos-clubs/gestion/coach-contrat.html',
   '/coach-dash': '/public/nos-clubs/gestion/coach-dash.html',
   '/coach-messages': '/public/nos-clubs/gestion/coach-messages.html',
@@ -58,6 +63,8 @@ const URL_MAP = {
   '/talent-contrat': '/public/nos-clubs/gestion/talent-contrat.html',
   '/talent-dash': '/public/nos-clubs/gestion/talent-dash.html',
   '/talent-messages': '/public/nos-clubs/gestion/talent-messages.html',
+
+  // ========== ADMINISTRATION PUBLIQUE ==========
   '/admin': '/public/admin/administration.html',
   '/admin/acteurs': '/public/admin/acteurs-admin/acteurs-admin.html',
   '/admin/actualites': '/public/admin/actualites-admin/actualites-admin.html',
@@ -90,6 +97,8 @@ const URL_MAP = {
   '/admin/test-pratique': '/public/admin/test-pratique-admin/test-pratique-admin.html',
   '/admin/tournoi': '/public/admin/tournoi-admin/tournoi-admin.html',
   '/admin/transactions': '/public/admin/transactions-admin/transactions-admin.html',
+
+  // ========== AUTHENTIFICATION PRIVÉE ==========
   '/login': '/hubisapp/authprive/users/login.html',
   '/signup': '/hubisapp/authprive/users/signup.html',
   '/reset-password': '/hubisapp/authprive/users/reset-password.html',
@@ -99,6 +108,8 @@ const URL_MAP = {
   '/authprive/admin/users': '/hubisapp/authprive/admin/admin-users.html',
   '/authprive/admin/logs': '/hubisapp/authprive/admin/admin-logs.html',
   '/authprive/admin/ids': '/hubisapp/authprive/admin/admin-ids.html',
+
+  // ========== FOOTBALLEUR ==========
   '/footballeur/dashboard': '/hubisapp/footballeur/dashboard/foot-dash.html',
   '/footballeur/profil': '/hubisapp/footballeur/profile-edit/foot-profile.html',
   '/footballeur/cv': '/hubisapp/footballeur/edit-cv/foot-cv.html',
@@ -118,21 +129,33 @@ const URL_MAP = {
   '/footballeur/admin/transferts': '/hubisapp/footballeur/admin-foot/transferts/admin-foot-transferts.html',
   '/footballeur/admin/verifications': '/hubisapp/footballeur/admin-foot/verifications/admin-foot-verif.html',
   '/footballeur/admin/videos': '/hubisapp/footballeur/admin-foot/videos/admin-foot-videos.html',
+
+  // ========== BASKETTEUR ==========
   '/basketteur/dashboard': '/hubisapp/basketteur/dashboard/basket-dash.html',
   '/basketteur/revenus': '/hubisapp/basketteur/revenus/basket-revenus.html',
   '/basketteur/revenus-setup': '/hubisapp/basketteur/revenus/basket-revenus-setup.html',
+
+  // ========== COACH ==========
   '/coach/dashboard': '/hubisapp/coach/dashboard/coach-dash.html',
   '/coach/revenus': '/hubisapp/coach/revenus/coach-revenus.html',
   '/coach/revenus-setup': '/hubisapp/coach/revenus/coach-revenus-setup.html',
+
+  // ========== AGENT ==========
   '/agent/dashboard': '/hubisapp/agent/dashboard/agent-dash.html',
   '/agent/commissions': '/hubisapp/agent/commissions/agent-commissions.html',
   '/agent/commissions-setup': '/hubisapp/agent/commissions/agent-commissions-setup.html',
+
+  // ========== ACADÉMIE ==========
   '/academie/dashboard': '/hubisapp/academie/dashboard/academie-dash.html',
   '/academie/revenus': '/hubisapp/academie/revenus/academie-revenus.html',
   '/academie/revenus-setup': '/hubisapp/academie/revenus/academie-revenus-setup.html',
+
+  // ========== PARRAIN ==========
   '/parrain/dashboard': '/hubisapp/parrain/dashboard/parrain-dash.html',
   '/parrain/dons': '/hubisapp/parrain/dons/parrain-dons.html',
   '/parrain/dons-setup': '/hubisapp/parrain/dons/parrain-dons-setup.html',
+
+  // ========== SHARED – COMMUNAUTÉ ==========
   '/communaute/feed': '/hubisapp/shared/community/feed.html',
   '/communaute/live': '/hubisapp/shared/community/live.html',
   '/communaute/notifications': '/hubisapp/shared/community/notifications.html',
@@ -142,12 +165,18 @@ const URL_MAP = {
   '/communaute/settings-feed': '/hubisapp/shared/community/settings-feed.html',
   '/communaute/stories': '/hubisapp/shared/community/stories.html',
   '/communaute/stories-view': '/hubisapp/shared/community/stories-view.html',
+
+  // ========== SHARED – MESSAGERIE ==========
   '/messagerie/conversation': '/hubisapp/shared/messagerie/conversation.html',
   '/messagerie/discuss': '/hubisapp/shared/messagerie/discuss.html',
   '/messagerie/profil-msg': '/hubisapp/shared/messagerie/profil-msg.html',
   '/messagerie/settings-msg': '/hubisapp/shared/messagerie/settings-msg.html',
+
+  // ========== SHARED – TOURNOI ==========
   '/gestion-tournoi': '/hubisapp/shared/gestion-tournoi/acceuil-gt.html',
   '/suivi-tournoi': '/hubisapp/shared/suivi-tournoi/suivi-tournoi.html',
+
+  // ========== PAGE DE CONSTRUCTION ==========
   '/construction': '/hubisapp/shared/construction.html'
 };
 

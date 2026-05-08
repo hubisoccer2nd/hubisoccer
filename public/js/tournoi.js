@@ -1,115 +1,60 @@
-// ========== TOURNOI.JS – CORRIGÉ ==========
+// ========== DEBUT : tournoi.js ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ============================================================
-   TRADUCTIONS
-   ============================================================ */
-const translations = {
+/* ----- LANGUE & TRADUCTIONS ----- */
+// Utilise `window.translations` défini dans tournoi-i18n.js (si non présent, fallback fr minimal)
+const translations = window.translations || {
     fr: {
-        'loader.message': 'Chargement...',
-        'nav.home': 'ESPACE TOURNOI',
-        'nav.scouting': 'SCOUTING',
-        'nav.process': 'PROCESSUS',
-        'nav.affiliation': 'AFFILIATION',
-        'nav.actors': 'DEVENIR ACTEUR',
-        'nav.tournoi': 'TOURNOIS',
-        'nav.community': 'COMMUNITY',
-        'nav.market': 'MARKET',
-        'tournoi.live_title': 'Live en direct',
-        'tournoi.tournois_title': 'Tournois à venir',
-        'tournoi.info_title': 'Comment participer ?',
-        'tournoi.info_text': '1. Choisissez un tournoi.<br>2. Copiez le code d\'inscription.<br>3. Cliquez sur "S\'inscrire" et remplissez le formulaire.<br>4. Après validation, vous recevrez vos identifiants pour accéder à l\'espace privé.',
-        'tournoi.modal.title': 'Inscription au tournoi',
-        'tournoi.modal.nom': 'Nom complet *',
-        'tournoi.modal.date_naissance': 'Date de naissance *',
-        'tournoi.modal.ville_quartier': 'Ville / Quartier *',
-        'tournoi.modal.telephone': 'Téléphone (WhatsApp) *',
-        'tournoi.modal.email': 'Email *',
-        'tournoi.modal.reseaux': 'Réseaux sociaux',
-        'tournoi.modal.categorie': 'Catégorie principale *',
-        'tournoi.modal.discipline_sport': 'Discipline sportive *',
-        'tournoi.modal.discipline_artiste': 'Discipline artistique *',
-        'tournoi.modal.autre_discipline': 'Précisez *',
-        'tournoi.modal.statut_talent': 'Vous êtes *',
-        'tournoi.modal.nom_club_actuel': 'Nom du Club / Association *',
-        'tournoi.modal.contact_responsable': 'Nom et Contact du Responsable *',
-        'tournoi.modal.niveau_etudes': 'Niveau d\'études actuel',
-        'tournoi.modal.metier_souhaite': 'Métier souhaité ou compétence secondaire',
-        'tournoi.modal.envoyer': 'Envoyer ma demande',
-        'tournoi.copy': 'Copier',
-        'tournoi.copied': 'Copié !',
-        'tournoi.inscrire': 'S\'inscrire',
-        'tournoi.code_complet': 'Complet',
-        'footer.badge1': 'Conformité APDP Bénin',
-        'footer.badge2': 'Règlementation FIFA',
-        'footer.badge3': 'Triple Projet Sport-Études-Carrière',
-        'footer.tel': '📞 +229 01 95 97 31 57',
-        'footer.email': '📧 contacthubisoccer@gmail.com',
-        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
-        'toast.code_copied': 'Code copié !',
-        'toast.fill_fields': 'Veuillez remplir tous les champs obligatoires.',
-        'toast.inscription_ok': 'Demande envoyée. Vous serez notifié après validation.',
-        'toast.inscription_error': 'Erreur lors de l\'envoi.',
-        'toast.no_live': 'Aucun live en cours pour le moment.'
-    },
-    en: {
-        'loader.message': 'Loading...',
-        'nav.home': 'TOURNAMENT SPACE',
-        'nav.scouting': 'SCOUTING',
-        'nav.process': 'PROCESS',
-        'nav.affiliation': 'AFFILIATION',
-        'nav.actors': 'BECOME AN ACTOR',
-        'nav.tournoi': 'TOURNAMENTS',
-        'nav.community': 'COMMUNITY',
-        'nav.market': 'MARKET',
-        'tournoi.live_title': 'Live now',
-        'tournoi.tournois_title': 'Upcoming tournaments',
-        'tournoi.info_title': 'How to participate?',
-        'tournoi.info_text': '1. Choose a tournament.<br>2. Copy the registration code.<br>3. Click "Register" and fill the form.<br>4. After validation, you will receive your credentials to access the private area.',
-        'tournoi.modal.title': 'Tournament registration',
-        'tournoi.modal.nom': 'Full name *',
-        'tournoi.modal.date_naissance': 'Date of birth *',
-        'tournoi.modal.ville_quartier': 'City / District *',
-        'tournoi.modal.telephone': 'Phone (WhatsApp) *',
-        'tournoi.modal.email': 'Email *',
-        'tournoi.modal.reseaux': 'Social media',
-        'tournoi.modal.categorie': 'Main category *',
-        'tournoi.modal.discipline_sport': 'Sport discipline *',
-        'tournoi.modal.discipline_artiste': 'Artistic discipline *',
-        'tournoi.modal.autre_discipline': 'Specify *',
-        'tournoi.modal.statut_talent': 'You are *',
-        'tournoi.modal.nom_club_actuel': 'Club / Association name *',
-        'tournoi.modal.contact_responsable': 'Responsible contact *',
-        'tournoi.modal.niveau_etudes': 'Current education level',
-        'tournoi.modal.metier_souhaite': 'Desired job or secondary skill',
-        'tournoi.modal.envoyer': 'Submit my request',
-        'tournoi.copy': 'Copy',
-        'tournoi.copied': 'Copied!',
-        'tournoi.inscrire': 'Register',
-        'tournoi.code_complet': 'Full',
-        'footer.badge1': 'APDP Benin Compliance',
-        'footer.badge2': 'FIFA Regulations',
-        'footer.badge3': 'Triple Project Sport-Studies-Career',
-        'footer.tel': '📞 +229 01 95 97 31 57',
-        'footer.email': '📧 contacthubisoccer@gmail.com',
-        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.',
-        'toast.code_copied': 'Code copied!',
-        'toast.fill_fields': 'Please fill in all required fields.',
-        'toast.inscription_ok': 'Request sent. You will be notified after validation.',
-        'toast.inscription_error': 'Error sending request.',
-        'toast.no_live': 'No live at the moment.'
+        loader_message: 'Chargement...',
+        tournoi_live_title: 'Live en direct',
+        tournois_title: 'Tournois à venir',
+        tournoi_info_title: 'Comment participer ?',
+        tournoi_info_text: '1. Choisissez un tournoi.<br>2. Copiez le code d\'inscription.<br>3. Cliquez sur "S\'inscrire" et remplissez le formulaire.<br>4. Après validation, vous recevrez vos identifiants pour accéder à l\'espace privé.',
+        modal_inscription_title: 'Inscription au tournoi',
+        modal_nom_complet: 'Nom complet *',
+        modal_date_naissance: 'Date de naissance *',
+        modal_ville_quartier: 'Ville / Quartier *',
+        modal_telephone: 'Téléphone (WhatsApp) *',
+        modal_email: 'Email *',
+        modal_reseaux_sociaux: 'Réseaux sociaux',
+        modal_categorie: 'Catégorie principale *',
+        modal_discipline_sport: 'Discipline sportive *',
+        modal_discipline_artiste: 'Discipline artistique *',
+        modal_autre_discipline: 'Précisez *',
+        modal_statut_talent: 'Vous êtes *',
+        modal_nom_club_actuel: 'Nom du Club / Association *',
+        modal_contact_responsable: 'Nom et Contact du Responsable *',
+        modal_niveau_etudes: 'Niveau d\'études actuel',
+        modal_metier_souhaite: 'Métier souhaité ou compétence secondaire',
+        modal_envoyer: 'Envoyer ma demande',
+        copy: 'Copier',
+        copied: 'Copié !',
+        inscrire: 'S\'inscrire',
+        code_complet: 'Complet',
+        footer_conformite: 'Conformité APDP Bénin',
+        footer_reglementation: 'Règlementation FIFA',
+        footer_double_projet: 'Triple Projet Sport-Études-Carrière',
+        contact_tel: '📞 +229 01 95 97 31 57',
+        contact_email: '📧 contacthubisoccer@gmail.com',
+        rccm: 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        copyright: '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+        toast_code_copied: 'Code copié !',
+        toast_fill_fields: 'Veuillez remplir tous les champs obligatoires.',
+        toast_inscription_ok: 'Demande envoyée. Vous serez notifié après validation.',
+        toast_inscription_error: 'Erreur lors de l\'envoi.',
+        toast_no_live: 'Aucun live en cours pour le moment.',
+        no_tournoi: 'Aucun tournoi pour le moment.',
+        media_modal_title: 'Détail du média'
     }
 };
 
-let currentLang = localStorage.getItem('tournoi_lang') || navigator.language.split('-')[0];
+let currentLang = localStorage.getItem('hubiLang') || 'fr';
 if (!translations[currentLang]) currentLang = 'fr';
 
 function t(key, params = {}) {
-    let text = translations[currentLang]?.[key] || translations.fr[key] || key;
+    let text = (translations[currentLang] && translations[currentLang][key]) || translations['fr'][key] || key;
     for (const [k, v] of Object.entries(params)) text = text.replace(`{${k}}`, v);
     return text;
 }
@@ -118,38 +63,33 @@ function applyTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (key) {
-            if (el.tagName === 'INPUT' && el.getAttribute('data-i18n-placeholder')) el.placeholder = t(key);
-            else el.innerHTML = t(key);
+            if (el.tagName === 'INPUT' && el.hasAttribute('data-i18n-placeholder')) {
+                el.placeholder = t(key);
+            } else if (el.tagName === 'SELECT' || el.tagName === 'OPTION') {
+                el.textContent = t(key);
+            } else {
+                // Conserver les <br> etc.
+                if (el.innerHTML.includes('<')) el.innerHTML = t(key);
+                else el.textContent = t(key);
+            }
         }
-    });
-    document.querySelectorAll('select option').forEach(opt => {
-        const key = opt.getAttribute('data-i18n');
-        if (key) opt.textContent = t(key);
     });
 }
 
 function changeLanguage(lang) {
     if (translations[lang]) {
         currentLang = lang;
-        localStorage.setItem('tournoi_lang', lang);
+        localStorage.setItem('hubiLang', lang);
         applyTranslations();
-        loadTournois();
         loadLive();
+        loadTournois();
     }
 }
-/* FIN TRADUCTIONS */
 
-/* ============================================================
-   ÉLÉMENTS DOM
-   ============================================================ */
-const tournoiGrid = document.getElementById('tournoiGrid');
-const liveContainer = document.getElementById('liveContainer');
-/* FIN DOM */
-
-/* ============================================================
-   CHARGEMENT DU LIVE
-   ============================================================ */
+/* ----- CHARGEMENT DU LIVE ----- */
 async function loadLive() {
+    const container = document.getElementById('liveContainer');
+    if (!container) return;
     try {
         const { data, error } = await supabasePublic
             .from('public_lives')
@@ -160,10 +100,10 @@ async function loadLive() {
         if (error) throw error;
         if (data && data.length > 0) {
             const live = data[0];
-            liveContainer.innerHTML = `
+            container.innerHTML = `
                 <div class="live-card">
                     <div class="live-video">
-                        <iframe src="${live.embed_url}" frameborder="0" allowfullscreen></iframe>
+                        <iframe src="${escapeHtml(live.embed_url)}" frameborder="0" allowfullscreen></iframe>
                     </div>
                     <div class="live-info">
                         <h3 class="live-title">${escapeHtml(live.titre)}</h3>
@@ -172,28 +112,112 @@ async function loadLive() {
                 </div>
             `;
         } else {
-            liveContainer.innerHTML = `<div class="no-live">${t('toast.no_live')}</div>`;
+            container.innerHTML = `<div class="no-live">${t('toast_no_live')}</div>`;
         }
     } catch (err) {
         console.error(err);
-        liveContainer.innerHTML = `<div class="no-live">${t('toast.no_live')}</div>`;
+        container.innerHTML = `<div class="no-live">${t('toast_no_live')}</div>`;
     }
 }
-/* FIN LIVE */
 
-/* ============================================================
-   CHARGEMENT DES TOURNOIS
-   ============================================================ */
+/* ----- CHARGEMENT DES TOURNOIS (avec médias multiples) ----- */
+const tournoiGrid = document.getElementById('tournoiGrid');
+
 async function loadTournois() {
     if (!tournoiGrid) return;
     showLoader();
     try {
-        const { data, error } = await supabasePublic
+        const { data: tournois, error } = await supabasePublic
             .from('public_tournois')
             .select('*')
             .order('date_debut', { ascending: true });
         if (error) throw error;
-        renderTournois(data || []);
+        if (!tournois || tournois.length === 0) {
+            tournoiGrid.innerHTML = `<p>${t('no_tournoi')}</p>`;
+            return;
+        }
+        let html = '';
+        for (const tournoi of tournois) {
+            // Récupérer les médias liés
+            const { data: medias } = await supabasePublic
+                .from('public_tournoi_media')
+                .select('media_url, media_type')
+                .eq('tournoi_id', tournoi.id)
+                .order('position');
+            const mediaItems = medias || [];
+            // Générer la miniature avec initiales si aucun média
+            let mediaHtml = '';
+            if (mediaItems.length > 0) {
+                // Afficher la première image ou vidéo en miniature
+                const first = mediaItems[0];
+                if (first.media_type === 'image') {
+                    mediaHtml = `<img src="${first.media_url}" alt="${escapeHtml(tournoi.titre)}" class="card-image">`;
+                } else {
+                    mediaHtml = `<div class="video-thumb"><video src="${first.media_url}" muted preload="metadata"></video><span class="play-icon"><i class="fas fa-play-circle"></i></span></div>`;
+                }
+            } else {
+                const initials = (tournoi.titre || '?').substring(0,2).toUpperCase();
+                mediaHtml = `<div class="initials-placeholder">${initials}</div>`;
+            }
+            html += `
+                <div class="tournoi-card" data-tournoi-id="${tournoi.id}">
+                    <div class="card-image-container">
+                        ${mediaHtml}
+                        <div class="card-badge">${escapeHtml(tournoi.sport)}</div>
+                    </div>
+                    <div class="card-content">
+                        <h3>${escapeHtml(tournoi.titre)}</h3>
+                        <p class="tournoi-desc">${escapeHtml(tournoi.description || '')}</p>
+                        <div class="tournoi-meta">
+                            <span><i class="fas fa-calendar-alt"></i> ${formatDate(tournoi.date_debut)} - ${formatDate(tournoi.date_fin)}</span>
+                            <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(tournoi.ville)}${tournoi.quartier ? ' - ' + escapeHtml(tournoi.quartier) : ''}</span>
+                        </div>
+                        <div class="tournoi-code" id="code-${tournoi.id}">
+                            <span class="code-label">Code d'inscription :</span>
+                            <div class="code-box">
+                                <span class="code">••••••</span>
+                                <button class="copy-btn" data-tournoi-id="${tournoi.id}"><i class="fas fa-copy"></i> ${t('copy')}</button>
+                            </div>
+                            <button class="btn-inscrire" style="display: none;" data-tournoi-id="${tournoi.id}">${t('inscrire')}</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        tournoiGrid.innerHTML = html;
+
+        // Attacher les événements de copie, de clic sur les cartes (galerie) et d'ouverture de modale
+        document.querySelectorAll('.tournoi-card').forEach(card => {
+            card.addEventListener('click', async function(e) {
+                // Ne pas ouvrir la modale média si on clique sur un bouton ou un lien
+                if (e.target.closest('button') || e.target.closest('a')) return;
+                const tournoiId = this.dataset.tournoiId;
+                await openMediaModal(tournoiId);
+            });
+        });
+
+        // Réactiver les boutons de copie
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const tournoiId = btn.dataset.tournoiId;
+                await handleCopyCode(tournoiId, btn);
+            });
+        });
+
+        // Boutons "S'inscrire"
+        document.querySelectorAll('.btn-inscrire').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const tournoiId = btn.dataset.tournoiId;
+                openInscriptionModal(tournoiId, btn.dataset.codeId, btn.dataset.codeValue, btn.dataset.type, btn.dataset.entite);
+            });
+        });
+
+        // Pour chaque tournoi, charger le code d'inscription
+        for (const t of tournois) {
+            await loadCodeForTournoi(t.id);
+        }
     } catch (err) {
         console.error(err);
         showToast('Erreur chargement tournois', 'error');
@@ -202,58 +226,99 @@ async function loadTournois() {
     }
 }
 
-function renderTournois(tournois) {
-    if (!tournoiGrid) return;
-    if (!tournois.length) {
-        tournoiGrid.innerHTML = '<p>Aucun tournoi pour le moment.</p>';
-        return;
-    }
-    let html = '';
-    for (const tournoi of tournois) {
-        html += `
-            <div class="tournoi-card" data-tournoi-id="${tournoi.id}">
-                <div class="card-image">
-                    <img src="${tournoi.image_url || 'img/default-tournoi.jpg'}" alt="${escapeHtml(tournoi.titre)}">
-                    <div class="card-badge">${escapeHtml(tournoi.sport)}</div>
-                </div>
-                <div class="card-content">
-                    <h3>${escapeHtml(tournoi.titre)}</h3>
-                    <p class="tournoi-desc">${escapeHtml(tournoi.description || '')}</p>
-                    <div class="tournoi-meta">
-                        <span><i class="fas fa-calendar-alt"></i> ${formatDate(tournoi.date_debut)} - ${formatDate(tournoi.date_fin)}</span>
-                        <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(tournoi.ville)}${tournoi.quartier ? ' - ' + escapeHtml(tournoi.quartier) : ''}</span>
-                    </div>
-                    <div class="tournoi-code" id="code-${tournoi.id}">
-                        <span class="code-label">Code d'inscription :</span>
-                        <div class="code-box">
-                            <span class="code">••••••</span>
-                            <button class="copy-btn" data-tournoi-id="${tournoi.id}"><i class="fas fa-copy"></i> ${t('tournoi.copy')}</button>
-                        </div>
-                        <button class="btn-inscrire" style="display: none;" data-tournoi-id="${tournoi.id}">${t('tournoi.inscrire')}</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    tournoiGrid.innerHTML = html;
-    for (const tournoi of tournois) {
-        loadCodeForTournoi(tournoi.id);
+/* ----- AFFICHAGE DE LA GALERIE DANS UNE MODALE ----- */
+async function openMediaModal(tournoiId) {
+    try {
+        // Récupérer les infos du tournoi + les médias
+        const { data: tournoi, error: errTournoi } = await supabasePublic
+            .from('public_tournois')
+            .select('titre, description')
+            .eq('id', tournoiId)
+            .single();
+        if (errTournoi) throw errTournoi;
+        const { data: medias, error: errMedias } = await supabasePublic
+            .from('public_tournoi_media')
+            .select('media_url, media_type')
+            .eq('tournoi_id', tournoiId)
+            .order('position');
+        if (errMedias) throw errMedias;
+
+        const mediaList = medias || [];
+        const modal = document.getElementById('mediaModal');
+        const display = document.getElementById('mediaDisplay');
+        const titleEl = document.getElementById('mediaTitle');
+        const descEl = document.getElementById('mediaDescription');
+
+        let html = '';
+        if (mediaList.length === 0) {
+            html = `<p>Aucun média pour ce tournoi.</p>`;
+        } else if (mediaList.length === 1) {
+            const m = mediaList[0];
+            if (m.media_type === 'image') {
+                html = `<img src="${m.media_url}" alt="${escapeHtml(tournoi.titre)}" style="max-width:100%; max-height:70vh;">`;
+            } else {
+                html = `<video controls autoplay src="${m.media_url}" style="max-width:100%; max-height:70vh;"></video>`;
+            }
+        } else {
+            // Carrousel simple
+            html = `<div class="media-carousel">`;
+            mediaList.forEach((m, idx) => {
+                html += `<div class="slide ${idx === 0 ? 'active' : ''}">`;
+                if (m.media_type === 'image') {
+                    html += `<img src="${m.media_url}" alt="Média ${idx+1}">`;
+                } else {
+                    html += `<video controls src="${m.media_url}"></video>`;
+                }
+                html += `</div>`;
+            });
+            html += `</div><button class="prev-slide"><i class="fas fa-chevron-left"></i></button><button class="next-slide"><i class="fas fa-chevron-right"></i></button>`;
+        }
+
+        display.innerHTML = html;
+        titleEl.textContent = tournoi.titre;
+        descEl.textContent = tournoi.description || '';
+        modal.classList.add('active');
+
+        // Gestion du carrousel
+        let currentSlide = 0;
+        const slides = display.querySelectorAll('.slide');
+        if (slides.length > 1) {
+            function showSlide(index) {
+                slides.forEach((s, i) => s.classList.toggle('active', i === index));
+                currentSlide = index;
+            }
+            const prevBtn = modal.querySelector('.prev-slide');
+            const nextBtn = modal.querySelector('.next-slide');
+            if (prevBtn) prevBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showSlide((currentSlide - 1 + slides.length) % slides.length);
+            });
+            if (nextBtn) nextBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showSlide((currentSlide + 1) % slides.length);
+            });
+        }
+    } catch (err) {
+        showToast('Erreur chargement médias', 'error');
     }
 }
 
+/* ----- GESTION DU CODE D'INSCRIPTION ----- */
 async function loadCodeForTournoi(tournoiId) {
     try {
         const { data, error } = await supabasePublic
             .from('public_codes_tournoi')
-            .select('id, code, type_inscription, entite, quota_max, quota_utilise, tournoi_id')
+            .select('id, code, type_inscription, entite, quota_max, quota_utilise')
             .eq('tournoi_id', tournoiId)
             .eq('actif', true)
             .limit(1);
         if (error) throw error;
         const codeInfo = data && data[0] ? data[0] : null;
-        const codeBox = document.querySelector(`#code-${tournoiId} .code-box .code`);
+        const codeEl = document.querySelector(`#code-${tournoiId} .code`);
         const copyBtn = document.querySelector(`#code-${tournoiId} .copy-btn`);
         const inscrireBtn = document.querySelector(`#code-${tournoiId} .btn-inscrire`);
+        if (!codeEl || !copyBtn || !inscrireBtn) return;
+
         if (codeInfo) {
             const { data: tournoiData } = await supabasePublic
                 .from('public_tournois')
@@ -262,77 +327,68 @@ async function loadCodeForTournoi(tournoiId) {
                 .single();
             const estIndividuel = tournoiData?.type_tournoi === 'individuel';
             const estComplet = codeInfo.quota_utilise >= codeInfo.quota_max;
-            if (codeBox) codeBox.textContent = codeInfo.code;
-            if (copyBtn) {
-                if (estComplet) {
-                    copyBtn.innerHTML = `<i class="fas fa-ban"></i> ${t('tournoi.code_complet')}`;
-                    copyBtn.disabled = true;
-                    if (inscrireBtn) inscrireBtn.style.display = 'none';
-                } else {
-                    copyBtn.dataset.codeId = codeInfo.id;
-                    copyBtn.dataset.codeValue = codeInfo.code;
-                    copyBtn.dataset.type = codeInfo.type_inscription;
-                    copyBtn.dataset.entite = codeInfo.entite || '';
-                    copyBtn.dataset.quotaMax = codeInfo.quota_max;
-                    copyBtn.dataset.quotaUtilise = codeInfo.quota_utilise;
-                    copyBtn.dataset.tournoiId = tournoiId;
-                    copyBtn.dataset.tournoiType = estIndividuel ? 'individuel' : 'collectif';
-                }
+            codeEl.textContent = codeInfo.code;
+            if (estComplet) {
+                copyBtn.innerHTML = `<i class="fas fa-ban"></i> ${t('code_complet')}`;
+                copyBtn.disabled = true;
+                inscrireBtn.style.display = 'none';
+            } else {
+                copyBtn.disabled = false;
+                copyBtn.innerHTML = `<i class="fas fa-copy"></i> ${t('copy')}`;
+                copyBtn.dataset.codeId = codeInfo.id;
+                copyBtn.dataset.codeValue = codeInfo.code;
+                copyBtn.dataset.type = codeInfo.type_inscription;
+                copyBtn.dataset.entite = codeInfo.entite || '';
+                copyBtn.dataset.tournoiId = tournoiId;
+                copyBtn.dataset.tournoiType = estIndividuel ? 'individuel' : 'collectif';
             }
         } else {
-            if (codeBox) codeBox.textContent = 'Code indisponible';
-            if (copyBtn) copyBtn.disabled = true;
+            codeEl.textContent = 'Code indisponible';
+            copyBtn.disabled = true;
         }
     } catch (err) {
         console.error(err);
     }
 }
-/* FIN CHARGEMENT TOURNOIS */
 
-/* ============================================================
-   COPIER LE CODE ET AFFICHER LE BOUTON S'INSCRIRE
-   ============================================================ */
-document.addEventListener('click', async (e) => {
-    const copyBtn = e.target.closest('.copy-btn');
-    if (copyBtn && copyBtn.dataset.codeValue && !copyBtn.disabled) {
-        e.preventDefault();
-        const code = copyBtn.dataset.codeValue;
-        try {
-            await navigator.clipboard.writeText(code);
-        } catch (err) {
-            // Fallback manuel
-            const textarea = document.createElement('textarea');
-            textarea.value = code;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-        }
-        showToast(t('toast.code_copied'), 'success');
-        const codeBox = copyBtn.closest('.code-box');
-        const inscrireBtn = copyBtn.closest('.tournoi-code').querySelector('.btn-inscrire');
-        if (inscrireBtn) {
-            if (codeBox) codeBox.style.display = 'none';
-            inscrireBtn.style.display = 'block';
-            inscrireBtn.dataset.codeId = copyBtn.dataset.codeId;
-            inscrireBtn.dataset.codeValue = copyBtn.dataset.codeValue;
-            inscrireBtn.dataset.type = copyBtn.dataset.type;
-            inscrireBtn.dataset.entite = copyBtn.dataset.entite;
-            inscrireBtn.dataset.tournoiId = copyBtn.dataset.tournoiId;
-            inscrireBtn.dataset.tournoiType = copyBtn.dataset.tournoiType;
-        }
+async function handleCopyCode(tournoiId, btn) {
+    const code = btn.dataset.codeValue;
+    if (!code) return;
+    try {
+        await navigator.clipboard.writeText(code);
+    } catch (err) {
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
     }
-});
-/* FIN COPIER */
+    showToast(t('toast_code_copied'), 'success');
 
-/* ============================================================
-   OUVERTURE MODALE D'INSCRIPTION
-   ============================================================ */
+    // Afficher le bouton "S'inscrire"
+    const codeBox = btn.closest('.tournoi-code');
+    const inscrireBtn = codeBox.querySelector('.btn-inscrire');
+    const codeBoxDiv = codeBox.querySelector('.code-box');
+    if (inscrireBtn) {
+        codeBoxDiv.style.display = 'none';
+        inscrireBtn.style.display = 'inline-flex';
+        // Transférer les données
+        inscrireBtn.dataset.codeId = btn.dataset.codeId;
+        inscrireBtn.dataset.codeValue = btn.dataset.codeValue;
+        inscrireBtn.dataset.type = btn.dataset.type;
+        inscrireBtn.dataset.entite = btn.dataset.entite;
+        inscrireBtn.dataset.tournoiId = btn.dataset.tournoiId;
+        inscrireBtn.dataset.tournoiType = btn.dataset.tournoiType;
+    }
+}
+
+/* ----- MODALE INSCRIPTION ----- */
 const inscriptionModal = document.getElementById('inscriptionModal');
 const modalCodeId = document.getElementById('modalCodeId');
 const modalTournoiId = document.getElementById('modalTournoiId');
 
-// Gestion dynamique des champs V2
+// Champs dynamiques
 const categorieSelect = document.getElementById('inscriptionCategorie');
 const disciplineSportGroup = document.getElementById('disciplineSportGroup');
 const disciplineArtisteGroup = document.getElementById('disciplineArtisteGroup');
@@ -396,35 +452,28 @@ statutTalentSelect.addEventListener('change', function() {
     }
 });
 
-document.addEventListener('click', (e) => {
-    const inscrireBtn = e.target.closest('.btn-inscrire');
-    if (inscrireBtn && inscrireBtn.dataset.codeId) {
-        e.preventDefault();
-        modalCodeId.value = inscrireBtn.dataset.codeId;
-        modalTournoiId.value = inscrireBtn.dataset.tournoiId;
-        
-        document.getElementById('inscriptionForm').reset();
-        resetDynamicFields();
-        
-        inscriptionModal.classList.add('active');
-    }
-});
+function openInscriptionModal(tournoiId, codeId, codeValue, type, entite) {
+    modalCodeId.value = codeId;
+    modalTournoiId.value = tournoiId;
+    document.getElementById('inscriptionForm').reset();
+    resetDynamicFields();
+    inscriptionModal.classList.add('active');
+}
 
 document.querySelectorAll('.close-modal').forEach(btn => {
     btn.addEventListener('click', () => {
         inscriptionModal.classList.remove('active');
+        document.getElementById('mediaModal').classList.remove('active');
     });
 });
 window.addEventListener('click', (e) => {
     if (e.target === inscriptionModal) inscriptionModal.classList.remove('active');
+    const mediaModal = document.getElementById('mediaModal');
+    if (e.target === mediaModal) mediaModal.classList.remove('active');
 });
-/* FIN MODALE */
 
-/* ============================================================
-   SOUMISSION DU FORMULAIRE D'INSCRIPTION
-   ============================================================ */
-const inscriptionForm = document.getElementById('inscriptionForm');
-inscriptionForm.addEventListener('submit', async (e) => {
+/* ----- SOUMISSION INSCRIPTION ----- */
+document.getElementById('inscriptionForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const codeId = modalCodeId.value;
@@ -435,24 +484,24 @@ inscriptionForm.addEventListener('submit', async (e) => {
     const email = document.getElementById('inscriptionEmail').value.trim();
     const reseauxSociaux = document.getElementById('inscriptionReseauxSociaux').value.trim();
     
-    const categorie = document.getElementById('inscriptionCategorie').value;
+    const categorie = categorieSelect.value;
     let discipline = '';
     let autreDiscipline = '';
     if (categorie === 'sportif') {
-        discipline = document.getElementById('inscriptionDisciplineSport').value;
+        discipline = disciplineSportSelect.value;
         if (discipline === 'autre_sport') {
-            autreDiscipline = document.getElementById('inscriptionAutreDiscipline').value.trim();
+            autreDiscipline = inscriptionAutreDiscipline.value.trim();
         }
     } else if (categorie === 'artiste') {
-        discipline = document.getElementById('inscriptionDisciplineArtiste').value;
+        discipline = disciplineArtisteSelect.value;
         if (discipline === 'autre_artiste') {
-            autreDiscipline = document.getElementById('inscriptionAutreDiscipline').value.trim();
+            autreDiscipline = inscriptionAutreDiscipline.value.trim();
         }
     }
     
-    const statutTalent = document.getElementById('inscriptionStatutTalent').value;
-    const nomClubActuel = statutTalent === 'en_club' ? document.getElementById('inscriptionNomClubActuel').value.trim() : null;
-    const contactResponsable = statutTalent === 'en_club' ? document.getElementById('inscriptionContactResponsable').value.trim() : null;
+    const statutTalent = statutTalentSelect.value;
+    const nomClubActuel = statutTalent === 'en_club' ? inscriptionNomClubActuel.value.trim() : null;
+    const contactResponsable = statutTalent === 'en_club' ? inscriptionContactResponsable.value.trim() : null;
     
     const niveauEtudes = document.getElementById('inscriptionNiveauEtudes').value.trim();
     const metierSouhaite = document.getElementById('inscriptionMetierSouhaite').value.trim();
@@ -466,67 +515,55 @@ inscriptionForm.addEventListener('submit', async (e) => {
     });
     
     if (!codeId || !nom || !dateNaissance || !villeQuartier || !telephone || !email || !categorie) {
-        showToast(t('toast.fill_fields'), 'warning');
+        showToast(t('toast_fill_fields'), 'warning');
         return;
     }
-    if (categorie === 'sportif' && !discipline) {
-        showToast(t('toast.fill_fields'), 'warning');
-        return;
-    }
-    if (categorie === 'artiste' && !discipline) {
-        showToast(t('toast.fill_fields'), 'warning');
+    if ((categorie === 'sportif' && !discipline) || (categorie === 'artiste' && !discipline)) {
+        showToast(t('toast_fill_fields'), 'warning');
         return;
     }
     if (statutTalent === 'en_club' && (!nomClubActuel || !contactResponsable)) {
-        showToast(t('toast.fill_fields'), 'warning');
+        showToast(t('toast_fill_fields'), 'warning');
         return;
     }
 
     showLoader();
     try {
-        const insertData = {
-            code_id: codeId,
-            nom_complet: nom,
-            email: email,
-            telephone: telephone,
-            nom_club: nomClubActuel || null,
-            statut: 'en_attente',
-            date_soumission: new Date().toISOString(),
-            date_naissance: dateNaissance,
-            ville_quartier: villeQuartier,
-            reseaux_sociaux: reseauxSociaux || null,
-            categorie_talent: categorie,
-            discipline: discipline,
-            autre_discipline: autreDiscipline || null,
-            statut_talent: statutTalent,
-            nom_club_actuel: nomClubActuel,
-            contact_responsable: contactResponsable,
-            niveau_etudes: niveauEtudes || null,
-            metier_souhaite: metierSouhaite || null,
-            disponibilites: Object.keys(disponibilites).length > 0 ? disponibilites : null
-        };
-        
         const { error } = await supabasePublic
             .from('public_inscriptions_tournoi')
-            .insert([insertData]);
+            .insert([{
+                code_id: codeId,
+                nom_complet: nom,
+                email: email,
+                telephone: telephone,
+                nom_club: nomClubActuel || null,
+                statut: 'en_attente',
+                date_soumission: new Date().toISOString(),
+                date_naissance: dateNaissance,
+                ville_quartier: villeQuartier,
+                reseaux_sociaux: reseauxSociaux || null,
+                categorie_talent: categorie,
+                discipline: discipline,
+                autre_discipline: autreDiscipline || null,
+                statut_talent: statutTalent,
+                nom_club_actuel: nomClubActuel,
+                contact_responsable: contactResponsable,
+                niveau_etudes: niveauEtudes || null,
+                metier_souhaite: metierSouhaite || null,
+                disponibilites: Object.keys(disponibilites).length > 0 ? disponibilites : null
+            }]);
         if (error) throw error;
-        
-        showToast(t('toast.inscription_ok'), 'success');
+        showToast(t('toast_inscription_ok'), 'success');
         inscriptionModal.classList.remove('active');
-        inscriptionForm.reset();
-        resetDynamicFields();
     } catch (err) {
         console.error(err);
-        showToast(t('toast.inscription_error'), 'error');
+        showToast(t('toast_inscription_error'), 'error');
     } finally {
         hideLoader();
     }
 });
-/* FIN SOUMISSION */
 
-/* ============================================================
-   UTILITAIRES
-   ============================================================ */
+/* ----- UTILITAIRES ----- */
 function formatDate(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -562,11 +599,8 @@ function hideLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'none';
 }
-/* FIN UTILITAIRES */
 
-/* ============================================================
-   MENU MOBILE ET LANGUE
-   ============================================================ */
+/* ----- MENU MOBILE & LANGUE ----- */
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
@@ -583,6 +617,7 @@ function initMenuMobile() {
         });
     }
 }
+
 function initLangSelector() {
     const langSelect = document.getElementById('langSelect');
     if (langSelect) {
@@ -590,11 +625,8 @@ function initLangSelector() {
         langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
     }
 }
-/* FIN MENU & LANGUE */
 
-/* ============================================================
-   INITIALISATION
-   ============================================================ */
+/* ----- INIT ----- */
 document.addEventListener('DOMContentLoaded', () => {
     applyTranslations();
     initLangSelector();
@@ -602,4 +634,4 @@ document.addEventListener('DOMContentLoaded', () => {
     loadLive();
     loadTournois();
 });
-/* FIN INITIALISATION */
+// ========== FIN : tournoi.js ==========

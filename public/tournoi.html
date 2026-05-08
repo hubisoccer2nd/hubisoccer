@@ -6,24 +6,54 @@
     <title>Tournois & Lives - HubISoccer</title>
     <meta name="description" content="Participez aux tournois de détection HubISoccer. Suivez les lives, obtenez vos codes d'inscription et montrez votre talent.">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://hubisoccer.site/public/tournoi.html">
+    <link rel="canonical" href="https://hubisoccer.site/tournoi">
+    <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://hubisoccer.site/public/tournoi.html">
+    <meta property="og:url" content="https://hubisoccer.site/tournoi">
     <meta property="og:title" content="Tournois HubISoccer – Joue et détecte-toi">
     <meta property="og:description" content="Participez aux tournois de détection. Suivez les lives, obtenez vos codes d'inscription.">
     <meta property="og:image" content="https://hubisoccer.site/public/img/stade-cotonou.jpg">
-    <link rel="alternate" hreflang="fr" href="https://hubisoccer.site/public/tournoi.html">
+    <!-- Hreflang -->
+    <link rel="alternate" hreflang="fr" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="en" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="yo" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="fon" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="mina" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="lin" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="wol" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="diou" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="ha" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="sw" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="es" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="pt" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="de" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="it" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="ar" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="zh" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="ru" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="ja" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="tr" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="ko" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="hi" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="nl" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="pl" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="vi" href="https://hubisoccer.site/tournoi">
+    <link rel="alternate" hreflang="x-default" href="https://hubisoccer.site/tournoi">
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Styles -->
     <link rel="stylesheet" href="css/tournoi.css">
 </head>
 <body>
     <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
         <div class="spinner"></div>
-        <span data-i18n="loader.message">Chargement...</span>
+        <span data-i18n="loader_message">Chargement...</span>
     </div>
+
+    <!-- ========== NAVIGATION UNIFIÉE ========== -->
     <nav>
-        <a href="../index.html" class="logo-link">
+        <a href="/" class="logo-link">
             <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
@@ -55,188 +85,185 @@
             </select>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="dashboard-tournoi.html" data-i18n="nav.home">ESPACE TOURNOI</a>
-                <a href="scouting.html" data-i18n="nav.scouting">SCOUTING</a>
-                <a href="processus.html" data-i18n="nav.process">PROCESSUS</a>
-                <a href="affiliation.html" data-i18n="nav.affiliation">AFFILIATION</a>
-                <a href="acteurs.html" data-i18n="nav.actors">DEVENIR ACTEUR</a>
-                <a href="tournoi.html" class="active" data-i18n="nav.tournoi">TOURNOIS</a>
-                <a href="hub-community.html" data-i18n="nav.community">COMMUNITY</a>
-                <a href="e-marketing-hubisoccer.html" data-i18n="nav.market">MARKET</a>
+                <a href="/market" data-i18n="hub_market">HUBISOCCER MARKET</a>
+                <a href="/communaute-hub" data-i18n="hub_community">HUB COMMUNITY</a>
+                <a href="/scouting" data-i18n="scouting">SCOUTING</a>
+                <a href="/processus" data-i18n="processus">PROCESSUS</a>
+                <a href="/affiliation" data-i18n="affiliation">AFFILIATION</a>
+                <a href="/premier-pas" data-i18n="premier_pas">PREMIER-PAS</a>
+                <a href="/acteurs" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
+                <a href="/artiste-adhesion" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
+                <a href="/tournoi" class="active" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
+                <a href="/clubs" data-i18n="nos_clubs">NOS CLUBS</a>
+                <a href="/esp" data-i18n="esp">SAVOIR+</a>
+                <a href="/connexion-tournoi" class="btn-auth" data-i18n="espace_tournoi">ESPACE TOURNOI</a>
+                <a href="/messagerie-publique" class="btn-auth gold" data-i18n="messagerie">MESSAGERIE</a>
             </div>
         </div>
     </nav>
 
     <main class="tournoi-main">
         <section class="live-section" id="liveSection">
-            <h2><i class="fas fa-broadcast-tower"></i> <span data-i18n="tournoi.live_title">Live en direct</span></h2>
+            <h2><i class="fas fa-broadcast-tower"></i> <span data-i18n="tournoi_live_title">Live en direct</span></h2>
             <div id="liveContainer" class="live-container"></div>
         </section>
 
         <section class="tournois-section">
-            <h2><i class="fas fa-trophy"></i> <span data-i18n="tournoi.tournois_title">Tournois à venir</span></h2>
+            <h2><i class="fas fa-trophy"></i> <span data-i18n="tournois_title">Tournois à venir</span></h2>
             <div id="tournoiGrid" class="tournoi-grid"></div>
         </section>
 
         <div class="tournoi-info">
-            <h3 data-i18n="tournoi.info_title">Comment participer ?</h3>
-            <p data-i18n="tournoi.info_text">1. Choisissez un tournoi.<br>2. Copiez le code d'inscription.<br>3. Cliquez sur "S'inscrire" et remplissez le formulaire.<br>4. Après validation, vous recevrez vos identifiants pour accéder à l'espace privé.</p>
+            <h3 data-i18n="tournoi_info_title">Comment participer ?</h3>
+            <p data-i18n="tournoi_info_text">1. Choisissez un tournoi.<br>2. Copiez le code d'inscription.<br>3. Cliquez sur "S'inscrire" et remplissez le formulaire.<br>4. Après validation, vous recevrez vos identifiants pour accéder à l'espace privé.</p>
         </div>
     </main>
 
     <footer>
         <div class="compliance-badges">
-            <div class="badge-item" data-i18n="footer.badge1">Conformité APDP Bénin</div>
-            <div class="badge-item" data-i18n="footer.badge2">Règlementation FIFA</div>
-            <div class="badge-item" data-i18n="footer.badge3">Triple Projet Sport-Études-Carrière</div>
+            <div class="badge-item" data-i18n="footer_conformite">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer_reglementation">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer_double_projet">Triple Projet Sport-Études-Carrière</div>
         </div>
         <div class="contact-box">
-            <a href="tel:+2290195973157" class="contact-item" data-i18n="footer.tel">📞 +229 01 95 97 31 57</a>
-            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="footer.email">📧 contacthubisoccer@gmail.com</a>
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="contact_tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="contact_email">📧 contacthubisoccer@gmail.com</a>
         </div>
         <div class="legal">
             <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
-            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
-            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+            <p data-i18n="rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
         </div>
     </footer>
 
-    <div id="toastContainer" class="toast-container"></div>
-
-    <!-- ========== DÉBUT : MODALE D'INSCRIPTION V2 ========== -->
+    <!-- ========== MODALE D'INSCRIPTION ========== -->
     <div id="inscriptionModal" class="modal">
         <div class="modal-content modal-large">
             <span class="close-modal">&times;</span>
-            <h3 data-i18n="tournoi.modal.title">Inscription au tournoi</h3>
+            <h3 data-i18n="modal_inscription_title">Inscription au tournoi</h3>
             <form id="inscriptionForm">
                 <input type="hidden" id="modalCodeId">
                 <input type="hidden" id="modalTournoiId">
                 
                 <fieldset class="form-section">
-                    <legend><i class="fas fa-user"></i> 1. Identité et contacts</legend>
+                    <legend><i class="fas fa-user"></i> 1. <span data-i18n="modal_identite">Identité et contacts</span></legend>
                     <div class="form-group">
-                        <label data-i18n="tournoi.modal.nom">Nom complet *</label>
+                        <label data-i18n="modal_nom_complet">Nom complet *</label>
                         <input type="text" id="inscriptionNom" required>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label data-i18n="tournoi.modal.date_naissance">Date de naissance *</label>
+                            <label data-i18n="modal_date_naissance">Date de naissance *</label>
                             <input type="date" id="inscriptionDateNaissance" required>
                         </div>
                         <div class="form-group">
-                            <label data-i18n="tournoi.modal.ville_quartier">Ville / Quartier *</label>
+                            <label data-i18n="modal_ville_quartier">Ville / Quartier *</label>
                             <input type="text" id="inscriptionVilleQuartier" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label data-i18n="tournoi.modal.telephone">Téléphone (WhatsApp) *</label>
+                            <label data-i18n="modal_telephone">Téléphone (WhatsApp) *</label>
                             <input type="tel" id="inscriptionTelephone" required>
                         </div>
                         <div class="form-group">
-                            <label data-i18n="tournoi.modal.email">Email *</label>
+                            <label data-i18n="modal_email">Email *</label>
                             <input type="email" id="inscriptionEmail" required>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="tournoi.modal.reseaux">Réseaux sociaux (Facebook / Instagram / TikTok)</label>
+                        <label data-i18n="modal_reseaux_sociaux">Réseaux sociaux (Facebook / Instagram / TikTok)</label>
                         <input type="text" id="inscriptionReseauxSociaux" placeholder="@pseudo ou URL">
                     </div>
                 </fieldset>
                 
                 <fieldset class="form-section">
-                    <legend><i class="fas fa-star"></i> 2. Profil du talent</legend>
+                    <legend><i class="fas fa-star"></i> 2. <span data-i18n="modal_profil">Profil du talent</span></legend>
                     <div class="form-group">
-                        <label data-i18n="tournoi.modal.categorie">Catégorie principale *</label>
+                        <label data-i18n="modal_categorie">Catégorie principale *</label>
                         <select id="inscriptionCategorie" required>
-                            <option value="">-- Sélectionnez --</option>
-                            <option value="sportif">Sportif</option>
-                            <option value="artiste">Artiste</option>
+                            <option value="">-- <span data-i18n="select_option">Sélectionnez</span> --</option>
+                            <option value="sportif" data-i18n="categorie_sportif">Sportif</option>
+                            <option value="artiste" data-i18n="categorie_artiste">Artiste</option>
                         </select>
                     </div>
                     <div class="form-group" id="disciplineSportGroup" style="display: none;">
-                        <label data-i18n="tournoi.modal.discipline_sport">Discipline sportive *</label>
+                        <label data-i18n="modal_discipline_sport">Discipline sportive *</label>
                         <select id="inscriptionDisciplineSport">
-                            <option value="">-- Sélectionnez --</option>
+                            <option value="">-- <span data-i18n="select_option">Sélectionnez</span> --</option>
                             <option value="football">Football</option>
                             <option value="basketball">Basketball</option>
                             <option value="tennis">Tennis</option>
                             <option value="athletisme">Athlétisme</option>
                             <option value="arts_martiaux">Arts Martiaux</option>
-                            <option value="autre_sport">Autre</option>
+                            <option value="autre_sport" data-i18n="autre">Autre</option>
                         </select>
                     </div>
                     <div class="form-group" id="disciplineArtisteGroup" style="display: none;">
-                        <label data-i18n="tournoi.modal.discipline_artiste">Discipline artistique *</label>
+                        <label data-i18n="modal_discipline_artiste">Discipline artistique *</label>
                         <select id="inscriptionDisciplineArtiste">
-                            <option value="">-- Sélectionnez --</option>
+                            <option value="">-- <span data-i18n="select_option">Sélectionnez</span> --</option>
                             <option value="chant">Chant</option>
                             <option value="danse">Danse</option>
                             <option value="slam">Slam</option>
                             <option value="humour">Humour</option>
                             <option value="art_visuel">Art Visuel</option>
-                            <option value="autre_artiste">Autre</option>
+                            <option value="autre_artiste" data-i18n="autre">Autre</option>
                         </select>
                     </div>
                     <div class="form-group" id="autreDisciplineGroup" style="display: none;">
-                        <label data-i18n="tournoi.modal.autre_discipline">Précisez *</label>
+                        <label data-i18n="modal_autre_discipline">Précisez *</label>
                         <input type="text" id="inscriptionAutreDiscipline">
                     </div>
                 </fieldset>
                 
                 <fieldset class="form-section">
-                    <legend><i class="fas fa-users"></i> 3. Statut actuel</legend>
+                    <legend><i class="fas fa-users"></i> 3. <span data-i18n="modal_statut">Statut actuel</span></legend>
                     <div class="form-group">
-                        <label data-i18n="tournoi.modal.statut_talent">Vous êtes *</label>
+                        <label data-i18n="modal_statut_talent">Vous êtes *</label>
                         <select id="inscriptionStatutTalent" required>
-                            <option value="libre">Talent Libre (Individuel)</option>
-                            <option value="en_club">Membre d'un Club / Association</option>
+                            <option value="libre" data-i18n="statut_libre">Talent Libre (Individuel)</option>
+                            <option value="en_club" data-i18n="statut_club">Membre d'un Club / Association</option>
                         </select>
                     </div>
                     <div id="clubFieldsGroup" style="display: none;">
                         <div class="form-group">
-                            <label data-i18n="tournoi.modal.nom_club_actuel">Nom du Club / Association *</label>
+                            <label data-i18n="modal_nom_club_actuel">Nom du Club / Association *</label>
                             <input type="text" id="inscriptionNomClubActuel">
                         </div>
                         <div class="form-group">
-                            <label data-i18n="tournoi.modal.contact_responsable">Nom et Contact du Responsable (Coach/Président) *</label>
+                            <label data-i18n="modal_contact_responsable">Nom et Contact du Responsable (Coach/Président) *</label>
                             <input type="text" id="inscriptionContactResponsable">
                         </div>
                     </div>
                 </fieldset>
                 
                 <fieldset class="form-section">
-                    <legend><i class="fas fa-graduation-cap"></i> 4. Volet "Trinité" (Études & Métiers)</legend>
+                    <legend><i class="fas fa-graduation-cap"></i> 4. <span data-i18n="modal_trinite">Volet "Trinité" (Études & Métiers)</span></legend>
                     <div class="form-group">
-                        <label data-i18n="tournoi.modal.niveau_etudes">Niveau d'études actuel</label>
+                        <label data-i18n="modal_niveau_etudes">Niveau d'études actuel</label>
                         <input type="text" id="inscriptionNiveauEtudes" placeholder="Ex: Bac, Licence, CAP...">
                     </div>
                     <div class="form-group">
-                        <label data-i18n="tournoi.modal.metier_souhaite">Métier souhaité ou compétence secondaire</label>
+                        <label data-i18n="modal_metier_souhaite">Métier souhaité ou compétence secondaire</label>
                         <input type="text" id="inscriptionMetierSouhaite" placeholder="Ex: Informaticien, Commerçant...">
                     </div>
                 </fieldset>
                 
                 <fieldset class="form-section">
-                    <legend><i class="fas fa-calendar-alt"></i> 5. Disponibilités pour les sélections</legend>
-                    <p class="fieldset-hint">Cochez les créneaux où vous êtes généralement libre.</p>
+                    <legend><i class="fas fa-calendar-alt"></i> 5. <span data-i18n="modal_disponibilites">Disponibilités pour les sélections</span></legend>
+                    <p class="fieldset-hint" data-i18n="modal_dispo_hint">Cochez les créneaux où vous êtes généralement libre.</p>
                     <div class="dispo-table">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Heures</th>
-                                    <th>Lun</th>
-                                    <th>Mar</th>
-                                    <th>Mer</th>
-                                    <th>Jeu</th>
-                                    <th>Ven</th>
-                                    <th>Sam</th>
-                                    <th>Dim</th>
+                                    <th data-i18n="table_heures">Heures</th>
+                                    <th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>06h - 10h</td>
+                                    <td data-i18n="matin">06h - 10h</td>
                                     <td><input type="checkbox" class="dispo-check" data-day="lundi" data-slot="matin"></td>
                                     <td><input type="checkbox" class="dispo-check" data-day="mardi" data-slot="matin"></td>
                                     <td><input type="checkbox" class="dispo-check" data-day="mercredi" data-slot="matin"></td>
@@ -246,7 +273,7 @@
                                     <td><input type="checkbox" class="dispo-check" data-day="dimanche" data-slot="matin"></td>
                                 </tr>
                                 <tr>
-                                    <td>14h - 18h</td>
+                                    <td data-i18n="apresmidi">14h - 18h</td>
                                     <td><input type="checkbox" class="dispo-check" data-day="lundi" data-slot="apresmidi"></td>
                                     <td><input type="checkbox" class="dispo-check" data-day="mardi" data-slot="apresmidi"></td>
                                     <td><input type="checkbox" class="dispo-check" data-day="mercredi" data-slot="apresmidi"></td>
@@ -260,12 +287,26 @@
                     </div>
                 </fieldset>
                 
-                <button type="submit" class="btn-submit" data-i18n="tournoi.modal.envoyer">Envoyer ma demande</button>
+                <button type="submit" class="btn-submit" data-i18n="modal_envoyer">Envoyer ma demande</button>
             </form>
         </div>
     </div>
-    <!-- ========== FIN : MODALE D'INSCRIPTION V2 ========== -->
+
+    <!-- ========== MODALE MÉDIA (galerie) ========== -->
+    <div id="mediaModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="mediaDisplay"></div>
+            <h3 id="mediaTitle"></h3>
+            <p id="mediaDescription"></p>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../security.js"></script>
+    <script src="tournoi-i18n.js"></script>
     <script src="js/tournoi.js"></script>
 </body>
 </html>

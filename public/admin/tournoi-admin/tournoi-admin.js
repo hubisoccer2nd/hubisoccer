@@ -3,6 +3,8 @@ const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+let currentInscriptionId = null; // Sécurise l'ID en cours de validation ou d'édition
+
 // ========== VÉRIFICATION DE SESSION ==========
 (async () => {
     const { data: { session } } = await supabaseAdmin.auth.getSession();
@@ -80,7 +82,7 @@ function hideLoader() {
 }
 
 /* =============================================
-   TOURNOIS (7 actions)
+   TOURNOIS
    ============================================= */
 async function loadTournois() {
     const list = document.getElementById('tournoisList');
@@ -148,17 +150,15 @@ window.deleteTournoi = async (id) => {
     if (!confirm('Supprimer définitivement ce tournoi et tous ses médias, codes, inscriptions ?')) return;
     showLoader();
     try {
-        // Supprimer les médias dans le bucket
         const { data: media } = await supabaseAdmin.from('public_tournoi_media').select('media_url').eq('tournoi_id', id);
         if (media) {
             for (const m of media) {
-                const path = m.media_url.split('/').slice(-2).join('/'); // extrait 'tournois/...'
+                const path = m.media_url.split('/').slice(-2).join('/');
                 await supabaseAdmin.storage.from('tournois_media').remove([path]);
             }
         }
         await supabaseAdmin.from('public_tournoi_media').delete().eq('tournoi_id', id);
         await supabaseAdmin.from('public_codes_tournoi').delete().eq('tournoi_id', id);
-        // Supprimer les inscriptions et participants associés (via codes)
         const { data: codes } = await supabaseAdmin.from('public_codes_tournoi').select('id').eq('tournoi_id', id);
         const codeIds = codes?.map(c => c.id) || [];
         if (codeIds.length) {
@@ -172,7 +172,7 @@ window.deleteTournoi = async (id) => {
     } finally { hideLoader(); }
 };
 
-// Détails (affiche toutes les infos dans un modal)
+// Détails tournoi
 window.viewTournoiDetails = async (id) => {
     showLoader();
     const { data: t } = await supabaseAdmin.from('public_tournois').select('*').eq('id', id).single();
@@ -189,48 +189,31 @@ window.viewTournoiDetails = async (id) => {
         <p><strong>Codes :</strong></p><ul>${codesHtml}</ul>
     `;
     document.getElementById('validationInfo').innerHTML = html;
-    // Désactiver le formulaire de validation dans ce modal partagé
-    document.getElementById('validationLogin').style.display = 'none';
-    document.getElementById('validationPassword').style.display = 'none';
-    document.getElementById('validationRole').style.display = 'none';
-    document.getElementById('saveValidationBtn').style.display = 'none';
+    hideValidationForm();
     document.getElementById('validationModal').classList.add('active');
     hideLoader();
-    // Restaurer l'affichage normal à la fermeture
     const restore = () => {
-        document.getElementById('validationLogin').style.display = '';
-        document.getElementById('validationPassword').style.display = '';
-        document.getElementById('validationRole').style.display = '';
-        document.getElementById('saveValidationBtn').style.display = '';
+        showValidationForm();
         document.getElementById('validationModal').removeEventListener('click', restore);
     };
     document.getElementById('validationModal').addEventListener('click', restore);
 };
 
-// Activer / Désactiver (pour un champ actif personnalisé, par exemple ajouter une colonne 'actif'? Sinon on peut simuler)
 window.toggleTournoiActive = async (id) => {
-    // Pas de colonne 'actif' dans public_tournois, mais on peut l'ajouter à l'avenir.
-    // Pour le moment, on affiche un message.
     showToast('Activation / désactivation non implémentée (à venir)', 'info');
 };
 
-// Rafraîchir un seul tournoi
 window.refreshSingleTournoi = (id) => {
-    loadTournois(); // Recharge toute la liste
+    loadTournois();
 };
 
-// Commentaire (note admin)
 window.addTournoiComment = async (id) => {
     const comment = prompt('Ajouter un commentaire / note pour ce tournoi :');
     if (comment === null) return;
     showLoader();
-    // On peut stocker dans une colonne 'commentaire_admin' si elle existe, sinon on simule
     const { error } = await supabaseAdmin.from('public_tournois').update({ commentaire_admin: comment.trim() }).eq('id', id);
-    if (error) {
-        showToast('Erreur sauvegarde commentaire', 'error');
-    } else {
-        showToast('Commentaire enregistré', 'success');
-    }
+    if (error) showToast('Erreur sauvegarde commentaire', 'error');
+    else showToast('Commentaire enregistré', 'success');
     hideLoader();
 };
 
@@ -295,7 +278,6 @@ document.getElementById('mediaFileInput').addEventListener('change', function() 
         const type = file.type.startsWith('video/') ? 'video' : 'image';
         pendingMediaFiles.push({ file, type });
         const currentId = document.getElementById('tournoiId').value;
-        // Recharger la liste des médias existants si on est en modification
         if (currentId) {
             supabaseAdmin.from('public_tournoi_media').select('*').eq('tournoi_id', currentId).order('position').then(({ data }) => {
                 existingMediaIds = data ? data.map(m => m.id) : [];
@@ -333,16 +315,13 @@ document.getElementById('tournoiForm').addEventListener('submit', async (e) => {
             if (error) throw error;
             tournoiId = newTournoi.id;
         }
-        // Gérer les suppressions de médias
         for (const mId of deletedMediaIds) {
             await supabaseAdmin.from('public_tournoi_media').delete().eq('id', mId);
         }
-        // Ajouter les nouveaux médias
         for (const pf of pendingMediaFiles) {
             const url = await uploadMediaFile(pf.file, tournoiId);
             await supabaseAdmin.from('public_tournoi_media').insert({ tournoi_id: tournoiId, media_url: url, media_type: pf.type, position: 0 });
         }
-        // Réindexer les positions
         const { data: allMedia } = await supabaseAdmin.from('public_tournoi_media').select('id').eq('tournoi_id', tournoiId).order('id');
         if (allMedia) {
             for (let i = 0; i < allMedia.length; i++) {
@@ -372,7 +351,7 @@ document.getElementById('newTournoiBtn').addEventListener('click', () => {
 document.getElementById('refreshTournoisBtn').addEventListener('click', loadTournois);
 
 /* =============================================
-   CODES (7 actions)
+   CODES
    ============================================= */
 async function loadCodes() {
     const list = document.getElementById('codesList');
@@ -401,9 +380,6 @@ async function loadCodes() {
                 </div>
             </div>
         `).join('');
-        document.getElementById('codesList').querySelectorAll('.edit').forEach(btn => btn.addEventListener('click', () => editCode(btn.dataset.id)));
-        document.getElementById('codesList').querySelectorAll('.delete').forEach(btn => btn.addEventListener('click', () => deleteCode(btn.dataset.id)));
-        // ... autres events ajoutés dynamiquement par les fonctions globales
     } catch (err) {
         showToast('Erreur chargement codes', 'error');
     } finally { hideLoader(); }
@@ -517,7 +493,7 @@ document.getElementById('codeForm').addEventListener('submit', async e => {
 document.getElementById('refreshCodesBtn').addEventListener('click', loadCodes);
 
 /* =============================================
-   INSCRIPTIONS (7 actions déjà présentes dans le code initial, je les reprends en ajoutant les icônes et la validation avec affichage identifiants)
+   INSCRIPTIONS (7 actions + validation bcrypt + édition complète)
    ============================================= */
 async function loadInscriptions() {
     const list = document.getElementById('inscriptionsList');
@@ -542,7 +518,7 @@ async function loadInscriptions() {
                 actionsHtml += `<button class="reject" onclick="rejectInscription(${ins.id})" title="Rejeter"><i class="fas fa-times-circle"></i></button>`;
             }
             actionsHtml += `<button class="view" onclick="viewInscriptionDetails(${ins.id})" title="Détails"><i class="fas fa-eye"></i></button>`;
-            actionsHtml += `<button class="edit" onclick="editInscription(${ins.id})" title="Modifier"><i class="fas fa-edit"></i></button>`;
+            actionsHtml += `<button class="edit" onclick="openEditInscriptionModal(${ins.id})" title="Modifier"><i class="fas fa-edit"></i></button>`;
             if (ins.statut === 'valide') {
                 actionsHtml += `<button class="resend" onclick="resendCredentials(${ins.id})" title="Renvoyer identifiants"><i class="fas fa-sync-alt"></i></button>`;
             }
@@ -563,7 +539,9 @@ async function loadInscriptions() {
     } finally { hideLoader(); }
 }
 
+// Validation
 window.openValidationModal = async (id) => {
+    currentInscriptionId = id;
     showLoader();
     const { data: ins } = await supabaseAdmin.from('public_inscriptions_tournoi').select('*, public_codes_tournoi(code, tournoi_id, public_tournois(titre, type_tournoi))').eq('id', id).single();
     if (!ins) return hideLoader();
@@ -579,12 +557,66 @@ window.openValidationModal = async (id) => {
     document.getElementById('validationPassword').value = '';
     document.getElementById('validationRole').value = estIndividuel ? 'joueur' : 'capitaine';
     document.getElementById('validationRole').disabled = estIndividuel;
-    document.getElementById('saveValidationBtn').dataset.inscriptionId = id;
     showValidationForm();
     document.getElementById('validationModal').classList.add('active');
     hideLoader();
 };
 
+// Bouton Valider et générer le compte
+document.getElementById('saveValidationBtn').addEventListener('click', async function() {
+    const inscriptionId = currentInscriptionId;
+    const login = document.getElementById('validationLogin').value.trim();
+    const password = document.getElementById('validationPassword').value.trim();
+    const role = document.getElementById('validationRole').value;
+    if (!login || !password) {
+        showToast('Login et mot de passe obligatoires', 'warning');
+        return;
+    }
+    // Vérifier la présence de bcrypt
+    if (typeof dcodeIO === 'undefined' || !dcodeIO.bcrypt) {
+        showToast('Erreur : bibliothèque de sécurité non chargée. Rechargez la page.', 'error', 5000);
+        return;
+    }
+    showLoader();
+    try {
+        const { data: ins, error: insErr } = await supabaseAdmin.from('public_inscriptions_tournoi').select('*, public_codes_tournoi(tournoi_id, code, type_inscription, entite, public_tournois(type_tournoi))').eq('id', inscriptionId).single();
+        if (insErr || !ins) throw new Error('Inscription introuvable');
+        // Marquer comme validée
+        await supabaseAdmin.from('public_inscriptions_tournoi').update({ statut: 'valide', date_traitement: new Date().toISOString() }).eq('id', inscriptionId);
+        // Hacher le mot de passe
+        const hashed = dcodeIO.bcrypt.hashSync(password, dcodeIO.bcrypt.genSaltSync(10));
+        const { data: newUser } = await supabaseAdmin.from('public_utilisateurs_tournoi').insert([{
+            inscription_id: inscriptionId,
+            login: login,
+            mot_de_passe_hash: hashed,
+            role: role
+        }]).select().single();
+        const tournoiId = ins.public_codes_tournoi.tournoi_id;
+        const code = ins.public_codes_tournoi;
+        if (ins.public_codes_tournoi?.public_tournois?.type_tournoi === 'individuel') {
+            await supabaseAdmin.from('public_participants_individuels').insert([{ tournoi_id: tournoiId, inscription_id: inscriptionId, nom_complet: ins.nom_complet, email: ins.email, telephone: ins.telephone, statut: 'inscrit' }]);
+        } else {
+            const nomEquipe = ins.nom_club || code.entite || 'Equipe de ' + ins.nom_complet;
+            await supabaseAdmin.from('public_equipes').insert([{ tournoi_id: tournoiId, nom_equipe: nomEquipe, type_equipe: code.type_inscription === 'club' ? 'club' : 'fan_club', capitaine_id: newUser.id }]);
+        }
+        // Incrémenter quota
+        const { data: codeData } = await supabaseAdmin.from('public_codes_tournoi').select('quota_utilise, quota_max').eq('id', ins.code_id).single();
+        if (codeData && codeData.quota_utilise < codeData.quota_max) {
+            await supabaseAdmin.from('public_codes_tournoi').update({ quota_utilise: codeData.quota_utilise + 1 }).eq('id', ins.code_id);
+        }
+        // Afficher les identifiants en clair
+        showToast(`✅ Inscription validée. Identifiants : Login: ${login} / Mot de passe: ${password}`, 'success', 30000);
+        document.getElementById('validationModal').classList.remove('active');
+        loadInscriptions(); loadCodes(); loadTournois();
+    } catch (err) {
+        showToast('Erreur validation : ' + err.message, 'error');
+    } finally {
+        hideLoader();
+        showValidationForm();
+    }
+});
+
+// Rejeter
 window.rejectInscription = async (id) => {
     const motif = prompt('Motif du rejet (optionnel) :');
     if (motif === null) return;
@@ -595,6 +627,7 @@ window.rejectInscription = async (id) => {
     hideLoader();
 };
 
+// Détails inscription
 window.viewInscriptionDetails = async (id) => {
     showLoader();
     const { data: ins } = await supabaseAdmin.from('public_inscriptions_tournoi').select('*, public_codes_tournoi(code, tournoi_id, public_tournois(titre, type_tournoi))').eq('id', id).single();
@@ -622,28 +655,131 @@ window.viewInscriptionDetails = async (id) => {
     hideLoader();
 };
 
-window.editInscription = async (id) => {
+// Nouveau modal d'édition complet
+window.openEditInscriptionModal = async (id) => {
+    currentInscriptionId = id;
     showLoader();
-    const { data: ins } = await supabaseAdmin.from('public_inscriptions_tournoi').select().eq('id', id).single();
-    if (!ins) return hideLoader();
-    hideLoader();
-    const newNom = prompt('Nom complet', ins.nom_complet);
-    if (newNom === null) return;
-    const newEmail = prompt('Email', ins.email);
-    if (newEmail === null) return;
-    const newTel = prompt('Téléphone', ins.telephone);
-    if (newTel === null) return;
-    showLoader();
-    await supabaseAdmin.from('public_inscriptions_tournoi').update({
-        nom_complet: newNom,
-        email: newEmail,
-        telephone: newTel
-    }).eq('id', id);
-    showToast('Inscription modifiée', 'success');
-    loadInscriptions();
+    const { data: ins } = await supabaseAdmin.from('public_inscriptions_tournoi').select('*').eq('id', id).single();
+    if (!ins) { hideLoader(); return; }
+    document.getElementById('editInscriptionId').value = ins.id;
+    document.getElementById('editNomComplet').value = ins.nom_complet || '';
+    document.getElementById('editDateNaissance').value = ins.date_naissance || '';
+    document.getElementById('editVilleQuartier').value = ins.ville_quartier || '';
+    document.getElementById('editTelephone').value = ins.telephone || '';
+    document.getElementById('editEmail').value = ins.email || '';
+    document.getElementById('editReseauxSociaux').value = ins.reseaux_sociaux || '';
+    document.getElementById('editCategorie').value = ins.categorie_talent || '';
+    handleEditCategorieChange();
+    if (ins.categorie_talent === 'sportif') {
+        document.getElementById('editDisciplineSport').value = ins.discipline || '';
+        handleEditAutreDiscipline('sportif', ins.discipline, ins.autre_discipline);
+    } else if (ins.categorie_talent === 'artiste') {
+        document.getElementById('editDisciplineArtiste').value = ins.discipline || '';
+        handleEditAutreDiscipline('artiste', ins.discipline, ins.autre_discipline);
+    }
+    document.getElementById('editStatutTalent').value = ins.statut_talent || '';
+    handleEditStatutChange();
+    if (ins.statut_talent === 'en_club') {
+        document.getElementById('editNomClubActuel').value = ins.nom_club_actuel || '';
+        document.getElementById('editContactResponsable').value = ins.contact_responsable || '';
+    }
+    document.getElementById('editNiveauEtudes').value = ins.niveau_etudes || '';
+    document.getElementById('editMetierSouhaite').value = ins.metier_souhaite || '';
+    // Disponibilités
+    document.querySelectorAll('.edit-dispo-check').forEach(cb => cb.checked = false);
+    if (ins.disponibilites) {
+        for (const [day, slots] of Object.entries(ins.disponibilites)) {
+            slots.forEach(slot => {
+                const cb = document.querySelector(`.edit-dispo-check[data-day="${day}"][data-slot="${slot}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
+    }
+    document.getElementById('editInscriptionModal').classList.add('active');
     hideLoader();
 };
 
+// Gestion dynamique du modal d'édition
+function handleEditCategorieChange() {
+    const val = document.getElementById('editCategorie').value;
+    document.getElementById('editDisciplineSportGroup').style.display = val === 'sportif' ? 'block' : 'none';
+    document.getElementById('editDisciplineArtisteGroup').style.display = val === 'artiste' ? 'block' : 'none';
+    document.getElementById('editAutreDisciplineGroup').style.display = 'none';
+}
+document.getElementById('editCategorie').addEventListener('change', handleEditCategorieChange);
+
+function handleEditAutreDiscipline(cat, disc, autre) {
+    const autreGroup = document.getElementById('editAutreDisciplineGroup');
+    if ((cat === 'sportif' && disc === 'autre_sport') || (cat === 'artiste' && disc === 'autre_artiste')) {
+        autreGroup.style.display = 'block';
+        document.getElementById('editAutreDiscipline').value = autre || '';
+    } else {
+        autreGroup.style.display = 'none';
+    }
+}
+document.getElementById('editDisciplineSport').addEventListener('change', function() {
+    handleEditAutreDiscipline('sportif', this.value);
+});
+document.getElementById('editDisciplineArtiste').addEventListener('change', function() {
+    handleEditAutreDiscipline('artiste', this.value);
+});
+
+function handleEditStatutChange() {
+    const val = document.getElementById('editStatutTalent').value;
+    document.getElementById('editClubFieldsGroup').style.display = val === 'en_club' ? 'block' : 'none';
+}
+document.getElementById('editStatutTalent').addEventListener('change', handleEditStatutChange);
+
+// Enregistrer les modifications du modal d'édition
+document.getElementById('editInscriptionForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editInscriptionId').value;
+    const disponibilites = {};
+    document.querySelectorAll('.edit-dispo-check:checked').forEach(cb => {
+        const day = cb.dataset.day;
+        const slot = cb.dataset.slot;
+        if (!disponibilites[day]) disponibilites[day] = [];
+        disponibilites[day].push(slot);
+    });
+    let discipline = '';
+    let autreDiscipline = '';
+    const cat = document.getElementById('editCategorie').value;
+    if (cat === 'sportif') {
+        discipline = document.getElementById('editDisciplineSport').value;
+        if (discipline === 'autre_sport') autreDiscipline = document.getElementById('editAutreDiscipline').value.trim();
+    } else if (cat === 'artiste') {
+        discipline = document.getElementById('editDisciplineArtiste').value;
+        if (discipline === 'autre_artiste') autreDiscipline = document.getElementById('editAutreDiscipline').value.trim();
+    }
+    const data = {
+        nom_complet: document.getElementById('editNomComplet').value.trim(),
+        email: document.getElementById('editEmail').value.trim(),
+        telephone: document.getElementById('editTelephone').value.trim(),
+        date_naissance: document.getElementById('editDateNaissance').value,
+        ville_quartier: document.getElementById('editVilleQuartier').value.trim(),
+        reseaux_sociaux: document.getElementById('editReseauxSociaux').value.trim(),
+        categorie_talent: cat,
+        discipline: discipline,
+        autre_discipline: autreDiscipline || null,
+        statut_talent: document.getElementById('editStatutTalent').value,
+        nom_club_actuel: document.getElementById('editStatutTalent').value === 'en_club' ? document.getElementById('editNomClubActuel').value.trim() : null,
+        contact_responsable: document.getElementById('editStatutTalent').value === 'en_club' ? document.getElementById('editContactResponsable').value.trim() : null,
+        niveau_etudes: document.getElementById('editNiveauEtudes').value.trim(),
+        metier_souhaite: document.getElementById('editMetierSouhaite').value.trim(),
+        disponibilites: Object.keys(disponibilites).length > 0 ? disponibilites : null
+    };
+    showLoader();
+    try {
+        await supabaseAdmin.from('public_inscriptions_tournoi').update(data).eq('id', id);
+        showToast('Inscription modifiée avec succès', 'success');
+        document.getElementById('editInscriptionModal').classList.remove('active');
+        loadInscriptions();
+    } catch (err) {
+        showToast('Erreur modification', 'error');
+    } finally { hideLoader(); }
+});
+
+// Renvoyer identifiants
 window.resendCredentials = async (id) => {
     showLoader();
     const { data: user } = await supabaseAdmin.from('public_utilisateurs_tournoi').select('login').eq('inscription_id', id).maybeSingle();
@@ -652,14 +788,19 @@ window.resendCredentials = async (id) => {
         hideLoader();
         return;
     }
-    // Générer un nouveau mot de passe
     const newPassword = Math.random().toString(36).slice(-8);
+    if (typeof dcodeIO === 'undefined' || !dcodeIO.bcrypt) {
+        showToast('Erreur : bibliothèque de sécurité non chargée. Rechargez la page.', 'error', 5000);
+        hideLoader();
+        return;
+    }
     const hashed = dcodeIO.bcrypt.hashSync(newPassword, dcodeIO.bcrypt.genSaltSync(10));
     await supabaseAdmin.from('public_utilisateurs_tournoi').update({ mot_de_passe_hash: hashed }).eq('inscription_id', id);
     showToast(`Identifiants renvoyés : Login: ${user.login} / Mot de passe: ${newPassword}`, 'info', 30000);
     hideLoader();
 };
 
+// Commentaire inscription
 window.addInscriptionComment = async (id) => {
     const comment = prompt('Ajouter un commentaire :');
     if (comment === null) return;
@@ -670,6 +811,7 @@ window.addInscriptionComment = async (id) => {
     hideLoader();
 };
 
+// Supprimer inscription
 window.deleteInscription = async (id) => {
     if (!confirm('Supprimer cette inscription ?')) return;
     showLoader();
@@ -679,54 +821,7 @@ window.deleteInscription = async (id) => {
     hideLoader();
 };
 
-// Validation enregistrée
-document.getElementById('saveValidationBtn').addEventListener('click', async function() {
-    const inscriptionId = this.dataset.inscriptionId;
-    const login = document.getElementById('validationLogin').value.trim();
-    const password = document.getElementById('validationPassword').value.trim();
-    const role = document.getElementById('validationRole').value;
-    if (!login || !password) {
-        showToast('Login et mot de passe obligatoires', 'warning');
-        return;
-    }
-    showLoader();
-    try {
-        // Récupérer les infos nécessaires
-        const { data: ins } = await supabaseAdmin.from('public_inscriptions_tournoi').select('*, public_codes_tournoi(tournoi_id, code, type_inscription, entite)').eq('id', inscriptionId).single();
-        if (!ins) throw new Error('Inscription introuvable');
-        // Marquer comme validée
-        await supabaseAdmin.from('public_inscriptions_tournoi').update({ statut: 'valide', date_traitement: new Date().toISOString() }).eq('id', inscriptionId);
-        // Hacher le mot de passe
-        const hashed = dcodeIO.bcrypt.hashSync(password, dcodeIO.bcrypt.genSaltSync(10));
-        const { data: newUser } = await supabaseAdmin.from('public_utilisateurs_tournoi').insert([{
-            inscription_id: inscriptionId,
-            login: login,
-            mot_de_passe_hash: hashed,
-            role: role
-        }]).select().single();
-        // Créer participant/équipe selon le type
-        const tournoiId = ins.public_codes_tournoi.tournoi_id;
-        const code = ins.public_codes_tournoi;
-        if (ins.public_codes_tournoi?.public_tournois?.type_tournoi === 'individuel') {
-            await supabaseAdmin.from('public_participants_individuels').insert([{ tournoi_id: tournoiId, inscription_id: inscriptionId, nom_complet: ins.nom_complet, email: ins.email, telephone: ins.telephone, statut: 'inscrit' }]);
-        } else {
-            const nomEquipe = ins.nom_club || code.entite || 'Equipe de ' + ins.nom_complet;
-            await supabaseAdmin.from('public_equipes').insert([{ tournoi_id: tournoiId, nom_equipe: nomEquipe, type_equipe: code.type_inscription === 'club' ? 'club' : 'fan_club', capitaine_id: newUser.id }]);
-        }
-        // Incrémenter quota
-        const { data: codeData } = await supabaseAdmin.from('public_codes_tournoi').select('quota_utilise, quota_max').eq('id', ins.code_id).single();
-        if (codeData && codeData.quota_utilise < codeData.quota_max) {
-            await supabaseAdmin.from('public_codes_tournoi').update({ quota_utilise: codeData.quota_utilise + 1 }).eq('id', ins.code_id);
-        }
-        // Afficher les identifiants
-        showToast(`✅ Inscription validée. Identifiants : Login: ${login} / Mot de passe: ${password}`, 'success', 30000);
-        document.getElementById('validationModal').classList.remove('active');
-        loadInscriptions(); loadCodes(); loadTournois();
-    } catch (err) {
-        showToast('Erreur validation', 'error');
-    } finally { hideLoader(); }
-});
-
+// Helper pour masquer/afficher le formulaire de validation dans la modale partagée
 function hideValidationForm() {
     document.getElementById('validationLogin').style.display = 'none';
     document.getElementById('validationPassword').style.display = 'none';
@@ -744,7 +839,7 @@ document.getElementById('refreshInscriptionsBtn').addEventListener('click', load
 document.getElementById('statusFilter').addEventListener('change', loadInscriptions);
 
 /* =============================================
-   LIVES (7 actions)
+   LIVES
    ============================================= */
 async function loadLives() {
     const list = document.getElementById('livesList');
@@ -830,7 +925,6 @@ window.addLiveComment = async (id) => {
     const comment = prompt('Commentaire pour ce live :');
     if (comment === null) return;
     showLoader();
-    // Ajouter une colonne commentaire_admin à la table public_lives si nécessaire
     const { error } = await supabaseAdmin.from('public_lives').update({ commentaire_admin: comment.trim() }).eq('id', id);
     if (error) showToast('Erreur', 'error');
     else showToast('Commentaire enregistré', 'success');
@@ -870,11 +964,13 @@ document.getElementById('liveForm').addEventListener('submit', async e => {
 
 document.getElementById('refreshLivesBtn').addEventListener('click', loadLives);
 
-// Fermeture des modales
+/* =============================================
+   FERMETURE DES MODALES
+   ============================================= */
 document.querySelectorAll('.close-modal').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-        showValidationForm(); // restaure les champs du modal validation
+        showValidationForm();
     });
 });
 window.addEventListener('click', e => {

@@ -6,84 +6,107 @@
     <title>Admin - Gestion des tournois | HubISoccer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="tournoi-admin.css">
 </head>
 <body>
-    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
-        <div class="spinner"></div> Chargement...
+    <!-- ========== VÉRIFICATION DE SESSION ========== -->
+    <div id="authCheck" style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:'Poppins',sans-serif; color:#4B0082;">
+        <i class="fas fa-spinner fa-pulse" style="font-size:2rem; margin-right:10px;"></i> Vérification de l'accès...
     </div>
 
-    <nav>
-        <a href="../../../index.html" class="logo-link">
-            <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
-        </a>
-        <div class="nav-right">
-            <span class="admin-badge">Espace Administration - Tournois</span>
-            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
-            <div class="nav-links" id="navLinks">
-                <a href="../administration.html">Accueil administration</a>
-                <a href="#" id="logoutBtn">Déconnexion</a>
+    <!-- ========== CONTENU ADMIN (caché au départ) ========== -->
+    <div id="adminContent" style="display: none;">
+
+        <nav class="dashboard-nav">
+            <div class="nav-left">
+                <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+                <span class="dashboard-title">Admin / Tournois</span>
             </div>
-        </div>
-    </nav>
-
-    <main class="admin-main">
-        <div class="admin-container">
-            <h1 class="page-title"><i class="fas fa-trophy"></i> Gestion des tournois</h1>
-            <p class="page-subtitle">Créez et gérez les tournois, codes d'inscription, lives et inscriptions.</p>
-
-            <div class="admin-tabs">
-                <button class="tab-btn active" data-tab="tournois">Tournois</button>
-                <button class="tab-btn" data-tab="codes">Codes</button>
-                <button class="tab-btn" data-tab="inscriptions">Inscriptions</button>
-                <button class="tab-btn" data-tab="lives">Lives</button>
+            <div class="nav-right">
+                <button id="refreshAllBtn" class="btn-action" title="Rafraîchir toutes les données"><i class="fas fa-sync-alt"></i> Tout rafraîchir</button>
+                <a href="../administration.html" class="btn-back" title="Retour au portail"><i class="fas fa-th-large"></i> Portail</a>
+                <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
             </div>
+        </nav>
 
-            <div id="tournois" class="tab-content active">
-                <div class="list-header">
-                    <button id="newTournoiBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau tournoi</button>
+        <main class="admin-main">
+            <div class="admin-container">
+                <h1 class="page-title"><i class="fas fa-trophy"></i> Gestion des tournois</h1>
+                <p class="page-subtitle">Créez et gérez les tournois, codes d'inscription, lives et inscriptions.</p>
+
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="tournois">Tournois</button>
+                    <button class="tab-btn" data-tab="codes">Codes</button>
+                    <button class="tab-btn" data-tab="inscriptions">Inscriptions</button>
+                    <button class="tab-btn" data-tab="lives">Lives</button>
                 </div>
-                <div id="tournoisList" class="items-list"></div>
-            </div>
 
-            <div id="codes" class="tab-content">
-                <div class="list-header">
-                    <button id="newCodeBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau code</button>
+                <!-- ========== ONGLET TOURNOIS ========== -->
+                <div id="tournois" class="tab-content active">
+                    <div class="list-header">
+                        <button id="refreshTournoisBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+                        <button id="newTournoiBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau tournoi</button>
+                    </div>
+                    <div id="tournoisList" class="items-list"></div>
                 </div>
-                <div id="codesList" class="items-list"></div>
-            </div>
 
-            <div id="inscriptions" class="tab-content">
-                <div class="filters">
-                    <select id="statusFilter" class="filter-select">
-                        <option value="all">📋 Tous les statuts</option>
-                        <option value="en_attente">⏳ En attente</option>
-                        <option value="valide">✅ Validé</option>
-                        <option value="rejete">❌ Rejeté</option>
-                    </select>
-                    <button id="refreshBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                <!-- ========== ONGLET CODES ========== -->
+                <div id="codes" class="tab-content">
+                    <div class="list-header">
+                        <button id="refreshCodesBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+                        <button id="newCodeBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau code</button>
+                    </div>
+                    <div id="codesList" class="items-list"></div>
                 </div>
-                <div id="inscriptionsList" class="items-list"></div>
-            </div>
 
-            <div id="lives" class="tab-content">
-                <div class="list-header">
-                    <button id="newLiveBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau live</button>
+                <!-- ========== ONGLET INSCRIPTIONS ========== -->
+                <div id="inscriptions" class="tab-content">
+                    <div class="filters">
+                        <select id="statusFilter" class="filter-select">
+                            <option value="all">📋 Tous les statuts</option>
+                            <option value="en_attente">⏳ En attente</option>
+                            <option value="valide">✅ Validé</option>
+                            <option value="rejete">❌ Rejeté</option>
+                        </select>
+                        <button id="refreshInscriptionsBtn" class="btn-action"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                    </div>
+                    <div id="inscriptionsList" class="items-list"></div>
                 </div>
-                <div id="livesList" class="items-list"></div>
+
+                <!-- ========== ONGLET LIVES ========== -->
+                <div id="lives" class="tab-content">
+                    <div class="list-header">
+                        <button id="refreshLivesBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+                        <button id="newLiveBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau live</button>
+                    </div>
+                    <div id="livesList" class="items-list"></div>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <footer>
-        <div class="legal">
-            <p>© 2026 HubISoccer - Administration Tournois. Tous droits réservés.</p>
-        </div>
-    </footer>
+        <footer class="dashboard-footer">
+            <div class="footer-content">
+                <div class="compliance-badges">
+                    <span class="badge">Conformité APDP Bénin</span>
+                    <span class="badge">Règlementation FIFA</span>
+                    <span class="badge">Triple Projet Sport-Études-Carrière</span>
+                </div>
+                <div class="contact-info">
+                    <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+                    <a href="mailto:contacthubisoccer@gmail.com"><i class="fas fa-envelope"></i> contacthubisoccer@gmail.com</a>
+                </div>
+                <div class="legal">
+                    <p>HubISoccer - The Hub of Inspiration of Soccer</p>
+                    <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+                    <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+                </div>
+            </div>
+        </footer>
 
-    <div id="toastContainer" class="toast-container"></div>
+    </div><!-- fin #adminContent -->
 
-    <!-- MODALE TOURNOI -->
+    <!-- ========== MODALE TOURNOI ========== -->
     <div id="tournoiModal" class="modal">
         <div class="modal-content large">
             <span class="close-modal">&times;</span>
@@ -154,12 +177,12 @@
                         <option value="individuel">Individuel</option>
                     </select>
                 </div>
-                <button type="submit" class="btn-submit">Enregistrer</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
             </form>
         </div>
     </div>
 
-    <!-- MODALE CODE -->
+    <!-- ========== MODALE CODE ========== -->
     <div id="codeModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -192,12 +215,12 @@
                 <div class="form-group">
                     <label><input type="checkbox" id="codeActif" checked> Actif</label>
                 </div>
-                <button type="submit" class="btn-submit">Enregistrer</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
             </form>
         </div>
     </div>
 
-    <!-- MODALE LIVE -->
+    <!-- ========== MODALE LIVE ========== -->
     <div id="liveModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -219,12 +242,12 @@
                 <div class="form-group">
                     <label><input type="checkbox" id="liveActif" checked> Actif</label>
                 </div>
-                <button type="submit" class="btn-submit">Enregistrer</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
             </form>
         </div>
     </div>
 
-    <!-- MODALE VALIDATION -->
+    <!-- ========== MODALE VALIDATION (identifiants générés) ========== -->
     <div id="validationModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -245,13 +268,14 @@
                     <option value="joueur">Joueur</option>
                 </select>
             </div>
-            <button id="saveValidationBtn" class="btn-submit">Valider et générer le compte</button>
+            <button id="saveValidationBtn" class="btn-submit"><i class="fas fa-save"></i> Valider et générer le compte</button>
         </div>
     </div>
 
-    <!-- bcrypt chargé en fin de body pour être immédiatement disponible -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Librairie bcrypt pour le hachage des mots de passe -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.4/bcrypt.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="tournoi-admin.js"></script>
 </body>
 </html>

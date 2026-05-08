@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentInscriptionId = null; // Sécurise l'ID en cours de validation ou d'édition
+let currentInscriptionId = null;
 
 // ========== VÉRIFICATION DE SESSION ==========
 (async () => {
@@ -81,6 +81,26 @@ function hideLoader() {
     if (loader) loader.style.display = 'none';
 }
 
+// ========== HACHAGE NATIF (SHA-256) ==========
+async function hashPasswordNative(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
+// ========== GÉNÉRATION DE MOT DE PASSE ALÉATOIRE ==========
+function generateRandomPassword(length = 10) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
 /* =============================================
    TOURNOIS
    ============================================= */
@@ -120,7 +140,6 @@ function formatDate(d) {
     return d ? new Date(d).toLocaleDateString('fr-FR') : '';
 }
 
-// Modifier
 window.editTournoi = async (id) => {
     showLoader();
     const { data, error } = await supabaseAdmin.from('public_tournois').select('*').eq('id', id).single();
@@ -137,7 +156,6 @@ window.editTournoi = async (id) => {
     document.getElementById('tournoiType').value = data.type_tournoi || 'collectif';
     document.getElementById('tournoiModalTitle').textContent = 'Modifier le tournoi';
     document.getElementById('tournoiModal').classList.add('active');
-    // Charger les médias
     existingMediaIds = []; deletedMediaIds = []; pendingMediaFiles = [];
     const { data: media } = await supabaseAdmin.from('public_tournoi_media').select('*').eq('tournoi_id', id).order('position');
     existingMediaIds = (media || []).map(m => m.id);
@@ -145,7 +163,6 @@ window.editTournoi = async (id) => {
     hideLoader();
 };
 
-// Suppression avec cascade
 window.deleteTournoi = async (id) => {
     if (!confirm('Supprimer définitivement ce tournoi et tous ses médias, codes, inscriptions ?')) return;
     showLoader();
@@ -172,7 +189,6 @@ window.deleteTournoi = async (id) => {
     } finally { hideLoader(); }
 };
 
-// Détails tournoi
 window.viewTournoiDetails = async (id) => {
     showLoader();
     const { data: t } = await supabaseAdmin.from('public_tournois').select('*').eq('id', id).single();
@@ -493,7 +509,7 @@ document.getElementById('codeForm').addEventListener('submit', async e => {
 document.getElementById('refreshCodesBtn').addEventListener('click', loadCodes);
 
 /* =============================================
-   INSCRIPTIONS (7 actions + validation bcrypt + édition complète)
+   INSCRIPTIONS (validation avec SHA-256, génération auto login/mdp)
    ============================================= */
 async function loadInscriptions() {
     const list = document.getElementById('inscriptionsList');
@@ -553,8 +569,11 @@ window.openValidationModal = async (id) => {
         <p><strong>Tournoi :</strong> ${tournoi?.titre || '?'} (${estIndividuel ? 'Individuel' : 'Collectif'})</p>
         <p><strong>Code :</strong> ${ins.public_codes_tournoi?.code || '?'}</p>
     `;
-    document.getElementById('validationLogin').value = '';
-    document.getElementById('validationPassword').value = '';
+    // Pré-remplir login (partie avant @) et mot de passe aléatoire
+    const loginAuto = ins.email.split('@')[0];
+    const passwordAuto = generateRandomPassword();
+    document.getElementById('validationLogin').value = loginAuto;
+    document.getElementById('validationPassword').value = passwordAuto;
     document.getElementById('validationRole').value = estIndividuel ? 'joueur' : 'capitaine';
     document.getElementById('validationRole').disabled = estIndividuel;
     showValidationForm();
@@ -562,7 +581,7 @@ window.openValidationModal = async (id) => {
     hideLoader();
 };
 
-// Bouton Valider et générer le compte
+// Bouton Valider et générer le compte (utilisation de SHA-256 natif)
 document.getElementById('saveValidationBtn').addEventListener('click', async function() {
     const inscriptionId = currentInscriptionId;
     const login = document.getElementById('validationLogin').value.trim();
@@ -572,9 +591,9 @@ document.getElementById('saveValidationBtn').addEventListener('click', async fun
         showToast('Login et mot de passe obligatoires', 'warning');
         return;
     }
-    // Vérifier la présence de bcrypt
-    if (typeof dcodeIO === 'undefined' || !dcodeIO.bcrypt) {
-        showToast('Erreur : bibliothèque de sécurité non chargée. Rechargez la page.', 'error', 5000);
+    // Vérifier que l'API crypto est disponible
+    if (!window.crypto || !crypto.subtle) {
+        showToast('Erreur : API de sécurité non disponible. Navigateur trop ancien.', 'error', 5000);
         return;
     }
     showLoader();
@@ -583,8 +602,8 @@ document.getElementById('saveValidationBtn').addEventListener('click', async fun
         if (insErr || !ins) throw new Error('Inscription introuvable');
         // Marquer comme validée
         await supabaseAdmin.from('public_inscriptions_tournoi').update({ statut: 'valide', date_traitement: new Date().toISOString() }).eq('id', inscriptionId);
-        // Hacher le mot de passe
-        const hashed = dcodeIO.bcrypt.hashSync(password, dcodeIO.bcrypt.genSaltSync(10));
+        // Hacher le mot de passe avec SHA-256
+        const hashed = await hashPasswordNative(password);
         const { data: newUser } = await supabaseAdmin.from('public_utilisateurs_tournoi').insert([{
             inscription_id: inscriptionId,
             login: login,
@@ -655,7 +674,7 @@ window.viewInscriptionDetails = async (id) => {
     hideLoader();
 };
 
-// Nouveau modal d'édition complet
+// Édition complète (inchangée)
 window.openEditInscriptionModal = async (id) => {
     currentInscriptionId = id;
     showLoader();
@@ -699,7 +718,6 @@ window.openEditInscriptionModal = async (id) => {
     hideLoader();
 };
 
-// Gestion dynamique du modal d'édition
 function handleEditCategorieChange() {
     const val = document.getElementById('editCategorie').value;
     document.getElementById('editDisciplineSportGroup').style.display = val === 'sportif' ? 'block' : 'none';
@@ -730,7 +748,6 @@ function handleEditStatutChange() {
 }
 document.getElementById('editStatutTalent').addEventListener('change', handleEditStatutChange);
 
-// Enregistrer les modifications du modal d'édition
 document.getElementById('editInscriptionForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('editInscriptionId').value;
@@ -779,7 +796,7 @@ document.getElementById('editInscriptionForm').addEventListener('submit', async 
     } finally { hideLoader(); }
 });
 
-// Renvoyer identifiants
+// Renvoyer identifiants (utilise SHA-256 natif)
 window.resendCredentials = async (id) => {
     showLoader();
     const { data: user } = await supabaseAdmin.from('public_utilisateurs_tournoi').select('login').eq('inscription_id', id).maybeSingle();
@@ -788,19 +805,18 @@ window.resendCredentials = async (id) => {
         hideLoader();
         return;
     }
-    const newPassword = Math.random().toString(36).slice(-8);
-    if (typeof dcodeIO === 'undefined' || !dcodeIO.bcrypt) {
-        showToast('Erreur : bibliothèque de sécurité non chargée. Rechargez la page.', 'error', 5000);
+    if (!window.crypto || !crypto.subtle) {
+        showToast('Erreur : API de sécurité non disponible.', 'error', 5000);
         hideLoader();
         return;
     }
-    const hashed = dcodeIO.bcrypt.hashSync(newPassword, dcodeIO.bcrypt.genSaltSync(10));
+    const newPassword = generateRandomPassword();
+    const hashed = await hashPasswordNative(newPassword);
     await supabaseAdmin.from('public_utilisateurs_tournoi').update({ mot_de_passe_hash: hashed }).eq('inscription_id', id);
     showToast(`Identifiants renvoyés : Login: ${user.login} / Mot de passe: ${newPassword}`, 'info', 30000);
     hideLoader();
 };
 
-// Commentaire inscription
 window.addInscriptionComment = async (id) => {
     const comment = prompt('Ajouter un commentaire :');
     if (comment === null) return;
@@ -811,7 +827,6 @@ window.addInscriptionComment = async (id) => {
     hideLoader();
 };
 
-// Supprimer inscription
 window.deleteInscription = async (id) => {
     if (!confirm('Supprimer cette inscription ?')) return;
     showLoader();
@@ -821,7 +836,6 @@ window.deleteInscription = async (id) => {
     hideLoader();
 };
 
-// Helper pour masquer/afficher le formulaire de validation dans la modale partagée
 function hideValidationForm() {
     document.getElementById('validationLogin').style.display = 'none';
     document.getElementById('validationPassword').style.display = 'none';

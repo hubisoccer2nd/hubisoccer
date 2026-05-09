@@ -1,3 +1,4 @@
+<!-- ========== DEBUT : public/admin/tournoi-admin/tournoi-admin.html ========== -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -10,14 +11,16 @@
     <link rel="stylesheet" href="tournoi-admin.css">
 </head>
 <body>
-    <!-- ========== VÉRIFICATION DE SESSION ========== -->
+    <!-- ========== DEBUT : VÉRIFICATION DE SESSION ========== -->
     <div id="authCheck" style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:'Poppins',sans-serif; color:#4B0082;">
         <i class="fas fa-spinner fa-pulse" style="font-size:2rem; margin-right:10px;"></i> Vérification de l'accès...
     </div>
+    <!-- ========== FIN : VÉRIFICATION DE SESSION ========== -->
 
-    <!-- ========== CONTENU ADMIN (caché au départ) ========== -->
+    <!-- ========== DEBUT : CONTENU ADMIN (caché au départ) ========== -->
     <div id="adminContent" style="display: none;">
 
+        <!-- ========== DEBUT : NAVIGATION ========== -->
         <nav class="dashboard-nav">
             <div class="nav-left">
                 <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
@@ -29,20 +32,24 @@
                 <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
             </div>
         </nav>
+        <!-- ========== FIN : NAVIGATION ========== -->
 
+        <!-- ========== DEBUT : CONTENU PRINCIPAL ========== -->
         <main class="admin-main">
             <div class="admin-container">
                 <h1 class="page-title"><i class="fas fa-trophy"></i> Gestion des tournois</h1>
                 <p class="page-subtitle">Créez et gérez les tournois, codes d'inscription, lives et inscriptions.</p>
 
+                <!-- ========== DEBUT : ONGLETS ========== -->
                 <div class="admin-tabs">
                     <button class="tab-btn active" data-tab="tournois">Tournois</button>
                     <button class="tab-btn" data-tab="codes">Codes</button>
                     <button class="tab-btn" data-tab="inscriptions">Inscriptions</button>
                     <button class="tab-btn" data-tab="lives">Lives</button>
                 </div>
+                <!-- ========== FIN : ONGLETS ========== -->
 
-                <!-- ========== ONGLET TOURNOIS ========== -->
+                <!-- ========== DEBUT : ONGLET TOURNOIS ========== -->
                 <div id="tournois" class="tab-content active">
                     <div class="list-header">
                         <button id="refreshTournoisBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
@@ -50,8 +57,9 @@
                     </div>
                     <div id="tournoisList" class="items-list"></div>
                 </div>
+                <!-- ========== FIN : ONGLET TOURNOIS ========== -->
 
-                <!-- ========== ONGLET CODES ========== -->
+                <!-- ========== DEBUT : ONGLET CODES ========== -->
                 <div id="codes" class="tab-content">
                     <div class="list-header">
                         <button id="refreshCodesBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
@@ -59,8 +67,9 @@
                     </div>
                     <div id="codesList" class="items-list"></div>
                 </div>
+                <!-- ========== FIN : ONGLET CODES ========== -->
 
-                <!-- ========== ONGLET INSCRIPTIONS ========== -->
+                <!-- ========== DEBUT : ONGLET INSCRIPTIONS ========== -->
                 <div id="inscriptions" class="tab-content">
                     <div class="filters">
                         <select id="statusFilter" class="filter-select">
@@ -73,8 +82,9 @@
                     </div>
                     <div id="inscriptionsList" class="items-list"></div>
                 </div>
+                <!-- ========== FIN : ONGLET INSCRIPTIONS ========== -->
 
-                <!-- ========== ONGLET LIVES ========== -->
+                <!-- ========== DEBUT : ONGLET LIVES ========== -->
                 <div id="lives" class="tab-content">
                     <div class="list-header">
                         <button id="refreshLivesBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
@@ -82,9 +92,13 @@
                     </div>
                     <div id="livesList" class="items-list"></div>
                 </div>
+                <!-- ========== FIN : ONGLET LIVES ========== -->
+
             </div>
         </main>
+        <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
 
+        <!-- ========== DEBUT : PIED DE PAGE ========== -->
         <footer class="dashboard-footer">
             <div class="footer-content">
                 <div class="compliance-badges">
@@ -103,10 +117,12 @@
                 </div>
             </div>
         </footer>
+        <!-- ========== FIN : PIED DE PAGE ========== -->
 
-    </div><!-- fin #adminContent -->
+    </div>
+    <!-- ========== FIN : CONTENU ADMIN ========== -->
 
-    <!-- ========== MODALE TOURNOI ========== -->
+    <!-- ========== DEBUT : MODALE TOURNOI ========== -->
     <div id="tournoiModal" class="modal">
         <div class="modal-content large">
             <span class="close-modal">&times;</span>
@@ -181,8 +197,9 @@
             </form>
         </div>
     </div>
+    <!-- ========== FIN : MODALE TOURNOI ========== -->
 
-    <!-- ========== MODALE CODE ========== -->
+    <!-- ========== DEBUT : MODALE CODE ========== -->
     <div id="codeModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -219,8 +236,9 @@
             </form>
         </div>
     </div>
+    <!-- ========== FIN : MODALE CODE ========== -->
 
-    <!-- ========== MODALE LIVE ========== -->
+    <!-- ========== DEBUT : MODALE LIVE ========== -->
     <div id="liveModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -246,8 +264,9 @@
             </form>
         </div>
     </div>
+    <!-- ========== FIN : MODALE LIVE ========== -->
 
-    <!-- ========== MODALE VALIDATION (identifiants générés) ========== -->
+    <!-- ========== DEBUT : MODALE VALIDATION ========== -->
     <div id="validationModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -271,8 +290,9 @@
             <button id="saveValidationBtn" class="btn-submit"><i class="fas fa-save"></i> Valider et générer le compte</button>
         </div>
     </div>
+    <!-- ========== FIN : MODALE VALIDATION ========== -->
 
-    <!-- ========== NOUVEAU MODAL D'ÉDITION COMPLÈTE D'INSCRIPTION ========== -->
+    <!-- ========== DEBUT : MODALE ÉDITION COMPLÈTE D'INSCRIPTION ========== -->
     <div id="editInscriptionModal" class="modal">
         <div class="modal-content modal-large">
             <span class="close-modal">&times;</span>
@@ -420,10 +440,13 @@
             </form>
         </div>
     </div>
+    <!-- ========== FIN : MODALE ÉDITION COMPLÈTE ========== -->
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Aucune librairie externe de hachage, on utilise crypto.subtle natif -->
+    <!-- ========== DEBUT : SCRIPTS ========== -->
     <script src="tournoi-admin.js"></script>
+    <!-- ========== FIN : SCRIPTS ========== -->
 </body>
 </html>
+<!-- ========== FIN : public/admin/tournoi-admin/tournoi-admin.html ========== -->

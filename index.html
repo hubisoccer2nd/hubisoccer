@@ -51,7 +51,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Styles -->
     <link rel="stylesheet" href="index.css">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <!-- Données structurées -->
     <script type="application/ld+json">
     {
@@ -85,7 +85,7 @@
 <body>
   <!-- ========== NAVIGATION ========== -->
   <nav>
-    <a href="/" class="logo-link">
+    <a href="./" class="logo-link">
       <img src="public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
     </a>
     <div class="nav-right">
@@ -121,20 +121,19 @@
       </button>
       
       <div class="nav-links" id="navLinks">
-        <a href="/e-marketing" data-i18n="hub_market">HUBISOCCER MARKET</a>
-        <a href="/hub-community" data-i18n="hub_community">HUB COMMUNITY</a>
-        <a href="/scouting" data-i18n="scouting">SCOUTING</a>
-        <a href="/processus" data-i18n="processus">PROCESSUS</a>
-        <a href="/affiliation" data-i18n="affiliation">AFFILIATION</a>
-        <a href="/premier-pas" data-i18n="premier_pas">PREMIER-PAS</a>
-        <a href="/acteurs" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
-        <a href="/artiste-adhesion" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
-        <a href="/tournoi" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
-        <!-- NOUVEAU LIEN NOS CLUBS -->
-        <a href="/clubs" data-i18n="nos_clubs">NOS CLUBS</a>
-        <a href="/esp" data-i18n="esp">SAVOIR+</a>
-        <a href="/login" class="btn-auth" data-i18n="connexion">Connexion</a>
-        <a href="/signup" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
+        <a href="e-marketing/index.html" data-i18n="hub_market">HUBISOCCER MARKET</a>
+        <a href="hub-community/index.html" data-i18n="hub_community">HUB COMMUNITY</a>
+        <a href="scouting/index.html" data-i18n="scouting">SCOUTING</a>
+        <a href="processus/index.html" data-i18n="processus">PROCESSUS</a>
+        <a href="affiliation/index.html" data-i18n="affiliation">AFFILIATION</a>
+        <a href="premier-pas/index.html" data-i18n="premier_pas">PREMIER-PAS</a>
+        <a href="acteurs/index.html" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
+        <a href="artiste-adhesion/index.html" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
+        <a href="tournoi/index.html" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
+        <a href="clubs/index.html" data-i18n="nos_clubs">NOS CLUBS</a>
+        <a href="esp/index.html" data-i18n="esp">SAVOIR+</a>
+        <a href="hubisapp/authprive/users/login.html" class="btn-auth" data-i18n="connexion">Connexion</a>
+        <a href="hubisapp/authprive/users/signup.html" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
       </div>
     </div>
   </nav>
@@ -145,15 +144,15 @@
     <h1 data-i18n="talent_rue">LE TALENT DE LA RUE,<br>LE FUTUR DU FOOTBALL.</h1>
     <p data-i18n="description">HubISoccer transforme la détection de rue en opportunité professionnelle. Nous certifions le parcours académique des talents et les connectons aux agents agréés.</p>
     <div class="cta-group">
-      <a href="/scouting" class="btn-main btn-filled" data-i18n="reseau_scouting">Réseau Scouting</a>
-      <a href="/tournoi" class="btn-main btn-border" data-i18n="tournoi">Tournoi HubISoccer</a>
+      <a href="scouting/index.html" class="btn-main btn-filled" data-i18n="reseau_scouting">Réseau Scouting</a>
+      <a href="tournoi/index.html" class="btn-main btn-border" data-i18n="tournoi">Tournoi HubISoccer</a>
     </div>
   </header>
   
   <!-- ========== ENGAGEMENTS ========== -->
   <section class="concept-section">
     <h2 data-i18n="engagement_ethique">NOTRE ENGAGEMENT ÉTHIQUE & JURIDIQUE</h2>
-    <div class="section-sub">Des valeurs qui nous guident</div>
+    <div class="section-sub" data-i18n="engagement_sub">Des valeurs qui nous guident</div>
     <div class="grid-cards" id="engagementsContainer"></div>
   </section>
   
@@ -166,8 +165,8 @@
   
   <!-- ========== STADES ========== -->
   <section class="stades-section">
-    <h2>Nos stades partenaires</h2>
-    <div class="section-sub">Les terrains où naissent les légendes</div>
+    <h2 data-i18n="stades_title">Nos stades partenaires</h2>
+    <div class="section-sub" data-i18n="stades_sub">Les terrains où naissent les légendes</div>
     <div class="stades-grid" id="stadesContainer"></div>
   </section>
   
@@ -205,6 +204,7 @@
   <script src="index-i18n.js"></script>
   <!-- Puis le script principal -->
   <script src="index.js"></script>
-  <script src="security.js"></script>
+  <!-- Script de sécurité (momentanément désactivé) -->
+  <!-- <script src="security.js"></script> -->
 </body>
 </html>

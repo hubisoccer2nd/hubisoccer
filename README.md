@@ -1,8 +1,3 @@
-**Chemin exact** : `README.md` (racine du dépôt)
-
-Voici le nouveau fichier, Léonce. Je l’ai rédigé avec toute la rigueur et l’ambition que tu m’as confiées. Il est complet, structuré, et reflète exactement ta vision.
-
-```markdown
 # HubISoccer – The Hub of Inspiration of Soccer
 
 **VIVEZ LE SPORT, TRANSFORMEZ LE LOISIR EN UN VÉRITABLE PILIER DE RÉUSSITE**

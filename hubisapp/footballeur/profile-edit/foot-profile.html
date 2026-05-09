@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Modifier mon profil · Footballeur | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="foot-profile.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-futbol"></i> Profil Footballeur</span>
+    </div>
+    <div class="nav-right">
+        <a href="../dashboard/foot-dash.html" class="btn-back"><i class="fas fa-arrow-left"></i> Retour</a>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="profile-edit-main">
+    <div class="profile-edit-container">
+        <h1><i class="fas fa-user-edit"></i> Compléter mon profil</h1>
+        <p class="subtitle">Plus votre profil est complet, plus vous attirez l'attention des recruteurs.</p>
+
+        <form id="profileForm" class="profile-form">
+            <!-- ===== SECTION 1 : IDENTITÉ & PITCH ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-id-card"></i> Identité & Pitch</legend>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nom complet <span class="required">*</span></label>
+                        <input type="text" id="full_name" placeholder="Ex: Sètondji Léonce Régis DOSSOU-YOVO" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Pseudo <span class="required">*</span></label>
+                        <input type="text" id="pseudo" placeholder="@monpseudo" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Bio / Accroche</label>
+                    <textarea id="bio" rows="3" placeholder="Décrivez-vous en quelques mots… (max 300 caractères)" maxlength="300"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ville</label>
+                        <input type="text" id="city" placeholder="Ex: Cotonou">
+                    </div>
+                    <div class="form-group">
+                        <label>Rayon de mobilité (km)</label>
+                        <input type="number" id="mobility_radius" min="0" max="500" value="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Statut actuel</label>
+                    <select id="current_status">
+                        <option value="">-- Sélectionnez --</option>
+                        <option value="Étudiant">Étudiant</option>
+                        <option value="Athlète de haut niveau">Athlète de haut niveau</option>
+                        <option value="Jeune diplômé">Jeune diplômé</option>
+                        <option value="Professionnel en reconversion">Professionnel en reconversion</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <!-- ===== SECTION 2 : VOLET SPORTIF ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-futbol"></i> Volet Sportif</legend>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Discipline principale</label>
+                        <input type="text" id="discipline" value="Football" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Niveau actuel</label>
+                        <select id="current_level">
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="Départemental">Départemental</option>
+                            <option value="Régional">Régional</option>
+                            <option value="National">National</option>
+                            <option value="Élite">Élite</option>
+                            <option value="Professionnel">Professionnel</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Club ou Structure actuelle</label>
+                    <input type="text" id="club" placeholder="Nom du club ou centre de formation">
+                </div>
+
+                <div class="form-group">
+                    <label>Palmarès et Statistiques</label>
+                    <textarea id="palmares" rows="3" placeholder="Titres, records, distinctions…"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Poste / Spécialité</label>
+                    <select id="position">
+                        <option value="">-- Sélectionnez --</option>
+                        <option value="Gardien de but">Gardien de but</option>
+                        <option value="Défenseur central">Défenseur central</option>
+                        <option value="Latéral droit">Latéral droit</option>
+                        <option value="Latéral gauche">Latéral gauche</option>
+                        <option value="Milieu défensif">Milieu défensif</option>
+                        <option value="Milieu central">Milieu central</option>
+                        <option value="Milieu offensif">Milieu offensif</option>
+                        <option value="Ailier droit">Ailier droit</option>
+                        <option value="Ailier gauche">Ailier gauche</option>
+                        <option value="Attaquant">Attaquant</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Autre spécialité (optionnel)</label>
+                    <input type="text" id="specialty" placeholder="Ex: Coups francs, jeu de tête…">
+                </div>
+            </fieldset>
+
+            <!-- ===== SECTION 3 : ÉTUDES & FORMATIONS ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-graduation-cap"></i> Études & Formations</legend>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Diplôme en cours</label>
+                        <input type="text" id="current_diploma" placeholder="Ex: Licence STAPS">
+                    </div>
+                    <div class="form-group">
+                        <label>Établissement</label>
+                        <input type="text" id="school" placeholder="Ex: Université d'Abomey-Calavi">
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="schedule_accommodation">
+                    <label for="schedule_accommodation">Je bénéficie d'un emploi du temps aménagé</label>
+                </div>
+
+                <div class="form-group">
+                    <label>Compétences acquises (Hard skills)</label>
+                    <textarea id="hard_skills" rows="2" placeholder="Langues, logiciels, certifications…"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Projet d'étude</label>
+                    <textarea id="study_project" rows="2" placeholder="Vos objectifs académiques à court/moyen terme"></textarea>
+                </div>
+            </fieldset>
+
+            <!-- ===== SECTION 4 : CARRIÈRE & MÉTIER ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-briefcase"></i> Carrière & Métier</legend>
+
+                <div class="form-group">
+                    <label>Secteurs d'intérêt</label>
+                    <input type="text" id="interest_sectors" placeholder="Ex: Management du sport, Finance, Santé…">
+                </div>
+
+                <div class="form-group">
+                    <label>Expériences professionnelles</label>
+                    <textarea id="professional_experiences" rows="3" placeholder="Stages, jobs d'été, alternances…"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Soft Skills (qualités développées via le sport)</label>
+                    <textarea id="soft_skills" rows="2" placeholder="Ex: Leadership, résilience, esprit d'équipe…"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Disponibilités</label>
+                    <input type="text" id="availability" placeholder="Ex: Stages, alternances, interventions">
+                </div>
+            </fieldset>
+
+            <!-- ===== INFORMATIONS PERSONNELLES DE BASE (déjà dans dashboard) ===== -->
+            <fieldset class="form-section">
+                <legend><i class="fas fa-user"></i> Informations personnelles</legend>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Téléphone <span class="required">*</span></label>
+                        <input type="tel" id="phone" placeholder="+229 01 23 45 67" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date de naissance <span class="required">*</span></label>
+                        <input type="date" id="birth_date" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Taille (cm)</label>
+                        <input type="number" id="height" min="100" max="250">
+                    </div>
+                    <div class="form-group">
+                        <label>Poids (kg)</label>
+                        <input type="number" id="weight" min="30" max="200">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pied fort</label>
+                        <select id="preferred_foot">
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="Gauche">Gauche</option>
+                            <option value="Droit">Droit</option>
+                            <option value="Ambi">Ambi (les deux)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nationalité</label>
+                        <select id="nationality">
+                            <option value="">-- Sélectionnez --</option>
+                            <!-- Rempli dynamiquement -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Pays de résidence <span class="required">*</span></label>
+                    <select id="country" required>
+                        <option value="">-- Sélectionnez --</option>
+                        <!-- Rempli dynamiquement -->
+                    </select>
+                </div>
+            </fieldset>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" id="saveBtn"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+                <button type="button" class="btn-secondary" id="certifyBtn"><i class="fas fa-certificate"></i> Certifier mon profil</button>
+            </div>
+        </form>
+
+        <!-- ===== SECTION CERTIFICATION (état actuel) ===== -->
+        <div class="certification-status" id="certificationStatus" style="display:none;">
+            <p><i class="fas fa-check-circle" style="color: #551B8C;"></i> Votre profil est <strong>certifié</strong> <span style="color: #551B8C;">✅</span></p>
+        </div>
+
+        <!-- ===== SECTION SUPPRESSION DE COMPTE ===== -->
+        <div class="danger-zone">
+            <h3><i class="fas fa-exclamation-triangle"></i> Zone dangereuse</h3>
+            <p>Une fois la suppression demandée, vous disposez de 48h pour annuler. Passé ce délai, votre compte sera définitivement supprimé par l'administration.</p>
+            <button type="button" class="btn-danger" id="deleteAccountBtn"><i class="fas fa-trash-alt"></i> Supprimer mon compte</button>
+            <button type="button" class="btn-warning" id="revokeDeletionBtn" style="display:none;"><i class="fas fa-undo-alt"></i> Révoquer la suppression</button>
+            <p id="deletionStatus" class="deletion-status"></p>
+        </div>
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== MODALE RAISON SUPPRESSION ===== -->
+<div id="deleteModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal" id="closeDeleteModal">&times;</span>
+        <h3><i class="fas fa-sad-tear"></i> Pourquoi souhaitez-vous supprimer votre compte ?</h3>
+        <textarea id="deletionReason" rows="4" placeholder="Votre retour nous aidera à améliorer HubISoccer…"></textarea>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="cancelDeleteBtn">Annuler</button>
+            <button class="btn-danger" id="confirmDeleteBtn">Confirmer la demande</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== SCRIPT ===== -->
+<script src="foot-profile.js"></script>
+</body>
+</html>

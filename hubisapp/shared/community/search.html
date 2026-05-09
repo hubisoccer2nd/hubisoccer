@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Recherche | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="search.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="c-loader" style="display:none;">
+    <div class="c-spinner"></div>
+    <div class="c-loader-bar-wrap">
+        <div class="c-loader-bar" id="loaderBar" style="width:0%"></div>
+    </div>
+    <span class="c-loader-text" id="loaderText">Recherche en cours...</span>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="c-nav">
+    <div class="c-nav-left">
+        <button class="back-nav-btn" id="backBtn" title="Retour">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="c-nav-logo" id="navLogo">
+        <span class="c-nav-title">Recherche</span>
+    </div>
+    <div class="c-nav-right">
+        <div class="c-user-menu" id="userMenu">
+            <div class="c-user-avatar-wrap" id="userAvatarWrap">
+                <div class="c-user-avatar-initials" id="userAvatarInitials"></div>
+                <img class="c-user-avatar" id="userAvatar" alt="" style="display:none;">
+            </div>
+            <span class="c-user-name" id="userName">...</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="c-user-dropdown" id="userDropdown">
+                <a href="#" id="dropDashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="feed.html"><i class="fas fa-users"></i> Ma Communauté</a>
+                <hr>
+                <button id="dropLogout" class="c-logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+            </div>
+        </div>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="search-main">
+    <div class="search-container">
+
+        <!-- Barre de recherche principale -->
+        <div class="search-header">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Rechercher un athlète, un artiste, un acteur, un post..." autofocus>
+                <button class="clear-search-btn" id="clearSearchBtn" style="display:none;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <button class="btn-primary" id="searchBtn">
+                <i class="fas fa-search"></i> Rechercher
+            </button>
+        </div>
+
+        <!-- Filtres avancés -->
+        <div class="search-filters">
+            <div class="filter-group">
+                <label>Type de contenu</label>
+                <div class="filter-chips">
+                    <button class="filter-chip active" data-type="all">Tout</button>
+                    <button class="filter-chip" data-type="profiles">Profils</button>
+                    <button class="filter-chip" data-type="posts">Publications</button>
+                    <button class="filter-chip" data-type="hashtags">Hashtags</button>
+                </div>
+            </div>
+
+            <div class="filter-group" id="roleFilterGroup" style="display:none;">
+                <label>Rôle</label>
+                <div class="filter-chips" id="roleFilters">
+                    <button class="filter-chip active" data-role="all">Tous</button>
+                    <!-- Les rôles seront injectés dynamiquement -->
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Trier par</label>
+                <select class="c-select" id="sortSelect">
+                    <option value="relevance">Pertinence</option>
+                    <option value="recent">Plus récents</option>
+                    <option value="popular">Plus populaires</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Statistiques de recherche -->
+        <div class="search-stats" id="searchStats" style="display:none;">
+            <span id="resultsCount">0</span> résultat(s) trouvé(s)
+        </div>
+
+        <!-- Résultats -->
+        <div class="search-results" id="searchResults">
+            <!-- État initial : suggestion de recherche -->
+            <div class="search-suggestions" id="searchSuggestions">
+                <div class="suggestions-header">
+                    <h3><i class="fas fa-fire"></i> Tendances actuelles</h3>
+                </div>
+                <div class="trending-list" id="trendingList">
+                    <!-- Chargé dynamiquement -->
+                </div>
+                <div class="suggestions-header">
+                    <h3><i class="fas fa-clock"></i> Recherches récentes</h3>
+                </div>
+                <div class="recent-list" id="recentList">
+                    <!-- Chargé dynamiquement -->
+                </div>
+            </div>
+
+            <!-- Résultats de recherche -->
+            <div class="results-container" id="resultsContainer" style="display:none;"></div>
+
+            <!-- État vide -->
+            <div class="search-empty" id="searchEmpty" style="display:none;">
+                <div class="empty-icon"><i class="fas fa-search"></i></div>
+                <h3>Aucun résultat</h3>
+                <p>Essayez avec d'autres mots-clés ou filtres.</p>
+            </div>
+
+            <!-- Squelettes de chargement -->
+            <div class="search-skeleton" id="searchSkeleton" style="display:none;">
+                <div class="skeleton-item"></div>
+                <div class="skeleton-item"></div>
+                <div class="skeleton-item"></div>
+            </div>
+        </div>
+
+        <!-- Bouton charger plus -->
+        <div id="loadMoreWrap" style="text-align:center; padding:20px; display:none;">
+            <button class="btn-ghost" id="loadMoreBtn">
+                <i class="fas fa-arrow-down"></i> Charger plus
+            </button>
+        </div>
+
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== DEBUT TOAST CONTAINER ===== -->
+<div id="toastContainer" class="c-toast-container"></div>
+<!-- ===== FIN TOAST CONTAINER ===== -->
+
+<!-- ===== DEBUT SCRIPTS ===== -->
+<script src="utils.js"></script>
+<script src="session.js"></script>
+<script src="search.js"></script>
+<!-- ===== FIN SCRIPTS ===== -->
+</body>
+</html>

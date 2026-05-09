@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Mes Revenus – HubIS Wallet | HubISoccer (Basketteur)</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="basket-revenus.css">
+    <!-- Librairie QR Code -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <!-- Librairie PDF (jsPDF + AutoTable) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR STANDARD ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-wallet"></i> HubIS Wallet</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelectHeader">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-wrapper">
+            <div class="notif-icon" id="notifIcon">
+                <i class="fas fa-bell"></i>
+                <span class="notif-badge" id="notifBadge">0</span>
+            </div>
+            <div class="notif-dropdown" id="notifDropdown">
+                <div class="notif-header">
+                    <h4>Notifications</h4>
+                    <button class="mark-all-read" id="markAllReadBtn">Tout lu</button>
+                </div>
+                <div class="notif-list" id="notifList">
+                    <p class="notif-placeholder">Chargement…</p>
+                </div>
+                <div class="notif-footer">
+                    <a href="#" id="viewAllNotifLink">Voir tout</a>
+                </div>
+            </div>
+        </div>
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" class="user-avatar" id="userAvatar" style="display:none;" alt="Avatar">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/basket-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/basket-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR STANDARD ===== -->
+
+<!-- ===== DEBUT SIDEBAR STANDARD ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-basketball-ball"></i><h3>Menu Basketteur</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="../dashboard/basket-dash.html"><i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span></a>
+        <a href="../verification/basket-verif.html"><i class="fas fa-shield-alt"></i><span>Vérification du Statut</span></a>
+        <a href="../cv/basket-cv.html"><i class="fas fa-file-alt"></i><span>Mon CV Pro</span></a>
+        <a href="../certifications/basket-certif.html"><i class="fas fa-certificate"></i><span>Diplômes & Certifs</span></a>
+        <a href="../transferts/basket-transfert.html"><i class="fas fa-exchange-alt"></i><span>Historique Transferts</span></a>
+        <a href="../videos/basket-videos.html"><i class="fas fa-video"></i><span>Mes Vidéos</span></a>
+        <a href="basket-revenus.html" class="active"><i class="fas fa-coins"></i><span>Mes Revenus</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/basket-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR STANDARD ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="revenue-main">
+    <div class="revenue-container">
+
+        <!-- Carte HubIS 3D -->
+        <div class="card-viewport">
+            <div class="hubis-card" id="hubisCard" onclick="flipCard()">
+                <!-- Face avant -->
+                <div class="card-face card-front">
+                    <div class="card-shimmer"></div>
+                    <div class="card-top-row">
+                        <div class="card-brand">
+                            <div class="cb-icon"><i class="fas fa-wallet"></i></div>
+                            <span>HubIS Wallet</span>
+                        </div>
+                        <div class="card-network">
+                            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="card-logo">
+                        </div>
+                    </div>
+                    <div class="card-chip-row">
+                        <div class="chip">
+                            <div class="chip-lines">
+                                <div class="cl h"></div><div class="cl h"></div><div class="cl h"></div>
+                                <div class="cl v"></div>
+                            </div>
+                        </div>
+                        <div class="card-contactless"><i class="fas fa-wifi"></i></div>
+                    </div>
+                    <div class="card-number" id="cardNumber">•••• •••• •••• ••••</div>
+                    <div class="card-bottom-row">
+                        <div class="card-holder">
+                            <div class="ch-label">TITULAIRE</div>
+                            <div class="ch-name" id="cardHolderName">—</div>
+                        </div>
+                        <div class="card-expiry">
+                            <div class="ce-label">EXPIRE</div>
+                            <div class="ce-date" id="cardExpiry">—</div>
+                        </div>
+                        <div class="card-role-badge" id="cardRoleBadge">🏀</div>
+                    </div>
+                </div>
+                <!-- Face arrière -->
+                <div class="card-face card-back">
+                    <div class="card-mag-strip"></div>
+                    <div class="card-cvv-area">
+                        <div class="cvv-sig"></div>
+                        <div class="cvv-box">
+                            <div class="cvv-label">CVC</div>
+                            <div class="cvv-value" id="cardCVV">•••</div>
+                        </div>
+                    </div>
+                    <div class="card-back-id" id="cardBackId">HIS-XXXX-XXXX-XXXX</div>
+                    <div class="card-back-domain">hubisoccer.com</div>
+                    <div class="card-back-note">
+                        <i class="fas fa-lock"></i> Carte virtuelle sécurisée — Ne partagez jamais votre PIN
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="card-flip-hint"><i class="fas fa-rotate"></i> Tapez la carte pour la retourner</p>
+
+        <!-- Solde principal -->
+        <div class="balance-block">
+            <div class="balance-main">
+                <div class="bm-label">Solde principal</div>
+                <div class="bm-amount" id="balanceAmount">
+                    <span class="ba-value">0,00</span>
+                    <span class="ba-currency">CFA</span>
+                </div>
+                <div class="bm-pending" id="balancePending">En attente : <strong>0,00 CFA</strong></div>
+            </div>
+            <div class="balance-stats">
+                <div class="bstat income">
+                    <div class="bst-icon"><i class="fas fa-arrow-down"></i></div>
+                    <div class="bst-body">
+                        <span class="bst-label">Revenus (mois)</span>
+                        <span class="bst-val" id="monthIncome">0,00 CFA</span>
+                    </div>
+                </div>
+                <div class="bstat expense">
+                    <div class="bst-icon"><i class="fas fa-arrow-up"></i></div>
+                    <div class="bst-body">
+                        <span class="bst-label">Dépenses (mois)</span>
+                        <span class="bst-val" id="monthExpense">0,00 CFA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Solde carte virtuelle -->
+        <div class="balance-block" style="margin-top: 12px;">
+            <div class="balance-main">
+                <div class="bm-label">Solde carte virtuelle</div>
+                <div class="bm-amount" id="cardBalanceAmount">
+                    <span class="ba-value">0,00</span>
+                    <span class="ba-currency">CFA</span>
+                </div>
+                <button class="btn-transfer-card" onclick="openModal('transferCardModal')">
+                    <i class="fas fa-credit-card"></i> Recharger la carte
+                </button>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="quick-actions">
+            <button class="qa-btn" onclick="openModal('sendModal')">
+                <div class="qa-icon send"><i class="fas fa-paper-plane"></i></div>
+                <span>Envoyer</span>
+            </button>
+            <button class="qa-btn" onclick="openModal('receiveModal')">
+                <div class="qa-icon receive"><i class="fas fa-arrow-down-to-bracket"></i></div>
+                <span>Recevoir</span>
+            </button>
+            <button class="qa-btn" onclick="openModal('depositModal')">
+                <div class="qa-icon deposit"><i class="fas fa-plus"></i></div>
+                <span>Recharger</span>
+            </button>
+            <button class="qa-btn" onclick="openModal('withdrawModal')">
+                <div class="qa-icon withdraw"><i class="fas fa-money-bill-transfer"></i></div>
+                <span>Retirer</span>
+            </button>
+        </div>
+
+        <!-- Bonus -->
+        <div class="bonus-stats glass-card">
+            <h2><i class="fas fa-gift"></i> Mes bonus</h2>
+            <div class="bonus-item">
+                <span class="bonus-icon"><i class="fas fa-star"></i></span>
+                <span class="bonus-label">Homme du match</span>
+                <span class="bonus-value" id="bonusHomme">0</span>
+            </div>
+            <div class="bonus-item">
+                <span class="bonus-icon"><i class="fas fa-trophy"></i></span>
+                <span class="bonus-label">Primes diverses</span>
+                <span class="bonus-value" id="bonusPrimes">0</span>
+            </div>
+            <div class="bonus-item">
+                <span class="bonus-icon"><i class="fas fa-users"></i></span>
+                <span class="bonus-label">Hubis-Community</span>
+                <span class="bonus-value" id="bonusCommunity">0</span>
+            </div>
+            <div class="bonus-withdraw" id="bonusWithdrawSection">
+                <p class="bonus-inscription-label">
+                    <i class="fas fa-gift"></i> <span id="bonusMessage">Chargement...</span>
+                </p>
+                <button class="btn-withdraw-bonus" id="withdrawBonusBtn" onclick="withdrawBonus()" disabled>
+                    <i class="fas fa-arrow-right"></i> Retirer le bonus
+                </button>
+            </div>
+        </div>
+
+        <!-- Historique des transactions -->
+        <div class="transactions-section">
+            <div class="ts-header">
+                <h2 class="ts-title">Historique</h2>
+                <div class="ts-actions">
+                    <button class="btn-export-pdf" onclick="exportTransactionsToPDF()">
+                        <i class="fas fa-file-pdf"></i> Exporter PDF
+                    </button>
+                    <div class="ts-filters">
+                        <button class="tf-btn active" data-filter="all" onclick="filterTransactions('all',this)">Tout</button>
+                        <button class="tf-btn" data-filter="credit" onclick="filterTransactions('credit',this)">Entrées</button>
+                        <button class="tf-btn" data-filter="debit" onclick="filterTransactions('debit',this)">Sorties</button>
+                    </div>
+                </div>
+            </div>
+            <div class="tx-list" id="txList">
+                <div class="tx-skeleton" id="txSkeleton">
+                    <div class="sk-item"></div><div class="sk-item"></div><div class="sk-item"></div>
+                </div>
+                <div class="tx-empty hidden" id="txEmpty">
+                    <div class="te-icon"><i class="fas fa-receipt"></i></div>
+                    <p class="te-title">Aucune transaction</p>
+                    <p class="te-sub">Vos transactions apparaîtront ici.</p>
+                </div>
+            </div>
+            <button class="btn-load-more" id="btnLoadMore" onclick="loadMoreTransactions()" style="display:none">
+                <i class="fas fa-chevron-down"></i> Charger plus
+            </button>
+        </div>
+
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== MODALES (identiques à la version footballeur) ===== -->
+<!-- Modale Envoyer -->
+<div class="modal-overlay" id="sendModal" onclick="closeModalOutside(event,'sendModal')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="mh-icon send"><i class="fas fa-paper-plane"></i></div>
+            <div class="mh-title"><h3>Envoyer des fonds</h3><p>Transférer vers un autre membre HubIS</p></div>
+            <button class="modal-close" onclick="closeModal('sendModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-id-badge"></i> Wallet ID du destinataire</label>
+                <input type="text" class="form-input" id="sendRecipientId" placeholder="HIS-XXXX-XXXX-XXXX" oninput="this.value=this.value.toUpperCase()">
+                <div class="recipient-preview hidden" id="recipientPreview">
+                    <div class="rp-avatar"><i class="fas fa-user"></i></div>
+                    <div class="rp-info"><span class="rp-name" id="rpName">—</span><span class="rp-role" id="rpRole">—</span></div>
+                    <i class="fas fa-check-circle rp-ok"></i>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-money-bill"></i> Montant (CFA)</label>
+                <div class="amount-input-wrap">
+                    <input type="number" class="form-input amount-input" id="sendAmount" placeholder="0" min="100" step="100">
+                    <span class="ai-currency" id="sendCurrencyLabel">CFA</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-comment"></i> Note (facultatif)</label>
+                <input type="text" class="form-input" id="sendNote" placeholder="Ex: Remboursement entrainement" maxlength="100">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-key"></i> Confirmer avec votre PIN</label>
+                <div class="pin-row-modal" id="pinSend">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="sendpin" data-idx="0">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="sendpin" data-idx="1">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="sendpin" data-idx="2">
+                    <div class="pin-sep">—</div>
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="sendpin" data-idx="3">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="sendpin" data-idx="4">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="sendpin" data-idx="5">
+                </div>
+            </div>
+            <div class="modal-fee-note"><i class="fas fa-info-circle"></i> Les transferts entre membres HubISoccer sont gratuits.</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeModal('sendModal')">Annuler</button>
+            <button class="btn-modal-confirm send-confirm" onclick="executeTransfer()"><i class="fas fa-paper-plane"></i> Envoyer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Recevoir -->
+<div class="modal-overlay" id="receiveModal" onclick="closeModalOutside(event,'receiveModal')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="mh-icon receive"><i class="fas fa-arrow-down-to-bracket"></i></div>
+            <div class="mh-title"><h3>Recevoir des fonds</h3><p>Partagez vos coordonnées de paiement</p></div>
+            <button class="modal-close" onclick="closeModal('receiveModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body receive-body">
+            <div class="qr-zone">
+                <canvas id="qrCanvas" width="180" height="180"></canvas>
+                <p class="qr-hint">QR Code de votre wallet</p>
+            </div>
+            <div class="receive-id-block">
+                <label class="form-label"><i class="fas fa-wallet"></i> Votre Wallet ID</label>
+                <div class="receive-id-row">
+                    <span class="rid-value" id="receiveWalletId">HIS-XXXX-XXXX-XXXX</span>
+                    <button class="btn-copy" onclick="copyField('receiveWalletId')"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>
+            <div class="receive-note">
+                <i class="fas fa-shield-halved"></i>
+                <p>Communiquez uniquement votre Wallet ID à vos contacts de confiance sur HubISoccer.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Recharger -->
+<div class="modal-overlay" id="depositModal" onclick="closeModalOutside(event,'depositModal')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="mh-icon deposit"><i class="fas fa-plus"></i></div>
+            <div class="mh-title"><h3>Recharger le wallet</h3><p>Ajouter des fonds à votre solde</p></div>
+            <button class="modal-close" onclick="closeModal('depositModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="deposit-amounts">
+                <button class="da-btn" onclick="setDepositAmount(1000)">1 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(5000)">5 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(10000)">10 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(25000)">25 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(50000)">50 000 CFA</button>
+                <button class="da-btn" onclick="setDepositAmount(100000)">100 000 CFA</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-money-bill"></i> Montant personnalisé (CFA)</label>
+                <div class="amount-input-wrap">
+                    <input type="number" class="form-input amount-input" id="depositAmount" placeholder="0" min="100" step="100">
+                    <span class="ai-currency" id="depositCurrencyLabel">CFA</span>
+                </div>
+            </div>
+            <div class="payment-methods">
+                <label class="form-label"><i class="fas fa-credit-card"></i> Méthode de paiement</label>
+                <div class="pm-list">
+                    <label class="pm-card selected"><input type="radio" name="payMethod" value="card" checked><i class="fas fa-credit-card"></i> Carte bancaire<div class="pm-check"><i class="fas fa-check"></i></div></label>
+                    <label class="pm-card"><input type="radio" name="payMethod" value="transfer"><i class="fas fa-building-columns"></i> Virement bancaire<div class="pm-check"><i class="fas fa-check"></i></div></label>
+                    <label class="pm-card"><input type="radio" name="payMethod" value="mobile"><i class="fas fa-mobile-screen-button"></i> Mobile Money<div class="pm-check"><i class="fas fa-check"></i></div></label>
+                    <label class="pm-card"><input type="radio" name="payMethod" value="feexpay"><i class="fas fa-globe"></i> Feexpay<div class="pm-check"><i class="fas fa-check"></i></div></label>
+                    <label class="pm-card"><input type="radio" name="payMethod" value="fedaypay"><i class="fas fa-globe"></i> Fedaypay<div class="pm-check"><i class="fas fa-check"></i></div></label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeModal('depositModal')">Annuler</button>
+            <button class="btn-modal-confirm deposit-confirm" onclick="executeDeposit()"><i class="fas fa-plus"></i> Recharger</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Retirer -->
+<div class="modal-overlay" id="withdrawModal" onclick="closeModalOutside(event,'withdrawModal')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="mh-icon withdraw"><i class="fas fa-money-bill-transfer"></i></div>
+            <div class="mh-title"><h3>Retirer des fonds</h3><p>Virer vers votre compte ou mobile money</p></div>
+            <button class="modal-close" onclick="closeModal('withdrawModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-money-bill"></i> Montant à retirer (CFA)</label>
+                <div class="amount-input-wrap">
+                    <input type="number" class="form-input amount-input" id="withdrawAmount" placeholder="0" min="500" step="100">
+                    <span class="ai-currency" id="withdrawCurrencyLabel">CFA</span>
+                </div>
+                <p class="field-hint">Minimum : 500 CFA | Solde disponible : <strong id="withdrawAvail">0,00 CFA</strong></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-credit-card"></i> Méthode de retrait</label>
+                <div class="pm-list" id="withdrawMethodGroup">
+                    <label class="pm-card selected"><input type="radio" name="withdrawMethod" value="transfer" checked> Virement bancaire<div class="pm-check"><i class="fas fa-check"></i></div></label>
+                    <label class="pm-card"><input type="radio" name="withdrawMethod" value="mobile"> Mobile Money<div class="pm-check"><i class="fas fa-check"></i></div></label>
+                    <label class="pm-card"><input type="radio" name="withdrawMethod" value="feexpay"> Feexpay<div class="pm-check"><i class="fas fa-check"></i></div></label>
+                    <label class="pm-card"><input type="radio" name="withdrawMethod" value="fedaypay"> Fedaypay<div class="pm-check"><i class="fas fa-check"></i></div></label>
+                </div>
+            </div>
+            <div id="transferFields">
+                <div class="form-group"><label class="form-label"><i class="fas fa-building-columns"></i> IBAN</label><input type="text" class="form-input" id="withdrawIBAN" placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX" oninput="formatIBAN(this)"></div>
+                <div class="form-group"><label class="form-label"><i class="fas fa-code"></i> BIC / SWIFT</label><input type="text" class="form-input" id="withdrawBIC" placeholder="Ex: BNPAFRPP"></div>
+                <div class="form-group"><label class="form-label"><i class="fas fa-user"></i> Nom du titulaire du compte</label><input type="text" class="form-input" id="withdrawAccountHolder" placeholder="Nom complet"></div>
+                <div class="form-group"><label class="form-label"><i class="fas fa-map-pin"></i> Adresse de la banque</label><input type="text" class="form-input" id="withdrawBankAddress" placeholder="Adresse de l'agence"></div>
+            </div>
+            <div id="mobileMoneyFields" style="display:none;">
+                <div class="form-group"><label class="form-label"><i class="fas fa-phone-alt"></i> Numéro de téléphone</label><input type="tel" class="form-input" id="withdrawMobilePhone" placeholder="Ex: +229 97 12 34 56"></div>
+                <div class="form-group"><label class="form-label"><i class="fas fa-wifi"></i> Réseau</label><select class="form-input" id="withdrawMobileNetwork"><option value="">-- Sélectionnez --</option><option value="MTN">MTN</option><option value="Moov">Moov</option><option value="Orange">Orange</option><option value="Autre">Autre</option></select></div>
+                <div class="form-group"><label class="form-label"><i class="fas fa-user"></i> Nom du titulaire du compte Mobile Money</label><input type="text" class="form-input" id="withdrawMobileHolder" placeholder="Nom complet"></div>
+                <div class="form-group"><label class="form-label"><i class="fas fa-id-card"></i> ID HubISoccer du bénéficiaire</label><input type="text" class="form-input" id="withdrawMobileHubID" placeholder="HIS-XXXX-XXXX-XXXX"></div>
+            </div>
+            <div id="eWalletFields" style="display:none;">
+                <div class="form-group"><label class="form-label"><i class="fas fa-phone-alt"></i> Numéro de téléphone / ID compte</label><input type="text" class="form-input" id="withdrawEWalletPhone" placeholder="Ex: +229 97 12 34 56"></div>
+                <div class="form-group"><label class="form-label"><i class="fas fa-user"></i> Nom complet du titulaire</label><input type="text" class="form-input" id="withdrawEWalletHolder" placeholder="Nom complet"></div>
+                <div class="form-group"><label class="form-label"><i class="fas fa-envelope"></i> Adresse email</label><input type="email" class="form-input" id="withdrawEWalletEmail" placeholder="email@exemple.com"></div>
+                <div class="form-group"><label class="form-label"><i class="fas fa-id-card"></i> ID HubISoccer du bénéficiaire</label><input type="text" class="form-input" id="withdrawEWalletHubID" placeholder="HIS-XXXX-XXXX-XXXX"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-key"></i> Confirmer avec votre PIN</label>
+                <div class="pin-row-modal" id="pinWithdraw">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="wdpin" data-idx="0">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="wdpin" data-idx="1">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="wdpin" data-idx="2">
+                    <div class="pin-sep">—</div>
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="wdpin" data-idx="3">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="wdpin" data-idx="4">
+                    <input type="password" class="pin-box-sm" maxlength="1" inputmode="numeric" data-group="wdpin" data-idx="5">
+                </div>
+            </div>
+            <div class="modal-fee-note warning"><i class="fas fa-triangle-exclamation"></i> Un délai de 1-3 jours ouvrés est requis pour les retraits.</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeModal('withdrawModal')">Annuler</button>
+            <button class="btn-modal-confirm withdraw-confirm" onclick="executeWithdraw()"><i class="fas fa-money-bill-transfer"></i> Retirer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Transfert carte -->
+<div class="modal-overlay" id="transferCardModal" onclick="closeModalOutside(event,'transferCardModal')">
+    <div class="modal-box small-modal">
+        <div class="modal-header">
+            <div class="mh-icon deposit"><i class="fas fa-credit-card"></i></div>
+            <div class="mh-title"><h3>Recharger la carte</h3><p>Transférer du solde principal vers la carte</p></div>
+            <button class="modal-close" onclick="closeModal('transferCardModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-money-bill"></i> Montant à transférer (CFA)</label>
+                <div class="amount-input-wrap">
+                    <input type="number" class="form-input amount-input" id="transferCardAmount" placeholder="0" min="100" step="100">
+                    <span class="ai-currency" id="transferCardCurrencyLabel">CFA</span>
+                </div>
+                <p class="field-hint">Solde principal disponible : <strong id="transferAvail">0,00 CFA</strong></p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeModal('transferCardModal')">Annuler</button>
+            <button class="btn-modal-confirm deposit-confirm" onclick="transferToCard()">
+                <i class="fas fa-credit-card"></i> Transférer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Paramètres -->
+<div class="modal-overlay" id="settingsModal" onclick="closeModalOutside(event,'settingsModal')">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="mh-icon"><i class="fas fa-gear"></i></div>
+            <div class="mh-title"><h3>Paramètres du wallet</h3><p>Gérer votre compte HubIS Wallet</p></div>
+            <button class="modal-close" onclick="closeModal('settingsModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body settings-body">
+            <div class="settings-item" onclick="showToast('Fonctionnalité à venir','info')">
+                <div class="si-icon"><i class="fas fa-key"></i></div>
+                <div class="si-text"><strong>Changer le PIN</strong><span>Modifier votre code de sécurité</span></div>
+                <i class="fas fa-chevron-right si-arrow"></i>
+            </div>
+            <div class="settings-item" onclick="copyField('settingsWalletId')">
+                <div class="si-icon"><i class="fas fa-wallet"></i></div>
+                <div class="si-text"><strong>Mon Wallet ID</strong><span id="settingsWalletId">HIS-XXXX-XXXX-XXXX</span></div>
+                <i class="fas fa-copy si-arrow"></i>
+            </div>
+            <div class="settings-item" onclick="showToast('Changement de devise prochainement','info')">
+                <div class="si-icon"><i class="fas fa-coins"></i></div>
+                <div class="si-text"><strong>Devise</strong><span id="settingsCurrency">XOF</span></div>
+                <i class="fas fa-chevron-right si-arrow"></i>
+            </div>
+            <div class="settings-item danger" onclick="confirmSuspendWallet()">
+                <div class="si-icon danger"><i class="fas fa-lock"></i></div>
+                <div class="si-text"><strong>Suspendre le wallet</strong><span>Bloquer temporairement les transactions</span></div>
+                <i class="fas fa-chevron-right si-arrow"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Détail transaction -->
+<div class="modal-overlay" id="txDetailModal" onclick="closeModalOutside(event,'txDetailModal')">
+    <div class="modal-box small-modal">
+        <div class="modal-header">
+            <div class="mh-icon" id="txDetailIcon"><i class="fas fa-receipt"></i></div>
+            <div class="mh-title"><h3>Détail transaction</h3></div>
+            <button class="modal-close" onclick="closeModal('txDetailModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="txDetailBody"></div>
+    </div>
+</div>
+
+<!-- Modale Notification -->
+<div class="modal-overlay" id="notificationModal" onclick="closeModalOutside(event,'notificationModal')">
+    <div class="modal-box small-modal">
+        <div class="modal-header">
+            <div class="mh-icon"><i class="fas fa-bell"></i></div>
+            <div class="mh-title"><h3 id="notifModalTitle">Notification</h3></div>
+            <button class="modal-close" onclick="closeModal('notificationModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <p id="notifModalMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeModal('notificationModal')">Fermer</button>
+            <button class="btn-modal-confirm" id="notifActionBtn" style="display:none;">Voir</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Script principal -->
+<script src="basket-revenus.js"></script>
+</body>
+</html>

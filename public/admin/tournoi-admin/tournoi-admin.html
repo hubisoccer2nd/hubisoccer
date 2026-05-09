@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion des tournois | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="tournoi-admin.css">
+</head>
+<body>
+    <!-- ========== VÉRIFICATION DE SESSION ========== -->
+    <div id="authCheck" style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:'Poppins',sans-serif; color:#4B0082;">
+        <i class="fas fa-spinner fa-pulse" style="font-size:2rem; margin-right:10px;"></i> Vérification de l'accès...
+    </div>
+
+    <!-- ========== CONTENU ADMIN (caché au départ) ========== -->
+    <div id="adminContent" style="display: none;">
+
+        <nav class="dashboard-nav">
+            <div class="nav-left">
+                <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+                <span class="dashboard-title">Admin / Tournois</span>
+            </div>
+            <div class="nav-right">
+                <button id="refreshAllBtn" class="btn-action" title="Rafraîchir toutes les données"><i class="fas fa-sync-alt"></i> Tout rafraîchir</button>
+                <a href="../administration.html" class="btn-back" title="Retour au portail"><i class="fas fa-th-large"></i> Portail</a>
+                <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+            </div>
+        </nav>
+
+        <main class="admin-main">
+            <div class="admin-container">
+                <h1 class="page-title"><i class="fas fa-trophy"></i> Gestion des tournois</h1>
+                <p class="page-subtitle">Créez et gérez les tournois, codes d'inscription, lives et inscriptions.</p>
+
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="tournois">Tournois</button>
+                    <button class="tab-btn" data-tab="codes">Codes</button>
+                    <button class="tab-btn" data-tab="inscriptions">Inscriptions</button>
+                    <button class="tab-btn" data-tab="lives">Lives</button>
+                </div>
+
+                <!-- ========== ONGLET TOURNOIS ========== -->
+                <div id="tournois" class="tab-content active">
+                    <div class="list-header">
+                        <button id="refreshTournoisBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+                        <button id="newTournoiBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau tournoi</button>
+                    </div>
+                    <div id="tournoisList" class="items-list"></div>
+                </div>
+
+                <!-- ========== ONGLET CODES ========== -->
+                <div id="codes" class="tab-content">
+                    <div class="list-header">
+                        <button id="refreshCodesBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+                        <button id="newCodeBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau code</button>
+                    </div>
+                    <div id="codesList" class="items-list"></div>
+                </div>
+
+                <!-- ========== ONGLET INSCRIPTIONS ========== -->
+                <div id="inscriptions" class="tab-content">
+                    <div class="filters">
+                        <select id="statusFilter" class="filter-select">
+                            <option value="all">📋 Tous les statuts</option>
+                            <option value="en_attente">⏳ En attente</option>
+                            <option value="valide">✅ Validé</option>
+                            <option value="rejete">❌ Rejeté</option>
+                        </select>
+                        <button id="refreshInscriptionsBtn" class="btn-action"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                    </div>
+                    <div id="inscriptionsList" class="items-list"></div>
+                </div>
+
+                <!-- ========== ONGLET LIVES ========== -->
+                <div id="lives" class="tab-content">
+                    <div class="list-header">
+                        <button id="refreshLivesBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+                        <button id="newLiveBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau live</button>
+                    </div>
+                    <div id="livesList" class="items-list"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="dashboard-footer">
+            <div class="footer-content">
+                <div class="compliance-badges">
+                    <span class="badge">Conformité APDP Bénin</span>
+                    <span class="badge">Règlementation FIFA</span>
+                    <span class="badge">Triple Projet Sport-Études-Carrière</span>
+                </div>
+                <div class="contact-info">
+                    <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+                    <a href="mailto:contacthubisoccer@gmail.com"><i class="fas fa-envelope"></i> contacthubisoccer@gmail.com</a>
+                </div>
+                <div class="legal">
+                    <p>HubISoccer - The Hub of Inspiration of Soccer</p>
+                    <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+                    <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+                </div>
+            </div>
+        </footer>
+
+    </div><!-- fin #adminContent -->
+
+    <!-- ========== MODALE TOURNOI ========== -->
+    <div id="tournoiModal" class="modal">
+        <div class="modal-content large">
+            <span class="close-modal">&times;</span>
+            <h3 id="tournoiModalTitle">Nouveau tournoi</h3>
+            <form id="tournoiForm">
+                <input type="hidden" id="tournoiId">
+                <div class="form-group">
+                    <label>Sport *</label>
+                    <select id="tournoiSport" required>
+                        <option value="football">Football</option>
+                        <option value="basketball">Basketball</option>
+                        <option value="tennis">Tennis</option>
+                        <option value="athletisme">Athlétisme</option>
+                        <option value="handball">Handball</option>
+                        <option value="volleyball">Volley‑ball</option>
+                        <option value="rugby">Rugby</option>
+                        <option value="natation">Natation</option>
+                        <option value="arts_martiaux">Arts martiaux</option>
+                        <option value="cyclisme">Cyclisme</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Titre *</label>
+                    <input type="text" id="tournoiTitre" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="tournoiDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Ville *</label>
+                    <input type="text" id="tournoiVille" required>
+                </div>
+                <div class="form-group">
+                    <label>Quartier</label>
+                    <input type="text" id="tournoiQuartier">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date début *</label>
+                        <input type="date" id="tournoiDateDebut" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date fin *</label>
+                        <input type="date" id="tournoiDateFin" required>
+                    </div>
+                </div>
+                <!-- Médias -->
+                <div class="form-group">
+                    <label>Médias du tournoi</label>
+                    <div class="media-manager">
+                        <div class="media-actions">
+                            <button type="button" id="addImageBtn" class="btn-secondary"><i class="fas fa-image"></i> Ajouter une image</button>
+                            <button type="button" id="addVideoBtn" class="btn-secondary"><i class="fas fa-video"></i> Ajouter une vidéo</button>
+                        </div>
+                        <input type="file" id="mediaFileInput" accept="image/jpeg,image/png,video/mp4,video/webm" style="display: none;">
+                        <div id="mediaList" class="media-list"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Règlements</label>
+                    <textarea id="tournoiReglements" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Type de tournoi *</label>
+                    <select id="tournoiType" required>
+                        <option value="collectif">Collectif (équipes)</option>
+                        <option value="individuel">Individuel</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== MODALE CODE ========== -->
+    <div id="codeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="codeModalTitle">Nouveau code</h3>
+            <form id="codeForm">
+                <input type="hidden" id="codeId">
+                <div class="form-group">
+                    <label>Tournoi *</label>
+                    <select id="codeTournoiId" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Code *</label>
+                    <input type="text" id="codeValeur" required>
+                </div>
+                <div class="form-group">
+                    <label>Type d'inscription *</label>
+                    <select id="codeType" required>
+                        <option value="joueur_libre">Joueur libre</option>
+                        <option value="club">Club</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Entité (fan club / nom club)</label>
+                    <input type="text" id="codeEntite">
+                </div>
+                <div class="form-group">
+                    <label>Quota maximum</label>
+                    <input type="number" id="codeQuotaMax" value="15" min="1">
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="codeActif" checked> Actif</label>
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== MODALE LIVE ========== -->
+    <div id="liveModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="liveModalTitle">Nouveau live</h3>
+            <form id="liveForm">
+                <input type="hidden" id="liveId">
+                <div class="form-group">
+                    <label>Titre *</label>
+                    <input type="text" id="liveTitre" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="liveDescription" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>URL d'intégration (iframe) *</label>
+                    <input type="text" id="liveEmbedUrl" placeholder="https://..." required>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="liveActif" checked> Actif</label>
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== MODALE VALIDATION (identifiants générés) ========== -->
+    <div id="validationModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Valider l'inscription</h3>
+            <div id="validationInfo" class="info-box"></div>
+            <div class="form-group">
+                <label>Login *</label>
+                <input type="text" id="validationLogin" required>
+            </div>
+            <div class="form-group">
+                <label>Mot de passe *</label>
+                <input type="text" id="validationPassword" required>
+            </div>
+            <div class="form-group">
+                <label>Rôle</label>
+                <select id="validationRole">
+                    <option value="capitaine">Capitaine</option>
+                    <option value="joueur">Joueur</option>
+                </select>
+            </div>
+            <button id="saveValidationBtn" class="btn-submit"><i class="fas fa-save"></i> Valider et générer le compte</button>
+        </div>
+    </div>
+
+    <!-- ========== NOUVEAU MODAL D'ÉDITION COMPLÈTE D'INSCRIPTION ========== -->
+    <div id="editInscriptionModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close-modal">&times;</span>
+            <h3>Modifier l'inscription</h3>
+            <form id="editInscriptionForm">
+                <input type="hidden" id="editInscriptionId">
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-user"></i> Identité et contacts</legend>
+                    <div class="form-group">
+                        <label>Nom complet *</label>
+                        <input type="text" id="editNomComplet" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date de naissance *</label>
+                            <input type="date" id="editDateNaissance" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ville / Quartier *</label>
+                            <input type="text" id="editVilleQuartier" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Téléphone (WhatsApp) *</label>
+                            <input type="tel" id="editTelephone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="editEmail" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Réseaux sociaux</label>
+                        <input type="text" id="editReseauxSociaux">
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-star"></i> Profil du talent</legend>
+                    <div class="form-group">
+                        <label>Catégorie principale *</label>
+                        <select id="editCategorie" required>
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="sportif">Sportif</option>
+                            <option value="artiste">Artiste</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="editDisciplineSportGroup">
+                        <label>Discipline sportive *</label>
+                        <select id="editDisciplineSport">
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="football">Football</option>
+                            <option value="basketball">Basketball</option>
+                            <option value="tennis">Tennis</option>
+                            <option value="athletisme">Athlétisme</option>
+                            <option value="arts_martiaux">Arts Martiaux</option>
+                            <option value="autre_sport">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="editDisciplineArtisteGroup">
+                        <label>Discipline artistique *</label>
+                        <select id="editDisciplineArtiste">
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="chant">Chant</option>
+                            <option value="danse">Danse</option>
+                            <option value="slam">Slam</option>
+                            <option value="humour">Humour</option>
+                            <option value="art_visuel">Art Visuel</option>
+                            <option value="autre_artiste">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="editAutreDisciplineGroup" style="display:none;">
+                        <label>Précisez *</label>
+                        <input type="text" id="editAutreDiscipline">
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-users"></i> Statut actuel</legend>
+                    <div class="form-group">
+                        <label>Vous êtes *</label>
+                        <select id="editStatutTalent" required>
+                            <option value="libre">Talent Libre (Individuel)</option>
+                            <option value="en_club">Membre d'un Club / Association</option>
+                        </select>
+                    </div>
+                    <div id="editClubFieldsGroup" style="display:none;">
+                        <div class="form-group">
+                            <label>Nom du Club / Association *</label>
+                            <input type="text" id="editNomClubActuel">
+                        </div>
+                        <div class="form-group">
+                            <label>Nom et Contact du Responsable *</label>
+                            <input type="text" id="editContactResponsable">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-graduation-cap"></i> Études & Métiers</legend>
+                    <div class="form-group">
+                        <label>Niveau d'études actuel</label>
+                        <input type="text" id="editNiveauEtudes">
+                    </div>
+                    <div class="form-group">
+                        <label>Métier souhaité ou compétence secondaire</label>
+                        <input type="text" id="editMetierSouhaite">
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fas fa-calendar-alt"></i> Disponibilités</legend>
+                    <p class="fieldset-hint">Cochez les créneaux où vous êtes généralement libre.</p>
+                    <div class="dispo-table">
+                        <table>
+                            <thead><tr><th>Heures</th><th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>06h - 10h</td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="lundi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="mardi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="mercredi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="jeudi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="vendredi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="samedi" data-slot="matin"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="dimanche" data-slot="matin"></td>
+                                </tr>
+                                <tr>
+                                    <td>14h - 18h</td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="lundi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="mardi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="mercredi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="jeudi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="vendredi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="samedi" data-slot="apresmidi"></td>
+                                    <td><input type="checkbox" class="edit-dispo-check" data-day="dimanche" data-slot="apresmidi"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Aucune librairie externe de hachage, on utilise crypto.subtle natif -->
+    <script src="tournoi-admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Espace Parrain · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="parrain-dash.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-hands-helping"></i> Espace Parrain</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/parrain-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/parrain-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-hands-helping"></i><h3>Menu Parrain</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="parrain-dash.html" class="active">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../verification/parrain-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../proteges/parrain-proteges.html">
+            <i class="fas fa-user-friends"></i><span>Mes Protégés</span>
+        </a>
+        <a href="../dons/parrain-dons.html">
+            <i class="fas fa-hand-holding-usd"></i><span>Mes Dons & Bourses</span>
+        </a>
+        <a href="../mentorat/parrain-mentorat.html">
+            <i class="fas fa-comments"></i><span>Sessions Mentorat</span>
+        </a>
+        <a href="../impact/parrain-impact.html">
+            <i class="fas fa-chart-line"></i><span>Mon Impact</span>
+        </a>
+        <a href="../cv/parrain-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon Profil</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/parrain-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<main class="dashboard-main">
+<div class="dashboard-container">
+    <aside class="profile-card glass-card">
+        <div class="avatar-upload" onclick="triggerUpload()">
+            <div id="profileAvatarContainer" class="avatar-container">
+                <img src="" id="profileDisplay" alt="Avatar" style="display:none;">
+                <div class="profile-initials" id="profileDisplayInitials"></div>
+            </div>
+            <div class="edit-badge"><i class="fas fa-camera"></i></div>
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        </div>
+        <button id="deleteAvatarBtn" class="btn-delete-avatar" style="display:none;">
+            <i class="fas fa-trash-alt"></i> Supprimer la photo
+        </button>
+        <h2 id="dashboardName">—</h2>
+        <div class="parrain-pseudo"><i class="fas fa-hands-helping"></i><span id="parrainPseudo">—</span></div>
+        <div class="parrain-contact">
+            <p><i class="fas fa-phone-alt"></i> <span id="parrainPhone">—</span></p>
+            <p><i class="fas fa-envelope"></i> <span id="parrainEmail">—</span></p>
+            <p><i class="fas fa-flag"></i> <span id="parrainCountryFlag">🌍</span> <span id="parrainCountryName">—</span></p>
+        </div>
+        <p class="role-badge">Parrain</p>
+        <div class="id-copy-box" onclick="copyID()">
+            <i class="fas fa-id-card"></i><span id="parrainID">ID : —</span><i class="fas fa-copy copy-icon"></i>
+        </div>
+        <div class="stats-mini-container">
+            <button class="mini-stat-btn" onclick="location.href='../verification/parrain-verif.html'">
+                <i class="fas fa-chart-pie"></i>
+                <span class="mini-stat-value" id="profileCompletion">0</span>%
+                <span class="mini-stat-label">Profil complété</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-binoculars"></i>
+                <span class="mini-stat-value" id="scoutingViews">0</span>
+                <span class="mini-stat-label">Vues profil</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-star"></i>
+                <span class="mini-stat-value" id="recruiterFavs">0</span>
+                <span class="mini-stat-label">Favoris</span>
+            </button>
+        </div>
+        <a href="../cv/parrain-cv.html" class="btn-download-cv">
+            <i class="fas fa-file-pdf"></i> Télécharger mon CV PDF
+        </a>
+    </aside>
+    <div class="main-panel">
+        <div class="parrain-header glass-card">
+            <div class="parrain-header-left">
+                <h1 id="parrainFullName">—</h1>
+                <p class="parrain-position" id="parrainPosition">Type d'engagement non renseigné</p>
+            </div>
+            <div class="parrain-header-right">
+                <div class="parrain-basic-info">
+                    <span><i class="fas fa-birthday-cake"></i> <span id="parrainAge">—</span> ans</span>
+                    <span><i class="fas fa-globe-africa"></i> <span id="parrainNationality">—</span></span>
+                    <span><i class="fas fa-hands-helping"></i> <span id="parrainSpecialite">—</span></span>
+                    <span><i class="fas fa-building"></i> <span id="parrainClub">—</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="global-stats-grid">
+            <div class="stat-card-global"><div class="stat-card-label">PROTÉGÉS SUIVIS</div><div class="stat-card-value" id="nbProteges">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">DONS TOTAUX VERSÉS</div><div class="stat-card-value" id="totalDons">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">BOURSES ACCORDÉES</div><div class="stat-card-value" id="nbBourses">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">ANNÉES D'ACTIVITÉ</div><div class="stat-card-value" id="anneesAct">—</div></div>
+        </div>
+        <div class="info-contrat glass-card">
+            <h3 class="section-title"><i class="fas fa-file-contract"></i> Situation contractuelle</h3>
+            <div class="info-contrat-grid">
+                <div class="info-item"><span class="info-label"><i class="fas fa-coins"></i> Salaire / Honoraires</span><span class="info-value" id="salary">—</span></div>
+                <div class="info-item"><span class="info-label"><i class="fas fa-calendar-times"></i> Expire le</span><span class="info-value" id="contractExpiry">—</span></div>
+                <div class="info-item"><span class="info-label"><i class="fas fa-chart-line"></i> Évaluation / Cote</span><span class="info-value" id="marketValue">—</span></div>
+                <div class="info-item"><span class="info-label"><i class="fas fa-id-badge"></i> Statut professionnel</span><span class="info-value" id="statutPro">—</span></div>
+            </div>
+        </div>
+        <div class="main-skills glass-card">
+            <h3 class="section-title"><i class="fas fa-chart-bar"></i> Compétences principales</h3>
+            <div class="skills-grid">
+                    <div class="skill-item"><span class="skill-label">Accompagnement</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_acc" style="width:0%"></div></div><span class="skill-value" id="skill_acc_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Financement</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_fin" style="width:0%"></div></div><span class="skill-value" id="skill_fin_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Réseau institutionnel</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_res" style="width:0%"></div></div><span class="skill-value" id="skill_res_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Mentorat</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_mentor" style="width:0%"></div></div><span class="skill-value" id="skill_mentor_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Communication</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_comm" style="width:0%"></div></div><span class="skill-value" id="skill_comm_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Suivi de parcours</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_suivi" style="width:0%"></div></div><span class="skill-value" id="skill_suivi_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Éthique</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_eth" style="width:0%"></div></div><span class="skill-value" id="skill_eth_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Impact communautaire</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_impact" style="width:0%"></div></div><span class="skill-value" id="skill_impact_value">0</span></div>
+            </div>
+        </div>
+        <div class="attributes-section glass-card">
+            <h3 class="section-title"><i class="fas fa-list-ul"></i> Profil détaillé — Corps · Âme · Esprit</h3>
+            <div class="attributes-tabs">
+                    <button class="attr-tab active" data-cat="competences"><i class="fas fa-hands-helping"></i> Esprit — Compétences Parrain</button>
+                    <button class="attr-tab" data-cat="activite"><i class="fas fa-chart-pie"></i> Âme — Activité & Impact</button>
+                    <button class="attr-tab" data-cat="contrat"><i class="fas fa-file-contract"></i> Corps — Engagement & Structure</button>
+            </div>
+                <div id="competences-attrs" class="attr-content active">
+                    <div class="attr-grid">
+                        <div class="attr-item"><span class="attr-name">Accompagnement humain</span><span class="attr-value" id="cp_acc">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Gestion de projet</span><span class="attr-value" id="cp_pro">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Financement / Bourses</span><span class="attr-value" id="cp_fin">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Réseau institutionnel</span><span class="attr-value" id="cp_res">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Mentorat personnalisé</span><span class="attr-value" id="cp_men">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Communication</span><span class="attr-value" id="cp_com">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Suivi de parcours</span><span class="attr-value" id="cp_sui">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Éthique sportive</span><span class="attr-value" id="cp_eth">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Orientation scolaire</span><span class="attr-value" id="cp_sco">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Orientation carrière</span><span class="attr-value" id="cp_car">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Impact communautaire</span><span class="attr-value" id="cp_imp">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Écoute active</span><span class="attr-value" id="cp_eco">0</span></div>
+                    </div>
+                </div>
+                <div id="activite-attrs" class="attr-content">
+                    <div class="attr-grid">
+                        <div class="attr-item"><span class="attr-name">Protégés suivis (total)</span><span class="attr-value" id="ac_pro">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Dons financiers totaux</span><span class="attr-value" id="ac_don">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Bourses accordées</span><span class="attr-value" id="ac_bou">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Sessions de mentorat</span><span class="attr-value" id="ac_ses">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Réussites de protégés</span><span class="attr-value" id="ac_reu">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Études financées</span><span class="attr-value" id="ac_etu">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Années d'activité</span><span class="attr-value" id="ac_ann">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Score d'impact global</span><span class="attr-value" id="ac_sco">0</span></div>
+                    </div>
+                </div>
+                <div id="contrat-attrs" class="attr-content">
+                    <div class="attr-grid">
+                        <div class="attr-item"><span class="attr-name">Organisme / ONG</span><span class="attr-value" id="co_org">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Type d'engagement</span><span class="attr-value" id="co_typ">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Date début parrainage</span><span class="attr-value" id="co_deb">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Convention en cours</span><span class="attr-value" id="co_con">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Budget annuel alloué</span><span class="attr-value" id="co_bud">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Partenaires institutionnels</span><span class="attr-value" id="co_par">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Note d'évaluation</span><span class="attr-value" id="co_not">0</span></div>
+                    </div>
+                </div>
+        </div>
+        <div class="reports-section glass-card">
+            <h3 class="section-title"><i class="fas fa-file-signature"></i> Notes & Évaluations</h3>
+            <div class="reports-body">
+                <p id="scoutingReports" class="reports-text">Aucune note pour le moment.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+<div id="toastContainer" class="toast-container"></div>
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-hands-helping"></i> HubISoccer · Triple Projet</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Esprit</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<script src="parrain-dash.js"></script>
+</body>
+</html>

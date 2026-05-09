@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Profil | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="profil-msg.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== LOADER GLOBAL ===== -->
+<div class="c-loader" id="globalLoader" style="display:flex;">
+    <div class="c-spinner"></div>
+    <span class="c-loader-text" id="loaderText">Chargement du profil...</span>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="top-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="nav-logo" onclick="window.location.href='../community/feed.html'">
+        <span class="nav-title">Profil Messagerie</span>
+    </div>
+    <div class="nav-right">
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-wrap">
+                <div class="user-avatar-initials" id="userAvatarInitials"></div>
+                <img id="userAvatar" alt="" class="user-avatar" style="display:none;">
+            </div>
+            <span class="user-name" id="userName">...</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="#" id="dropProfile"><i class="fas fa-user"></i> Mon profil</a>
+                <a href="#" id="dropDashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="conversation.html"><i class="fas fa-comments"></i> Messages</a>
+                <a href="settings-msg.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr>
+                <a href="#" id="dropLogout" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+        <h3>Menu</h3>
+        <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+</aside>
+
+<!-- ===== CONTENU PRINCIPAL ===== -->
+<main class="main-content">
+    <div class="profile-container">
+
+        <!-- En‑tête du profil -->
+        <div class="profile-header">
+            <div class="cover-photo" id="coverPhoto">
+                <img id="coverImg" src="../../img/default-cover.jpg" alt="Cover">
+                <button class="edit-cover-btn" id="editCoverBtn"><i class="fas fa-camera"></i> Modifier la couverture</button>
+                <input type="file" id="coverInput" accept="image/*" style="display:none">
+            </div>
+            <div class="profile-avatar-section">
+                <div class="avatar-wrapper">
+                    <div class="profile-avatar-initials" id="profileAvatarInitials"></div>
+                    <img id="profileAvatar" src="../../img/user-default.jpg" alt="Avatar" class="profile-avatar" style="display:none;">
+                    <button class="edit-avatar-btn" id="editAvatarBtn"><i class="fas fa-camera"></i></button>
+                    <input type="file" id="avatarInput" accept="image/*" style="display:none">
+                </div>
+                <div class="profile-info">
+                    <h2 id="displayName">Chargement...</h2>
+                    <p id="userHandle">@...</p>
+                    <p id="userStatus"><i class="fas fa-circle"></i> <span id="statusText">Hors ligne</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations personnelles -->
+        <div class="profile-section">
+            <h3><i class="fas fa-user"></i> Informations personnelles</h3>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label>Bio</label>
+                    <textarea id="bioInput" rows="3" placeholder="Parlez de vous..."></textarea>
+                </div>
+                <div class="form-field">
+                    <label>Téléphone</label>
+                    <input type="tel" id="phoneInput" placeholder="+229 ...">
+                </div>
+                <div class="form-field">
+                    <label>Email</label>
+                    <input type="email" id="emailInput" disabled>
+                </div>
+                <div class="form-field">
+                    <label>Localisation</label>
+                    <input type="text" id="locationInput" placeholder="Ville, Pays">
+                </div>
+            </div>
+        </div>
+
+        <!-- Confidentialité et sécurité -->
+        <div class="profile-section">
+            <h3><i class="fas fa-shield-alt"></i> Confidentialité et sécurité</h3>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h4>Dernière activité</h4>
+                    <p>Afficher quand vous étiez en ligne pour la dernière fois.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="showLastSeen">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h4>Statut en ligne</h4>
+                    <p>Qui peut voir si vous êtes actuellement en ligne.</p>
+                </div>
+                <select id="onlineStatusVisibility" class="settings-select">
+                    <option value="everyone">Tout le monde</option>
+                    <option value="followers">Abonnés</option>
+                    <option value="nobody">Personne</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h4>Authentification à deux facteurs</h4>
+                    <p>Renforcez la sécurité de votre compte.</p>
+                </div>
+                <button class="btn-outline" id="setup2FABtn">Configurer</button>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="profile-section">
+            <h3><i class="fas fa-chart-bar"></i> Statistiques de messagerie</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="totalMessages">0</span>
+                    <span class="stat-label">Messages envoyés</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="totalConversations">0</span>
+                    <span class="stat-label">Conversations</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="storageUsed">0 Mo</span>
+                    <span class="stat-label">Stockage utilisé</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="profile-section">
+            <h3><i class="fas fa-bolt"></i> Actions rapides</h3>
+            <div class="action-buttons">
+                <button class="btn-outline" id="exportDataBtn"><i class="fas fa-download"></i> Exporter mes données</button>
+                <button class="btn-danger" id="deleteAllConvsBtn"><i class="fas fa-trash-alt"></i> Supprimer toutes mes conversations</button>
+                <button class="btn-outline" id="blockedContactsBtn" onclick="window.location.href='settings-msg.html'"><i class="fas fa-ban"></i> Gérer les contacts bloqués</button>
+            </div>
+        </div>
+
+        <!-- Bouton de sauvegarde -->
+        <div class="save-section">
+            <button class="btn-confirm" id="saveProfileBtn">Enregistrer les modifications</button>
+        </div>
+    </div>
+</main>
+
+<!-- ===== MODAL DE CONFIRMATION ===== -->
+<div id="modalConfirm" class="modal">
+    <div class="modal-box modal-box-sm">
+        <div class="modal-head">
+            <h2 id="confirmTitle">Confirmation</h2>
+            <button class="modal-close" onclick="closeModal('modalConfirm')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body"><p id="confirmDesc"></p></div>
+        <div class="modal-foot">
+            <button class="btn-cancel" onclick="closeModal('modalConfirm')">Annuler</button>
+            <button class="btn-confirm" id="confirmActionBtn">Confirmer</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOASTS ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="session.js"></script>
+<script src="utils.js"></script>
+<script src="profil-msg.js"></script>
+</body>
+</html>

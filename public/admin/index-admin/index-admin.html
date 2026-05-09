@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Admin Page d'accueil | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="index-admin.css">
+</head>
+<body>
+
+<!-- ========== VÉRIFICATION D'ACCÈS ========== -->
+<div id="authCheck" style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:'Poppins',sans-serif; color:#4B0082;">
+    <i class="fas fa-spinner fa-pulse" style="font-size:2rem; margin-right:10px;"></i> Vérification de l'accès...
+</div>
+
+<!-- ========== CONTENU ADMIN (caché au départ) ========== -->
+<div id="adminContent" style="display: none;">
+
+    <!-- Barre de navigation admin -->
+    <nav class="dashboard-nav">
+        <div class="nav-left">
+            <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+            <span class="dashboard-title">Admin / Page d'accueil</span>
+        </div>
+        <div class="nav-right">
+            <button id="refreshAllBtn" class="btn-action" title="Rafraîchir toutes les données"><i class="fas fa-sync-alt"></i> Tout rafraîchir</button>
+            <a href="../administration.html" class="btn-back" title="Retour au portail"><i class="fas fa-th-large"></i> Portail</a>
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+        </div>
+    </nav>
+
+    <!-- ========== SECTION ENGAGEMENTS ========== -->
+    <div class="admin-container engagements-page">
+        <h1>Gestion des engagements éthiques</h1>
+        <div class="admin-card">
+            <div class="card-header">
+                <h2><i class="fas fa-handshake"></i> Liste des engagements</h2>
+                <div class="header-actions">
+                    <button id="refreshEngagementsBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+                    <button id="addEngagementBtn" class="btn-add"><i class="fas fa-plus"></i> Ajouter</button>
+                </div>
+            </div>
+            <div id="engagementsList" class="admin-list"></div>
+        </div>
+    </div>
+
+    <!-- ========== SECTION RÔLES ========== -->
+    <div class="admin-container roles-page">
+        <h1>Gestion des rôles / portails</h1>
+        <div class="admin-card">
+            <div class="card-header">
+                <h2><i class="fas fa-users-cog"></i> Liste des rôles</h2>
+                <div class="header-actions">
+                    <button id="refreshRolesBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+                    <button id="addRoleBtn" class="btn-add"><i class="fas fa-plus"></i> Ajouter</button>
+                </div>
+            </div>
+            <div id="rolesList" class="admin-list"></div>
+        </div>
+    </div>
+
+    <!-- ========== SECTION STADES ========== -->
+    <div class="admin-container stades-page">
+        <h1>Gestion des stades partenaires</h1>
+        <div class="admin-card">
+            <div class="card-header">
+                <h2><i class="fas fa-futbol"></i> Liste des stades</h2>
+                <div class="header-actions">
+                    <button id="refreshStadesBtn" class="btn-action" title="Rafraîchir"><i class="fas fa-sync-alt"></i></button>
+                    <button id="addStadeBtn" class="btn-add"><i class="fas fa-plus"></i> Ajouter</button>
+                </div>
+            </div>
+            <div id="stadesList" class="admin-list"></div>
+        </div>
+    </div>
+
+    <!-- ========== MODALE ENGAGEMENT ========== -->
+    <div id="engagementModal" class="admin-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEngagementModal()">&times;</span>
+            <h3 id="engagementModalTitle">Ajouter un engagement</h3>
+            <form id="engagementForm">
+                <input type="hidden" id="engagementId">
+                <div class="form-group">
+                    <label>Titre</label>
+                    <input type="text" id="engTitre" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="engDescription" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Icône (nom FontAwesome, ex: fa-gavel)</label>
+                    <input type="text" id="engIcon" placeholder="fa-gavel">
+                </div>
+                <div class="form-group">
+                    <label>Ordre</label>
+                    <input type="number" id="engOrder" value="0">
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== MODALE RÔLE ========== -->
+    <div id="roleModal" class="admin-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRoleModal()">&times;</span>
+            <h3 id="roleModalTitle">Ajouter un rôle</h3>
+            <form id="roleForm">
+                <input type="hidden" id="roleId">
+                <div class="form-group">
+                    <label>Titre</label>
+                    <input type="text" id="roleTitre" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="roleDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Icône (nom FontAwesome, ex: fa-user)</label>
+                    <input type="text" id="roleIcon" placeholder="fa-user">
+                </div>
+                <div class="form-group">
+                    <label>Ordre</label>
+                    <input type="number" id="roleOrder" value="0">
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== MODALE STADE ========== -->
+    <div id="stadeModal" class="admin-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeStadeModal()">&times;</span>
+            <h3 id="stadeModalTitle">Ajouter un stade</h3>
+            <form id="stadeForm">
+                <input type="hidden" id="stadeId">
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" id="stadeName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="stadeDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Image</label>
+                    <input type="file" id="stadeImage" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Vidéo (optionnelle)</label>
+                    <input type="file" id="stadeVideo" accept="video/*">
+                </div>
+                <div class="form-group">
+                    <label>Ordre</label>
+                    <input type="number" id="stadeOrder" value="0">
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pied de page admin -->
+    <footer class="dashboard-footer">
+        <div class="footer-content">
+            <div class="compliance-badges">
+                <span class="badge">Conformité APDP Bénin</span>
+                <span class="badge">Règlementation FIFA</span>
+                <span class="badge">Triple Projet Sport-Études-Carrière</span>
+            </div>
+            <div class="contact-info">
+                <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+                <a href="mailto:contacthubisoccer@gmail.com"><i class="fas fa-envelope"></i> contacthubisoccer@gmail.com</a>
+            </div>
+            <div class="legal">
+                <p>HubISoccer - The Hub of Inspiration of Soccer</p>
+                <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+                <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+</div><!-- fin #adminContent -->
+
+<script src="index-admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+/* ============================================================
+   HubISoccer — admin-foot-scout.css
+   Administration Scouting Footballeur
+   ============================================================ */
+
+/* ===== DEBUT VARIABLES ===== */
+:root {
+    --primary:        #551B8C;
+    --primary-light:  #7e3db0;
+    --primary-dark:   #3d1266;
+    --gold:           #FFCC00;
+    --gold-dark:      #e6b800;
+    --corps-color:    #e74c3c;
+    --ame-color:      #3498db;
+    --esprit-color:   #27ae60;
+    --bg-page:        #f4f1f9;
+    --bg-card:        #ffffff;
+    --bg-card2:       #f9f7fd;
+    --text:           #1a1a2e;
+    --text-muted:     #6c757d;
+    --border:         #e8e4f0;
+    --danger:         #dc3545;
+    --shadow-sm:      0 2px 8px rgba(85,27,140,0.08);
+    --shadow-md:      0 6px 24px rgba(85,27,140,0.12);
+    --shadow-lg:      0 12px 48px rgba(85,27,140,0.16);
+    --radius:         14px;
+    --radius-sm:      8px;
+    --radius-pill:    9999px;
+    --transition:     0.25s ease;
+    --font:           'Poppins', sans-serif;
+}
+/* ===== FIN VARIABLES ===== */
+
+/* ===== DEBUT RESET ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: var(--font);
+    background: var(--bg-page);
+    color: var(--text);
+    line-height: 1.6;
+}
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+/* ===== FIN RESET ===== */
+
+/* ===== DEBUT LOADER ===== */
+.global-loader {
+    position: fixed; inset: 0;
+    background: rgba(21,0,46,0.88); backdrop-filter: blur(6px);
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
+}
+.loader-inner { text-align: center; }
+.spinner {
+    width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.15);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+}
+.loader-text { color: var(--gold); }
+@keyframes spin { to { transform: rotate(360deg); } }
+/* ===== FIN LOADER ===== */
+
+/* ===== DEBUT NAVBAR ===== */
+.admin-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%; height: 70px; background: var(--bg-card);
+    border-bottom: 2px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.nav-left { display: flex; align-items: center; gap: 16px; }
+.logo-nav { height: 40px; }
+.admin-title { font-weight: 700; color: var(--primary); font-size: 1.1rem; }
+.nav-right { display: flex; align-items: center; gap: 20px; }
+.user-name { font-weight: 600; color: var(--text-muted); }
+.logout-link {
+    background: var(--danger); color: white; padding: 8px 20px;
+    border-radius: var(--radius-pill); font-weight: 600; transition: var(--transition);
+}
+.logout-link:hover { background: #c82333; }
+/* ===== FIN NAVBAR ===== */
+
+/* ===== DEBUT MAIN ===== */
+.admin-main { padding: 30px 5%; }
+.admin-container { max-width: 1600px; margin: 0 auto; }
+.admin-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 30px;
+}
+.admin-header h1 { font-size: 1.8rem; color: var(--primary); display: flex; align-items: center; gap: 12px; }
+.btn-refresh {
+    background: var(--primary); color: white; padding: 12px 24px;
+    border-radius: var(--radius-pill); font-weight: 600;
+    display: flex; align-items: center; gap: 8px; transition: var(--transition);
+}
+.btn-refresh:hover { background: var(--primary-light); }
+
+.search-panel { display: flex; gap: 16px; margin-bottom: 30px; }
+.search-panel input {
+    flex: 2; padding: 14px 20px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill); font-size: 1rem;
+}
+.search-panel select {
+    flex: 1; padding: 14px 20px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill); font-size: 1rem; background: white;
+}
+
+.admin-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+
+/* Liste footballeurs */
+.footballeurs-list {
+    background: var(--bg-card); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--shadow-md);
+}
+.footballeurs-list h2 { font-size: 1.3rem; color: var(--primary); margin-bottom: 20px; }
+.list-container { max-height: 600px; overflow-y: auto; }
+.footballeur-item {
+    display: flex; align-items: center; gap: 16px; padding: 16px;
+    border-bottom: 1px solid var(--border); cursor: pointer;
+    transition: var(--transition);
+}
+.footballeur-item:hover { background: var(--bg-card2); }
+.footballeur-item.selected {
+    background: rgba(85,27,140,0.05); border-left: 4px solid var(--primary);
+}
+.footballeur-avatar {
+    width: 45px; height: 45px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--gold);
+}
+.footballeur-info { flex: 1; }
+.footballeur-name { font-weight: 700; color: var(--text); }
+.footballeur-detail { font-size: 0.8rem; color: var(--text-muted); }
+
+/* Panneau d'édition */
+.edit-panel {
+    background: var(--bg-card); border-radius: var(--radius);
+    padding: 30px; box-shadow: var(--shadow-md);
+}
+.edit-panel h2 { font-size: 1.3rem; color: var(--primary); margin-bottom: 24px; }
+#noSelectionMessage { text-align: center; color: var(--text-muted); padding: 40px; }
+
+fieldset {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 24px;
+}
+legend {
+    font-weight: 700; color: var(--primary); padding: 0 12px;
+    display: flex; align-items: center; gap: 8px;
+}
+.form-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-bottom: 16px;
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-weight: 600; color: var(--text-muted); font-size: 0.9rem; }
+input, select, textarea {
+    padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: var(--radius); font-family: inherit; font-size: 0.95rem;
+    background: white;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary); outline: none;
+}
+input[readonly] { background: var(--bg-card2); }
+
+.radar-preview {
+    display: flex; justify-content: center;
+    padding: 16px; background: var(--bg-card2);
+    border-radius: var(--radius);
+}
+.attr-tabs-btns { display: flex; gap: 8px; margin-bottom: 20px; }
+.attr-tab {
+    padding: 8px 16px; border-radius: 20px;
+    background: var(--bg-card2); border: 1.5px solid var(--border);
+    color: var(--text-muted); font-size: 0.82rem; font-weight: 500;
+    transition: var(--transition); display: flex; align-items: center; gap: 6px;
+}
+.attr-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.attr-panel { display: none; }
+.attr-panel.active { display: block; }
+.attr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.form-actions {
+    display: flex; gap: 20px; justify-content: flex-end; margin-top: 30px;
+}
+.btn-save {
+    background: var(--primary); color: white; padding: 14px 32px;
+    border-radius: var(--radius-pill); font-weight: 700;
+    transition: var(--transition);
+}
+.btn-save:hover { background: var(--primary-light); }
+
+/* Toasts */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9000; }
+.toast {
+    background: white; border-radius: var(--radius); padding: 16px 20px;
+    box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 14px;
+    border-left: 5px solid var(--primary); margin-top: 10px;
+}
+.toast.success { border-left-color: var(--esprit-color); }
+.toast.error { border-left-color: var(--corps-color); }
+.toast-icon { font-size: 1.2rem; }
+.toast-content { flex: 1; }
+.toast-close { color: var(--text-muted); cursor: pointer; }
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .admin-grid { grid-template-columns: 1fr; }
+}
+/* ===== FIN MAIN ===== */

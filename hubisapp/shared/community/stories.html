@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Stories | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="stories.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="stories-body">
+
+<!-- ===== LOADER ===== -->
+<div class="c-loader" id="globalLoader" style="display:flex;">
+    <div class="c-spinner"></div>
+    <span class="c-loader-text">Chargement des stories...</span>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="stories-nav">
+    <div class="stories-nav-left">
+        <a href="feed.html" class="stories-back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="stories-nav-logo">
+        <span class="stories-nav-title">Stories</span>
+    </div>
+    <div class="stories-nav-right">
+        <div class="stories-user-info">
+            <div class="stories-nav-avatar-wrap">
+                <div class="stories-nav-avatar-initials" id="navUserAvatarInitials"></div>
+                <img id="navUserAvatar" alt="" class="stories-nav-avatar" style="display:none;">
+                <!-- 🔥 Pastille de statut en ligne -->
+                <span class="online-status-dot" id="navOnlineStatus" style="display:none;"></span>
+            </div>
+            <span id="navUserName">...</span>
+            <!-- 🔥 Bouton Menu (⋮) -->
+            <button class="nav-menu-btn" id="navMenuBtn" title="Options">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- ===== CONTENU PRINCIPAL ===== -->
+<div class="stories-list-content">
+
+    <!-- My HubIS Mood -->
+    <div class="my-story-section">
+        <h3>My HubIS Mood</h3>
+        <div class="my-story-card" id="myStoryCard">
+            <div class="my-story-add" id="myStoryAdd">
+                <div class="my-story-avatar-wrap">
+                    <div class="my-story-avatar-initials" id="myStoryAvatarInitials"></div>
+                    <img id="myStoryAvatar" alt="" style="display:none;">
+                    <div class="my-story-plus"><i class="fas fa-plus"></i></div>
+                </div>
+                <span>Ajouter une story</span>
+            </div>
+            <div class="my-story-existing" id="myStoryExisting" style="display:none">
+                <div id="myStoriesList" class="my-stories-thumbs"></div>
+                <!-- Les actions sont désormais directement sous chaque miniature, plus de bouton global -->
+            </div>
+        </div>
+    </div>
+
+    <!-- HubIS Enjoy -->
+    <div class="following-stories-section">
+        <h3>HubIS Enjoy</h3>
+        <div id="followingStoriesList" class="following-stories-list"></div>
+    </div>
+
+    <!-- Stories vues -->
+    <div class="viewed-stories-section" id="viewedStoriesSection" style="display:none">
+        <h3>Vues</h3>
+        <div id="viewedStoriesList" class="following-stories-list dimmed"></div>
+    </div>
+
+</div>
+
+<!-- ===== MODALE UPLOAD ===== -->
+<div id="modalUploadStory" class="c-modal">
+    <div class="c-modal-box">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-smile"></i> Nouvelle story</h2>
+            <button class="c-modal-close" onclick="closeModal('modalUploadStory')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <div class="story-type-tabs">
+                <button class="story-type-tab active" data-type="photo"><i class="fas fa-camera"></i> Photo</button>
+                <button class="story-type-tab" data-type="video"><i class="fas fa-video"></i> Vidéo</button>
+                <button class="story-type-tab" data-type="text"><i class="fas fa-font"></i> Texte</button>
+            </div>
+
+            <div class="story-upload-zone" id="storyUploadZone">
+                <div class="story-drop-area" id="storyDropArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Glisse ton fichier ici ou <span class="upload-link">clique pour choisir</span></p>
+                    <small>Photo : max 10 Mo · Vidéo : max 900 Mo (≈15 min)</small>
+                </div>
+                <input type="file" id="storyFileInput" accept="image/*,video/*" style="display:none">
+                <div class="story-file-preview" id="storyFilePreview" style="display:none"></div>
+            </div>
+
+            <div class="story-text-zone" id="storyTextZone" style="display:none">
+                <div class="story-text-canvas" id="storyTextCanvas">
+                    <textarea id="storyTextContent" maxlength="200" placeholder="Écris quelque chose..."></textarea>
+                </div>
+                <div class="story-text-style-bar">
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#551B8C,#3d1266)">Violet</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#1a1a2e,#0d0d1a)">Nuit</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#FFCC00,#e6b800)" style="color:#333">Or</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#22c55e,#16a34a)">Vert</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#ef4444,#dc2626)">Rouge</button>
+                    <button class="txt-style-btn" data-bg="linear-gradient(135deg,#3b82f6,#1d4ed8)">Bleu</button>
+                </div>
+            </div>
+
+            <div class="c-field" style="margin-top:16px">
+                <label>Légende <span class="hint">(optionnel · max 120 caractères)</span></label>
+                <input type="text" class="c-input" id="storyCaptionInput" maxlength="120" placeholder="Ajouter une légende...">
+            </div>
+
+            <div class="c-field">
+                <label>Durée d'affichage</label>
+                <select class="c-select" id="storyDurationSelect">
+                    <option value="5">5 secondes</option>
+                    <option value="10">10 secondes</option>
+                    <option value="15">15 secondes</option>
+                    <option value="30">30 secondes</option>
+                    <option value="60">1 minute</option>
+                    <option value="300">5 minutes</option>
+                    <option value="600">10 minutes</option>
+                    <option value="900">15 minutes</option>
+                    <option value="1800">30 minutes</option>
+                    <option value="2700">45 minutes</option>
+                    <option value="3600" selected>60 minutes</option>
+                </select>
+            </div>
+
+            <div class="c-field">
+                <label>Visibilité</label>
+                <select class="c-select" id="storyVisibilitySelect">
+                    <option value="all">Tout le monde (abonnés)</option>
+                    <option value="close_friends">Amis proches uniquement</option>
+                </select>
+            </div>
+        </div>
+        <div class="c-modal-foot">
+            <button class="btn-ghost" onclick="closeModal('modalUploadStory')">Annuler</button>
+            <button class="btn-primary" id="publishStoryBtn">
+                <i class="fas fa-paper-plane"></i> Publier la story
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale options (pour ses propres stories) -->
+<div id="modalMyStoryOptions" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2>Options</h2>
+            <button class="c-modal-close" onclick="closeModal('modalMyStoryOptions')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body" style="padding:8px 0">
+            <button class="story-option-item" id="viewStoryViewsBtn">
+                <i class="fas fa-eye"></i> Voir les vues
+            </button>
+            <button class="story-option-item" id="downloadStoryBtn">
+                <i class="fas fa-download"></i> Télécharger
+            </button>
+            <button class="story-option-item" id="hideStoryBtn">
+                <i class="fas fa-eye-slash"></i> Masquer pour certaines personnes
+            </button>
+            <hr style="border-color:var(--gray-light);margin:4px 16px">
+            <button class="story-option-item danger" id="deleteStoryBtn">
+                <i class="fas fa-trash-alt"></i> Supprimer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale vues -->
+<div id="modalStoryViews" class="c-modal">
+    <div class="c-modal-box c-modal-box-sm">
+        <div class="c-modal-head">
+            <h2><i class="fas fa-eye"></i> Vues</h2>
+            <button class="c-modal-close" onclick="closeModal('modalStoryViews')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="c-modal-body">
+            <ul id="storyViewsList" class="users-list"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOASTS ===== -->
+<div id="toastContainer" class="c-toast-container"></div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="utils.js"></script>
+<script src="session.js"></script>
+<script src="stories.js"></script>
+</body>
+</html>

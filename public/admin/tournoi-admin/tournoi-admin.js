@@ -5,7 +5,7 @@ const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_K
 
 let currentInscriptionId = null;
 
-// ========== VÉRIFICATION DE SESSION ==========
+// ========== DEBUT : VÉRIFICATION DE SESSION ==========
 (async () => {
     const { data: { session } } = await supabaseAdmin.auth.getSession();
     if (!session) {
@@ -16,6 +16,7 @@ let currentInscriptionId = null;
     document.getElementById('adminContent').style.display = 'block';
     loadAll();
 })();
+// ========== FIN : VÉRIFICATION DE SESSION ==========
 
 function loadAll() {
     loadTournois();
@@ -30,9 +31,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     window.location.href = '../administration.html';
 });
 
-/* =============================================
-   ONGLETS
-   ============================================= */
+// ========== DEBUT : ONGLETS ==========
 const tabs = document.querySelectorAll('.tab-btn');
 const contents = document.querySelectorAll('.tab-content');
 tabs.forEach(tab => {
@@ -47,10 +46,9 @@ tabs.forEach(tab => {
         else if (tab.dataset.tab === 'lives') loadLives();
     });
 });
+// ========== FIN : ONGLETS ==========
 
-/* =============================================
-   UTILITAIRES
-   ============================================= */
+// ========== DEBUT : UTILITAIRES ==========
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -80,8 +78,9 @@ function hideLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'none';
 }
+// ========== FIN : UTILITAIRES ==========
 
-// ========== HACHAGE NATIF (SHA-256) ==========
+// ========== DEBUT : HACHAGE NATIF (SHA-256) ==========
 async function hashPasswordNative(password) {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
@@ -90,8 +89,9 @@ async function hashPasswordNative(password) {
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
 }
+// ========== FIN : HACHAGE NATIF ==========
 
-// ========== GÉNÉRATION DE MOT DE PASSE ALÉATOIRE ==========
+// ========== DEBUT : GÉNÉRATION DE MOT DE PASSE ALÉATOIRE ==========
 function generateRandomPassword(length = 10) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -100,10 +100,9 @@ function generateRandomPassword(length = 10) {
     }
     return result;
 }
+// ========== FIN : GÉNÉRATION DE MOT DE PASSE ==========
 
-/* =============================================
-   TOURNOIS
-   ============================================= */
+// ========== DEBUT : TOURNOIS ==========
 async function loadTournois() {
     const list = document.getElementById('tournoisList');
     showLoader();
@@ -216,7 +215,14 @@ window.viewTournoiDetails = async (id) => {
 };
 
 window.toggleTournoiActive = async (id) => {
-    showToast('Activation / désactivation non implémentée (à venir)', 'info');
+    showLoader();
+    const { data } = await supabaseAdmin.from('public_tournois').select('actif').eq('id', id).single();
+    if (data) {
+        await supabaseAdmin.from('public_tournois').update({ actif: !data.actif }).eq('id', id);
+        showToast(`Tournoi ${!data.actif ? 'activé' : 'désactivé'}`, 'success');
+        loadTournois();
+    }
+    hideLoader();
 };
 
 window.refreshSingleTournoi = (id) => {
@@ -365,10 +371,9 @@ document.getElementById('newTournoiBtn').addEventListener('click', () => {
 });
 
 document.getElementById('refreshTournoisBtn').addEventListener('click', loadTournois);
+// ========== FIN : TOURNOIS ==========
 
-/* =============================================
-   CODES
-   ============================================= */
+// ========== DEBUT : CODES ==========
 async function loadCodes() {
     const list = document.getElementById('codesList');
     showLoader();
@@ -507,10 +512,9 @@ document.getElementById('codeForm').addEventListener('submit', async e => {
 });
 
 document.getElementById('refreshCodesBtn').addEventListener('click', loadCodes);
+// ========== FIN : CODES ==========
 
-/* =============================================
-   INSCRIPTIONS (validation avec SHA-256, génération auto login/mdp)
-   ============================================= */
+// ========== DEBUT : INSCRIPTIONS (validation avec SHA-256, génération auto login/mdp) ==========
 async function loadInscriptions() {
     const list = document.getElementById('inscriptionsList');
     showLoader();
@@ -569,7 +573,6 @@ window.openValidationModal = async (id) => {
         <p><strong>Tournoi :</strong> ${tournoi?.titre || '?'} (${estIndividuel ? 'Individuel' : 'Collectif'})</p>
         <p><strong>Code :</strong> ${ins.public_codes_tournoi?.code || '?'}</p>
     `;
-    // Pré-remplir login (partie avant @) et mot de passe aléatoire
     const loginAuto = ins.email.split('@')[0];
     const passwordAuto = generateRandomPassword();
     document.getElementById('validationLogin').value = loginAuto;
@@ -581,7 +584,6 @@ window.openValidationModal = async (id) => {
     hideLoader();
 };
 
-// Bouton Valider et générer le compte (utilisation de SHA-256 natif)
 document.getElementById('saveValidationBtn').addEventListener('click', async function() {
     const inscriptionId = currentInscriptionId;
     const login = document.getElementById('validationLogin').value.trim();
@@ -591,7 +593,6 @@ document.getElementById('saveValidationBtn').addEventListener('click', async fun
         showToast('Login et mot de passe obligatoires', 'warning');
         return;
     }
-    // Vérifier que l'API crypto est disponible
     if (!window.crypto || !crypto.subtle) {
         showToast('Erreur : API de sécurité non disponible. Navigateur trop ancien.', 'error', 5000);
         return;
@@ -600,9 +601,7 @@ document.getElementById('saveValidationBtn').addEventListener('click', async fun
     try {
         const { data: ins, error: insErr } = await supabaseAdmin.from('public_inscriptions_tournoi').select('*, public_codes_tournoi(tournoi_id, code, type_inscription, entite, public_tournois(type_tournoi))').eq('id', inscriptionId).single();
         if (insErr || !ins) throw new Error('Inscription introuvable');
-        // Marquer comme validée
         await supabaseAdmin.from('public_inscriptions_tournoi').update({ statut: 'valide', date_traitement: new Date().toISOString() }).eq('id', inscriptionId);
-        // Hacher le mot de passe avec SHA-256
         const hashed = await hashPasswordNative(password);
         const { data: newUser } = await supabaseAdmin.from('public_utilisateurs_tournoi').insert([{
             inscription_id: inscriptionId,
@@ -618,12 +617,10 @@ document.getElementById('saveValidationBtn').addEventListener('click', async fun
             const nomEquipe = ins.nom_club || code.entite || 'Equipe de ' + ins.nom_complet;
             await supabaseAdmin.from('public_equipes').insert([{ tournoi_id: tournoiId, nom_equipe: nomEquipe, type_equipe: code.type_inscription === 'club' ? 'club' : 'fan_club', capitaine_id: newUser.id }]);
         }
-        // Incrémenter quota
         const { data: codeData } = await supabaseAdmin.from('public_codes_tournoi').select('quota_utilise, quota_max').eq('id', ins.code_id).single();
         if (codeData && codeData.quota_utilise < codeData.quota_max) {
             await supabaseAdmin.from('public_codes_tournoi').update({ quota_utilise: codeData.quota_utilise + 1 }).eq('id', ins.code_id);
         }
-        // Afficher les identifiants en clair
         showToast(`✅ Inscription validée. Identifiants : Login: ${login} / Mot de passe: ${password}`, 'success', 30000);
         document.getElementById('validationModal').classList.remove('active');
         loadInscriptions(); loadCodes(); loadTournois();
@@ -635,7 +632,6 @@ document.getElementById('saveValidationBtn').addEventListener('click', async fun
     }
 });
 
-// Rejeter
 window.rejectInscription = async (id) => {
     const motif = prompt('Motif du rejet (optionnel) :');
     if (motif === null) return;
@@ -646,7 +642,6 @@ window.rejectInscription = async (id) => {
     hideLoader();
 };
 
-// Détails inscription
 window.viewInscriptionDetails = async (id) => {
     showLoader();
     const { data: ins } = await supabaseAdmin.from('public_inscriptions_tournoi').select('*, public_codes_tournoi(code, tournoi_id, public_tournois(titre, type_tournoi))').eq('id', id).single();
@@ -674,7 +669,6 @@ window.viewInscriptionDetails = async (id) => {
     hideLoader();
 };
 
-// Édition complète (inchangée)
 window.openEditInscriptionModal = async (id) => {
     currentInscriptionId = id;
     showLoader();
@@ -704,7 +698,6 @@ window.openEditInscriptionModal = async (id) => {
     }
     document.getElementById('editNiveauEtudes').value = ins.niveau_etudes || '';
     document.getElementById('editMetierSouhaite').value = ins.metier_souhaite || '';
-    // Disponibilités
     document.querySelectorAll('.edit-dispo-check').forEach(cb => cb.checked = false);
     if (ins.disponibilites) {
         for (const [day, slots] of Object.entries(ins.disponibilites)) {
@@ -796,7 +789,6 @@ document.getElementById('editInscriptionForm').addEventListener('submit', async 
     } finally { hideLoader(); }
 });
 
-// Renvoyer identifiants (utilise SHA-256 natif)
 window.resendCredentials = async (id) => {
     showLoader();
     const { data: user } = await supabaseAdmin.from('public_utilisateurs_tournoi').select('login').eq('inscription_id', id).maybeSingle();
@@ -851,10 +843,9 @@ function showValidationForm() {
 
 document.getElementById('refreshInscriptionsBtn').addEventListener('click', loadInscriptions);
 document.getElementById('statusFilter').addEventListener('change', loadInscriptions);
+// ========== FIN : INSCRIPTIONS ==========
 
-/* =============================================
-   LIVES
-   ============================================= */
+// ========== DEBUT : LIVES ==========
 async function loadLives() {
     const list = document.getElementById('livesList');
     showLoader();
@@ -977,10 +968,9 @@ document.getElementById('liveForm').addEventListener('submit', async e => {
 });
 
 document.getElementById('refreshLivesBtn').addEventListener('click', loadLives);
+// ========== FIN : LIVES ==========
 
-/* =============================================
-   FERMETURE DES MODALES
-   ============================================= */
+// ========== DEBUT : FERMETURE DES MODALES ==========
 document.querySelectorAll('.close-modal').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
@@ -993,4 +983,5 @@ window.addEventListener('click', e => {
         showValidationForm();
     }
 });
+// ========== FIN : FERMETURE DES MODALES ==========
 // ========== FIN : tournoi-admin.js ==========

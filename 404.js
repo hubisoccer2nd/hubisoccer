@@ -32,7 +32,6 @@ function applyTranslations(lang) {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (t[key]) {
-            // Les éléments qui peuvent contenir du HTML (comme <br>) sont remplacés avec innerHTML
             if (el.innerHTML.includes('<')) {
                 el.innerHTML = t[key];
             } else {
@@ -52,7 +51,6 @@ function loadLanguage(lang) {
         if (lang !== 'fr') loadLanguage('fr');
     }
 }
-
 // ========== FIN : TRADUCTIONS ==========
 
 // ========== DEBUT : INITIALISATION ==========

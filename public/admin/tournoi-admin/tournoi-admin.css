@@ -516,7 +516,6 @@ body {
     margin-bottom: 25px;
     background: #fafafa;
 }
-
 .form-section legend {
     background: var(--primary);
     color: white;
@@ -530,11 +529,9 @@ body {
     align-items: center;
     gap: 8px;
 }
-
 .form-section legend i {
     color: var(--gold);
 }
-
 .fieldset-hint {
     font-size: 0.85rem;
     color: var(--gray);

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nos Clubs | HubISoccer</title>
+    <meta name="description" content="Découvrez les clubs officiels HubISoccer près de chez vous. Postulez pour rejoindre un club ou inscrivez-vous sur liste d'attente.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://hubisoccer.site/public/nos-clubs/presentation/clubs.html">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hubisoccer.site/public/nos-clubs/presentation/clubs.html">
+    <meta property="og:title" content="Nos Clubs | HubISoccer">
+    <meta property="og:description" content="Découvrez les clubs officiels HubISoccer près de chez vous. Postulez pour rejoindre un club ou inscrivez-vous sur liste d'attente.">
+    <meta property="og:image" content="https://hubisoccer.site/public/img/logo-navbar.png">
+    <link rel="alternate" hreflang="fr" href="https://hubisoccer.site/public/nos-clubs/presentation/clubs.html">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="clubs.css">
+</head>
+<body>
+    <!-- ========== DÉBUT : NAVBAR OFFICIELLE (sans Accueil) ========== -->
+    <nav>
+        <a href="../../index.html" class="logo-link">
+            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
+        <div class="nav-right">
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <button class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="../../premier-pas.html" data-i18n="nav.premier_pas">Premier Pas</a>
+                <a href="../../acteurs.html" data-i18n="nav.acteurs">Acteurs</a>
+                <a href="../../artiste-adhesion.html" data-i18n="nav.artistes">Artistes</a>
+                <a href="../../tournoi.html" data-i18n="nav.tournois">Tournois</a>
+                <a href="clubs.html" class="active" data-i18n="nav.clubs">Nos Clubs</a>
+                <a href="../../hub-community.html" data-i18n="nav.community">Communauté</a>
+                <a href="../../actualites.html" data-i18n="nav.actualites">Actualités</a>
+                <a href="../../contact.html" data-i18n="nav.contact">Contact</a>
+                <a href="../gestion/nos-clubs-login.html" data-i18n="nav.login">Connexion</a>
+            </div>
+        </div>
+    </nav>
+    <!-- ========== FIN : NAVBAR ========== -->
+
+    <!-- ========== DÉBUT : HEADER ========== -->
+    <header class="clubs-header">
+        <h1 data-i18n="header.title">Nos Clubs</h1>
+        <p data-i18n="header.subtitle">Rejoignez un club près de chez vous. Entraînez-vous, progressez et préparez votre avenir avec la Trinité HubISoccer.</p>
+    </header>
+    <!-- ========== FIN : HEADER ========== -->
+
+    <!-- ========== DÉBUT : FILTRES ========== -->
+    <section class="filters-section">
+        <div class="filter-group">
+            <input type="text" id="searchInput" data-i18n-placeholder="filter.search" placeholder="Rechercher un club...">
+            <select id="disciplineFilter">
+                <option value="all" data-i18n="filter.discipline_all">Toutes les disciplines</option>
+                <option value="sportif" data-i18n="filter.discipline_sport">Tous les sports</option>
+                <option value="artiste" data-i18n="filter.discipline_artiste">Tous les artistes</option>
+            </select>
+            <select id="villeFilter">
+                <option value="all" data-i18n="filter.ville_all">Toutes les villes</option>
+            </select>
+            <select id="statutFilter">
+                <option value="all" data-i18n="filter.statut_all">Tous les statuts</option>
+                <option value="actif" data-i18n="filter.statut_actif">Actifs</option>
+                <option value="archive" data-i18n="filter.statut_archive">Archivés</option>
+            </select>
+        </div>
+    </section>
+    <!-- ========== FIN : FILTRES ========== -->
+
+    <!-- ========== DÉBUT : GRILLE DES CLUBS ========== -->
+    <section class="clubs-grid-section">
+        <div class="clubs-grid" id="clubsGrid">
+            <div class="loading-placeholder">Chargement des clubs...</div>
+        </div>
+        <div class="retry-container" style="display:none;">
+            <button id="retryLoad" class="btn-retry">Réessayer</button>
+        </div>
+    </section>
+    <!-- ========== FIN : GRILLE DES CLUBS ========== -->
+
+    <!-- ========== DÉBUT : FOOTER ========== -->
+    <footer>
+        <div class="legal">
+            <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
+            <p data-i18n="footer.rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="footer.copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+        </div>
+    </footer>
+    <!-- ========== FIN : FOOTER ========== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../nos-clubs-i18n.js"></script>
+    <script src="clubs.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HubISoccer - Studio Logo Pro</title>
+    <meta name="description" content="Créez le logo officiel de votre club HubISoccer avec notre studio professionnel.">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,700;1,700&family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/createur_logo.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="hubi-dark-theme">
+
+    <!-- ========== DÉBUT : LOADER ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+
+    <!-- ========== DÉBUT : STUDIO CONTAINER ========== -->
+    <div class="studio-app" id="studioApp">
+
+        <!-- COLONNE GAUCHE : PANNEAU DE CONFIGURATION -->
+        <aside class="panel-left" id="panelLeft">
+            <div class="panel-logo">
+                <img src="img/logo-navbar.png" alt="HubISoccer" class="mini-logo">
+                <h1 class="studio-title">LOGO<br>STUDIO</h1>
+            </div>
+
+            <!-- Section Identité -->
+            <div class="control-section">
+                <h3><i class="fas fa-id-card"></i> IDENTITÉ DU CLUB</h3>
+                <input type="text" id="clubNameInput" placeholder="Nom du Club" class="hubi-input">
+                <input type="text" id="neighborhoodInput" placeholder="Quartier" class="hubi-input">
+            </div>
+
+            <!-- Section Typographie & Style Word -->
+            <div class="control-section">
+                <h3><i class="fas fa-font"></i> TYPOGRAPHIE & STYLE</h3>
+                <select id="fontFamilySelect" class="hubi-select">
+                    <option value="Bebas Neue">Bebas Neue (Sport)</option>
+                    <option value="Montserrat">Montserrat (Moderne)</option>
+                    <option value="Permanent Marker">Permanent Marker (Street)</option>
+                    <option value="Playfair Display">Playfair Display (Classique)</option>
+                </select>
+                <div class="tool-row">
+                    <input type="number" id="fontSizeInput" value="60" min="12" max="300" class="hubi-input small" title="Taille du texte">
+                    <input type="color" id="textColorPicker" value="#FFCC00" class="hubi-color" title="Couleur du texte">
+                </div>
+                <div class="tool-row format-buttons">
+                    <button id="btnBold" title="Gras"><strong>B</strong></button>
+                    <button id="btnItalic" title="Italique"><em>I</em></button>
+                    <button id="btnUnderline" title="Souligné"><u>U</u></button>
+                </div>
+                <div class="tool-row align-buttons">
+                    <button onclick="alignText('left')" title="Aligner à gauche"><i class="fas fa-align-left"></i></button>
+                    <button onclick="alignText('center')" title="Centrer"><i class="fas fa-align-center"></i></button>
+                    <button onclick="alignText('right')" title="Aligner à droite"><i class="fas fa-align-right"></i></button>
+                </div>
+                <label class="spacing-label">Espacement lettres</label>
+                <input type="range" id="letterSpacingSlider" min="-5" max="20" value="0" class="hubi-range">
+            </div>
+
+            <!-- Section Formes & Écussons -->
+            <div class="control-section">
+                <h3><i class="fas fa-shapes"></i> FORMES & ÉCUSSONS</h3>
+                <div class="shape-grid">
+                    <button onclick="addShape('circle')" class="shape-btn"><i class="fas fa-circle"></i> Cercle</button>
+                    <button onclick="addShape('shield')" class="shape-btn"><i class="fas fa-shield-alt"></i> Bouclier</button>
+                    <button onclick="addShape('diamond')" class="shape-btn"><i class="fas fa-gem"></i> Losange</button>
+                    <button onclick="addShape('crown')" class="shape-btn"><i class="fas fa-crown"></i> Couronne</button>
+                    <button onclick="addShape('star')" class="shape-btn"><i class="fas fa-star"></i> Étoile</button>
+                    <button onclick="addShape('rectangle')" class="shape-btn"><i class="fas fa-square"></i> Rectangle</button>
+                    <button onclick="addShape('ellipse')" class="shape-btn"><i class="fas fa-circle"></i> Ellipse</button>
+                </div>
+                <label>Couleur de la forme</label>
+                <input type="color" id="shapeColorPicker" value="#4B0082" class="hubi-color full-width">
+            </div>
+
+            <!-- Section Couleurs avancées (palette monde) -->
+            <div class="control-section">
+                <h3><i class="fas fa-palette"></i> COULEURS DU MONDE</h3>
+                <div class="color-palette" id="colorPalette">
+                    <!-- Générée dynamiquement en JS -->
+                </div>
+                <input type="color" id="customColorPicker" class="hubi-color full-width" title="Choisissez une couleur personnalisée">
+            </div>
+        </aside>
+
+        <!-- COLONNE CENTRALE : CANVAS DE TRAVAIL -->
+        <main class="canvas-area">
+            <div class="canvas-wrapper">
+                <canvas id="logoCanvas"></canvas>
+            </div>
+            <div class="canvas-footer">
+                <button onclick="deleteSelected()" class="btn-tool"><i class="fas fa-trash-alt"></i> Supprimer l'élément</button>
+                <button onclick="duplicateSelected()" class="btn-tool"><i class="fas fa-copy"></i> Dupliquer</button>
+                <span class="canvas-hint">Glissez, redimensionnez, modifiez.</span>
+            </div>
+        </main>
+
+        <!-- COLONNE DROITE : STATUT & FINALISATION -->
+        <aside class="panel-right">
+            <div class="status-card">
+                <h3><i class="fas fa-info-circle"></i> ÉTAT DU PROJET</h3>
+                <div id="statusBadge" class="status-badge draft">BROUILLON</div>
+                <p id="statusDesc">Votre logo est en cours de création.</p>
+            </div>
+
+            <div class="preview-widget">
+                <h4>Aperçu sur maillot</h4>
+                <div class="mockup-shirt" id="mockupShirt">
+                    <img id="mockupLogoPreview" src="" alt="Logo preview" style="display: none; max-width: 80px;">
+                </div>
+            </div>
+
+            <button id="btnSubmitLogo" class="btn-primary-gold">
+                <i class="fas fa-paper-plane"></i> SOUMETTRE À OZAWA
+            </button>
+
+            <div class="download-section locked" id="downloadSection">
+                <i class="fas fa-lock"></i>
+                <p>TÉLÉCHARGEMENT VERROUILLÉ</p>
+                <button id="btnDownloadLogo" class="btn-download" disabled>
+                    <i class="fas fa-download"></i> Télécharger (PNG/PDF)
+                </button>
+            </div>
+
+            <div class="feedback-box" id="adminFeedback">
+                <h4>Note de l'Admin :</h4>
+                <p id="feedbackText">Aucun retour pour le moment.</p>
+            </div>
+        </aside>
+    </div>
+    <!-- ========== FIN : STUDIO CONTAINER ========== -->
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="js/createur_logo.js"></script>
+</body>
+</html>

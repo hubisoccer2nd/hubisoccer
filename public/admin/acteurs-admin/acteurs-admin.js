@@ -1,3 +1,4 @@
+/* DEBUT : public/admin/acteurs-admin/acteurs-admin.js */
 // ========== ACTEURS-ADMIN.JS ==========
 // ========== CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
@@ -86,6 +87,26 @@ function generateLogin(nom) {
     const base = nom.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 8);
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return base + random;
+}
+
+async function generateUniqueLogin(nom) {
+    let login = generateLogin(nom);
+    let attempts = 0;
+    while (attempts < 5) {
+        const { data, error } = await supabaseAdmin
+            .from('public_acteur_inscriptions')
+            .select('login')
+            .eq('login', login)
+            .maybeSingle();
+        if (error || !data) {
+            return login; // pas de conflit
+        }
+        // Sinon, on regénère
+        login = generateLogin(nom);
+        attempts++;
+    }
+    // En dernier recours, on ajoute un timestamp
+    return login + Date.now().toString().slice(-4);
 }
 
 function generatePassword() {
@@ -218,6 +239,7 @@ async function openViewModal(ppId) {
                 <p><strong>ID :</strong> ${escapeHtml(ins.pp_id)}</p>
                 <p><strong>Statut :</strong> <span class="status-badge ${getStatusClass(ins.status)}">${getStatusLabel(ins.status)}</span></p>
                 <p><strong>Date de soumission :</strong> ${formatDate(ins.created_at)}</p>
+                ${ins.commentaire_admin ? `<p><strong>Commentaire admin :</strong> ${escapeHtml(ins.commentaire_admin)}</p>` : ''}
             </div>
             <div class="detail-section">
                 <h4><i class="fas fa-file-alt"></i> Justificatif</h4>
@@ -301,14 +323,16 @@ async function sendMessage() {
     }
 }
 
-// Modale d'approbation
-function openApproveModal(ppId) {
+// Modale d'approbation (avec vérification d'unicité du login)
+async function openApproveModal(ppId) {
     const ins = allInscriptions.find(i => i.pp_id === ppId);
     if (!ins) return;
     currentInscription = ins;
 
-    const login = generateLogin(ins.full_name);
+    showLoader();
+    const login = await generateUniqueLogin(ins.full_name);
     const password = generatePassword();
+    hideLoader();
 
     document.getElementById('generatedLogin').value = login;
     document.getElementById('generatedPassword').value = password;
@@ -474,7 +498,7 @@ document.getElementById('refreshStatsBtn').addEventListener('click', () => {
 });
 // ========== FIN : ÉVÉNEMENTS ==========
 
-// ========== DÉBUT : MENU MOBILE ==========
+// ========== DÉBUT : MENU MOBILE ET DÉCONNEXION ==========
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 if (menuToggle && navLinks) {
@@ -489,17 +513,22 @@ if (menuToggle && navLinks) {
         }
     });
 }
+
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        showToast('Déconnexion (à implémenter)', 'info');
+        // Effacement de toute session stockée
+        localStorage.removeItem('hubiLang');
+        // Redirection vers la page d'accueil publique
+        window.location.href = '../../../index.html';
     });
 }
-// ========== FIN : MENU MOBILE ==========
+// ========== FIN : MENU MOBILE ET DÉCONNEXION ==========
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', () => {
     loadInscriptions();
 });
 // ========== FIN DE ACTEURS-ADMIN.JS ==========
+/* FIN : public/admin/acteurs-admin/acteurs-admin.js */

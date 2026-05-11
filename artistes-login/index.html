@@ -1,3 +1,4 @@
+<!-- DEBUT : artistes-login/index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,16 +8,43 @@
     <meta name="description" content="Connectez-vous à votre espace artiste HubISoccer pour suivre votre dossier.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/artistes-login.css">
+    <link rel="stylesheet" href="artistes-login.css">
 </head>
 <body>
     <!-- ========== DÉBUT : NAVBAR ========== -->
     <nav>
-        <a href="./" class="logo-link">
-            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        <a href="../" class="logo-link">
+            <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
-            <a href="artiste-adhesion.html" class="btn-back"><i class="fas fa-arrow-left"></i> Retour</a>
+            <!-- Sélecteur de langue avec 24 options -->
+            <select class="lang-picker" id="langSelect">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="yo">🇳🇬 Yoruba</option>
+                <option value="fon">🇧🇯 Fon</option>
+                <option value="mina">🇹🇬 Mina</option>
+                <option value="lin">🇨🇬 Lingala</option>
+                <option value="wol">🇸🇳 Wolof</option>
+                <option value="diou">🇨🇮 Dioula</option>
+                <option value="ha">🇳🇬 Hausa</option>
+                <option value="sw">🇰🇪 Kiswahili</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="pt">🇵🇹 Português</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ko">🇰🇷 한국어</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="nl">🇳🇱 Nederlands</option>
+                <option value="pl">🇵🇱 Polski</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+            </select>
+            <a href="../artiste-adhesion/" class="btn-back"><i class="fas fa-arrow-left"></i> Retour</a>
         </div>
     </nav>
     <!-- ========== FIN : NAVBAR ========== -->
@@ -62,6 +90,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/artistes-login.js"></script>
+    <script src="artistes-login.js"></script>
 </body>
 </html>
+<!-- FIN : artistes-login/index.html -->

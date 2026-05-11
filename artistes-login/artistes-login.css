@@ -1,3 +1,4 @@
+/* DEBUT : artistes-login/artistes-login.css */
 /* ========== ARTISTES-LOGIN.CSS ========== */
 /* ========== DÉBUT : VARIABLES ========== */
 :root {
@@ -35,15 +36,50 @@ nav {
     background: var(--white);
     box-shadow: var(--shadow);
 }
+
+.logo-link {
+    display: inline-block;
+}
+
 .logo-nav {
     height: 45px;
+    transition: 0.3s;
 }
+
+.logo-nav:hover {
+    opacity: 0.8;
+    transform: scale(1.02);
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.lang-picker {
+    background: var(--white);
+    color: var(--primary);
+    border: 1px solid var(--light-gray);
+    padding: 8px 12px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    outline: none;
+    transition: 0.3s;
+}
+
+.lang-picker:hover {
+    border-color: var(--gold);
+}
+
 .btn-back {
     color: var(--primary);
     text-decoration: none;
     font-weight: 600;
     transition: 0.3s;
 }
+
 .btn-back:hover {
     color: var(--gold);
 }
@@ -181,3 +217,4 @@ footer {
 }
 /* ========== FIN : RESPONSIVE ========== */
 /* ========== FIN DE ARTISTES-LOGIN.CSS ========== */
+/* FIN : artistes-login/artistes-login.css */

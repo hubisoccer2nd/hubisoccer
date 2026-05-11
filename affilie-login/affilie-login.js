@@ -1,3 +1,4 @@
+/* DEBUT : affilie-login/affilie-login.js */
 // ========== AFFILIE-LOGIN.JS ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -17,6 +18,7 @@ const translations = {
         'nav.market': 'Market',
         'nav.login': 'Connexion',
         'nav.signup': 'Inscription',
+        'nos_clubs': 'Nos Clubs',
         'affilie.login.title': 'Espace affilié',
         'affilie.login.subtitle': 'Connectez-vous avec votre numéro WhatsApp',
         'affilie.login.phone': 'Numéro WhatsApp *',
@@ -65,6 +67,7 @@ const translations = {
         'nav.market': 'Market',
         'nav.login': 'Login',
         'nav.signup': 'Sign up',
+        'nos_clubs': 'Our Clubs',
         'affilie.login.title': 'Affiliate space',
         'affilie.login.subtitle': 'Login with your WhatsApp number',
         'affilie.login.phone': 'WhatsApp number *',
@@ -197,7 +200,7 @@ function renderDashboard(affiliate) {
     if (welcomeName) welcomeName.textContent = t('affilie.dashboard.welcome', { name: affiliate.nom });
     
     const baseUrl = window.location.origin;
-    let targetPath = (affiliate.type === 'sportif') ? '/premier-pas.html' : '/e-marketing-hubisoccer.html';
+    let targetPath = (affiliate.type === 'sportif') ? '/premier-pas/' : '/e-marketing/';
     const link = `${baseUrl}${targetPath}?ref=${encodeURIComponent(affiliate.id)}`;
     if (affiliateLinkSpan) affiliateLinkSpan.textContent = link;
     
@@ -242,7 +245,6 @@ async function loadStats(affiliateId) {
             .single();
         if (!affError && affiliateData) {
             const withdrawn = affiliateData.withdrawn_amount || 0;
-            // Stocker le solde disponible dans un attribut data pour utilisation dans le retrait
             if (totalCommissionSpan) totalCommissionSpan.setAttribute('data-total-commission', totalCommission);
             if (totalCommissionSpan) totalCommissionSpan.setAttribute('data-withdrawn', withdrawn);
         }
@@ -298,7 +300,7 @@ if (copyLinkBtn) {
     });
 }
 
-// ========== DEMANDE DE RETRAIT (CORRIGÉE) ==========
+// ========== DEMANDE DE RETRAIT ==========
 if (withdrawBtn) {
     withdrawBtn.addEventListener('click', async () => {
         if (!currentAffiliate) {
@@ -466,3 +468,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile();
     checkSession();
 });
+/* FIN : affilie-login/affilie-login.js */

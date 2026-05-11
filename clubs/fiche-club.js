@@ -1,3 +1,4 @@
+/* DEBUT : clubs/fiche-club.js */
 // ========== FICHE-CLUB.JS – VERSION FINALE ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
@@ -643,3 +644,4 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAutoSave();
 });
 // ========== FIN DE FICHE-CLUB.JS ==========
+/* FIN : clubs/fiche-club.js */

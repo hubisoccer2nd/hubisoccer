@@ -1,3 +1,4 @@
+/* DEBUT : affiliation/affiliation.js */
 // ========== AFFILIATION.JS ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -16,6 +17,7 @@ const translations = {
         'nav.market': 'E-MARKET-HUBISOCCER',
         'nav.login': 'Connexion',
         'nav.signup': 'Inscription',
+        'nos_clubs': 'Nos Clubs',
         'affiliation.header.title': 'Programme Ambassadeur',
         'affiliation.header.highlight': 'HubISoccer',
         'affiliation.header.subtitle': 'Gagnez de l\'argent en partageant notre mission et en détectant des talents.',
@@ -82,6 +84,7 @@ const translations = {
         'nav.market': 'Market',
         'nav.login': 'Login',
         'nav.signup': 'Sign up',
+        'nos_clubs': 'Our Clubs',
         'affiliation.header.title': 'Ambassador Program',
         'affiliation.header.highlight': 'HubISoccer',
         'affiliation.header.subtitle': 'Earn money by sharing our mission and spotting talent.',
@@ -247,7 +250,7 @@ function initAffiliationForm() {
         }
 
         const baseUrl = window.location.origin;
-        let targetPath = (type === 'sportif') ? '/premier-pas.html' : '/e-marketing-hubisoccer.html';
+        let targetPath = (type === 'sportif') ? '/premier-pas/' : '/e-marketing/';
         const link = `${baseUrl}${targetPath}?ref=${encodeURIComponent(affiliateId)}`;
 
         affLinkSpan.textContent = link;
@@ -346,3 +349,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initAffiliationForm();
     updateSimulation();
 });
+/* FIN : affiliation/affiliation.js */

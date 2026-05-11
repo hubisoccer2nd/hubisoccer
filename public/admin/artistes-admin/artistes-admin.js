@@ -1,3 +1,4 @@
+/* DEBUT : public/admin/artistes-admin/artistes-admin.js */
 // ========== ARTISTES-ADMIN.JS ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
@@ -570,7 +571,12 @@ if (menuToggle && navLinks) {
         }
     });
 }
-document.getElementById('logoutBtn')?.addEventListener('click', e => { e.preventDefault(); showToast('Déconnexion', 'info'); });
+document.getElementById('logoutBtn')?.addEventListener('click', e => { 
+    e.preventDefault(); 
+    // Nettoyage d'une éventuelle session légère et redirection vers l'accueil public
+    localStorage.removeItem('hubiLang');
+    window.location.href = '../../../index.html'; 
+});
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -592,3 +598,4 @@ document.addEventListener('DOMContentLoaded', () => {
     populateArtisteSelect();
 });
 // ========== FIN DE ARTISTES-ADMIN.JS ==========
+/* FIN : public/admin/artistes-admin/artistes-admin.js */

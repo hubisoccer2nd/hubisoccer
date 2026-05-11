@@ -1,3 +1,4 @@
+/* DEBUT : actualites/actualites.js */
 // ========== ACTUALITES.JS ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -45,12 +46,13 @@ async function loadActualites() {
     const date = new Date(article.date_publication).toLocaleDateString('fr-FR');
     let mediaHtml = '';
     if (article.media_url) {
+      const safeUrl = encodeURI(article.media_url);
       if (article.media_type === 'image') {
-        mediaHtml = `<img class="article-media" src="${article.media_url}" alt="${article.titre}">`;
+        mediaHtml = `<img class="article-media" src="${safeUrl}" alt="${escapeHtml(article.titre)}">`;
       } else if (article.media_type === 'video') {
-        mediaHtml = `<video class="article-media" src="${article.media_url}" controls></video>`;
+        mediaHtml = `<video class="article-media" src="${safeUrl}" controls></video>`;
       } else if (article.media_type === 'audio') {
-        mediaHtml = `<audio class="article-media" src="${article.media_url}" controls></audio>`;
+        mediaHtml = `<audio class="article-media" src="${safeUrl}" controls></audio>`;
       }
     }
     html += `
@@ -84,12 +86,13 @@ function showArticleModal(article) {
   modal.id = 'articleModal';
   let mediaHtml = '';
   if (article.media_url) {
+    const safeUrl = encodeURI(article.media_url);
     if (article.media_type === 'image') {
-      mediaHtml = `<img src="${article.media_url}" alt="${article.titre}">`;
+      mediaHtml = `<img src="${safeUrl}" alt="${escapeHtml(article.titre)}">`;
     } else if (article.media_type === 'video') {
-      mediaHtml = `<video src="${article.media_url}" controls autoplay></video>`;
+      mediaHtml = `<video src="${safeUrl}" controls autoplay></video>`;
     } else if (article.media_type === 'audio') {
-      mediaHtml = `<audio src="${article.media_url}" controls></audio>`;
+      mediaHtml = `<audio src="${safeUrl}" controls></audio>`;
     }
   }
   modal.innerHTML = `
@@ -121,3 +124,4 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   loadActualites();
 });
+/* FIN : actualites/actualites.js */

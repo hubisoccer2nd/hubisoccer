@@ -1,4 +1,3 @@
-// Fichier de traduction clubs – à compléter plus tard
 /* DEBUT : clubs/clubs-i18n.js */
 // ========== CLUBS-I18N.JS – TRADUCTIONS MINIMALES FR/EN ==========
 const nosClubsTranslations = {

@@ -1,3 +1,4 @@
+/* DEBUT : public/admin/nos-clubs-admin/gestion/gestion-inscriptions.js */
 // ========== GESTION-INSCRIPTIONS.JS ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
@@ -70,6 +71,24 @@ function generateLogin(nom) {
     const base = nom.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 8);
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     return base + random;
+}
+
+async function generateUniqueLogin(nom) {
+    let login = generateLogin(nom);
+    let attempts = 0;
+    while (attempts < 5) {
+        const { data, error } = await supabaseAdmin
+            .from('nosclub_inscriptions')
+            .select('login')
+            .eq('login', login)
+            .maybeSingle();
+        if (error || !data) {
+            return login; // pas de conflit
+        }
+        login = generateLogin(nom);
+        attempts++;
+    }
+    return login + Date.now().toString().slice(-4);
 }
 
 function generatePassword() {
@@ -259,8 +278,8 @@ async function sendViewMessage() {
 }
 // ========== FIN : GESTION MODALE VISUALISATION ==========
 
-// ========== DÉBUT : APPROBATION ==========
-function openApproveModal(id) {
+// ========== DÉBUT : APPROBATION (AVEC VÉRIFICATION D'UNICITÉ DU LOGIN) ==========
+async function openApproveModal(id) {
     const ins = allInscriptions.find(i => i.id == id);
     if (!ins) return;
     currentInscription = ins;
@@ -276,7 +295,8 @@ function openApproveModal(id) {
         document.getElementById('generatedLogin').value = login;
         document.getElementById('generatedPassword').value = '******** (déjà défini)';
     } else {
-        login = generateLogin(ins.nom_complet);
+        // Génération avec vérification d'unicité
+        login = await generateUniqueLogin(ins.nom_complet);
         password = generatePassword();
         document.getElementById('generatedLogin').value = login;
         document.getElementById('generatedPassword').value = password;
@@ -714,7 +734,7 @@ document.getElementById('clubFilter').addEventListener('change', renderInscripti
 document.getElementById('statusFilter').addEventListener('change', renderInscriptionsTable);
 // ========== FIN : ÉVÉNEMENTS FILTRES ==========
 
-// ========== DÉBUT : MENU MOBILE ==========
+// ========== DÉBUT : MENU MOBILE ET DÉCONNEXION ==========
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 if (menuToggle && navLinks) {
@@ -725,8 +745,15 @@ if (menuToggle && navLinks) {
         }
     });
 }
-document.getElementById('logoutBtn')?.addEventListener('click', e => { e.preventDefault(); showToast('Déconnexion', 'info'); });
-// ========== FIN : MENU MOBILE ==========
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('hubiLang');
+        window.location.href = '../../../index.html';
+    });
+}
+// ========== FIN : MENU MOBILE ET DÉCONNEXION ==========
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -736,3 +763,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 // ========== FIN DE GESTION-INSCRIPTIONS.JS ==========
+/* FIN : public/admin/nos-clubs-admin/gestion/gestion-inscriptions.js */

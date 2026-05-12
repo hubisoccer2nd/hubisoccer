@@ -1,3 +1,4 @@
+/* DEBUT : hub-community/hub-community.js */
 // ========== HUB-COMMUNITY.JS ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
@@ -64,7 +65,7 @@ function renderPosts(posts) {
         html += `
             <div class="post-card" data-id="${post.id}">
                 <div class="post-header">
-                    <img src="img/user-default.jpg" alt="Avatar">
+                    <img src="../public/img/user-default.jpg" alt="Avatar">
                     <div class="post-author">
                         <h4>HubISoccer</h4>
                         <small>${new Date(post.created_at).toLocaleDateString()}</small>
@@ -166,12 +167,12 @@ function getMediaPreview(url) {
 
 function getEntityLink(type, id) {
     const links = {
-        club: `nos-clubs/presentation/fiche-club.html?id=${id}`,
-        tournoi: `tournoi.html?id=${id}`,
-        scouting: `scouting.html?id=${id}`,
-        market: `e-marketing-hubisoccer.html?id=${id}`,
-        artiste: `artiste-adhesion.html?id=${id}`,
-        sportif: `premier-pas.html?id=${id}`
+        club: `../clubs/fiche-club.html?id=${id}`,
+        tournoi: `../tournoi/?id=${id}`,
+        scouting: `../scouting/?id=${id}`,
+        market: `../e-marketing/?id=${id}`,
+        artiste: `../artiste-adhesion/?id=${id}`,
+        sportif: `../premier-pas/?id=${id}`
     };
     return links[type] || '#';
 }
@@ -193,7 +194,7 @@ function renderComments(comments, postId) {
         html += `
             <div class="comment" data-id="${c.id}">
                 <div class="comment-main">
-                    <img src="img/user-default.jpg" alt="Avatar">
+                    <img src="../public/img/user-default.jpg" alt="Avatar">
                     <div class="comment-content">
                         <span class="comment-author">Anonyme</span>
                         <span class="comment-text">${escapeHtml(c.content)}</span>
@@ -217,7 +218,7 @@ function renderReplies(replies, postId) {
         html += `
             <div class="comment">
                 <div class="comment-main">
-                    <img src="img/user-default.jpg" alt="Avatar">
+                    <img src="../public/img/user-default.jpg" alt="Avatar">
                     <div class="comment-content">
                         <span class="comment-author">Anonyme</span>
                         <span class="comment-text">${escapeHtml(r.content)}</span>
@@ -237,7 +238,7 @@ function renderReplies(replies, postId) {
 function renderAddComment(postId) {
     return `
         <div class="add-comment">
-            <img src="img/user-default.jpg" alt="Avatar">
+            <img src="../public/img/user-default.jpg" alt="Avatar">
             <input type="text" class="comment-input" data-id="${postId}" placeholder="Votre commentaire...">
             <button class="send-comment" data-id="${postId}">Envoyer</button>
         </div>
@@ -248,8 +249,8 @@ function renderLimitMessage() {
     return `
         <div class="comment-limit-message">
             <p>${hubiT('toast.limit_reached')}</p>
-            <a href="public/auth/login.html" class="btn-auth">${hubiT('connexion')}</a>
-            <a href="public/auth/signup.html" class="btn-auth gold">${hubiT('inscrire')}</a>
+            <a href="../acteurs-login/" class="btn-auth">${hubiT('connexion')}</a>
+            <a href="../clubs/" class="btn-auth gold">${hubiT('nos_clubs')}</a>
         </div>
     `;
 }
@@ -404,7 +405,7 @@ async function addDislike(postId) {
 }
 
 async function sharePost(postId) {
-    const shareUrl = window.location.origin + '/hubisoccer/public/hub-community.html?post=' + postId;
+    const shareUrl = window.location.origin + '/hub-community/?post=' + postId;
     if (navigator.share) {
         try { await navigator.share({ title: 'HubISoccer Community', text: 'Découvrez ce post sur la communauté HubISoccer !', url: shareUrl }); } catch (err) {}
     } else {
@@ -572,3 +573,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     await window.loadPosts();
 });
 // ========== FIN DE HUB-COMMUNITY.JS ==========
+/* FIN : hub-community/hub-community.js */

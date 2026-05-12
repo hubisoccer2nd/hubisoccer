@@ -1,30 +1,34 @@
+<!-- DEBUT : premier-pas/index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription sportif – Premier Pas | HubISoccer</title>
-    <meta name="description" content="Remplissez votre dossier d'inscription pour rejoindre HubISoccer. Téléchargez vos justificatifs et obtenez votre ID unique.">
+    <title>Premier Pas – Inscription Sportif | HubISoccer</title>
+    <meta name="description" content="Faites le premier pas vers votre carrière sportive. Remplissez votre dossier, téléchargez vos documents et obtenez votre identifiant unique HubISoccer.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://hubisoccer.site/premier-pas/">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://hubisoccer2nd.github.io/hubisoccer/public/premier-pas.html">
-    <meta property="og:title" content="Inscription sportif – Premier Pas | HubISoccer">
-    <meta property="og:description" content="Remplissez votre dossier d'inscription pour rejoindre HubISoccer.">
-    <meta property="og:image" content="https://hubisoccer2nd.github.io/hubisoccer/public/img/logo-navbar.png">
+    <meta property="og:url" content="https://hubisoccer.site/premier-pas/">
+    <meta property="og:title" content="Premier Pas – Inscription Sportif | HubISoccer">
+    <meta property="og:description" content="Faites le premier pas vers votre carrière sportive.">
+    <meta property="og:image" content="https://hubisoccer.site/public/img/pas1.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/premier-pas.css">
+    <link rel="stylesheet" href="premier-pas.css">
 </head>
 <body>
     <!-- ========== DÉBUT : LOADER ========== -->
     <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
-        <div class="spinner"></div> Chargement...
+        <div class="spinner"></div>
+        <span data-i18n="loader.message">Chargement...</span>
     </div>
     <!-- ========== FIN : LOADER ========== -->
 
     <!-- ========== DÉBUT : NAVBAR OFFICIELLE ========== -->
     <nav>
-        <a href="./" class="logo-link">
-            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        <a href="../" class="logo-link">
+            <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
             <select class="lang-picker" id="langSelect">
@@ -55,124 +59,135 @@
             </select>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="e-marketing-hubisoccer.html" data-i18n="hub_market">HUBISOCCER MARKET</a>
-                <a href="hub-community.html" data-i18n="hub_community">HUB COMMUNITY</a>
-                <a href="scouting.html" data-i18n="scouting">SCOUTING</a>
-                <a href="processus.html" data-i18n="processus">PROCESSUS</a>
-                <a href="affiliation.html" data-i18n="affiliation">AFFILIATION</a>
-                <a href="premier-pas.html" class="active" data-i18n="premier_pas">PREMIER-PAS</a>
-                <a href="acteurs.html" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
-                <a href="artiste-adhesion.html" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
-                <a href="tournoi.html" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
-                <a href="esp.html" data-i18n="esp">SAVOIR+</a>
-                <a href="../hubisapp/authprive/users/login.html" class="btn-auth" data-i18n="connexion">Connexion</a>
-                <a href="../hubisapp/authprive/users/signup.html" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
+                <a href="../scouting/" data-i18n="scouting">SCOUTING</a>
+                <a href="../processus/" data-i18n="processus">PROCESSUS</a>
+                <a href="../affiliation/" data-i18n="affiliation">AFFILIATION</a>
+                <a href="../acteurs/" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
+                <a href="../artiste-adhesion/" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
+                <a href="../premier-pas/" class="active" data-i18n="premier_pas">PREMIER‑PAS</a>
+                <a href="../clubs/" data-i18n="nos_clubs">NOS CLUBS</a>
+                <a href="../tournoi/" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
+                <a href="../hub-community/" data-i18n="hub_community">HUB COMMUNITY</a>
+                <a href="../e-marketing/" data-i18n="hub_market">MARKET</a>
+                <a href="../acteurs-login/" class="btn-auth" data-i18n="connexion">Connexion</a>
+                <a href="../clubs/" class="btn-auth gold" data-i18n="nos_clubs">Nos Clubs</a>
             </div>
         </div>
     </nav>
     <!-- ========== FIN : NAVBAR ========== -->
 
     <!-- ========== DÉBUT : HEADER ========== -->
-    <header class="premierpas-header" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(75,0,130,0.8)), url('img/pas1.jpg') center/cover no-repeat;">
-        <h1><span data-i18n="premierpas.header.title">Premier Pas</span> <span class="highlight" data-i18n="premierpas.header.highlight">vers le Futur</span></h1>
-        <p data-i18n="premierpas.header.subtitle">L'adhésion officielle au programme HubISoccer. Nous certifions ton talent uniquement si ton parcours scolaire ou professionnel est prouvé.</p>
+    <header class="premier-pas-header" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(75,0,130,0.8)), url('../public/img/pas1.jpg') center/cover no-repeat;">
+        <h1><span data-i18n="premierpas.header.title">Premier Pas</span> <span class="highlight" data-i18n="premierpas.header.highlight">HubISoccer</span></h1>
+        <p data-i18n="premierpas.header.subtitle">Remplissez votre dossier, téléchargez vos documents et obtenez votre identifiant unique pour intégrer l’écosystème HubISoccer.</p>
     </header>
     <!-- ========== FIN : HEADER ========== -->
 
-    <!-- ========== DÉBUT : FORMULAIRE ========== -->
-    <section class="registration-section">
-        <div class="form-container">
-            <h2 data-i18n="form.title">Dossier d'Adhésion <span class="highlight">(Sportifs)</span></h2>
-            <form id="premierPasForm">
-                <div class="section-title"><i class="fas fa-user-circle"></i><span data-i18n="form.who">Qui êtes-vous ?</span></div>
-                <div class="form-group">
-                    <label data-i18n="form.definition">Veuillez vous définir *</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="definition" value="moi-meme" required> <span data-i18n="form.myself">Moi-même</span></label>
-                        <label><input type="radio" name="definition" value="parent"> <span data-i18n="form.parent">Mon parent</span></label>
-                        <label><input type="radio" name="definition" value="tuteur"> <span data-i18n="form.guardian">Mon tuteur</span></label>
-                        <label><input type="radio" name="definition" value="proche"> <span data-i18n="form.relative">Mon proche</span></label>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group"><label data-i18n="form.fullname">Nom complet *</label><input type="text" id="fullName" required></div>
-                    <div class="form-group"><label data-i18n="form.birthdate">Date de naissance *</label><input type="date" id="birthDate" required></div>
-                </div>
-                <div id="parentGroup" class="form-group" style="display: none;"><label data-i18n="form.parentname">Nom du parent / tuteur (si mineur)</label><input type="text" id="parentName"></div>
-
-                <div class="form-group"><label data-i18n="form.inscription_code">Code d'inscription (optionnel)</label><input type="text" id="inscriptionCode"></div>
-
-                <div class="section-title"><i class="fas fa-link"></i><span data-i18n="form.affiliation_section">Affiliation</span></div>
-                <div class="form-group">
-                    <label data-i18n="form.is_affiliated">Êtes-vous affilié(e) ?</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="affiliation" value="oui" id="affOui"> <span data-i18n="form.yes">Oui</span></label>
-                        <label><input type="radio" name="affiliation" value="non" id="affNon" checked> <span data-i18n="form.no">Non</span></label>
-                    </div>
-                </div>
-                <div id="affiliateGroup" class="form-group" style="display: none;"><label data-i18n="form.affiliate_id">ID affilié</label><input type="text" id="affiliateId"></div>
-
-                <div class="section-title"><i class="fas fa-graduation-cap"></i><span data-i18n="form.academic">Parcours Académique & Métier</span></div>
-                <div class="form-group"><label data-i18n="form.diploma_title">Diplôme / formation en cours *</label><input type="text" id="diplomaTitle" required></div>
-
-                <div class="form-group">
-                    <label data-i18n="form.diploma_file">Attestation de scolarité ou Diplôme *</label>
-                    <div class="file-upload-box" id="upload-diplome">
-                        <i class="fas fa-cloud-upload-alt"></i><span data-i18n="form.upload_click">Cliquez pour télécharger (PDF, JPG, PNG)</span>
-                        <input type="file" id="diplomaFile" accept=".jpg,.png,.pdf" required>
-                        <div class="upload-status" id="uploadStatusDiplome" style="display: none;">
-                            <span class="upload-spinner"></span><span>Téléversement...</span>
-                        </div>
-                        <div class="upload-success" id="uploadSuccessDiplome" style="display: none;">
-                            <i class="fas fa-check-circle"></i><span>Fichier prêt</span>
+    <!-- ========== DÉBUT : FORMULAIRE D'ADHÉSION ========== -->
+    <main>
+        <section class="registration-section">
+            <div class="form-container">
+                <h2 data-i18n="premierpas.form.title">Dossier d'Inscription <span class="highlight">(Sportifs)</span></h2>
+                <form id="premierPasForm">
+                    <!-- Qui êtes-vous ? -->
+                    <div class="section-title"><i class="fas fa-user-circle"></i><span data-i18n="premierpas.form.who">Qui êtes-vous ?</span></div>
+                    <div class="form-group">
+                        <label data-i18n="premierpas.form.definition">Veuillez vous définir *</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="definition" value="moi-meme" required> <span data-i18n="premierpas.form.myself">Moi-même</span></label>
+                            <label><input type="radio" name="definition" value="parent"> <span data-i18n="premierpas.form.parent">Mon parent</span></label>
+                            <label><input type="radio" name="definition" value="tuteur"> <span data-i18n="premierpas.form.guardian">Mon tuteur</span></label>
+                            <label><input type="radio" name="definition" value="proche"> <span data-i18n="premierpas.form.relative">Mon proche</span></label>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label data-i18n="form.idcard_file">Pièce d'identité *</label>
-                    <div class="file-upload-box" id="upload-piece">
-                        <i class="fas fa-cloud-upload-alt"></i><span data-i18n="form.upload_click">Cliquez pour télécharger (PDF, JPG, PNG)</span>
-                        <input type="file" id="idCardFile" accept=".jpg,.png,.pdf" required>
-                        <div class="upload-status" id="uploadStatusIdCard" style="display: none;">
-                            <span class="upload-spinner"></span><span>Téléversement...</span>
-                        </div>
-                        <div class="upload-success" id="uploadSuccessIdCard" style="display: none;">
-                            <i class="fas fa-check-circle"></i><span>Fichier prêt</span>
+                    <div class="form-row">
+                        <div class="form-group"><label data-i18n="premierpas.form.fullname">Nom complet *</label><input type="text" id="fullName" required></div>
+                        <div class="form-group"><label data-i18n="premierpas.form.birthdate">Date de naissance *</label><input type="date" id="birthDate" required></div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group"><label data-i18n="premierpas.form.email">Email *</label><input type="email" id="email" required></div>
+                        <div class="form-group"><label data-i18n="premierpas.form.phone">Téléphone *</label><input type="tel" id="phone" required></div>
+                    </div>
+
+                    <div id="parentGroup" class="form-group" style="display: none;"><label data-i18n="premierpas.form.parentname">Nom du parent / tuteur (si mineur)</label><input type="text" id="parentName"></div>
+
+                    <div class="form-group"><label data-i18n="premierpas.form.inscription_code">Code d'inscription (optionnel)</label><input type="text" id="inscriptionCode"></div>
+
+                    <!-- Affiliation -->
+                    <div class="section-title"><i class="fas fa-link"></i><span data-i18n="premierpas.form.affiliation_section">Affiliation</span></div>
+                    <div class="form-group">
+                        <label data-i18n="premierpas.form.is_affiliated">Êtes-vous affilié(e) ?</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="affiliation" value="oui" id="affOui"> <span data-i18n="premierpas.form.yes">Oui</span></label>
+                            <label><input type="radio" name="affiliation" value="non" id="affNon" checked> <span data-i18n="premierpas.form.no">Non</span></label>
                         </div>
                     </div>
-                </div>
+                    <div id="affiliateGroup" class="form-group" style="display: none;"><label data-i18n="premierpas.form.affiliate_id">ID affilié</label><input type="text" id="affiliateId"></div>
 
-                <div class="form-group"><label data-i18n="form.phone">Téléphone *</label><input type="tel" id="phone" required></div>
+                    <!-- Documents -->
+                    <div class="section-title"><i class="fas fa-graduation-cap"></i><span data-i18n="premierpas.form.academic">Parcours Académique & Justificatifs</span></div>
+                    <div class="form-group"><label data-i18n="premierpas.form.diploma_title">Diplôme / formation en cours *</label><input type="text" id="diplomaTitle" required></div>
 
-                <div class="section-title"><i class="fas fa-futbol"></i><span data-i18n="form.sport_section">Sport pratiqué</span></div>
-                <div class="form-group">
-                    <select id="sportSelect" required>
-                        <option value="" data-i18n="form.choose_sport">-- Choisissez un sport --</option>
-                        <option value="football">Football</option>
-                        <option value="basketball">Basketball</option>
-                        <option value="tennis">Tennis</option>
-                        <option value="athletisme">Athlétisme</option>
-                        <option value="handball">Handball</option>
-                        <option value="volleyball">Volley‑ball</option>
-                        <option value="rugby">Rugby</option>
-                        <option value="natation">Natation</option>
-                        <option value="arts_martiaux">Arts martiaux</option>
-                        <option value="cyclisme">Cyclisme</option>
-                    </select>
-                </div>
-                <div id="sportSpecificFields" class="sport-fields"></div>
+                    <div class="form-group">
+                        <label data-i18n="premierpas.form.diploma_file">Attestation / Diplôme *</label>
+                        <div class="file-upload-box" id="upload-diplome">
+                            <i class="fas fa-cloud-upload-alt"></i><span data-i18n="premierpas.form.upload_click">Cliquez pour télécharger</span>
+                            <input type="file" id="diplomaFile" accept=".jpg,.png,.pdf" required>
+                            <div class="upload-status" id="uploadStatusDiplome" style="display: none;">
+                                <span class="upload-spinner"></span><span>Téléversement...</span>
+                            </div>
+                            <div class="upload-success" id="uploadSuccessDiplome" style="display: none;">
+                                <i class="fas fa-check-circle"></i><span>Fichier prêt</span>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="checkbox-group">
-                    <input type="checkbox" id="certifie" required>
-                    <label for="certifie" data-i18n="form.certify">Je certifie l'exactitude des documents fournis. Toute fraude entraînera une exclusion définitive.</label>
-                </div>
+                    <div class="form-group">
+                        <label data-i18n="premierpas.form.idcard_file">Pièce d'identité *</label>
+                        <div class="file-upload-box" id="upload-piece">
+                            <i class="fas fa-cloud-upload-alt"></i><span data-i18n="premierpas.form.upload_click">Cliquez pour télécharger</span>
+                            <input type="file" id="idCardFile" accept=".jpg,.png,.pdf" required>
+                            <div class="upload-status" id="uploadStatusIdCard" style="display: none;">
+                                <span class="upload-spinner"></span><span>Téléversement...</span>
+                            </div>
+                            <div class="upload-success" id="uploadSuccessIdCard" style="display: none;">
+                                <i class="fas fa-check-circle"></i><span>Fichier prêt</span>
+                            </div>
+                        </div>
+                    </div>
 
-                <button type="submit" class="btn-submit" id="submitBtn"><i class="fas fa-paper-plane"></i> <span data-i18n="form.submit">Valider mon Premier Pas</span></button>
-            </form>
-        </div>
-    </section>
+                    <!-- Discipline sportive -->
+                    <div class="section-title"><i class="fas fa-futbol"></i><span data-i18n="premierpas.form.sport_section">Discipline sportive</span></div>
+                    <div class="form-group">
+                        <select id="sportSelect" required>
+                            <option value="" data-i18n="premierpas.form.choose_sport">-- Choisissez votre sport --</option>
+                            <option value="football">Football</option>
+                            <option value="basketball">Basketball</option>
+                            <option value="tennis">Tennis</option>
+                            <option value="athletisme">Athlétisme</option>
+                            <option value="handball">Handball</option>
+                            <option value="volleyball">Volley‑ball</option>
+                            <option value="rugby">Rugby</option>
+                            <option value="natation">Natation</option>
+                            <option value="arts_martiaux">Arts martiaux</option>
+                            <option value="cyclisme">Cyclisme</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div id="sportSpecificFields" class="sport-fields"></div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="certifie" required>
+                        <label for="certifie" data-i18n="premierpas.form.certify">Je certifie l'exactitude des documents fournis. Toute fraude entraînera une exclusion définitive.</label>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="submitBtn"><i class="fas fa-paper-plane"></i> <span data-i18n="premierpas.form.submit">Valider mon adhésion</span></button>
+                </form>
+            </div>
+        </section>
+    </main>
     <!-- ========== FIN : FORMULAIRE ========== -->
 
     <!-- ========== DÉBUT : MODALE DE SUCCÈS ========== -->
@@ -181,20 +196,20 @@
             <div class="modal-header">
                 <span class="close-modal" onclick="closeSuccessModal()">×</span>
                 <i class="fas fa-check-circle success-icon" style="font-size: 3rem; color: var(--success);"></i>
-                <h2 data-i18n="modal.title">Inscription envoyée !</h2>
+                <h2 data-i18n="premierpas.success.title">Inscription envoyée !</h2>
             </div>
             <div class="modal-body">
-                <p data-i18n="modal.message">Votre dossier est en attente de vérification par l'équipe HubISoccer.</p>
-                <p data-i18n="modal.id_label">Votre identifiant unique :</p>
+                <p data-i18n="premierpas.success.message">Votre dossier est en attente de vérification par l'équipe HubISoccer.</p>
+                <p data-i18n="premierpas.success.id_label">Votre identifiant unique :</p>
                 <div class="tracking-link-box">
                     <span id="trackingId"></span>
-                    <button id="copyTrackingBtn" class="btn-copy-link"><i class="fas fa-copy"></i> <span data-i18n="modal.copy">Copier</span></button>
+                    <button id="copyTrackingBtn" class="btn-copy-link"><i class="fas fa-copy"></i> <span data-i18n="premierpas.success.copy">Copier</span></button>
                 </div>
-                <p class="info-note" data-i18n="modal.note">Conservez précieusement cet identifiant. Vous recevrez vos identifiants de connexion après validation par notre équipe.</p>
-                <p><a href="premier-pas-login.html" data-i18n="modal.link">Accéder au suivi</a></p>
+                <p class="info-note" data-i18n="premierpas.success.note">Conservez précieusement cet identifiant. Vous pourrez suivre votre dossier et recevoir vos identifiants de connexion après validation.</p>
+                <p><a href="../premier-pas-login/" id="trackingLink" data-i18n="premierpas.success.link">Accéder au suivi</a></p>
             </div>
             <div class="modal-footer">
-                <button class="btn-close-modal" onclick="closeSuccessModal()" data-i18n="modal.close">Fermer</button>
+                <button class="btn-close-modal" onclick="closeSuccessModal()" data-i18n="premierpas.success.close">Fermer</button>
             </div>
         </div>
     </div>
@@ -207,12 +222,12 @@
             <div class="badge-item" data-i18n="footer_double_projet">Triple Projet Sport-Études-Carrière</div>
         </div>
         <div class="contact-box">
-            <a href="tel:+2290195973157" class="contact-item">📞 +229 01 95 97 31 57</a>
-            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item">📧 contacthubisoccer@gmail.com</a>
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="contact_tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="contact_email">📧 contacthubisoccer@gmail.com</a>
         </div>
         <div class="legal">
             <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
-            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
             <p data-i18n="copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
         </div>
     </footer>
@@ -220,6 +235,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/premier-pas.js"></script>
+    <script src="premier-pas.js"></script>
 </body>
 </html>
+<!-- FIN : premier-pas/index.html -->

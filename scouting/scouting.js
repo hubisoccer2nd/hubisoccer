@@ -1,75 +1,1241 @@
+/* DEBUT : scouting/scouting.js */
 // ========== SCOUTING.JS ==========
+// ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ========== FIN : CONFIGURATION SUPABASE ==========
 
-// ========== TRADUCTIONS (extrait pour éviter la longueur) ==========
+// ========== DÉBUT : TRADUCTIONS (24 LANGUES) ==========
 const translations = {
     fr: {
-        'loader.message': 'Chargement...',
-        'nav.home': 'Accueil',
-        'nav.scouting': 'Scouting',
-        'nav.process': 'Processus',
-        'nav.affiliation': 'Affiliation',
-        'nav.actors': 'Devenir acteur',
-        'nav.tournoi': 'Tournois',
-        'nav.community': 'Community',
-        'nav.market': 'Market',
-        'nav.login': 'Connexion',
-        'nav.signup': 'Inscription',
-        'scouting.header.title': 'Scouting',
-        'scouting.header.highlight': 'HubISoccer',
-        'scouting.header.subtitle': 'Découvrez les talents du monde entier, vérifiés et certifiés.',
-        'scouting.filter.continent': 'Tous les continents',
-        'scouting.filter.category': 'Toutes catégories',
-        'scouting.filter.placeholder': 'Pays (ex: Bénin, Brésil...)',
-        'scouting.filter.search': 'Rechercher',
-        'scouting.results.title': 'Talents récents',
-        'scouting.no_results': 'Aucun sportif trouvé.',
-        'scouting.view_profile': 'Voir le profil',
-        'footer.badge1': 'Conformité APDP Bénin',
-        'footer.badge2': 'Règlementation FIFA',
-        'footer.badge3': 'Triple Projet Sport-Études-Carrière',
-        'footer.tel': '📞 +229 01 95 97 31 57',
-        'footer.email': '📧 contacthubisoccer@gmail.com',
-        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
-        'toast.error_load': 'Erreur chargement des sportifs'
+      'loader.message': 'Chargement...',
+      'hub_market': 'MARKET',
+      'hub_community': 'HUB COMMUNITY',
+      'scouting': 'SCOUTING',
+      'processus': 'PROCESSUS',
+      'affiliation': 'AFFILIATION',
+      'premier_pas': 'PREMIER‑PAS',
+      'acteurs': 'DEVENEZ UN ACTEUR',
+      'artiste': 'DEVENEZ UN ARTISTE',
+      'nos_clubs': 'NOS CLUBS',
+      'tournoi_public': 'TOURNOI PUBLIC',
+      'esp': 'SAVOIR+',
+      'connexion': 'Connexion',
+      'inscrire': 'S\'inscrire',
+      'scouting.title': 'Scouting',
+      'scouting.subtitle': 'Découvrez les meilleurs talents',
+      'scouting.filter.all_sports': 'Tous les sports',
+      'scouting.filter.all_categories': 'Toutes les catégories',
+      'scouting.filter.all_continents': 'Tous les continents',
+      'scouting.card.view_profile': 'Voir le profil',
+      'scouting.no_talents': 'Aucun talent trouvé',
+      'footer_conformite': 'Conformité APDP Bénin',
+      'footer_reglementation': 'Règlementation FIFA',
+      'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+      'contact_tel': '📞 +229 01 95 97 31 57',
+      'contact_email': '📧 contacthubisoccer@gmail.com',
+      'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+      'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+      'toast.error_load': 'Erreur lors du chargement des talents.',
+      'sport_label.football': 'Football',
+      'sport_label.basketball': 'Basketball',
+      'sport_label.tennis': 'Tennis',
+      'sport_label.athletisme': 'Athlétisme',
+      'sport_label.handball': 'Handball',
+      'sport_label.volleyball': 'Volley‑ball',
+      'sport_label.rugby': 'Rugby',
+      'sport_label.natation': 'Natation',
+      'sport_label.arts_martiaux': 'Arts martiaux',
+      'sport_label.cyclisme': 'Cyclisme',
+      'categorie_label.U13': 'U13',
+      'categorie_label.U15': 'U15',
+      'categorie_label.U17': 'U17',
+      'categorie_label.U20': 'U20',
+      'categorie_label.Senior': 'Senior',
+      'continent_label.Afrique': 'Afrique',
+      'continent_label.Europe': 'Europe',
+      'continent_label.Asie': 'Asie',
+      'continent_label.Amérique': 'Amérique',
+      'continent_label.Océanie': 'Océanie'
     },
     en: {
-        'loader.message': 'Loading...',
-        'nav.home': 'Home',
-        'nav.scouting': 'Scouting',
-        'nav.process': 'Process',
-        'nav.affiliation': 'Affiliation',
-        'nav.actors': 'Become an actor',
-        'nav.tournoi': 'Tournaments',
-        'nav.community': 'Community',
-        'nav.market': 'Market',
-        'nav.login': 'Login',
-        'nav.signup': 'Sign up',
-        'scouting.header.title': 'Scouting',
-        'scouting.header.highlight': 'HubISoccer',
-        'scouting.header.subtitle': 'Discover talents from around the world, verified and certified.',
-        'scouting.filter.continent': 'All continents',
-        'scouting.filter.category': 'All categories',
-        'scouting.filter.placeholder': 'Country (ex: Benin, Brazil...)',
-        'scouting.filter.search': 'Search',
-        'scouting.results.title': 'Recent talents',
-        'scouting.no_results': 'No athletes found.',
-        'scouting.view_profile': 'View profile',
-        'footer.badge1': 'APDP Benin Compliance',
-        'footer.badge2': 'FIFA Regulations',
-        'footer.badge3': 'Triple Project Sport-Studies-Career',
-        'footer.tel': '📞 +229 01 95 97 31 57',
-        'footer.email': '📧 contacthubisoccer@gmail.com',
-        'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.',
-        'toast.error_load': 'Error loading athletes'
+      'loader.message': 'Loading...',
+      'hub_market': 'MARKET',
+      'hub_community': 'HUB COMMUNITY',
+      'scouting': 'SCOUTING',
+      'processus': 'PROCESS',
+      'affiliation': 'AFFILIATION',
+      'premier_pas': 'FIRST STEP',
+      'acteurs': 'BECOME AN ACTOR',
+      'artiste': 'BECOME AN ARTIST',
+      'nos_clubs': 'OUR CLUBS',
+      'tournoi_public': 'PUBLIC TOURNAMENT',
+      'esp': 'LEARN MORE',
+      'connexion': 'Login',
+      'inscrire': 'Sign up',
+      'scouting.title': 'Scouting',
+      'scouting.subtitle': 'Discover the best talents',
+      'scouting.filter.all_sports': 'All sports',
+      'scouting.filter.all_categories': 'All categories',
+      'scouting.filter.all_continents': 'All continents',
+      'scouting.card.view_profile': 'View profile',
+      'scouting.no_talents': 'No talents found',
+      'footer_conformite': 'APDP Benin Compliance',
+      'footer_reglementation': 'FIFA Regulations',
+      'footer_double_projet': 'Triple Sport-Studies-Career Project',
+      'contact_tel': '📞 +229 01 95 97 31 57',
+      'contact_email': '📧 contacthubisoccer@gmail.com',
+      'rccm': 'RCCM : RB/ABC/24 A 111814 | TIN : 0201910800236',
+      'copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.',
+      'toast.error_load': 'Error loading talents.',
+      'sport_label.football': 'Football',
+      'sport_label.basketball': 'Basketball',
+      'sport_label.tennis': 'Tennis',
+      'sport_label.athletisme': 'Athletics',
+      'sport_label.handball': 'Handball',
+      'sport_label.volleyball': 'Volleyball',
+      'sport_label.rugby': 'Rugby',
+      'sport_label.natation': 'Swimming',
+      'sport_label.arts_martiaux': 'Martial arts',
+      'sport_label.cyclisme': 'Cycling',
+      'categorie_label.U13': 'U13',
+      'categorie_label.U15': 'U15',
+      'categorie_label.U17': 'U17',
+      'categorie_label.U20': 'U20',
+      'categorie_label.Senior': 'Senior',
+      'continent_label.Afrique': 'Africa',
+      'continent_label.Europe': 'Europe',
+      'continent_label.Asie': 'Asia',
+      'continent_label.Amérique': 'America',
+      'continent_label.Océanie': 'Oceania'
+    },
+    yo: {
+        'loader.message': 'Nlọ...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'Ilana',
+        'affiliation': 'Ifọwọsi',
+        'premier_pas': 'Igbese Akọkọ',
+        'acteurs': 'Di Oṣere',
+        'artiste': 'Di Oṣere',
+        'nos_clubs': 'Awọn Ẹgbẹ Wa',
+        'tournoi_public': 'Idije Gbogbo eniyan',
+        'esp': 'Kọ Ẹkọ Siwaju',
+        'connexion': 'Wo ile',
+        'inscrire': 'Forukọsilẹ',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Ṣawari awọn talenti to dara julọ',
+        'scouting.filter.all_sports': 'Gbogbo awọn idaraya',
+        'scouting.filter.all_categories': 'Gbogbo awọn ẹka',
+        'scouting.filter.all_continents': 'Gbogbo awọn continent',
+        'scouting.card.view_profile': 'Wo profaili',
+        'scouting.no_talents': 'Ko si talenti ti a ri',
+        'footer_conformite': 'Ifaramọ APDP Benin',
+        'footer_reglementation': 'Awọn ilana FIFA',
+        'footer_double_projet': 'Ise agbese Idaraya-Ẹkọ-Meji',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM: RB/ABC/24 A 111814 | IFU: 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Gbogbo ẹtọ wa ni ipamọ.',
+        'toast.error_load': 'Aṣiṣe nigbati o n gbe awọn talenti.',
+        'sport_label.football': 'Bọọlu afẹsẹgba',
+        'sport_label.basketball': 'Bọọlu agbọn',
+        'sport_label.tennis': 'Tẹnisi',
+        'sport_label.athletisme': 'Idaraya',
+        'sport_label.handball': 'Bọọlu ọwọ',
+        'sport_label.volleyball': 'Bọọlu afẹfẹ',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Odo',
+        'sport_label.arts_martiaux': 'Iṣẹ ọna ogun',
+        'sport_label.cyclisme': 'Kẹkẹ ẹlẹsẹ',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Agba',
+        'continent_label.Afrique': 'Afrika',
+        'continent_label.Europe': 'Yuroopu',
+        'continent_label.Asie': 'Asia',
+        'continent_label.Amérique': 'Amẹrika',
+        'continent_label.Océanie': 'Oseania'
+    },
+    fon: {
+        'loader.message': 'Tɛn ɖo...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Mǐtɔn bɔlu xɔ ɖé lɛ',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Byɔ xɔntin',
+        'inscrire': 'Nyikɔ wlan',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Découvrez les meilleurs talents',
+        'scouting.filter.all_sports': 'Tous les sports',
+        'scouting.filter.all_categories': 'Toutes les catégories',
+        'scouting.filter.all_continents': 'Tous les continents',
+        'scouting.card.view_profile': 'Voir le profil',
+        'scouting.no_talents': 'Aucun talent trouvé',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+        'toast.error_load': 'Erreur lors du chargement des talents.',
+        'sport_label.football': 'Football',
+        'sport_label.basketball': 'Basketball',
+        'sport_label.tennis': 'Tennis',
+        'sport_label.athletisme': 'Athlétisme',
+        'sport_label.handball': 'Handball',
+        'sport_label.volleyball': 'Volley‑ball',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Natation',
+        'sport_label.arts_martiaux': 'Arts martiaux',
+        'sport_label.cyclisme': 'Cyclisme',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'Afrique',
+        'continent_label.Europe': 'Europe',
+        'continent_label.Asie': 'Asie',
+        'continent_label.Amérique': 'Amérique',
+        'continent_label.Océanie': 'Océanie'
+    },
+    mina: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Míà bɔlu hɔn ɖé lɛ',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Gé ɖé émè',
+        'inscrire': 'Ŋkɔ́ wlá',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Découvrez les meilleurs talents',
+        'scouting.filter.all_sports': 'Tous les sports',
+        'scouting.filter.all_categories': 'Toutes les catégories',
+        'scouting.filter.all_continents': 'Tous les continents',
+        'scouting.card.view_profile': 'Voir le profil',
+        'scouting.no_talents': 'Aucun talent trouvé',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+        'toast.error_load': 'Erreur lors du chargement des talents.',
+        'sport_label.football': 'Football',
+        'sport_label.basketball': 'Basketball',
+        'sport_label.tennis': 'Tennis',
+        'sport_label.athletisme': 'Athlétisme',
+        'sport_label.handball': 'Handball',
+        'sport_label.volleyball': 'Volley‑ball',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Natation',
+        'sport_label.arts_martiaux': 'Arts martiaux',
+        'sport_label.cyclisme': 'Cyclisme',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'Afrique',
+        'continent_label.Europe': 'Europe',
+        'continent_label.Asie': 'Asie',
+        'continent_label.Amérique': 'Amérique',
+        'continent_label.Océanie': 'Océanie'
+    },
+    lin: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Ba Clubs na biso',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Kota',
+        'inscrire': 'Komikomisa',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Découvrez les meilleurs talents',
+        'scouting.filter.all_sports': 'Tous les sports',
+        'scouting.filter.all_categories': 'Toutes les catégories',
+        'scouting.filter.all_continents': 'Tous les continents',
+        'scouting.card.view_profile': 'Voir le profil',
+        'scouting.no_talents': 'Aucun talent trouvé',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+        'toast.error_load': 'Erreur lors du chargement des talents.',
+        'sport_label.football': 'Football',
+        'sport_label.basketball': 'Basketball',
+        'sport_label.tennis': 'Tennis',
+        'sport_label.athletisme': 'Athlétisme',
+        'sport_label.handball': 'Handball',
+        'sport_label.volleyball': 'Volley‑ball',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Natation',
+        'sport_label.arts_martiaux': 'Arts martiaux',
+        'sport_label.cyclisme': 'Cyclisme',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'Afrique',
+        'continent_label.Europe': 'Europe',
+        'continent_label.Asie': 'Asie',
+        'continent_label.Amérique': 'Amérique',
+        'continent_label.Océanie': 'Océanie'
+    },
+    wol: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Sunu clubs yi',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Dugg',
+        'inscrire': 'Seetal',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Découvrez les meilleurs talents',
+        'scouting.filter.all_sports': 'Tous les sports',
+        'scouting.filter.all_categories': 'Toutes les catégories',
+        'scouting.filter.all_continents': 'Tous les continents',
+        'scouting.card.view_profile': 'Voir le profil',
+        'scouting.no_talents': 'Aucun talent trouvé',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+        'toast.error_load': 'Erreur lors du chargement des talents.',
+        'sport_label.football': 'Football',
+        'sport_label.basketball': 'Basketball',
+        'sport_label.tennis': 'Tennis',
+        'sport_label.athletisme': 'Athlétisme',
+        'sport_label.handball': 'Handball',
+        'sport_label.volleyball': 'Volley‑ball',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Natation',
+        'sport_label.arts_martiaux': 'Arts martiaux',
+        'sport_label.cyclisme': 'Cyclisme',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'Afrique',
+        'continent_label.Europe': 'Europe',
+        'continent_label.Asie': 'Asie',
+        'continent_label.Amérique': 'Amérique',
+        'continent_label.Océanie': 'Océanie'
+    },
+    diou: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'An ka clubs ni',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Dɔ́n',
+        'inscrire': 'Sɛ̀bɛ̀n',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Découvrez les meilleurs talents',
+        'scouting.filter.all_sports': 'Tous les sports',
+        'scouting.filter.all_categories': 'Toutes les catégories',
+        'scouting.filter.all_continents': 'Tous les continents',
+        'scouting.card.view_profile': 'Voir le profil',
+        'scouting.no_talents': 'Aucun talent trouvé',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
+        'toast.error_load': 'Erreur lors du chargement des talents.',
+        'sport_label.football': 'Football',
+        'sport_label.basketball': 'Basketball',
+        'sport_label.tennis': 'Tennis',
+        'sport_label.athletisme': 'Athlétisme',
+        'sport_label.handball': 'Handball',
+        'sport_label.volleyball': 'Volley‑ball',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Natation',
+        'sport_label.arts_martiaux': 'Arts martiaux',
+        'sport_label.cyclisme': 'Cyclisme',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'Afrique',
+        'continent_label.Europe': 'Europe',
+        'continent_label.Asie': 'Asie',
+        'continent_label.Amérique': 'Amérique',
+        'continent_label.Océanie': 'Océanie'
+    },
+      ha: {
+        'loader.message': 'Ana lodi...',
+        'hub_market': 'KASUWA',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'TSARI',
+        'affiliation': 'ALAƘA',
+        'premier_pas': 'MATAKI NA FARKO',
+        'acteurs': 'ZAMA DAN WASAN',
+        'artiste': 'ZAMA MAWAKI',
+        'nos_clubs': 'KUNGIYOYINMU',
+        'tournoi_public': 'GASAR JAM\'IYYA',
+        'esp': 'KARA KOYO',
+        'connexion': 'Shiga',
+        'inscrire': 'Yi rajista',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Gano mafi kyawun baiwa',
+        'scouting.filter.all_sports': 'Duk wasanni',
+        'scouting.filter.all_categories': 'Duk rukunoni',
+        'scouting.filter.all_continents': 'Duk nahiyoyi',
+        'scouting.card.view_profile': 'Duba bayanin martaba',
+        'scouting.no_talents': 'Babu baiwa da aka samu',
+        'footer_conformite': 'APDP Benin Amincewa',
+        'footer_reglementation': 'Dokokin FIFA',
+        'footer_double_projet': 'Tsarin Wasanni-Ilimi-Aiki Uku',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Duk haƙƙoƙin mallaka.',
+        'toast.error_load': 'Kuskure yayin lodawa.',
+        'sport_label.football': 'Ƙwallon ƙafa',
+        'sport_label.basketball': 'Kwando',
+        'sport_label.tennis': 'Tenis',
+        'sport_label.athletisme': 'Wasannin motsa jiki',
+        'sport_label.handball': 'Hannun ƙwallo',
+        'sport_label.volleyball': 'Ƙwallon raga',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Ruwa',
+        'sport_label.arts_martiaux': 'Fadan gargajiya',
+        'sport_label.cyclisme': 'Keke',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Babba',
+        'continent_label.Afrique': 'Afrika',
+        'continent_label.Europe': 'Turai',
+        'continent_label.Asie': 'Asiya',
+        'continent_label.Amérique': 'Amurka',
+        'continent_label.Océanie': 'Oseaniya'
+    },
+    sw: {
+        'loader.message': 'Inapakia...',
+        'hub_market': 'SOKO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'MCHAKATO',
+        'affiliation': 'Uhusiano',
+        'premier_pas': 'HATUA YA KWANZA',
+        'acteurs': 'KUWA MTAALAMU',
+        'artiste': 'KUWA MSANII',
+        'nos_clubs': 'VILABU VYETU',
+        'tournoi_public': 'MASHINDANO YA UMMA',
+        'esp': 'JIFUNZE ZAIDI',
+        'connexion': 'Ingia',
+        'inscrire': 'Jiandikishe',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Gundua vipaji bora',
+        'scouting.filter.all_sports': 'Michezo yote',
+        'scouting.filter.all_categories': 'Kategoria zote',
+        'scouting.filter.all_continents': 'Mabara yote',
+        'scouting.card.view_profile': 'Tazama wasifu',
+        'scouting.no_talents': 'Hakuna vipaji vilivyopatikana',
+        'footer_conformite': 'Uzingatiaji wa APDP Benin',
+        'footer_reglementation': 'Kanuni za FIFA',
+        'footer_double_projet': 'Mradi wa Michezo-Masomo-Kazi Mara Tatu',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Haki zote zimehifadhiwa.',
+        'toast.error_load': 'Hitilafu wakati wa kupakia.',
+        'sport_label.football': 'Soka',
+        'sport_label.basketball': 'Kikapu',
+        'sport_label.tennis': 'Tenis',
+        'sport_label.athletisme': 'Riadha',
+        'sport_label.handball': 'Mpira wa mkono',
+        'sport_label.volleyball': 'Mpira wa wavu',
+        'sport_label.rugby': 'Ragbi',
+        'sport_label.natation': 'Kuogelea',
+        'sport_label.arts_martiaux': 'Sanaa za kijeshi',
+        'sport_label.cyclisme': 'Baiskeli',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Mkubwa',
+        'continent_label.Afrique': 'Afrika',
+        'continent_label.Europe': 'Ulaya',
+        'continent_label.Asie': 'Asia',
+        'continent_label.Amérique': 'Amerika',
+        'continent_label.Océanie': 'Oceania'
+    },
+    es: {
+        'loader.message': 'Cargando...',
+        'hub_market': 'MERCADO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESO',
+        'affiliation': 'AFILIACIÓN',
+        'premier_pas': 'PRIMER PASO',
+        'acteurs': 'CONVIÉRTETE EN ACTOR',
+        'artiste': 'CONVIÉRTETE EN ARTISTA',
+        'nos_clubs': 'NUESTROS CLUBES',
+        'tournoi_public': 'TORNEO PÚBLICO',
+        'esp': 'SABER MÁS',
+        'connexion': 'Iniciar sesión',
+        'inscrire': 'Registrarse',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Descubre los mejores talentos',
+        'scouting.filter.all_sports': 'Todos los deportes',
+        'scouting.filter.all_categories': 'Todas las categorías',
+        'scouting.filter.all_continents': 'Todos los continentes',
+        'scouting.card.view_profile': 'Ver perfil',
+        'scouting.no_talents': 'Ningún talento encontrado',
+        'footer_conformite': 'Conformidad APDP Benín',
+        'footer_reglementation': 'Reglamento FIFA',
+        'footer_double_projet': 'Triple Proyecto Deporte-Estudios-Carrera',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Todos los derechos reservados.',
+        'toast.error_load': 'Error al cargar los talentos.',
+        'sport_label.football': 'Fútbol',
+        'sport_label.basketball': 'Baloncesto',
+        'sport_label.tennis': 'Tenis',
+        'sport_label.athletisme': 'Atletismo',
+        'sport_label.handball': 'Balonmano',
+        'sport_label.volleyball': 'Voleibol',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Natación',
+        'sport_label.arts_martiaux': 'Artes marciales',
+        'sport_label.cyclisme': 'Ciclismo',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'África',
+        'continent_label.Europe': 'Europa',
+        'continent_label.Asie': 'Asia',
+        'continent_label.Amérique': 'América',
+        'continent_label.Océanie': 'Oceanía'
+    },
+    pt: {
+        'loader.message': 'Carregando...',
+        'hub_market': 'MERCADO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSO',
+        'affiliation': 'AFILIAÇÃO',
+        'premier_pas': 'PRIMEIRO PASSO',
+        'acteurs': 'TORNE-SE UM ATOR',
+        'artiste': 'TORNE-SE UM ARTISTA',
+        'nos_clubs': 'NOSSOS CLUBES',
+        'tournoi_public': 'TORNEIO PÚBLICO',
+        'esp': 'SAIBA MAIS',
+        'connexion': 'Entrar',
+        'inscrire': 'Inscrever-se',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Descubra os melhores talentos',
+        'scouting.filter.all_sports': 'Todos os esportes',
+        'scouting.filter.all_categories': 'Todas as categorias',
+        'scouting.filter.all_continents': 'Todos os continentes',
+        'scouting.card.view_profile': 'Ver perfil',
+        'scouting.no_talents': 'Nenhum talento encontrado',
+        'footer_conformite': 'Conformidade APDP Benim',
+        'footer_reglementation': 'Regulamento FIFA',
+        'footer_double_projet': 'Triplo Projeto Esporte-Estudos-Carreira',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Todos os direitos reservados.',
+        'toast.error_load': 'Erro ao carregar talentos.',
+        'sport_label.football': 'Futebol',
+        'sport_label.basketball': 'Basquetebol',
+        'sport_label.tennis': 'Ténis',
+        'sport_label.athletisme': 'Atletismo',
+        'sport_label.handball': 'Andebol',
+        'sport_label.volleyball': 'Voleibol',
+        'sport_label.rugby': 'Râguebi',
+        'sport_label.natation': 'Natação',
+        'sport_label.arts_martiaux': 'Artes marciais',
+        'sport_label.cyclisme': 'Ciclismo',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Sénior',
+        'continent_label.Afrique': 'África',
+        'continent_label.Europe': 'Europa',
+        'continent_label.Asie': 'Ásia',
+        'continent_label.Amérique': 'América',
+        'continent_label.Océanie': 'Oceânia'
+    },
+    de: {
+        'loader.message': 'Laden...',
+        'hub_market': 'MARKT',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROZESS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'ERSTER SCHRITT',
+        'acteurs': 'WERDE AKTEUR',
+        'artiste': 'WERDE KÜNSTLER',
+        'nos_clubs': 'UNSERE CLUBS',
+        'tournoi_public': 'ÖFFENTLICHES TURNIER',
+        'esp': 'MEHR ERFAHREN',
+        'connexion': 'Anmelden',
+        'inscrire': 'Registrieren',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Entdecken Sie die besten Talente',
+        'scouting.filter.all_sports': 'Alle Sportarten',
+        'scouting.filter.all_categories': 'Alle Kategorien',
+        'scouting.filter.all_continents': 'Alle Kontinente',
+        'scouting.card.view_profile': 'Profil ansehen',
+        'scouting.no_talents': 'Keine Talente gefunden',
+        'footer_conformite': 'APDP Benin Konformität',
+        'footer_reglementation': 'FIFA-Regulierung',
+        'footer_double_projet': 'Dreifachprojekt Sport-Studium-Beruf',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Alle Rechte vorbehalten.',
+        'toast.error_load': 'Fehler beim Laden der Talente.',
+        'sport_label.football': 'Fußball',
+        'sport_label.basketball': 'Basketball',
+        'sport_label.tennis': 'Tennis',
+        'sport_label.athletisme': 'Leichtathletik',
+        'sport_label.handball': 'Handball',
+        'sport_label.volleyball': 'Volleyball',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Schwimmen',
+        'sport_label.arts_martiaux': 'Kampfsport',
+        'sport_label.cyclisme': 'Radsport',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'Afrika',
+        'continent_label.Europe': 'Europa',
+        'continent_label.Asie': 'Asien',
+        'continent_label.Amérique': 'Amerika',
+        'continent_label.Océanie': 'Ozeanien'
+    },
+    it: {
+        'loader.message': 'Caricamento...',
+        'hub_market': 'MERCATO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSO',
+        'affiliation': 'AFFILIAZIONE',
+        'premier_pas': 'PRIMO PASSO',
+        'acteurs': 'DIVENTA UN ATTORE',
+        'artiste': 'DIVENTA UN ARTISTA',
+        'nos_clubs': 'I NOSTRI CLUB',
+        'tournoi_public': 'TORNEO PUBBLICO',
+        'esp': 'SCOPRI DI PIÙ',
+        'connexion': 'Accedi',
+        'inscrire': 'Registrati',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Scopri i migliori talenti',
+        'scouting.filter.all_sports': 'Tutti gli sport',
+        'scouting.filter.all_categories': 'Tutte le categorie',
+        'scouting.filter.all_continents': 'Tutti i continenti',
+        'scouting.card.view_profile': 'Vedi profilo',
+        'scouting.no_talents': 'Nessun talento trovato',
+        'footer_conformite': 'Conformità APDP Benin',
+        'footer_reglementation': 'Regolamento FIFA',
+        'footer_double_projet': 'Triplo Progetto Sport-Studi-Carriera',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tutti i diritti riservati.',
+        'toast.error_load': 'Errore nel caricamento dei talenti.',
+        'sport_label.football': 'Calcio',
+        'sport_label.basketball': 'Pallacanestro',
+        'sport_label.tennis': 'Tennis',
+        'sport_label.athletisme': 'Atletica',
+        'sport_label.handball': 'Pallamano',
+        'sport_label.volleyball': 'Pallavolo',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Nuoto',
+        'sport_label.arts_martiaux': 'Arti marziali',
+        'sport_label.cyclisme': 'Ciclismo',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'Africa',
+        'continent_label.Europe': 'Europa',
+        'continent_label.Asie': 'Asia',
+        'continent_label.Amérique': 'America',
+        'continent_label.Océanie': 'Oceania'
+    },
+        ar: {
+        'loader.message': 'جار التحميل...',
+        'hub_market': 'السوق',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'الاستكشاف',
+        'processus': 'العملية',
+        'affiliation': 'الانتماء',
+        'premier_pas': 'الخطوة الأولى',
+        'acteurs': 'كن فاعلاً',
+        'artiste': 'كن فناناً',
+        'nos_clubs': 'أنديتنا',
+        'tournoi_public': 'بطولة عامة',
+        'esp': 'اعرف المزيد',
+        'connexion': 'تسجيل الدخول',
+        'inscrire': 'التسجيل',
+        'scouting.title': 'الاستكشاف',
+        'scouting.subtitle': 'اكتشف أفضل المواهب',
+        'scouting.filter.all_sports': 'جميع الرياضات',
+        'scouting.filter.all_categories': 'جميع الفئات',
+        'scouting.filter.all_continents': 'جميع القارات',
+        'scouting.card.view_profile': 'عرض الملف الشخصي',
+        'scouting.no_talents': 'لم يتم العثور على أي موهبة',
+        'footer_conformite': 'الامتثال لـ APDP بنين',
+        'footer_reglementation': 'لوائح الفيفا',
+        'footer_double_projet': 'مشروع الرياضة والدراسة والمهنة الثلاثي',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. جميع الحقوق محفوظة.',
+        'toast.error_load': 'خطأ أثناء تحميل المواهب.',
+        'sport_label.football': 'كرة القدم',
+        'sport_label.basketball': 'كرة السلة',
+        'sport_label.tennis': 'تنس',
+        'sport_label.athletisme': 'ألعاب القوى',
+        'sport_label.handball': 'كرة اليد',
+        'sport_label.volleyball': 'الكرة الطائرة',
+        'sport_label.rugby': 'رجبي',
+        'sport_label.natation': 'سباحة',
+        'sport_label.arts_martiaux': 'فنون قتالية',
+        'sport_label.cyclisme': 'ركوب الدراجات',
+        'categorie_label.U13': 'تحت 13',
+        'categorie_label.U15': 'تحت 15',
+        'categorie_label.U17': 'تحت 17',
+        'categorie_label.U20': 'تحت 20',
+        'categorie_label.Senior': 'كبار',
+        'continent_label.Afrique': 'أفريقيا',
+        'continent_label.Europe': 'أوروبا',
+        'continent_label.Asie': 'آسيا',
+        'continent_label.Amérique': 'أمريكا',
+        'continent_label.Océanie': 'أوقيانوسيا'
+    },
+    zh: {
+        'loader.message': '加载中...',
+        'hub_market': '市场',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': '球探',
+        'processus': '流程',
+        'affiliation': '隶属',
+        'premier_pas': '第一步',
+        'acteurs': '成为行动者',
+        'artiste': '成为艺术家',
+        'nos_clubs': '我们的俱乐部',
+        'tournoi_public': '公开锦标赛',
+        'esp': '了解更多',
+        'connexion': '登录',
+        'inscrire': '注册',
+        'scouting.title': '球探',
+        'scouting.subtitle': '发现最佳人才',
+        'scouting.filter.all_sports': '所有运动',
+        'scouting.filter.all_categories': '所有类别',
+        'scouting.filter.all_continents': '所有大洲',
+        'scouting.card.view_profile': '查看资料',
+        'scouting.no_talents': '未找到人才',
+        'footer_conformite': 'APDP 贝宁合规',
+        'footer_reglementation': 'FIFA 规则',
+        'footer_double_projet': '体育-学业-职业三重项目',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa。 版权所有。',
+        'toast.error_load': '加载人才时出错。',
+        'sport_label.football': '足球',
+        'sport_label.basketball': '篮球',
+        'sport_label.tennis': '网球',
+        'sport_label.athletisme': '田径',
+        'sport_label.handball': '手球',
+        'sport_label.volleyball': '排球',
+        'sport_label.rugby': '橄榄球',
+        'sport_label.natation': '游泳',
+        'sport_label.arts_martiaux': '武术',
+        'sport_label.cyclisme': '自行车',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': '成人',
+        'continent_label.Afrique': '非洲',
+        'continent_label.Europe': '欧洲',
+        'continent_label.Asie': '亚洲',
+        'continent_label.Amérique': '美洲',
+        'continent_label.Océanie': '大洋洲'
+    },
+    ru: {
+        'loader.message': 'Загрузка...',
+        'hub_market': 'РЫНОК',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'СКАУТИНГ',
+        'processus': 'ПРОЦЕСС',
+        'affiliation': 'ПАРТНЕРСТВО',
+        'premier_pas': 'ПЕРВЫЙ ШАГ',
+        'acteurs': 'СТАНЬ ДЕЯТЕЛЕМ',
+        'artiste': 'СТАНЬ АРТИСТОМ',
+        'nos_clubs': 'НАШИ КЛУБЫ',
+        'tournoi_public': 'ПУБЛИЧНЫЙ ТУРНИР',
+        'esp': 'УЗНАТЬ БОЛЬШЕ',
+        'connexion': 'Войти',
+        'inscrire': 'Регистрация',
+        'scouting.title': 'Скаутинг',
+        'scouting.subtitle': 'Откройте лучших талантов',
+        'scouting.filter.all_sports': 'Все виды спорта',
+        'scouting.filter.all_categories': 'Все категории',
+        'scouting.filter.all_continents': 'Все континенты',
+        'scouting.card.view_profile': 'Посмотреть профиль',
+        'scouting.no_talents': 'Талантов не найдено',
+        'footer_conformite': 'Соответствие APDP Бенин',
+        'footer_reglementation': 'Регламент ФИФА',
+        'footer_double_projet': 'Тройной проект Спорт-Учёба-Карьера',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Все права защищены.',
+        'toast.error_load': 'Ошибка при загрузке талантов.',
+        'sport_label.football': 'Футбол',
+        'sport_label.basketball': 'Баскетбол',
+        'sport_label.tennis': 'Теннис',
+        'sport_label.athletisme': 'Лёгкая атлетика',
+        'sport_label.handball': 'Гандбол',
+        'sport_label.volleyball': 'Волейбол',
+        'sport_label.rugby': 'Регби',
+        'sport_label.natation': 'Плавание',
+        'sport_label.arts_martiaux': 'Боевые искусства',
+        'sport_label.cyclisme': 'Велоспорт',
+        'categorie_label.U13': 'до 13',
+        'categorie_label.U15': 'до 15',
+        'categorie_label.U17': 'до 17',
+        'categorie_label.U20': 'до 20',
+        'categorie_label.Senior': 'Взрослые',
+        'continent_label.Afrique': 'Африка',
+        'continent_label.Europe': 'Европа',
+        'continent_label.Asie': 'Азия',
+        'continent_label.Amérique': 'Америка',
+        'continent_label.Océanie': 'Океания'
+    },
+    ja: {
+        'loader.message': '読み込み中...',
+        'hub_market': 'マーケット',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'スカウティング',
+        'processus': 'プロセス',
+        'affiliation': 'アフィリエイト',
+        'premier_pas': '第一歩',
+        'acteurs': 'アクターになる',
+        'artiste': 'アーティストになる',
+        'nos_clubs': '私たちのクラブ',
+        'tournoi_public': '公開トーナメント',
+        'esp': 'もっと知る',
+        'connexion': 'ログイン',
+        'inscrire': '登録',
+        'scouting.title': 'スカウティング',
+        'scouting.subtitle': '最高の才能を見つける',
+        'scouting.filter.all_sports': 'すべてのスポーツ',
+        'scouting.filter.all_categories': 'すべてのカテゴリ',
+        'scouting.filter.all_continents': 'すべての大陸',
+        'scouting.card.view_profile': 'プロフィールを見る',
+        'scouting.no_talents': '才能が見つかりません',
+        'footer_conformite': 'APDP ベナン準拠',
+        'footer_reglementation': 'FIFA 規則',
+        'footer_double_projet': 'スポーツ・勉強・職業のトリプルプロジェクト',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. 全著作権所有。',
+        'toast.error_load': '才能の読み込み中にエラー。',
+        'sport_label.football': 'サッカー',
+        'sport_label.basketball': 'バスケットボール',
+        'sport_label.tennis': 'テニス',
+        'sport_label.athletisme': '陸上競技',
+        'sport_label.handball': 'ハンドボール',
+        'sport_label.volleyball': 'バレーボール',
+        'sport_label.rugby': 'ラグビー',
+        'sport_label.natation': '水泳',
+        'sport_label.arts_martiaux': '武道',
+        'sport_label.cyclisme': '自転車競技',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'シニア',
+        'continent_label.Afrique': 'アフリカ',
+        'continent_label.Europe': 'ヨーロッパ',
+        'continent_label.Asie': 'アジア',
+        'continent_label.Amérique': 'アメリカ',
+        'continent_label.Océanie': 'オセアニア'
+    },
+    tr: {
+        'loader.message': 'Yükleniyor...',
+        'hub_market': 'PAZAR',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'SÜREÇ',
+        'affiliation': 'BAĞLILIK',
+        'premier_pas': 'İLK ADIM',
+        'acteurs': 'AKTÖR OL',
+        'artiste': 'SANATÇI OL',
+        'nos_clubs': 'KULÜPLERİMİZ',
+        'tournoi_public': 'AÇIK TURNUVA',
+        'esp': 'DAHA FAZLA',
+        'connexion': 'Giriş',
+        'inscrire': 'Kaydol',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'En iyi yetenekleri keşfedin',
+        'scouting.filter.all_sports': 'Tüm sporlar',
+        'scouting.filter.all_categories': 'Tüm kategoriler',
+        'scouting.filter.all_continents': 'Tüm kıtalar',
+        'scouting.card.view_profile': 'Profili gör',
+        'scouting.no_talents': 'Hiç yetenek bulunamadı',
+        'footer_conformite': 'APDP Benin Uyumluluğu',
+        'footer_reglementation': 'FIFA Düzenlemeleri',
+        'footer_double_projet': 'Üçlü Proje Spor-Eğitim-Kariyer',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tüm hakları saklıdır.',
+        'toast.error_load': 'Yetenekler yüklenirken hata.',
+        'sport_label.football': 'Futbol',
+        'sport_label.basketball': 'Basketbol',
+        'sport_label.tennis': 'Tenis',
+        'sport_label.athletisme': 'Atletizm',
+        'sport_label.handball': 'Hentbol',
+        'sport_label.volleyball': 'Voleybol',
+        'sport_label.rugby': 'Ragbi',
+        'sport_label.natation': 'Yüzme',
+        'sport_label.arts_martiaux': 'Dövüş sanatları',
+        'sport_label.cyclisme': 'Bisiklet',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Yetişkin',
+        'continent_label.Afrique': 'Afrika',
+        'continent_label.Europe': 'Avrupa',
+        'continent_label.Asie': 'Asya',
+        'continent_label.Amérique': 'Amerika',
+        'continent_label.Océanie': 'Okyanusya'
+    },
+    ko: {
+        'loader.message': '로딩 중...',
+        'hub_market': '마켓',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': '스카우팅',
+        'processus': '프로세스',
+        'affiliation': '제휴',
+        'premier_pas': '첫걸음',
+        'acteurs': '액터 되기',
+        'artiste': '아티스트 되기',
+        'nos_clubs': '우리 클럽',
+        'tournoi_public': '공개 토너먼트',
+        'esp': '더 알아보기',
+        'connexion': '로그인',
+        'inscrire': '가입',
+        'scouting.title': '스카우팅',
+        'scouting.subtitle': '최고의 인재를 발견하세요',
+        'scouting.filter.all_sports': '모든 스포츠',
+        'scouting.filter.all_categories': '모든 카테고리',
+        'scouting.filter.all_continents': '모든 대륙',
+        'scouting.card.view_profile': '프로필 보기',
+        'scouting.no_talents': '인재를 찾을 수 없습니다',
+        'footer_conformite': 'APDP 베냉 준수',
+        'footer_reglementation': 'FIFA 규정',
+        'footer_double_projet': '스포츠-공부-직업 삼중 프로젝트',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. 모든 권리 보유.',
+        'toast.error_load': '인재 로딩 오류.',
+        'sport_label.football': '축구',
+        'sport_label.basketball': '농구',
+        'sport_label.tennis': '테니스',
+        'sport_label.athletisme': '육상',
+        'sport_label.handball': '핸드볼',
+        'sport_label.volleyball': '배구',
+        'sport_label.rugby': '럭비',
+        'sport_label.natation': '수영',
+        'sport_label.arts_martiaux': '무술',
+        'sport_label.cyclisme': '사이클',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': '시니어',
+        'continent_label.Afrique': '아프리카',
+        'continent_label.Europe': '유럽',
+        'continent_label.Asie': '아시아',
+        'continent_label.Amérique': '아메리카',
+        'continent_label.Océanie': '오세아니아'
+    },
+    hi: {
+        'loader.message': 'लोड हो रहा है...',
+        'hub_market': 'बाज़ार',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'स्काउटिंग',
+        'processus': 'प्रक्रिया',
+        'affiliation': 'संबद्धता',
+        'premier_pas': 'पहला कदम',
+        'acteurs': 'एक एक्टर बनें',
+        'artiste': 'एक कलाकार बनें',
+        'nos_clubs': 'हमारे क्लब',
+        'tournoi_public': 'सार्वजनिक टूर्नामेंट',
+        'esp': 'और जानें',
+        'connexion': 'लॉग इन',
+        'inscrire': 'साइन अप',
+        'scouting.title': 'स्काउटिंग',
+        'scouting.subtitle': 'सर्वश्रेष्ठ प्रतिभाओं की खोज करें',
+        'scouting.filter.all_sports': 'सभी खेल',
+        'scouting.filter.all_categories': 'सभी श्रेणियाँ',
+        'scouting.filter.all_continents': 'सभी महाद्वीप',
+        'scouting.card.view_profile': 'प्रोफ़ाइल देखें',
+        'scouting.no_talents': 'कोई प्रतिभा नहीं मिली',
+        'footer_conformite': 'APDP बेनिन अनुपालन',
+        'footer_reglementation': 'फीफा नियम',
+        'footer_double_projet': 'खेल-अध्ययन-पेशा ट्रिपल प्रोजेक्ट',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. सर्वाधिकार सुरक्षित।',
+        'toast.error_load': 'प्रतिभाओं को लोड करने में त्रुटि।',
+        'sport_label.football': 'फ़ुटबॉल',
+        'sport_label.basketball': 'बास्केटबॉल',
+        'sport_label.tennis': 'टेनिस',
+        'sport_label.athletisme': 'एथलेटिक्स',
+        'sport_label.handball': 'हैंडबॉल',
+        'sport_label.volleyball': 'वॉलीबॉल',
+        'sport_label.rugby': 'रग्बी',
+        'sport_label.natation': 'तैराकी',
+        'sport_label.arts_martiaux': 'मार्शल आर्ट',
+        'sport_label.cyclisme': 'साइकिलिंग',
+        'categorie_label.U13': 'अंडर 13',
+        'categorie_label.U15': 'अंडर 15',
+        'categorie_label.U17': 'अंडर 17',
+        'categorie_label.U20': 'अंडर 20',
+        'categorie_label.Senior': 'सीनियर',
+        'continent_label.Afrique': 'अफ्रीका',
+        'continent_label.Europe': 'यूरोप',
+        'continent_label.Asie': 'एशिया',
+        'continent_label.Amérique': 'अमेरिका',
+        'continent_label.Océanie': 'ओशिनिया'
+    },
+    nl: {
+        'loader.message': 'Laden...',
+        'hub_market': 'MARKT',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCES',
+        'affiliation': 'AFFILIATIE',
+        'premier_pas': 'EERSTE STAP',
+        'acteurs': 'WORD EEN ACTEUR',
+        'artiste': 'WORD EEN ARTIST',
+        'nos_clubs': 'ONZE CLUBS',
+        'tournoi_public': 'OPENBAAR TOERNOOI',
+        'esp': 'MEER WETEN',
+        'connexion': 'Inloggen',
+        'inscrire': 'Inschrijven',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Ontdek de beste talenten',
+        'scouting.filter.all_sports': 'Alle sporten',
+        'scouting.filter.all_categories': 'Alle categorieën',
+        'scouting.filter.all_continents': 'Alle continenten',
+        'scouting.card.view_profile': 'Profiel bekijken',
+        'scouting.no_talents': 'Geen talenten gevonden',
+        'footer_conformite': 'APDP Benin Naleving',
+        'footer_reglementation': 'FIFA Regelgeving',
+        'footer_double_projet': 'Triple Project Sport-Studie-Beroep',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Alle rechten voorbehouden.',
+        'toast.error_load': 'Fout bij het laden van talenten.',
+        'sport_label.football': 'Voetbal',
+        'sport_label.basketball': 'Basketbal',
+        'sport_label.tennis': 'Tennis',
+        'sport_label.athletisme': 'Atletiek',
+        'sport_label.handball': 'Handbal',
+        'sport_label.volleyball': 'Volleybal',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Zwemmen',
+        'sport_label.arts_martiaux': 'Vechtsporten',
+        'sport_label.cyclisme': 'Wielrennen',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'Afrika',
+        'continent_label.Europe': 'Europa',
+        'continent_label.Asie': 'Azië',
+        'continent_label.Amérique': 'Amerika',
+        'continent_label.Océanie': 'Oceanië'
+    },
+    pl: {
+        'loader.message': 'Ładowanie...',
+        'hub_market': 'RYNEK',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SKAUTING',
+        'processus': 'PROCES',
+        'affiliation': 'AFILIACJA',
+        'premier_pas': 'PIERWSZY KROK',
+        'acteurs': 'ZOSTAŃ AKTOREM',
+        'artiste': 'ZOSTAŃ ARTYSTĄ',
+        'nos_clubs': 'NASZE KLUBY',
+        'tournoi_public': 'TURNIEJ PUBLICZNY',
+        'esp': 'DOWIEDZ SIĘ WIĘCEJ',
+        'connexion': 'Zaloguj',
+        'inscrire': 'Zarejestruj',
+        'scouting.title': 'Scouting',
+        'scouting.subtitle': 'Odkryj najlepsze talenty',
+        'scouting.filter.all_sports': 'Wszystkie sporty',
+        'scouting.filter.all_categories': 'Wszystkie kategorie',
+        'scouting.filter.all_continents': 'Wszystkie kontynenty',
+        'scouting.card.view_profile': 'Zobacz profil',
+        'scouting.no_talents': 'Nie znaleziono talentów',
+        'footer_conformite': 'Zgodność APDP Benin',
+        'footer_reglementation': 'Regulacje FIFA',
+        'footer_double_projet': 'Potrójny Projekt Sport-Nauka-Zawód',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Wszelkie prawa zastrzeżone.',
+        'toast.error_load': 'Błąd podczas ładowania talentów.',
+        'sport_label.football': 'Piłka nożna',
+        'sport_label.basketball': 'Koszykówka',
+        'sport_label.tennis': 'Tenis',
+        'sport_label.athletisme': 'Lekkoatletyka',
+        'sport_label.handball': 'Piłka ręczna',
+        'sport_label.volleyball': 'Siatkówka',
+        'sport_label.rugby': 'Rugby',
+        'sport_label.natation': 'Pływanie',
+        'sport_label.arts_martiaux': 'Sztuki walki',
+        'sport_label.cyclisme': 'Kolarstwo',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Senior',
+        'continent_label.Afrique': 'Afryka',
+        'continent_label.Europe': 'Europa',
+        'continent_label.Asie': 'Azja',
+        'continent_label.Amérique': 'Ameryka',
+        'continent_label.Océanie': 'Oceania'
+    },
+    vi: {
+        'loader.message': 'Đang tải...',
+        'hub_market': 'CHỢ',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'TUYỂN TRẠCH',
+        'processus': 'QUY TRÌNH',
+        'affiliation': 'LIÊN KẾT',
+        'premier_pas': 'BƯỚC ĐẦU TIÊN',
+        'acteurs': 'TRỞ THÀNH DIỄN VIÊN',
+        'artiste': 'TRỞ THÀNH NGHỆ SĨ',
+        'nos_clubs': 'CÂU LẠC BỘ CỦA CHÚNG TÔI',
+        'tournoi_public': 'GIẢI ĐẤU CÔNG KHAI',
+        'esp': 'TÌM HIỂU THÊM',
+        'connexion': 'Đăng nhập',
+        'inscrire': 'Đăng ký',
+        'scouting.title': 'Tuyển trạch',
+        'scouting.subtitle': 'Khám phá những tài năng xuất sắc nhất',
+        'scouting.filter.all_sports': 'Tất cả các môn thể thao',
+        'scouting.filter.all_categories': 'Tất cả các hạng mục',
+        'scouting.filter.all_continents': 'Tất cả các châu lục',
+        'scouting.card.view_profile': 'Xem hồ sơ',
+        'scouting.no_talents': 'Không tìm thấy tài năng nào',
+        'footer_conformite': 'Tuân thủ APDP Benin',
+        'footer_reglementation': 'Quy định FIFA',
+        'footer_double_projet': 'Dự án ba mục Thể thao-Học tập-Nghề nghiệp',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tất cả các quyền được bảo lưu.',
+        'toast.error_load': 'Lỗi khi tải tài năng.',
+        'sport_label.football': 'Bóng đá',
+        'sport_label.basketball': 'Bóng rổ',
+        'sport_label.tennis': 'Quần vợt',
+        'sport_label.athletisme': 'Điền kinh',
+        'sport_label.handball': 'Bóng ném',
+        'sport_label.volleyball': 'Bóng chuyền',
+        'sport_label.rugby': 'Bóng bầu dục',
+        'sport_label.natation': 'Bơi lội',
+        'sport_label.arts_martiaux': 'Võ thuật',
+        'sport_label.cyclisme': 'Đua xe đạp',
+        'categorie_label.U13': 'U13',
+        'categorie_label.U15': 'U15',
+        'categorie_label.U17': 'U17',
+        'categorie_label.U20': 'U20',
+        'categorie_label.Senior': 'Trưởng thành',
+        'continent_label.Afrique': 'Châu Phi',
+        'continent_label.Europe': 'Châu Âu',
+        'continent_label.Asie': 'Châu Á',
+        'continent_label.Amérique': 'Châu Mỹ',
+        'continent_label.Océanie': 'Châu Đại Dương'
     }
 };
-
-let currentLang = localStorage.getItem('scouting_lang') || navigator.language.split('-')[0];
+// ========== FIN : TRADUCTIONS ==========
+// ========== DÉBUT : FONCTIONS DE TRADUCTION ==========
+let currentLang = localStorage.getItem('hubiLang') || navigator.language.split('-')[0];
 if (!translations[currentLang]) currentLang = 'fr';
 
 function t(key, params = {}) {
@@ -82,144 +1248,123 @@ function applyTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (key) {
-            if (el.tagName === 'INPUT' && el.getAttribute('data-i18n-placeholder')) el.placeholder = t(key);
-            else el.innerHTML = t(key);
+            if (el.tagName === 'INPUT' && el.getAttribute('data-i18n-placeholder')) {
+                el.placeholder = t(key);
+            } else {
+                el.innerHTML = t(key);
+            }
         }
     });
-    document.querySelectorAll('select option').forEach(opt => {
-        const key = opt.getAttribute('data-i18n');
-        if (key) opt.textContent = t(key);
-    });
-    const grid = document.getElementById('playersGrid');
-    if (grid && grid.innerHTML.includes('no-results')) {
-        const emptyDiv = grid.querySelector('.no-results');
-        if (emptyDiv) emptyDiv.textContent = t('scouting.no_results');
+    // Mise à jour des options de filtres
+    const sportFilter = document.getElementById('sportFilter');
+    if (sportFilter) {
+        const firstOption = sportFilter.querySelector('option[value="all"]');
+        if (firstOption) firstOption.textContent = t('scouting.filter.all_sports');
+    }
+    const categorieFilter = document.getElementById('categorieFilter');
+    if (categorieFilter) {
+        const firstOption = categorieFilter.querySelector('option[value="all"]');
+        if (firstOption) firstOption.textContent = t('scouting.filter.all_categories');
+    }
+    const continentFilter = document.getElementById('continentFilter');
+    if (continentFilter) {
+        const firstOption = continentFilter.querySelector('option[value="all"]');
+        if (firstOption) firstOption.textContent = t('scouting.filter.all_continents');
     }
 }
 
 function changeLanguage(lang) {
     if (translations[lang]) {
         currentLang = lang;
-        localStorage.setItem('scouting_lang', lang);
+        localStorage.setItem('hubiLang', lang);
         applyTranslations();
-        renderPlayers(allPlayers);
+        loadAndRenderTalents();
     }
 }
+// ========== FIN : FONCTIONS DE TRADUCTION ==========
 
-// ========== ÉLÉMENTS DOM ==========
-const playersGrid = document.getElementById('playersGrid');
-const resultCount = document.getElementById('resultCount');
+// ========== DÉBUT : VARIABLES GLOBALES ==========
+let allTalents = [];
+const talentsGrid = document.getElementById('talentsGrid');
+const sportFilter = document.getElementById('sportFilter');
+const categorieFilter = document.getElementById('categorieFilter');
 const continentFilter = document.getElementById('continentFilter');
-const categoryFilter = document.getElementById('categoryFilter');
-const countrySearch = document.getElementById('countrySearch');
-const searchBtn = document.getElementById('searchBtn');
+// ========== FIN : VARIABLES GLOBALES ==========
 
-let allPlayers = [];
-
-// ========== CHARGEMENT DES SPORTIFS ==========
-async function loadAllPlayers() {
-    showLoader();
+// ========== DÉBUT : CHARGEMENT ET RENDU DES TALENTS ==========
+async function loadAndRenderTalents() {
     try {
+        talentsGrid.innerHTML = `<div class="loading-placeholder">${t('loader.message')}</div>`;
         const { data, error } = await supabasePublic
             .from('public_scouting_sportifs')
             .select('*')
             .order('created_at', { ascending: false });
         if (error) throw error;
-        allPlayers = data || [];
-        renderPlayers(allPlayers);
+        allTalents = data || [];
+        renderTalents();
     } catch (err) {
         console.error(err);
-        showToast(t('toast.error_load'), 'error');
-        playersGrid.innerHTML = `<div class="no-results">${t('toast.error_load')}</div>`;
-    } finally {
-        hideLoader();
+        talentsGrid.innerHTML = `<p class="error-message">${t('toast.error_load')}</p>`;
     }
 }
 
-function filterPlayers() {
-    const continent = continentFilter.value;
-    const category = categoryFilter.value;
-    const search = countrySearch.value.toLowerCase().trim();
-    const filtered = allPlayers.filter(p => {
-        const matchContinent = continent === 'all' || p.continent === continent;
-        const matchCategory = category === 'all' || p.cat === category;
-        const matchSearch = !search || (p.pays && p.pays.toLowerCase().includes(search)) || (p.nom && p.nom.toLowerCase().includes(search));
-        return matchContinent && matchCategory && matchSearch;
+function renderTalents() {
+    const sport = sportFilter.value;
+    const cat = categorieFilter.value;
+    const cont = continentFilter.value;
+    
+    const filtered = allTalents.filter(talent => {
+        return (sport === 'all' || talent.cat === sport) &&
+            (cat === 'all' || talent.cat === cat) &&
+            (cont === 'all' || talent.continent === cont);
     });
-    renderPlayers(filtered);
-}
-
-function renderPlayers(players) {
-    if (!playersGrid) return;
-    if (players.length === 0) {
-        playersGrid.innerHTML = `<div class="no-results">${t('scouting.no_results')}</div>`;
-        resultCount.textContent = '0 ' + (currentLang === 'fr' ? 'sportif' : 'athlete');
+    
+    if (filtered.length === 0) {
+        talentsGrid.innerHTML = `<p class="no-talents">${t('scouting.no_talents')}</p>`;
         return;
     }
-    let html = '';
-    for (const p of players) {
-        const badgeClass = p.cat === 'mineur' ? 'mineur' : 'adulte';
-        const badgeText = p.cat === 'mineur' ? (currentLang === 'fr' ? 'U17' : 'U17') : (currentLang === 'fr' ? '18+' : '18+');
-        const age = p.age ? `${p.age} ${currentLang === 'fr' ? 'ans' : 'yrs'}` : '';
-        html += `
-            <div class="player-card">
-                <div class="card-image">
-                    <img src="${p.image_url || 'img/player-placeholder.jpg'}" alt="${escapeHtml(p.nom)}" onerror="this.src='img/player-placeholder.jpg'">
-                    <span class="card-badge ${badgeClass}">${badgeText}</span>
-                </div>
-                <div class="card-content">
-                    <h3>${escapeHtml(p.nom)}</h3>
-                    <p>${escapeHtml(p.poste || '')}</p>
-                    <div class="card-meta">
-                        <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(p.pays || '')}</span>
-                        ${age ? `<span><i class="fas fa-calendar-alt"></i> ${age}</span>` : ''}
-                        <span><i class="fas fa-futbol"></i> ${escapeHtml(p.club || '')}</span>
-                    </div>
-                    <div class="card-cert">
-                        <i class="fas fa-graduation-cap"></i> ${escapeHtml(p.cert || '')}
-                    </div>
-                    <a href="profil-scouting.html?id=${p.id}" class="btn-view">${t('scouting.view_profile')}</a>
-                </div>
+    
+    talentsGrid.innerHTML = filtered.map(talent => `
+        <div class="talent-card">
+            <div class="talent-image">
+                <img src="${talent.image_url || '../public/img/user-default.jpg'}" alt="${escapeHtml(talent.nom)}">
             </div>
-        `;
-    }
-    playersGrid.innerHTML = html;
-    const count = players.length;
-    resultCount.textContent = `${count} ${currentLang === 'fr' ? (count > 1 ? 'sportifs' : 'sportif') : (count > 1 ? 'athletes' : 'athlete')}`;
+            <div class="talent-info">
+                <h3>${escapeHtml(talent.nom)}</h3>
+                <p class="talent-poste">${t(`sport_label.${talent.cat}`) || talent.cat} - ${escapeHtml(talent.poste)}</p>
+                <p class="talent-details">
+                    <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(talent.pays)}</span>
+                    <span><i class="fas fa-calendar-alt"></i> ${t(`categorie_label.${talent.cat}`) || talent.cat}</span>
+                </p>
+                <a href="../profil-scouting/?id=${talent.id}" class="btn-view-profile">${t('scouting.card.view_profile')}</a>
+            </div>
+        </div>
+    `).join('');
 }
 
-// ========== UTILITAIRES ==========
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' } [m]));
 }
+// ========== FIN : CHARGEMENT ET RENDU DES TALENTS ==========
 
-function showToast(message, type = 'info', duration = 3000) {
-    let container = document.getElementById('toastContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toastContainer';
-        container.className = 'toast-container';
-        document.body.appendChild(container);
+// ========== DÉBUT : ÉVÉNEMENTS ==========
+sportFilter.addEventListener('change', renderTalents);
+categorieFilter.addEventListener('change', renderTalents);
+continentFilter.addEventListener('change', renderTalents);
+// ========== FIN : ÉVÉNEMENTS ==========
+
+// ========== DÉBUT : INITIALISATION ==========
+document.addEventListener('DOMContentLoaded', () => {
+    applyTranslations();
+    const langSelect = document.getElementById('langSelect');
+    if (langSelect) {
+        langSelect.value = currentLang;
+        langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
     }
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<div class="toast-content">${escapeHtml(message)}</div><button class="toast-close">×</button>`;
-    container.appendChild(toast);
-    toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
-    setTimeout(() => toast.remove(), duration);
-}
-
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
-
-function initMenuMobile() {
+    loadAndRenderTalents();
+    
+    // Menu mobile
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
     if (menuToggle && navLinks) {
@@ -234,23 +1379,6 @@ function initMenuMobile() {
             }
         });
     }
-}
-function initLangSelector() {
-    const langSelect = document.getElementById('langSelect');
-    if (langSelect) {
-        langSelect.value = currentLang;
-        langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
-    }
-}
-
-searchBtn.addEventListener('click', filterPlayers);
-continentFilter.addEventListener('change', filterPlayers);
-categoryFilter.addEventListener('change', filterPlayers);
-countrySearch.addEventListener('input', filterPlayers);
-
-document.addEventListener('DOMContentLoaded', () => {
-    applyTranslations();
-    initLangSelector();
-    initMenuMobile();
-    loadAllPlayers();
 });
+// ========== FIN : INITIALISATION ==========
+/* FIN : scouting/scouting.js */

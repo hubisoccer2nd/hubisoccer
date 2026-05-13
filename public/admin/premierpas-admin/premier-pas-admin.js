@@ -643,7 +643,11 @@ if (menuToggle && navLinks) {
         }
     });
 }
-document.getElementById('logoutBtn')?.addEventListener('click', e => { e.preventDefault(); showToast('Déconnexion', 'info'); });
+document.getElementById('logoutBtn')?.addEventListener('click', e => {
+    e.preventDefault();
+    localStorage.clear();
+    window.location.href = '../../../';
+});
 
 // ========== GESTION DES ONGLETS ==========
 document.querySelectorAll('.tab-btn').forEach(btn => {

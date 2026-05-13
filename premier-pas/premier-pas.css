@@ -194,24 +194,26 @@ nav {
 /* ========== FIN : NAVBAR OFFICIELLE ========== */
 
 /* ========== DÉBUT : HEADER PREMIER PAS ========== */
-.premierpas-header {
+.premier-pas-header {
     text-align: center;
     padding: 100px 20px;
-    color: white;
+    color: white; /* Correction : texte en blanc sur le fond sombre */
     background-size: cover;
     background-position: center;
 }
-.premierpas-header h1 {
+.premier-pas-header h1 {
     font-size: clamp(2rem, 8vw, 3.5rem);
     margin-bottom: 15px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.6); /* lisibilité */
 }
-.premierpas-header .highlight {
+.premier-pas-header .highlight {
     color: var(--gold);
 }
-.premierpas-header p {
+.premier-pas-header p {
     font-size: 1.2rem;
     max-width: 700px;
     margin: 0 auto;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
 }
 /* ========== FIN : HEADER PREMIER PAS ========== */
 
@@ -737,7 +739,7 @@ footer {
 }
 
 @media (max-width: 600px) {
-    .premierpas-header {
+    .premier-pas-header {
         padding: 60px 20px;
     }
     .form-container {
@@ -759,10 +761,10 @@ footer {
     .logo-nav {
         height: 40px;
     }
-    .premierpas-header {
+    .premier-pas-header {
         padding: 40px 15px;
     }
-    .premierpas-header h1 {
+    .premier-pas-header h1 {
         font-size: 1.8rem;
     }
     .form-container {

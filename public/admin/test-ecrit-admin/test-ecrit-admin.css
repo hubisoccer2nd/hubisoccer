@@ -1,8 +1,8 @@
 /* ========== TEST-ECRIT-ADMIN.CSS ========== */
 :root {
-    --primary: #551B8C;
-    --primary-light: #7e3db0;
-    --primary-dark: #3d1266;
+    --primary: #4B0082;
+    --primary-light: #7B2FBE;
+    --primary-dark: #2E004F;
     --gold: #FFCC00;
     --gold-dark: #e6b800;
     --bg-light: #F0F8FF;
@@ -14,7 +14,7 @@
     --warning: #ffc107;
     --danger: #dc3545;
     --shadow: 0 10px 30px rgba(0,0,0,0.05);
-    --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
+    --shadow-hover: 0 15px 40px rgba(75,0,130,0.15);
     --transition: all 0.3s ease;
 }
 

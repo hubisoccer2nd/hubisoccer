@@ -1,132 +1,955 @@
-// Configuration Supabase (espace public)
+/* DEBUT : processus/processus.js */
+// ========== PROCESSUS.JS ==========
+// ========== DÉBUT : CONFIGURATION SUPABASE (conservée pour compatibilité) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
-const supabaseSpacePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ========== FIN : CONFIGURATION SUPABASE ==========
 
-// ===== GESTION DU MENU MOBILE =====
-document.addEventListener('click', function(e) {
-    const menuToggle = e.target.closest('#menuToggle');
-    if (menuToggle) {
-        e.preventDefault();
-        const navLinks = document.getElementById('navLinks');
-        if (navLinks) {
+// ========== DÉBUT : TRADUCTIONS (24 LANGUES) ==========
+const translations = {
+  fr: {
+    'loader.message': 'Chargement...',
+    'hub_market': 'MARKET',
+    'hub_community': 'HUB COMMUNITY',
+    'scouting': 'SCOUTING',
+    'processus': 'PROCESSUS',
+    'affiliation': 'AFFILIATION',
+    'premier_pas': 'PREMIER‑PAS',
+    'acteurs': 'DEVENEZ UN ACTEUR',
+    'artiste': 'DEVENEZ UN ARTISTE',
+    'nos_clubs': 'NOS CLUBS',
+    'tournoi_public': 'TOURNOI PUBLIC',
+    'esp': 'SAVOIR+',
+    'connexion': 'Connexion',
+    'inscrire': 'S\'inscrire',
+    'processus.header.title': 'Le Triple Projet HubISoccer',
+    'processus.header.subtitle': 'Découvrez le parcours complet qui vous mène du premier pas à la carrière professionnelle.',
+    'processus.step1.title': 'Premier Pas',
+    'processus.step1.desc': 'Inscrivez‑vous gratuitement, remplissez votre dossier et obtenez votre identifiant unique.',
+    'processus.step2.title': 'Validation Administrative',
+    'processus.step2.desc': 'Notre équipe vérifie vos documents et valide votre dossier si tout est conforme.',
+    'processus.step3.title': 'Scouting & Détection',
+    'processus.step3.desc': 'Votre profil est publié dans notre réseau. Les recruteurs et clubs vous découvrent.',
+    'processus.step4.title': 'Tournois & Compétitions',
+    'processus.step4.desc': 'Participez à des tournois de détection et montrez votre talent en conditions réelles.',
+    'processus.step5.title': 'Carrière Professionnelle',
+    'processus.step5.desc': 'Signez dans un club professionnel ou développez votre carrière artistique.',
+    'processus.cta': 'Commencer l\'aventure',
+    'footer_conformite': 'Conformité APDP Bénin',
+    'footer_reglementation': 'Règlementation FIFA',
+    'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+    'contact_tel': '📞 +229 01 95 97 31 57',
+    'contact_email': '📧 contacthubisoccer@gmail.com',
+    'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+    'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+  },
+  en: {
+    'loader.message': 'Loading...',
+    'hub_market': 'MARKET',
+    'hub_community': 'HUB COMMUNITY',
+    'scouting': 'SCOUTING',
+    'processus': 'PROCESS',
+    'affiliation': 'AFFILIATION',
+    'premier_pas': 'FIRST STEP',
+    'acteurs': 'BECOME AN ACTOR',
+    'artiste': 'BECOME AN ARTIST',
+    'nos_clubs': 'OUR CLUBS',
+    'tournoi_public': 'PUBLIC TOURNAMENT',
+    'esp': 'LEARN MORE',
+    'connexion': 'Login',
+    'inscrire': 'Sign up',
+    'processus.header.title': 'The HubISoccer Triple Project',
+    'processus.header.subtitle': 'Discover the complete path from the first step to a professional career.',
+    'processus.step1.title': 'First Step',
+    'processus.step1.desc': 'Register for free, fill in your file and get your unique ID.',
+    'processus.step2.title': 'Administrative Validation',
+    'processus.step2.desc': 'Our team checks your documents and validates your file if everything is correct.',
+    'processus.step3.title': 'Scouting & Detection',
+    'processus.step3.desc': 'Your profile is published in our network. Recruiters and clubs discover you.',
+    'processus.step4.title': 'Tournaments & Competitions',
+    'processus.step4.desc': 'Take part in detection tournaments and show your talent in real conditions.',
+    'processus.step5.title': 'Professional Career',
+    'processus.step5.desc': 'Sign with a professional club or develop your artistic career.',
+    'processus.cta': 'Start the adventure',
+    'footer_conformite': 'APDP Benin Compliance',
+    'footer_reglementation': 'FIFA Regulations',
+    'footer_double_projet': 'Triple Sport-Studies-Career Project',
+    'contact_tel': '📞 +229 01 95 97 31 57',
+    'contact_email': '📧 contacthubisoccer@gmail.com',
+    'rccm': 'RCCM : RB/ABC/24 A 111814 | TIN : 0201910800236',
+    'copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.'
+  },
+  // Les 22 autres langues suivront dans le message suivant.
+      yo: {
+        'loader.message': 'Nlọ...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'Ilana',
+        'affiliation': 'Ifọwọsi',
+        'premier_pas': 'Igbese Akọkọ',
+        'acteurs': 'Di Oṣere',
+        'artiste': 'Di Oṣere',
+        'nos_clubs': 'Awọn Ẹgbẹ Wa',
+        'tournoi_public': 'Idije Gbogbo eniyan',
+        'esp': 'Kọ Ẹkọ Siwaju',
+        'connexion': 'Wo ile',
+        'inscrire': 'Forukọsilẹ',
+        'processus.header.title': 'Ise agbese HubISoccer Meta',
+        'processus.header.subtitle': 'Ṣawari ọna pipe lati igbese akọkọ si iṣẹ ọjọgbọn.',
+        'processus.step1.title': 'Igbese Akọkọ',
+        'processus.step1.desc': 'Forukọsilẹ ni ọfẹ, fọọmu rẹ kun ki o gba ID alailẹgbẹ rẹ.',
+        'processus.step2.title': 'Ifọwọsi Alakoso',
+        'processus.step2.desc': 'Ẹgbẹ wa n ṣayẹwo awọn iwe rẹ ki o fọwọsi faili rẹ ti ohun gbogbo ba tọ.',
+        'processus.step3.title': 'Ṣiṣayẹwo & Awari',
+        'processus.step3.desc': 'Profaili rẹ ti gbejade ni netiwọki wa. Awọn olubẹwẹ ati awọn ẹgbẹ ṣe awari rẹ.',
+        'processus.step4.title': 'Awọn Idije',
+        'processus.step4.desc': 'Kopa ninu awọn idije iṣawari ki o ṣe afihan talenti rẹ ni awọn ipo gidi.',
+        'processus.step5.title': 'Iṣẹ Ọjọgbọn',
+        'processus.step5.desc': 'Forukọsilẹ pẹlu ẹgbẹ alamọdaju tabi ṣe agbekalẹ iṣẹ iṣẹ ọna rẹ.',
+        'processus.cta': 'Bẹrẹ ìrìn-àjò naa',
+        'footer_conformite': 'Ifaramọ APDP Benin',
+        'footer_reglementation': 'Awọn ilana FIFA',
+        'footer_double_projet': 'Ise agbese Idaraya-Ẹkọ-Meji',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM: RB/ABC/24 A 111814 | IFU: 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Gbogbo ẹtọ wa ni ipamọ.'
+    },
+    fon: {
+        'loader.message': 'Tɛn ɖo...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Mǐtɔn bɔlu xɔ ɖé lɛ',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Byɔ xɔntin',
+        'inscrire': 'Nyikɔ wlan',
+        'processus.header.title': 'Le Triple Projet HubISoccer',
+        'processus.header.subtitle': 'Découvrez le parcours complet qui vous mène du premier pas à la carrière professionnelle.',
+        'processus.step1.title': 'Premier Pas',
+        'processus.step1.desc': 'Inscrivez‑vous gratuitement, remplissez votre dossier et obtenez votre identifiant unique.',
+        'processus.step2.title': 'Validation Administrative',
+        'processus.step2.desc': 'Notre équipe vérifie vos documents et valide votre dossier si tout est conforme.',
+        'processus.step3.title': 'Scouting & Détection',
+        'processus.step3.desc': 'Votre profil est publié dans notre réseau. Les recruteurs et clubs vous découvrent.',
+        'processus.step4.title': 'Tournois & Compétitions',
+        'processus.step4.desc': 'Participez à des tournois de détection et montrez votre talent en conditions réelles.',
+        'processus.step5.title': 'Carrière Professionnelle',
+        'processus.step5.desc': 'Signez dans un club professionnel ou développez votre carrière artistique.',
+        'processus.cta': 'Commencer l\'aventure',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    mina: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Míà bɔlu hɔn ɖé lɛ',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Gé ɖé émè',
+        'inscrire': 'Ŋkɔ́ wlá',
+        'processus.header.title': 'Le Triple Projet HubISoccer',
+        'processus.header.subtitle': 'Découvrez le parcours complet qui vous mène du premier pas à la carrière professionnelle.',
+        'processus.step1.title': 'Premier Pas',
+        'processus.step1.desc': 'Inscrivez‑vous gratuitement, remplissez votre dossier et obtenez votre identifiant unique.',
+        'processus.step2.title': 'Validation Administrative',
+        'processus.step2.desc': 'Notre équipe vérifie vos documents et valide votre dossier si tout est conforme.',
+        'processus.step3.title': 'Scouting & Détection',
+        'processus.step3.desc': 'Votre profil est publié dans notre réseau. Les recruteurs et clubs vous découvrent.',
+        'processus.step4.title': 'Tournois & Compétitions',
+        'processus.step4.desc': 'Participez à des tournois de détection et montrez votre talent en conditions réelles.',
+        'processus.step5.title': 'Carrière Professionnelle',
+        'processus.step5.desc': 'Signez dans un club professionnel ou développez votre carrière artistique.',
+        'processus.cta': 'Commencer l\'aventure',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    lin: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Ba Clubs na biso',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Kota',
+        'inscrire': 'Komikomisa',
+        'processus.header.title': 'Le Triple Projet HubISoccer',
+        'processus.header.subtitle': 'Découvrez le parcours complet qui vous mène du premier pas à la carrière professionnelle.',
+        'processus.step1.title': 'Premier Pas',
+        'processus.step1.desc': 'Inscrivez‑vous gratuitement, remplissez votre dossier et obtenez votre identifiant unique.',
+        'processus.step2.title': 'Validation Administrative',
+        'processus.step2.desc': 'Notre équipe vérifie vos documents et valide votre dossier si tout est conforme.',
+        'processus.step3.title': 'Scouting & Détection',
+        'processus.step3.desc': 'Votre profil est publié dans notre réseau. Les recruteurs et clubs vous découvrent.',
+        'processus.step4.title': 'Tournois & Compétitions',
+        'processus.step4.desc': 'Participez à des tournois de détection et montrez votre talent en conditions réelles.',
+        'processus.step5.title': 'Carrière Professionnelle',
+        'processus.step5.desc': 'Signez dans un club professionnel ou développez votre carrière artistique.',
+        'processus.cta': 'Commencer l\'aventure',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    wol: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Sunu clubs yi',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Dugg',
+        'inscrire': 'Seetal',
+        'processus.header.title': 'Le Triple Projet HubISoccer',
+        'processus.header.subtitle': 'Découvrez le parcours complet qui vous mène du premier pas à la carrière professionnelle.',
+        'processus.step1.title': 'Premier Pas',
+        'processus.step1.desc': 'Inscrivez‑vous gratuitement, remplissez votre dossier et obtenez votre identifiant unique.',
+        'processus.step2.title': 'Validation Administrative',
+        'processus.step2.desc': 'Notre équipe vérifie vos documents et valide votre dossier si tout est conforme.',
+        'processus.step3.title': 'Scouting & Détection',
+        'processus.step3.desc': 'Votre profil est publié dans notre réseau. Les recruteurs et clubs vous découvrent.',
+        'processus.step4.title': 'Tournois & Compétitions',
+        'processus.step4.desc': 'Participez à des tournois de détection et montrez votre talent en conditions réelles.',
+        'processus.step5.title': 'Carrière Professionnelle',
+        'processus.step5.desc': 'Signez dans un club professionnel ou développez votre carrière artistique.',
+        'processus.cta': 'Commencer l\'aventure',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    diou: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'An ka clubs ni',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Dɔ́n',
+        'inscrire': 'Sɛ̀bɛ̀n',
+        'processus.header.title': 'Le Triple Projet HubISoccer',
+        'processus.header.subtitle': 'Découvrez le parcours complet qui vous mène du premier pas à la carrière professionnelle.',
+        'processus.step1.title': 'Premier Pas',
+        'processus.step1.desc': 'Inscrivez‑vous gratuitement, remplissez votre dossier et obtenez votre identifiant unique.',
+        'processus.step2.title': 'Validation Administrative',
+        'processus.step2.desc': 'Notre équipe vérifie vos documents et valide votre dossier si tout est conforme.',
+        'processus.step3.title': 'Scouting & Détection',
+        'processus.step3.desc': 'Votre profil est publié dans notre réseau. Les recruteurs et clubs vous découvrent.',
+        'processus.step4.title': 'Tournois & Compétitions',
+        'processus.step4.desc': 'Participez à des tournois de détection et montrez votre talent en conditions réelles.',
+        'processus.step5.title': 'Carrière Professionnelle',
+        'processus.step5.desc': 'Signez dans un club professionnel ou développez votre carrière artistique.',
+        'processus.cta': 'Commencer l\'aventure',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    ha: {
+        'loader.message': 'Ana lodi...',
+        'hub_market': 'KASUWA',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'TSARI',
+        'affiliation': 'ALAƘA',
+        'premier_pas': 'MATAKI NA FARKO',
+        'acteurs': 'ZAMA DAN WASAN',
+        'artiste': 'ZAMA MAWAKI',
+        'nos_clubs': 'KUNGIYOYINMU',
+        'tournoi_public': 'GASAR JAM\'IYYA',
+        'esp': 'KARA KOYO',
+        'connexion': 'Shiga',
+        'inscrire': 'Yi rajista',
+        'processus.header.title': 'Tsarin Ayyukan HubISoccer Sau Uku',
+        'processus.header.subtitle': 'Gano cikakkiyar hanyar daga matakin farko zuwa sana\'ar ƙwararru.',
+        'processus.step1.title': 'Mataki na Farko',
+        'processus.step1.desc': 'Yi rajista kyauta, cika fom ɗinka ka sami ID ɗinka na musamman.',
+        'processus.step2.title': 'Tabbatarwa ta Gudanarwa',
+        'processus.step2.desc': 'Ƙungiyarmu ta bincika takaddunka kuma ta tabbatar da fayil ɗinka idan komai daidai ne.',
+        'processus.step3.title': 'Bincike & Ganowa',
+        'processus.step3.desc': 'An buga bayaninka a cikin hanyar sadarwarmu. Masu daukar ma\'aikata da ƙungiyoyi sun gano ka.',
+        'processus.step4.title': 'Gasa & Gasar',
+        'processus.step4.desc': 'Shiga cikin gasar ganowa kuma nuna basirarka a yanayi na ainihi.',
+        'processus.step5.title': 'Sana\'ar Ƙwararru',
+        'processus.step5.desc': 'Shiga tare da ƙwararriyar ƙungiya ko haɓaka sana\'ar fasaha.',
+        'processus.cta': 'Fara kasada',
+        'footer_conformite': 'APDP Benin Amincewa',
+        'footer_reglementation': 'Dokokin FIFA',
+        'footer_double_projet': 'Tsarin Wasanni-Ilimi-Aiki Uku',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Duk haƙƙoƙin mallaka.'
+    },
+    sw: {
+        'loader.message': 'Inapakia...',
+        'hub_market': 'SOKO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'MCHAKATO',
+        'affiliation': 'Uhusiano',
+        'premier_pas': 'HATUA YA KWANZA',
+        'acteurs': 'KUWA MTAALAMU',
+        'artiste': 'KUWA MSANII',
+        'nos_clubs': 'VILABU VYETU',
+        'tournoi_public': 'MASHINDANO YA UMMA',
+        'esp': 'JIFUNZE ZAIDI',
+        'connexion': 'Ingia',
+        'inscrire': 'Jiandikishe',
+        'processus.header.title': 'Mradi wa Tatu wa HubISoccer',
+        'processus.header.subtitle': 'Gundua njia kamili kutoka hatua ya kwanza hadi taaluma.',
+        'processus.step1.title': 'Hatua ya Kwanza',
+        'processus.step1.desc': 'Jiandikishe bure, jaza fomu yako na upate kitambulisho chako cha kipekee.',
+        'processus.step2.title': 'Uthibitisho wa Kiutawala',
+        'processus.step2.desc': 'Timu yetu inakagua nyaraka zako na kuthibitisha faili yako ikiwa kila kitu ni sahihi.',
+        'processus.step3.title': 'Upelelezi na Ugunduzi',
+        'processus.step3.desc': 'Profaili yako imechapishwa katika mtandao wetu. Waajiri na vilabu wanakugundua.',
+        'processus.step4.title': 'Mashindano na Mashindano',
+        'processus.step4.desc': 'Shiriki katika mashindano ya upelelezi na uonyeshe kipaji chako katika hali halisi.',
+        'processus.step5.title': 'Taaluma ya Kitaaluma',
+        'processus.step5.desc': 'Saini na klabu ya kitaaluma au endeleza taaluma yako ya sanaa.',
+        'processus.cta': 'Anza safari',
+        'footer_conformite': 'Uzingatiaji wa APDP Benin',
+        'footer_reglementation': 'Kanuni za FIFA',
+        'footer_double_projet': 'Mradi wa Michezo-Masomo-Kazi Mara Tatu',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Haki zote zimehifadhiwa.'
+    },
+    es: {
+        'loader.message': 'Cargando...',
+        'hub_market': 'MERCADO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESO',
+        'affiliation': 'AFILIACIÓN',
+        'premier_pas': 'PRIMER PASO',
+        'acteurs': 'CONVIÉRTETE EN ACTOR',
+        'artiste': 'CONVIÉRTETE EN ARTISTA',
+        'nos_clubs': 'NUESTROS CLUBES',
+        'tournoi_public': 'TORNEO PÚBLICO',
+        'esp': 'SABER MÁS',
+        'connexion': 'Iniciar sesión',
+        'inscrire': 'Registrarse',
+        'processus.header.title': 'El Triple Proyecto HubISoccer',
+        'processus.header.subtitle': 'Descubra el camino completo desde el primer paso hasta la carrera profesional.',
+        'processus.step1.title': 'Primer Paso',
+        'processus.step1.desc': 'Regístrese gratis, complete su expediente y obtenga su identificador único.',
+        'processus.step2.title': 'Validación Administrativa',
+        'processus.step2.desc': 'Nuestro equipo verifica sus documentos y valida su expediente si todo es correcto.',
+        'processus.step3.title': 'Scouting y Detección',
+        'processus.step3.desc': 'Su perfil se publica en nuestra red. Los reclutadores y clubes lo descubren.',
+        'processus.step4.title': 'Torneos y Competiciones',
+        'processus.step4.desc': 'Participe en torneos de detección y muestre su talento en condiciones reales.',
+        'processus.step5.title': 'Carrera Profesional',
+        'processus.step5.desc': 'Firme con un club profesional o desarrolle su carrera artística.',
+        'processus.cta': 'Comenzar la aventura',
+        'footer_conformite': 'Conformidad APDP Benín',
+        'footer_reglementation': 'Reglamento FIFA',
+        'footer_double_projet': 'Triple Proyecto Deporte-Estudios-Carrera',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Todos los derechos reservados.'
+    },
+    pt: {
+        'loader.message': 'Carregando...',
+        'hub_market': 'MERCADO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSO',
+        'affiliation': 'AFILIAÇÃO',
+        'premier_pas': 'PRIMEIRO PASSO',
+        'acteurs': 'TORNE-SE UM ATOR',
+        'artiste': 'TORNE-SE UM ARTISTA',
+        'nos_clubs': 'NOSSOS CLUBES',
+        'tournoi_public': 'TORNEIO PÚBLICO',
+        'esp': 'SAIBA MAIS',
+        'connexion': 'Entrar',
+        'inscrire': 'Inscrever-se',
+        'processus.header.title': 'O Projeto Triplo HubISoccer',
+        'processus.header.subtitle': 'Descubra o caminho completo do primeiro passo à carreira profissional.',
+        'processus.step1.title': 'Primeiro Passo',
+        'processus.step1.desc': 'Inscreva-se gratuitamente, preencha o seu processo e obtenha o seu identificador único.',
+        'processus.step2.title': 'Validação Administrativa',
+        'processus.step2.desc': 'A nossa equipa verifica os seus documentos e valida o seu processo se tudo estiver correto.',
+        'processus.step3.title': 'Scouting e Deteção',
+        'processus.step3.desc': 'O seu perfil é publicado na nossa rede. Os recrutadores e clubes descobrem-no.',
+        'processus.step4.title': 'Torneios e Competições',
+        'processus.step4.desc': 'Participe em torneios de deteção e mostre o seu talento em condições reais.',
+        'processus.step5.title': 'Carreira Profissional',
+        'processus.step5.desc': 'Assine com um clube profissional ou desenvolva a sua carreira artística.',
+        'processus.cta': 'Começar a aventura',
+        'footer_conformite': 'Conformidade APDP Benim',
+        'footer_reglementation': 'Regulamento FIFA',
+        'footer_double_projet': 'Triplo Projeto Esporte-Estudos-Carreira',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Todos os direitos reservados.'
+    },
+    de: {
+        'loader.message': 'Laden...',
+        'hub_market': 'MARKT',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROZESS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'ERSTER SCHRITT',
+        'acteurs': 'WERDE AKTEUR',
+        'artiste': 'WERDE KÜNSTLER',
+        'nos_clubs': 'UNSERE CLUBS',
+        'tournoi_public': 'ÖFFENTLICHES TURNIER',
+        'esp': 'MEHR ERFAHREN',
+        'connexion': 'Anmelden',
+        'inscrire': 'Registrieren',
+        'processus.header.title': 'Das HubISoccer Dreifachprojekt',
+        'processus.header.subtitle': 'Entdecken Sie den vollständigen Weg vom ersten Schritt zur Profikarriere.',
+        'processus.step1.title': 'Erster Schritt',
+        'processus.step1.desc': 'Registrieren Sie sich kostenlos, füllen Sie Ihre Unterlagen aus und erhalten Sie Ihre eindeutige ID.',
+        'processus.step2.title': 'Administrative Validierung',
+        'processus.step2.desc': 'Unser Team prüft Ihre Dokumente und validiert Ihre Unterlagen, wenn alles korrekt ist.',
+        'processus.step3.title': 'Scouting & Erkennung',
+        'processus.step3.desc': 'Ihr Profil wird in unserem Netzwerk veröffentlicht. Talentsucher und Vereine entdecken Sie.',
+        'processus.step4.title': 'Turniere & Wettbewerbe',
+        'processus.step4.desc': 'Nehmen Sie an Sichtungsturnieren teil und zeigen Sie Ihr Talent unter realen Bedingungen.',
+        'processus.step5.title': 'Professionelle Karriere',
+        'processus.step5.desc': 'Unterschreiben Sie bei einem Profiverein oder entwickeln Sie Ihre künstlerische Karriere.',
+        'processus.cta': 'Das Abenteuer beginnen',
+        'footer_conformite': 'APDP Benin Konformität',
+        'footer_reglementation': 'FIFA-Regulierung',
+        'footer_double_projet': 'Dreifachprojekt Sport-Studium-Beruf',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Alle Rechte vorbehalten.'
+    },
+    it: {
+        'loader.message': 'Caricamento...',
+        'hub_market': 'MERCATO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSO',
+        'affiliation': 'AFFILIAZIONE',
+        'premier_pas': 'PRIMO PASSO',
+        'acteurs': 'DIVENTA UN ATTORE',
+        'artiste': 'DIVENTA UN ARTISTA',
+        'nos_clubs': 'I NOSTRI CLUB',
+        'tournoi_public': 'TORNEO PUBBLICO',
+        'esp': 'SCOPRI DI PIÙ',
+        'connexion': 'Accedi',
+        'inscrire': 'Registrati',
+        'processus.header.title': 'Il Triplo Progetto HubISoccer',
+        'processus.header.subtitle': 'Scopri il percorso completo dal primo passo alla carriera professionale.',
+        'processus.step1.title': 'Primo Passo',
+        'processus.step1.desc': 'Registrati gratuitamente, compila il tuo dossier e ottieni il tuo identificativo unico.',
+        'processus.step2.title': 'Validazione Amministrativa',
+        'processus.step2.desc': 'Il nostro team verifica i tuoi documenti e convalida il tuo dossier se tutto è corretto.',
+        'processus.step3.title': 'Scouting e Rilevamento',
+        'processus.step3.desc': 'Il tuo profilo è pubblicato nella nostra rete. Reclutatori e club ti scoprono.',
+        'processus.step4.title': 'Tornei e Competizioni',
+        'processus.step4.desc': 'Partecipa a tornei di rilevamento e mostra il tuo talento in condizioni reali.',
+        'processus.step5.title': 'Carriera Professionale',
+        'processus.step5.desc': 'Firma con un club professionistico o sviluppa la tua carriera artistica.',
+        'processus.cta': 'Inizia l\'avventura',
+        'footer_conformite': 'Conformità APDP Benin',
+        'footer_reglementation': 'Regolamento FIFA',
+        'footer_double_projet': 'Triplo Progetto Sport-Studi-Carriera',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tutti i diritti riservati.'
+    },
+    ar: {
+        'loader.message': 'جار التحميل...',
+        'hub_market': 'السوق',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'الاستكشاف',
+        'processus': 'العملية',
+        'affiliation': 'الانتماء',
+        'premier_pas': 'الخطوة الأولى',
+        'acteurs': 'كن فاعلاً',
+        'artiste': 'كن فناناً',
+        'nos_clubs': 'أنديتنا',
+        'tournoi_public': 'بطولة عامة',
+        'esp': 'اعرف المزيد',
+        'connexion': 'تسجيل الدخول',
+        'inscrire': 'التسجيل',
+        'processus.header.title': 'مشروع HubISoccer الثلاثي',
+        'processus.header.subtitle': 'اكتشف المسار الكامل من الخطوة الأولى إلى المسيرة المهنية.',
+        'processus.step1.title': 'الخطوة الأولى',
+        'processus.step1.desc': 'سجل مجاناً، املأ ملفك واحصل على معرفك الفريد.',
+        'processus.step2.title': 'التحقق الإداري',
+        'processus.step2.desc': 'يتحقق فريقنا من مستنداتك ويصدق على ملفك إذا كان كل شيء صحيحاً.',
+        'processus.step3.title': 'الاستكشاف والاكتشاف',
+        'processus.step3.desc': 'يتم نشر ملفك الشخصي في شبكتنا. يكتشفك الكشافون والأندية.',
+        'processus.step4.title': 'البطولات والمسابقات',
+        'processus.step4.desc': 'شارك في بطولات الاستكشاف وأظهر موهبتك في ظروف حقيقية.',
+        'processus.step5.title': 'المسيرة المهنية',
+        'processus.step5.desc': 'وقع مع نادٍ محترف أو طور مسيرتك الفنية.',
+        'processus.cta': 'ابدأ المغامرة',
+        'footer_conformite': 'الامتثال لـ APDP بنين',
+        'footer_reglementation': 'لوائح الفيفا',
+        'footer_double_projet': 'مشروع الرياضة والدراسة والمهنة الثلاثي',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. جميع الحقوق محفوظة.'
+    },
+    zh: {
+        'loader.message': '加载中...',
+        'hub_market': '市场',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': '球探',
+        'processus': '流程',
+        'affiliation': '隶属',
+        'premier_pas': '第一步',
+        'acteurs': '成为行动者',
+        'artiste': '成为艺术家',
+        'nos_clubs': '我们的俱乐部',
+        'tournoi_public': '公开锦标赛',
+        'esp': '了解更多',
+        'connexion': '登录',
+        'inscrire': '注册',
+        'processus.header.title': 'HubISoccer 三重项目',
+        'processus.header.subtitle': '发现从第一步到职业生涯的完整路径。',
+        'processus.step1.title': '第一步',
+        'processus.step1.desc': '免费注册，填写您的档案并获取您的唯一标识符。',
+        'processus.step2.title': '行政验证',
+        'processus.step2.desc': '我们的团队检查您的文件，如果一切正确，则验证您的档案。',
+        'processus.step3.title': '球探与发现',
+        'processus.step3.desc': '您的个人资料在我们的网络中发布。招聘人员和俱乐部会发现您。',
+        'processus.step4.title': '锦标赛与竞赛',
+        'processus.step4.desc': '参加检测锦标赛，在真实条件下展示您的才华。',
+        'processus.step5.title': '职业生涯',
+        'processus.step5.desc': '与职业俱乐部签约或发展您的艺术生涯。',
+        'processus.cta': '开始冒险',
+        'footer_conformite': 'APDP 贝宁合规',
+        'footer_reglementation': 'FIFA 规则',
+        'footer_double_projet': '体育-学业-职业三重项目',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa。 版权所有。'
+    },
+    ru: {
+        'loader.message': 'Загрузка...',
+        'hub_market': 'РЫНОК',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'СКАУТИНГ',
+        'processus': 'ПРОЦЕСС',
+        'affiliation': 'ПАРТНЕРСТВО',
+        'premier_pas': 'ПЕРВЫЙ ШАГ',
+        'acteurs': 'СТАНЬ ДЕЯТЕЛЕМ',
+        'artiste': 'СТАНЬ АРТИСТОМ',
+        'nos_clubs': 'НАШИ КЛУБЫ',
+        'tournoi_public': 'ПУБЛИЧНЫЙ ТУРНИР',
+        'esp': 'УЗНАТЬ БОЛЬШЕ',
+        'connexion': 'Войти',
+        'inscrire': 'Регистрация',
+        'processus.header.title': 'Тройной проект HubISoccer',
+        'processus.header.subtitle': 'Откройте полный путь от первого шага до профессиональной карьеры.',
+        'processus.step1.title': 'Первый Шаг',
+        'processus.step1.desc': 'Зарегистрируйтесь бесплатно, заполните анкету и получите уникальный идентификатор.',
+        'processus.step2.title': 'Административная проверка',
+        'processus.step2.desc': 'Наша команда проверяет ваши документы и подтверждает ваше досье, если всё верно.',
+        'processus.step3.title': 'Скаутинг и Обнаружение',
+        'processus.step3.desc': 'Ваш профиль публикуется в нашей сети. Скауты и клубы находят вас.',
+        'processus.step4.title': 'Турниры и Соревнования',
+        'processus.step4.desc': 'Участвуйте в просмотровых турнирах и покажите свой талант в реальных условиях.',
+        'processus.step5.title': 'Профессиональная Карьера',
+        'processus.step5.desc': 'Подпишите контракт с профессиональным клубом или развивайте свою артистическую карьеру.',
+        'processus.cta': 'Начать приключение',
+        'footer_conformite': 'Соответствие APDP Бенин',
+        'footer_reglementation': 'Регламент ФИФА',
+        'footer_double_projet': 'Тройной проект Спорт-Учёба-Карьера',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Все права защищены.'
+    },
+    ja: {
+        'loader.message': '読み込み中...',
+        'hub_market': 'マーケット',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'スカウティング',
+        'processus': 'プロセス',
+        'affiliation': 'アフィリエイト',
+        'premier_pas': '第一歩',
+        'acteurs': 'アクターになる',
+        'artiste': 'アーティストになる',
+        'nos_clubs': '私たちのクラブ',
+        'tournoi_public': '公開トーナメント',
+        'esp': 'もっと知る',
+        'connexion': 'ログイン',
+        'inscrire': '登録',
+        'processus.header.title': 'HubISoccer トリプルプロジェクト',
+        'processus.header.subtitle': '第一歩からプロキャリアまでの完全な道のりを発見してください。',
+        'processus.step1.title': '第一歩',
+        'processus.step1.desc': '無料で登録し、ファイルに記入して、一意のIDを取得してください。',
+        'processus.step2.title': '管理検証',
+        'processus.step2.desc': '私たちのチームがあなたの書類をチェックし、すべてが正しければあなたのファイルを検証します。',
+        'processus.step3.title': 'スカウティングと発見',
+        'processus.step3.desc': 'あなたのプロフィールが私たちのネットワークで公開されます。スカウトやクラブがあなたを発見します。',
+        'processus.step4.title': 'トーナメントと競技会',
+        'processus.step4.desc': '発掘トーナメントに参加し、実際の状況で才能を発揮してください。',
+        'processus.step5.title': 'プロフェッショナルキャリア',
+        'processus.step5.desc': 'プロクラブと契約するか、芸術的キャリアを発展させてください。',
+        'processus.cta': '冒険を始める',
+        'footer_conformite': 'APDP ベナン準拠',
+        'footer_reglementation': 'FIFA 規則',
+        'footer_double_projet': 'スポーツ・勉強・職業のトリプルプロジェクト',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. 全著作権所有。'
+    },
+    tr: {
+        'loader.message': 'Yükleniyor...',
+        'hub_market': 'PAZAR',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'SÜREÇ',
+        'affiliation': 'BAĞLILIK',
+        'premier_pas': 'İLK ADIM',
+        'acteurs': 'AKTÖR OL',
+        'artiste': 'SANATÇI OL',
+        'nos_clubs': 'KULÜPLERİMİZ',
+        'tournoi_public': 'AÇIK TURNUVA',
+        'esp': 'DAHA FAZLA',
+        'connexion': 'Giriş',
+        'inscrire': 'Kaydol',
+        'processus.header.title': 'HubISoccer Üçlü Projesi',
+        'processus.header.subtitle': 'İlk adımdan profesyonel kariyere giden tam yolu keşfedin.',
+        'processus.step1.title': 'İlk Adım',
+        'processus.step1.desc': 'Ücretsiz kaydolun, dosyanızı doldurun ve benzersiz kimliğinizi alın.',
+        'processus.step2.title': 'İdari Doğrulama',
+        'processus.step2.desc': 'Ekibimiz belgelerinizi kontrol eder ve her şey doğruysa dosyanızı onaylar.',
+        'processus.step3.title': 'Scouting ve Keşif',
+        'processus.step3.desc': 'Profiliniz ağımızda yayınlanır. İşverenler ve kulüpler sizi keşfeder.',
+        'processus.step4.title': 'Turnuvalar ve Yarışmalar',
+        'processus.step4.desc': 'Keşif turnuvalarına katılın ve yeteneğinizi gerçek koşullarda gösterin.',
+        'processus.step5.title': 'Profesyonel Kariyer',
+        'processus.step5.desc': 'Profesyonel bir kulüple sözleşme imzalayın veya sanatsal kariyerinizi geliştirin.',
+        'processus.cta': 'Maceraya başla',
+        'footer_conformite': 'APDP Benin Uyumluluğu',
+        'footer_reglementation': 'FIFA Düzenlemeleri',
+        'footer_double_projet': 'Üçlü Proje Spor-Eğitim-Kariyer',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tüm hakları saklıdır.'
+    },
+    ko: {
+        'loader.message': '로딩 중...',
+        'hub_market': '마켓',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': '스카우팅',
+        'processus': '프로세스',
+        'affiliation': '제휴',
+        'premier_pas': '첫걸음',
+        'acteurs': '액터 되기',
+        'artiste': '아티스트 되기',
+        'nos_clubs': '우리 클럽',
+        'tournoi_public': '공개 토너먼트',
+        'esp': '더 알아보기',
+        'connexion': '로그인',
+        'inscrire': '가입',
+        'processus.header.title': 'HubISoccer 삼중 프로젝트',
+        'processus.header.subtitle': '첫걸음부터 프로 경력까지의 완전한 경로를 발견하세요.',
+        'processus.step1.title': '첫걸음',
+        'processus.step1.desc': '무료로 가입하고 파일을 작성하여 고유 ID를 받으세요.',
+        'processus.step2.title': '관리 검증',
+        'processus.step2.desc': '우리 팀이 귀하의 문서를 확인하고 모든 것이 정확하면 파일을 검증합니다.',
+        'processus.step3.title': '스카우팅 및 발견',
+        'processus.step3.desc': '귀하의 프로필이 네트워크에 게시됩니다. 스카우트와 클럽이 귀하를 발견합니다.',
+        'processus.step4.title': '토너먼트 및 대회',
+        'processus.step4.desc': '발굴 토너먼트에 참가하여 실제 상황에서 재능을 보여주세요.',
+        'processus.step5.title': '프로 경력',
+        'processus.step5.desc': '프로 클럽과 계약하거나 예술적 경력을 개발하세요.',
+        'processus.cta': '모험 시작하기',
+        'footer_conformite': 'APDP 베냉 준수',
+        'footer_reglementation': 'FIFA 규정',
+        'footer_double_projet': '스포츠-공부-직업 삼중 프로젝트',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. 모든 권리 보유.'
+    },
+    hi: {
+        'loader.message': 'लोड हो रहा है...',
+        'hub_market': 'बाज़ार',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'स्काउटिंग',
+        'processus': 'प्रक्रिया',
+        'affiliation': 'संबद्धता',
+        'premier_pas': 'पहला कदम',
+        'acteurs': 'एक एक्टर बनें',
+        'artiste': 'एक कलाकार बनें',
+        'nos_clubs': 'हमारे क्लब',
+        'tournoi_public': 'सार्वजनिक टूर्नामेंट',
+        'esp': 'और जानें',
+        'connexion': 'लॉग इन',
+        'inscrire': 'साइन अप',
+        'processus.header.title': 'हबआइसॉकर ट्रिपल प्रोजेक्ट',
+        'processus.header.subtitle': 'पहले कदम से लेकर पेशेवर करियर तक का पूरा रास्ता खोजें।',
+        'processus.step1.title': 'पहला कदम',
+        'processus.step1.desc': 'मुफ्त में पंजीकरण करें, अपना फ़ाइल भरें और अपनी विशिष्ट आईडी प्राप्त करें।',
+        'processus.step2.title': 'प्रशासनिक सत्यापन',
+        'processus.step2.desc': 'हमारी टीम आपके दस्तावेजों की जाँच करती है और यदि सब कुछ सही है तो आपकी फ़ाइल को मान्य करती है।',
+        'processus.step3.title': 'स्काउटिंग और खोज',
+        'processus.step3.desc': 'आपकी प्रोफ़ाइल हमारे नेटवर्क में प्रकाशित होती है। भर्तीकर्ता और क्लब आपको खोजते हैं।',
+        'processus.step4.title': 'टूर्नामेंट और प्रतियोगिताएं',
+        'processus.step4.desc': 'खोज टूर्नामेंटों में भाग लें और वास्तविक परिस्थितियों में अपनी प्रतिभा दिखाएं।',
+        'processus.step5.title': 'पेशेवर कैरियर',
+        'processus.step5.desc': 'एक पेशेवर क्लब के साथ हस्ताक्षर करें या अपना कलात्मक करियर विकसित करें।',
+        'processus.cta': 'साहसिक कार्य शुरू करें',
+        'footer_conformite': 'APDP बेनिन अनुपालन',
+        'footer_reglementation': 'फीफा नियम',
+        'footer_double_projet': 'खेल-अध्ययन-पेशा तिहरा परियोजना',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. सर्वाधिकार सुरक्षित।'
+    },
+    nl: {
+        'loader.message': 'Laden...',
+        'hub_market': 'MARKT',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCES',
+        'affiliation': 'AFFILIATIE',
+        'premier_pas': 'EERSTE STAP',
+        'acteurs': 'WORD EEN ACTEUR',
+        'artiste': 'WORD EEN ARTIST',
+        'nos_clubs': 'ONZE CLUBS',
+        'tournoi_public': 'OPENBAAR TOERNOOI',
+        'esp': 'MEER WETEN',
+        'connexion': 'Inloggen',
+        'inscrire': 'Inschrijven',
+        'processus.header.title': 'Het HubISoccer Drievoudige Project',
+        'processus.header.subtitle': 'Ontdek het volledige pad van de eerste stap naar een professionele carrière.',
+        'processus.step1.title': 'Eerste Stap',
+        'processus.step1.desc': 'Registreer gratis, vul uw dossier in en ontvang uw unieke ID.',
+        'processus.step2.title': 'Administratieve Validatie',
+        'processus.step2.desc': 'Ons team controleert uw documenten en valideert uw dossier als alles correct is.',
+        'processus.step3.title': 'Scouting & Detectie',
+        'processus.step3.desc': 'Uw profiel wordt gepubliceerd in ons netwerk. Recruiters en clubs ontdekken u.',
+        'processus.step4.title': 'Toernooien & Competities',
+        'processus.step4.desc': 'Neem deel aan detectietoernooien en toon uw talent in echte omstandigheden.',
+        'processus.step5.title': 'Professionele Carrière',
+        'processus.step5.desc': 'Teken bij een professionele club of ontwikkel uw artistieke carrière.',
+        'processus.cta': 'Begin het avontuur',
+        'footer_conformite': 'APDP Benin Naleving',
+        'footer_reglementation': 'FIFA Regelgeving',
+        'footer_double_projet': 'Triple Project Sport-Studie-Beroep',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Alle rechten voorbehouden.'
+    },
+    pl: {
+        'loader.message': 'Ładowanie...',
+        'hub_market': 'RYNEK',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SKAUTING',
+        'processus': 'PROCES',
+        'affiliation': 'AFILIACJA',
+        'premier_pas': 'PIERWSZY KROK',
+        'acteurs': 'ZOSTAŃ AKTOREM',
+        'artiste': 'ZOSTAŃ ARTYSTĄ',
+        'nos_clubs': 'NASZE KLUBY',
+        'tournoi_public': 'TURNIEJ PUBLICZNY',
+        'esp': 'DOWIEDZ SIĘ WIĘCEJ',
+        'connexion': 'Zaloguj',
+        'inscrire': 'Zarejestruj',
+        'processus.header.title': 'Potrójny Projekt HubISoccer',
+        'processus.header.subtitle': 'Odkryj pełną ścieżkę od pierwszego kroku do kariery zawodowej.',
+        'processus.step1.title': 'Pierwszy Krok',
+        'processus.step1.desc': 'Zarejestruj się za darmo, wypełnij dokumenty i uzyskaj unikalny identyfikator.',
+        'processus.step2.title': 'Walidacja Administracyjna',
+        'processus.step2.desc': 'Nasz zespół sprawdza Twoje dokumenty i zatwierdza Twoje zgłoszenie, jeśli wszystko jest poprawne.',
+        'processus.step3.title': 'Skauting i Wykrywanie',
+        'processus.step3.desc': 'Twój profil jest publikowany w naszej sieci. Rekruterzy i kluby Cię odkrywają.',
+        'processus.step4.title': 'Turnieje i Zawody',
+        'processus.step4.desc': 'Weź udział w turniejach wykrywających i pokaż swój talent w rzeczywistych warunkach.',
+        'processus.step5.title': 'Kariera Zawodowa',
+        'processus.step5.desc': 'Podpisz kontrakt z profesjonalnym klubem lub rozwijaj swoją karierę artystyczną.',
+        'processus.cta': 'Rozpocznij przygodę',
+        'footer_conformite': 'Zgodność APDP Benin',
+        'footer_reglementation': 'Regulacje FIFA',
+        'footer_double_projet': 'Potrójny Projekt Sport-Nauka-Zawód',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Wszelkie prawa zastrzeżone.'
+    },
+    vi: {
+        'loader.message': 'Đang tải...',
+        'hub_market': 'CHỢ',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'TUYỂN TRẠCH',
+        'processus': 'QUY TRÌNH',
+        'affiliation': 'LIÊN KẾT',
+        'premier_pas': 'BƯỚC ĐẦU TIÊN',
+        'acteurs': 'TRỞ THÀNH DIỄN VIÊN',
+        'artiste': 'TRỞ THÀNH NGHỆ SĨ',
+        'nos_clubs': 'CÂU LẠC BỘ CỦA CHÚNG TÔI',
+        'tournoi_public': 'GIẢI ĐẤU CÔNG KHAI',
+        'esp': 'TÌM HIỂU THÊM',
+        'connexion': 'Đăng nhập',
+        'inscrire': 'Đăng ký',
+        'processus.header.title': 'Dự Án Ba Của HubISoccer',
+        'processus.header.subtitle': 'Khám phá con đường đầy đủ từ bước đầu tiên đến sự nghiệp chuyên nghiệp.',
+        'processus.step1.title': 'Bước Đầu Tiên',
+        'processus.step1.desc': 'Đăng ký miễn phí, điền vào hồ sơ và nhận ID duy nhất của bạn.',
+        'processus.step2.title': 'Xác Thực Hành Chính',
+        'processus.step2.desc': 'Nhóm của chúng tôi kiểm tra tài liệu của bạn và xác thực hồ sơ nếu mọi thứ đều đúng.',
+        'processus.step3.title': 'Tuyển Trạch & Phát Hiện',
+        'processus.step3.desc': 'Hồ sơ của bạn được công bố trên mạng của chúng tôi. Nhà tuyển dụng và câu lạc bộ phát hiện ra bạn.',
+        'processus.step4.title': 'Giải Đấu & Cuộc Thi',
+        'processus.step4.desc': 'Tham gia các giải đấu phát hiện và thể hiện tài năng của bạn trong điều kiện thực tế.',
+        'processus.step5.title': 'Sự Nghiệp Chuyên Nghiệp',
+        'processus.step5.desc': 'Ký hợp đồng với một câu lạc bộ chuyên nghiệp hoặc phát triển sự nghiệp nghệ thuật của bạn.',
+        'processus.cta': 'Bắt đầu cuộc phiêu lưu',
+        'footer_conformite': 'Tuân thủ APDP Benin',
+        'footer_reglementation': 'Quy định FIFA',
+        'footer_double_projet': 'Dự án ba mục Thể thao-Học tập-Nghề nghiệp',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tất cả các quyền được bảo lưu.'
+    }
+};
+// ========== FIN : TRADUCTIONS ==========
+
+// ========== DÉBUT : FONCTIONS DE TRADUCTION ==========
+let currentLang = localStorage.getItem('hubiLang') || navigator.language.split('-')[0];
+if (!translations[currentLang]) currentLang = 'fr';
+
+function t(key, params = {}) {
+    let text = translations[currentLang]?.[key] || translations.fr[key] || key;
+    for (const [k, v] of Object.entries(params)) text = text.replace(`{${k}}`, v);
+    return text;
+}
+
+function applyTranslations() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key) {
+            if (el.tagName === 'INPUT' && el.getAttribute('data-i18n-placeholder')) {
+                el.placeholder = t(key);
+            } else {
+                el.innerHTML = t(key);
+            }
+        }
+    });
+    document.querySelectorAll('select option').forEach(opt => {
+        const key = opt.getAttribute('data-i18n');
+        if (key) opt.textContent = t(key);
+    });
+}
+
+function changeLanguage(lang) {
+    if (translations[lang]) {
+        currentLang = lang;
+        localStorage.setItem('hubiLang', lang);
+        applyTranslations();
+    }
+}
+// ========== FIN : FONCTIONS DE TRADUCTION ==========
+
+// ========== DÉBUT : ANIMATION DES ÉTAPES ==========
+document.addEventListener('DOMContentLoaded', () => {
+    applyTranslations();
+
+    // Sélecteur de langue
+    const langSelect = document.getElementById('langSelect');
+    if (langSelect) {
+        langSelect.value = currentLang;
+        langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
+    }
+
+    // Menu mobile
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (menuToggle && navLinks) {
+        menuToggle.addEventListener('click', () => {
             navLinks.classList.toggle('active');
             menuToggle.classList.toggle('open');
-        }
-        return;
+        });
+        document.addEventListener('click', (e) => {
+            if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+                navLinks.classList.remove('active');
+                menuToggle.classList.remove('open');
+            }
+        });
     }
-    if (!e.target.closest('.nav-links') && !e.target.closest('#menuToggle')) {
-        const navLinks = document.getElementById('navLinks');
-        if (navLinks && navLinks.classList.contains('active')) {
-            navLinks.classList.remove('active');
-            const toggle = document.getElementById('menuToggle');
-            if (toggle) toggle.classList.remove('open');
-        }
-    }
+
+    // Animation d'apparition des étapes au scroll
+    const steps = document.querySelectorAll('.step');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.2 });
+
+    steps.forEach(step => observer.observe(step));
 });
-
-// ===== GESTION DES LANGUES (exemple simplifié) =====
-const translations = {
-    fr: {
-        titre_page: "Processus HubISoccer – De la détection locale à la communauté privée",
-        // ... d'autres traductions si besoin
-    },
-    // les autres langues seraient définies ici
-};
-let currentLang = 'fr';
-function loadLanguage(lang) {
-    // à compléter si vous souhaitez traduire le contenu dynamique
-}
-const savedLang = localStorage.getItem('hubiLang') || 'fr';
-loadLanguage(savedLang);
-document.getElementById('langSelect').addEventListener('change', (e) => {
-    loadLanguage(e.target.value);
-});
-
-// ===== CHARGEMENT DES ÉTAPES =====
-async function loadTimeline() {
-    const container = document.getElementById('timelineContainer');
-    if (!container) return;
-
-    const { data: etapes, error } = await supabaseSpacePublic
-        .from('public_processus_etapes')
-        .select('*')
-        .order('order', { ascending: true });
-
-    if (error) {
-        console.error('Erreur chargement étapes:', error);
-        container.innerHTML = '<p class="error">Impossible de charger le processus.</p>';
-        return;
-    }
-
-    if (!etapes.length) {
-        container.innerHTML = '<p>Aucune étape pour le moment.</p>';
-        return;
-    }
-
-    let html = '';
-    etapes.forEach(e => {
-        html += `
-            <div class="timeline-item">
-                <div class="timeline-icon">
-                    <i class="fas ${e.icone}"></i>
-                </div>
-                <div class="timeline-content">
-                    <h2>${escapeHtml(e.titre)}</h2>
-                    <p>${escapeHtml(e.description)}</p>
-                </div>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-// ===== CHARGEMENT DES STATISTIQUES =====
-async function loadStats() {
-    const container = document.getElementById('statsContainer');
-    if (!container) return;
-
-    const { data: stats, error } = await supabaseSpacePublic
-        .from('public_processus_stats')
-        .select('*')
-        .order('order', { ascending: true });
-
-    if (error) {
-        console.error('Erreur chargement stats:', error);
-        container.innerHTML = '<p class="error">Impossible de charger les statistiques.</p>';
-        return;
-    }
-
-    if (!stats.length) {
-        container.innerHTML = '<p>Aucune statistique.</p>';
-        return;
-    }
-
-    let html = '';
-    stats.forEach(s => {
-        html += `
-            <div class="stat-item">
-                <span class="stat-number">${escapeHtml(s.nombre)}</span>
-                <span class="stat-label">${escapeHtml(s.label)}</span>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-// ===== UTILITAIRE =====
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-// ===== INITIALISATION =====
-document.addEventListener('DOMContentLoaded', () => {
-    loadTimeline();
-    loadStats();
-});
+// ========== FIN : ANIMATION DES ÉTAPES ==========
+/* FIN : processus/processus.js */

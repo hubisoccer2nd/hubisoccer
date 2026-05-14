@@ -50,13 +50,13 @@ async function loadCGU() {
     try {
         const { data, error } = await supabaseAdmin
             .from('public_pages')
-            .select('title, content')
+            .select('titre, contenu')   // ← CORRIGÉ
             .eq('slug', 'cgu')
             .maybeSingle();
         if (error) throw error;
         if (data) {
-            document.getElementById('cguTitle').value = data.title || '';
-            document.getElementById('cguContent').value = data.content || '';
+            document.getElementById('cguTitle').value = data.titre || '';   // ← CORRIGÉ
+            document.getElementById('cguContent').value = data.contenu || '';   // ← CORRIGÉ
         }
     } catch (err) {
         showToast('Erreur lors du chargement des CGU.', 'error');
@@ -82,8 +82,8 @@ async function saveCGU(e) {
             .from('public_pages')
             .upsert({
                 slug: 'cgu',
-                title: title,
-                content: content,
+                titre: title,      // ← CORRIGÉ
+                contenu: content,  // ← CORRIGÉ
                 updated_at: new Date().toISOString()
             }, { onConflict: 'slug' });
 

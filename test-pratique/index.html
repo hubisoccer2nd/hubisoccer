@@ -1,22 +1,26 @@
+<!-- DEBUT : test-pratique/index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test pratique – HubISoccer</title>
-    <meta name="description" content="Déposez vos vidéos techniques et tactiques selon votre sport. Évaluation par nos analystes.">
+    <title>Test Pratique | HubISoccer</title>
+    <meta name="description" content="Soumettez votre vidéo de performance pour le test pratique HubISoccer.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/test-pratique.css">
+    <link rel="stylesheet" href="test-pratique.css">
 </head>
 <body>
+    <!-- ========== DÉBUT : LOADER ========== -->
     <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
         <div class="spinner"></div> <span data-i18n="loader.message">Chargement...</span>
     </div>
+    <!-- ========== FIN : LOADER ========== -->
 
+    <!-- ========== DÉBUT : NAVBAR OFFICIELLE ========== -->
     <nav>
-        <a href="../index.html" class="logo-link">
-            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        <a href="../" class="logo-link">
+            <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
             <select class="lang-picker" id="langSelect">
@@ -47,102 +51,51 @@
             </select>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="../index.html" data-i18n="nav.home">Accueil</a>
-                <a href="scouting.html" data-i18n="nav.scouting">Scouting</a>
-                <a href="processus.html" data-i18n="nav.process">Processus</a>
-                <a href="affiliation.html" data-i18n="nav.affiliation">Affiliation</a>
-                <a href="acteurs.html" data-i18n="nav.actors">Devenir acteur</a>
-                <a href="tournoi.html" data-i18n="nav.tournaments">Tournois</a>
-                <a href="hub-community.html" data-i18n="nav.community">Community</a>
-                <a href="e-marketing-hubisoccer.html" data-i18n="nav.market">Market</a>
-                <a href="suivi.html" data-i18n="nav.follow_test">SUIVI TEST PRATIQUE</a>
-                <a href="public/auth/login.html" class="btn-auth" data-i18n="nav.login">Connexion</a>
-                <a href="public/auth/signup.html" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
+                <a href="../" data-i18n="nav.home">Accueil</a>
+                <a href="../scouting/" data-i18n="nav.scouting">Scouting</a>
+                <a href="../processus/" data-i18n="nav.process">Processus</a>
+                <a href="../affiliation/" data-i18n="nav.affiliation">Affiliation</a>
+                <a href="../acteurs/" data-i18n="nav.actors">Devenir acteur</a>
+                <a href="../tournoi/" data-i18n="nav.tournaments">Tournois</a>
+                <a href="../hub-community/" data-i18n="nav.community">Community</a>
+                <a href="../e-marketing/" data-i18n="nav.market">Market</a>
+                <a href="../acteurs-login/" class="btn-auth" data-i18n="nav.login">Connexion</a>
+                <a href="../hubisapp/authprive/users/signup/" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
             </div>
         </div>
     </nav>
+    <!-- ========== FIN : NAVBAR ========== -->
 
-    <main class="pratique-main">
-        <div class="pratique-card">
-            <h1><i class="fas fa-video"></i> <span data-i18n="pratique.title">Test pratique – Dépôt vidéo</span></h1>
-            <p class="subtitle" data-i18n="pratique.subtitle">Avant d’accéder au guide et à l’examen, nos analystes étudient tes capacités à travers deux courtes vidéos adaptées à ton sport.</p>
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
+    <main class="test-pratique-main">
+        <div class="form-card">
+            <h1><i class="fas fa-video"></i> <span data-i18n="test.title">Test Pratique</span></h1>
+            <p class="subtitle" data-i18n="test.subtitle">Soumettez une vidéo de votre performance sportive pour évaluation.</p>
 
-            <div class="info-box" id="sportInstructions">
-                <!-- Les instructions spécifiques au sport seront injectées ici -->
-            </div>
-
-            <form id="uploadForm">
+            <form id="testPratiqueForm">
                 <div class="form-group">
-                    <label data-i18n="pratique.id_label">ID de suivi (PP ID) *</label>
-                    <input type="text" id="pp_id" placeholder="ex: a5-VA-032714-HubIS-FT-123-00001" required>
+                    <label data-i18n="test.id_label">Votre ID de suivi (PP ID) *</label>
+                    <input type="text" id="ppId" placeholder="Ex: a5-VA-032714-HubIS-FT-123-00001" required>
                 </div>
                 <div class="form-group">
-                    <label data-i18n="pratique.nom">Nom *</label>
-                    <input type="text" id="nom" required>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="pratique.prenom">Prénom(s) *</label>
-                    <input type="text" id="prenom" required>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="pratique.sport">Sport *</label>
-                    <select id="sport" required>
-                        <option value="">-- Choisissez votre sport --</option>
-                        <option value="football">Football</option>
-                        <option value="basketball">Basketball</option>
-                        <option value="tennis">Tennis</option>
-                        <option value="athletisme">Athlétisme</option>
-                        <option value="handball">Handball</option>
-                        <option value="volleyball">Volley‑ball</option>
-                        <option value="rugby">Rugby</option>
-                        <option value="natation">Natation</option>
-                        <option value="arts_martiaux">Arts martiaux</option>
-                        <option value="cyclisme">Cyclisme</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="pratique.poste">Poste / Discipline *</label>
-                    <select id="poste" required>
-                        <option value="">-- Sélectionnez --</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label data-i18n="pratique.video1_label">Vidéo 1 – (max 5 min) *</label>
-                    <div class="video-upload" id="upload-video1">
+                    <label data-i18n="test.video_label">Vidéo de performance *</label>
+                    <div class="file-upload-box" id="uploadBox">
                         <i class="fas fa-cloud-upload-alt"></i>
-                        <p data-i18n="pratique.upload_click">Cliquez pour télécharger la vidéo 1</p>
-                        <span class="file-name" id="video1-name">Aucun fichier</span>
-                        <input type="file" id="video1" accept="video/mp4,video/quicktime,video/x-msvideo" required>
-                        <div class="progress-indicator" style="display: none;">
-                            <div class="progress-bar"></div>
-                            <span class="progress-text">0%</span>
-                        </div>
+                        <span data-i18n="test.upload_click">Cliquez pour télécharger (MP4, MOV, AVI, max 50 Mo)</span>
+                        <input type="file" id="videoFile" accept="video/*" required>
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <label data-i18n="pratique.video2_label">Vidéo 2 – (max 5 min) *</label>
-                    <div class="video-upload" id="upload-video2">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <p data-i18n="pratique.upload_click">Cliquez pour télécharger la vidéo 2</p>
-                        <span class="file-name" id="video2-name">Aucun fichier</span>
-                        <input type="file" id="video2" accept="video/mp4,video/quicktime,video/x-msvideo" required>
-                        <div class="progress-indicator" style="display: none;">
-                            <div class="progress-bar"></div>
-                            <span class="progress-text">0%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="progress-global" style="display: none;">
-                    <div class="progress-fill"></div>
-                </div>
-
-                <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> <span data-i18n="pratique.submit">Envoyer mes vidéos</span></button>
+                <button type="submit" class="btn-submit" data-i18n="test.submit">Soumettre ma vidéo</button>
             </form>
+
+            <div id="successMessage" class="success-card" style="display: none;">
+                <div class="success-icon">🎥</div>
+                <h2 data-i18n="test.success_title">Vidéo soumise avec succès !</h2>
+                <p data-i18n="test.success_message">Votre vidéo est en cours d'analyse par notre équipe. Vous recevrez une notification dans votre espace de suivi.</p>
+            </div>
         </div>
     </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
 
     <footer>
         <div class="compliance-badges">
@@ -164,6 +117,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/test-pratique.js"></script>
+    <script src="test-pratique.js"></script>
 </body>
 </html>
+<!-- FIN : test-pratique/index.html -->

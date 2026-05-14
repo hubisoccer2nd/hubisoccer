@@ -41,7 +41,7 @@ async function loadSteps() {
         const { data, error } = await supabaseAdmin
             .from('public_processus_etapes')
             .select('*')
-            .order('order', { ascending: true });   // ← Colonne corrigée
+            .order('etape', { ascending: true });
         if (error) throw error;
         renderSteps(data || []);
     } catch (err) { showToast('Erreur chargement étapes', 'error'); } finally { hideLoader(); }
@@ -55,15 +55,15 @@ function renderSteps(steps) {
     }
     stepsContainer.innerHTML = steps.map(step => `
         <div class="step-item">
-            <div class="step-number">${step.order}</div>   <!-- ← Utilisation de order -->
+            <div class="step-number">${step.etape}</div>
             <div class="step-fields">
                 <div class="form-group">
                     <label>Titre</label>
-                    <input type="text" id="title_${step.order}" value="${escapeHtml(step.titre)}">
+                    <input type="text" id="title_${step.etape}" value="${escapeHtml(step.titre)}">
                 </div>
                 <div class="form-group">
                     <label>Description</label>
-                    <textarea id="desc_${step.order}" rows="3">${escapeHtml(step.description)}</textarea>
+                    <textarea id="desc_${step.etape}" rows="3">${escapeHtml(step.description)}</textarea>
                 </div>
             </div>
         </div>
@@ -78,7 +78,7 @@ async function saveSteps(e) {
     showLoader();
     try {
         for (const el of stepElements) {
-            const order = parseInt(el.querySelector('.step-number').textContent);
+            const num = el.querySelector('.step-number').textContent;
             const titre = el.querySelector('input').value.trim();
             const description = el.querySelector('textarea').value.trim();
             if (!titre || !description) continue;
@@ -86,11 +86,11 @@ async function saveSteps(e) {
             const { error } = await supabaseAdmin
                 .from('public_processus_etapes')
                 .upsert({
-                    order: order,
+                    etape: parseInt(num),
                     titre: titre,
                     description: description,
                     updated_at: new Date().toISOString()
-                }, { onConflict: 'order' });    // ← Colonne corrigée
+                }, { onConflict: 'etape' });
 
             if (error) throw error;
         }

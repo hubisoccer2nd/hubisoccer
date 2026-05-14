@@ -1,19 +1,26 @@
+<!-- DEBUT : faq/index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foire aux questions | HubISoccer</title>
+    <title>FAQ | HubISoccer</title>
+    <meta name="description" content="Foire aux questions HubISoccer. Trouvez les réponses à toutes vos questions sur le Triple Projet.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/faq.css">
+    <link rel="stylesheet" href="faq.css">
 </head>
 <body>
+    <!-- ========== DÉBUT : LOADER ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> <span data-i18n="loader.message">Chargement...</span>
+    </div>
+    <!-- ========== FIN : LOADER ========== -->
 
-    <!-- ========== DEBUT NAVBAR ========== -->
+    <!-- ========== DÉBUT : NAVBAR OFFICIELLE ========== -->
     <nav>
-        <a href="../index.html" class="logo-link">
-            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        <a href="../" class="logo-link">
+            <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
             <select class="lang-picker" id="langSelect">
@@ -42,53 +49,62 @@
                 <option value="pl">🇵🇱 Polski</option>
                 <option value="vi">🇻🇳 Tiếng Việt</option>
             </select>
-            <button class="menu-toggle" id="menuToggle">
-                <span></span><span></span><span></span>
-            </button>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="../index.html">Accueil</a>
-                <a href="actualites.html">Actualités</a>
-                <a href="partenaires.html">Partenaires</a>
-                <a href="scouting.html">Scouting</a>
-                <a href="tournoi.html">Tournois</a>
-                <a href="hub-community.html">Community</a>
-                <a href="e-marketing-hubisoccer.html">Market</a>
-                <a href="faq.html" class="active">FAQ</a>
-                <a href="hubisapp/auth/login.html" class="btn-auth">Connexion</a>
-                <a href="hubisapp/auth/signup.html" class="btn-auth gold">Inscription</a>
+                <a href="../scouting/" data-i18n="scouting">SCOUTING</a>
+                <a href="../processus/" data-i18n="processus">PROCESSUS</a>
+                <a href="../affiliation/" data-i18n="affiliation">AFFILIATION</a>
+                <a href="../premier-pas/" data-i18n="premier_pas">PREMIER‑PAS</a>
+                <a href="../acteurs/" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
+                <a href="../artiste-adhesion/" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
+                <a href="../clubs/" data-i18n="nos_clubs">NOS CLUBS</a>
+                <a href="../tournoi/" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
+                <a href="../esp/" data-i18n="esp">SAVOIR+</a>
+                <a href="../hub-community/" data-i18n="hub_community">HUB COMMUNITY</a>
+                <a href="../e-marketing/" data-i18n="hub_market">MARKET</a>
+                <a href="../acteurs-login/" class="btn-auth" data-i18n="connexion">Connexion</a>
+                <a href="../hubisapp/authprive/users/signup/" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
             </div>
         </div>
     </nav>
-    <!-- ========== FIN NAVBAR ========== -->
+    <!-- ========== FIN : NAVBAR ========== -->
 
-    <main class="faq-container">
-        <h1>Foire aux questions</h1>
-        <div class="faq-list" id="faqList">
-            <!-- Les questions/réponses seront chargées dynamiquement -->
-            <div class="loader">Chargement...</div>
+    <!-- ========== DÉBUT : HEADER ========== -->
+    <header class="faq-header">
+        <h1 data-i18n="faq.title">Foire aux Questions</h1>
+        <p data-i18n="faq.subtitle">Trouvez rapidement une réponse à votre question.</p>
+    </header>
+    <!-- ========== FIN : HEADER ========== -->
+
+    <!-- ========== DÉBUT : CONTENU FAQ ========== -->
+    <main>
+        <div class="faq-container" id="faqList">
+            <div class="loader" data-i18n="loader.message">Chargement...</div>
         </div>
     </main>
+    <!-- ========== FIN : CONTENU FAQ ========== -->
 
-    <!-- ========== FOOTER ========== -->
     <footer>
         <div class="compliance-badges">
-            <div class="badge-item">Conformité APDP Bénin</div>
-            <div class="badge-item">Règlementation FIFA</div>
-            <div class="badge-item">Triple Projet Sport-Études-Carrière</div>
+            <div class="badge-item" data-i18n="footer_conformite">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer_reglementation">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer_double_projet">Triple Projet Sport-Études-Carrière</div>
         </div>
         <div class="contact-box">
-            <a href="tel:+2290195973157" class="contact-item">📞 +229 01 95 97 31 57</a>
-            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item">📧 contacthubisoccer@gmail.com</a>
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="contact_tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="contact_email">📧 contacthubisoccer@gmail.com</a>
         </div>
         <div class="legal">
             <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
-            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
-            <p>&copy; 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+            <p data-i18n="rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
         </div>
     </footer>
-    <!-- ========== FIN FOOTER ========== -->
+
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/faq.js"></script>
+    <script src="faq.js"></script>
 </body>
 </html>
+<!-- FIN : faq/index.html -->

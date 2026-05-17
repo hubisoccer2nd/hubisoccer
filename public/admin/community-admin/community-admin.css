@@ -1,5 +1,5 @@
-/* ========== COMMUNITY-ADMIN.CSS (SANS QUILL) ========== */
-/* ========== DÉBUT : VARIABLES ET RÉINITIALISATION ========== */
+/* ========== DEBUT : community-admin.css ========== */
+/* ========== DEBUT : VARIABLES ET RÉINITIALISATION ========== */
 :root {
     --primary: #4B0082;
     --primary-light: #7B2FBE;
@@ -15,8 +15,8 @@
     --warning: #ffc107;
     --danger: #dc3545;
     --info: #17a2b8;
-    --shadow: 0 0.5rem 1rem rgba(0,0,0,0.08);
-    --shadow-hover: 0 1rem 2rem rgba(0,0,0,0.12);
+    --shadow: 0 10px 30px rgba(0,0,0,0.05);
+    --shadow-hover: 0 15px 40px rgba(75,0,130,0.15);
     --transition: all 0.3s ease;
 }
 
@@ -30,10 +30,14 @@ body {
     font-family: 'Poppins', sans-serif;
     background: #f4f6f9;
     color: var(--dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     line-height: 1.6;
-    overflow-x: hidden;
 }
+/* ========== FIN : VARIABLES ET RÉINITIALISATION ========== */
 
+/* ========== DEBUT : LOADER ========== */
 .spinner {
     border: 4px solid rgba(255,255,255,0.3);
     border-top: 4px solid var(--gold);
@@ -43,53 +47,74 @@ body {
     animation: spin 1s linear infinite;
     margin: 0 auto 10px;
 }
-
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-/* ========== FIN : VARIABLES ET RÉINITIALISATION ========== */
+/* ========== FIN : LOADER ========== */
 
-/* ========== DÉBUT : NAVBAR ========== */
+/* ========== DEBUT : NAVBAR ========== */
 nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 5%;
-    background: var(--white);
-    box-shadow: var(--shadow);
-    border-bottom: 3px solid var(--primary);
+    padding: 10px 5%;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
     position: sticky;
     top: 0;
     z-index: 100;
+    border-bottom: 2px solid var(--light-gray);
 }
-
 .logo-nav {
-    height: 45px;
+    height: 40px;
+    cursor: pointer;
     transition: var(--transition);
 }
-
-.admin-badge {
-    background: var(--primary);
-    color: white;
-    padding: 8px 20px;
-    border-radius: 40px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    box-shadow: 0 4px 8px rgba(75,0,130,0.2);
+.logo-nav:hover {
+    transform: scale(1.05);
 }
-
-.admin-badge i {
-    margin-right: 8px;
-    color: var(--gold);
-}
-
 .nav-right {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
+    flex-wrap: wrap;
 }
-
+.admin-badge {
+    background: var(--primary);
+    color: var(--white);
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.admin-badge i {
+    color: var(--gold);
+}
+.nav-links {
+    display: flex;
+    gap: 10px;
+}
+.nav-links a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 30px;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+.nav-links a:hover {
+    background: var(--primary);
+    color: var(--white);
+}
 .menu-toggle {
     display: none;
     flex-direction: column;
@@ -99,9 +124,8 @@ nav {
     background: none;
     border: none;
     cursor: pointer;
-    z-index: 1001;
+    z-index: 101;
 }
-
 .menu-toggle span {
     display: block;
     width: 100%;
@@ -110,7 +134,6 @@ nav {
     border-radius: 3px;
     transition: var(--transition);
 }
-
 .menu-toggle.open span:nth-child(1) {
     transform: rotate(45deg) translate(5px, 5px);
 }
@@ -120,62 +143,33 @@ nav {
 .menu-toggle.open span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -7px);
 }
-
-.nav-links {
-    display: flex;
-    gap: 15px;
-}
-
-.nav-links a {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: var(--transition);
-    padding: 8px 16px;
-    border-radius: 30px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.nav-links a i {
-    color: var(--gold);
-}
-
-.nav-links a:hover {
-    background: var(--primary-light);
-    color: white;
-}
-.nav-links a:hover i {
-    color: white;
-}
 /* ========== FIN : NAVBAR ========== */
 
-/* ========== DÉBUT : MAIN LAYOUT ========== */
+/* ========== DEBUT : MAIN LAYOUT ========== */
 .admin-main {
-    padding: 40px 5%;
-    min-height: 80vh;
-}
-
-.admin-container {
     max-width: 1400px;
-    margin: 0 auto;
+    margin: 30px auto;
+    padding: 0 20px;
+    width: 100%;
+    flex: 1;
 }
-
+.admin-container {
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 30px;
+}
 .page-header {
     margin-bottom: 30px;
 }
-
 .page-title {
     font-size: 2rem;
-    color: var(--primary-dark);
+    color: var(--primary);
     margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 12px;
 }
-
 .page-title i {
     color: var(--gold);
     background: var(--primary);
@@ -183,15 +177,13 @@ nav {
     border-radius: 50%;
     font-size: 1.5rem;
 }
-
 .page-subtitle {
     color: var(--gray);
     font-size: 1rem;
-    margin-left: 65px;
 }
 /* ========== FIN : MAIN LAYOUT ========== */
 
-/* ========== DÉBUT : BARRE DE STATISTIQUES ========== */
+/* ========== DEBUT : BARRE DE STATISTIQUES ========== */
 .stats-bar {
     display: flex;
     gap: 15px;
@@ -199,7 +191,6 @@ nav {
     flex-wrap: wrap;
     align-items: center;
 }
-
 .stat-card {
     background: var(--white);
     border-radius: 20px;
@@ -213,31 +204,26 @@ nav {
     min-width: 140px;
     border-left: 6px solid var(--primary);
 }
-
 .stat-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-hover);
 }
-
 .stat-card i {
     font-size: 2rem;
     color: var(--primary);
 }
-
 .stat-number {
     font-size: 2rem;
     font-weight: 800;
     color: var(--primary-dark);
 }
-
 .stat-label {
     font-size: 0.85rem;
     color: var(--gray);
 }
-
 .btn-refresh {
     background: var(--primary);
-    color: white;
+    color: var(--white);
     border: none;
     padding: 14px 24px;
     border-radius: 50px;
@@ -249,18 +235,13 @@ nav {
     gap: 10px;
     box-shadow: 0 4px 8px rgba(75,0,130,0.2);
 }
-
-.btn-refresh i {
-    color: var(--gold);
-}
-
 .btn-refresh:hover {
     background: var(--primary-light);
     transform: translateY(-2px);
 }
 /* ========== FIN : BARRE DE STATISTIQUES ========== */
 
-/* ========== DÉBUT : ONGLETS ========== */
+/* ========== DEBUT : ONGLETS ========== */
 .admin-tabs {
     display: flex;
     gap: 10px;
@@ -268,7 +249,6 @@ nav {
     border-bottom: 2px solid var(--light-gray);
     flex-wrap: wrap;
 }
-
 .tab-btn {
     background: none;
     border: none;
@@ -282,71 +262,67 @@ nav {
     display: inline-flex;
     align-items: center;
     gap: 10px;
+    font-family: 'Poppins', sans-serif;
 }
-
 .tab-btn i {
     font-size: 1.1rem;
 }
-
 .tab-btn:hover {
     background: rgba(75,0,130,0.08);
     color: var(--primary);
 }
-
 .tab-btn.active {
     background: var(--primary);
-    color: white;
+    color: var(--white);
     box-shadow: 0 -4px 8px rgba(75,0,130,0.1);
 }
-
 .tab-btn.active i {
     color: var(--gold);
 }
-
 .tab-content {
     display: none;
 }
-
 .tab-content.active {
     display: block;
 }
 /* ========== FIN : ONGLETS ========== */
 
-/* ========== DÉBUT : FILTRES ========== */
+/* ========== DEBUT : FILTRES ========== */
 .filters-bar {
     display: flex;
     gap: 15px;
     margin-bottom: 20px;
     flex-wrap: wrap;
     align-items: center;
-    background: white;
+    background: var(--white);
     padding: 15px 20px;
     border-radius: 20px;
     box-shadow: var(--shadow);
 }
-
 .filters-bar input,
 .filters-bar select {
     padding: 12px 18px;
     border: 2px solid var(--light-gray);
     border-radius: 40px;
     font-size: 0.95rem;
-    background: white;
+    background: var(--white);
     transition: var(--transition);
     flex: 1;
     min-width: 180px;
+    font-family: 'Poppins', sans-serif;
 }
-
 .filters-bar input:focus,
 .filters-bar select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(75,0,130,0.1);
 }
+/* ========== FIN : FILTRES ========== */
 
+/* ========== DEBUT : BOUTONS PRINCIPAUX ========== */
 .btn-primary {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
+    color: var(--white);
     border: none;
     padding: 12px 24px;
     border-radius: 50px;
@@ -357,91 +333,88 @@ nav {
     align-items: center;
     gap: 10px;
     box-shadow: 0 4px 8px rgba(75,0,130,0.2);
+    font-family: 'Poppins', sans-serif;
 }
-
 .btn-primary i {
     color: var(--gold);
 }
-
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(75,0,130,0.3);
 }
-/* ========== FIN : FILTRES ========== */
+/* ========== FIN : BOUTONS PRINCIPAUX ========== */
 
-/* ========== DÉBUT : TABLEAUX ========== */
+/* ========== DEBUT : TABLEAUX ========== */
 .table-container {
-    background: white;
+    background: var(--white);
     border-radius: 20px;
     overflow-x: auto;
     box-shadow: var(--shadow);
     margin-bottom: 40px;
 }
-
 table {
     width: 100%;
     border-collapse: collapse;
 }
-
 thead th {
     background: var(--primary);
-    color: white;
+    color: var(--white);
     padding: 16px 15px;
     text-align: left;
     font-weight: 600;
     font-size: 0.9rem;
     white-space: nowrap;
 }
-
 thead th:first-child {
     border-radius: 20px 0 0 0;
 }
-
 thead th:last-child {
     border-radius: 0 20px 0 0;
 }
-
 tbody td {
     padding: 14px 15px;
     border-bottom: 1px solid var(--light-gray);
     font-size: 0.9rem;
     vertical-align: middle;
 }
-
 tbody tr:hover {
     background: rgba(75,0,130,0.02);
 }
-
 tbody tr:last-child td {
     border-bottom: none;
 }
-
 .id-cell {
     font-family: monospace;
     font-size: 0.8rem;
     color: var(--primary);
 }
-
 .content-cell {
     max-width: 200px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 .actions-cell {
     display: flex;
     gap: 8px;
     flex-wrap: nowrap;
 }
+.empty-message {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray);
+    font-size: 1rem;
+}
+/* ========== FIN : TABLEAUX ========== */
 
+/* ========== DEBUT : BOUTONS D'ACTION EN TABLEAU ========== */
 .btn-icon {
     border: none;
     cursor: pointer;
-    padding: 8px 10px;
+    padding: 8px;
     border-radius: 50%;
     transition: var(--transition);
-    background: white;
+    background: var(--white);
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     font-size: 1rem;
     display: inline-flex;
@@ -450,36 +423,28 @@ tbody tr:last-child td {
     width: 36px;
     height: 36px;
 }
-
 .btn-view { color: var(--info); border: 1px solid var(--info); }
-.btn-view:hover { background: var(--info); color: white; }
+.btn-view:hover { background: var(--info); color: var(--white); }
 
 .btn-edit { color: var(--primary); border: 1px solid var(--primary); }
-.btn-edit:hover { background: var(--primary); color: white; }
+.btn-edit:hover { background: var(--primary); color: var(--white); }
 
 .btn-pin { color: var(--warning); border: 1px solid var(--warning); }
-.btn-pin:hover { background: var(--warning); color: black; }
-.btn-pin.pinned { background: var(--warning); color: black; }
+.btn-pin:hover { background: var(--warning); color: #000; }
+.btn-pin.pinned { background: var(--warning); color: #000; }
 
 .btn-lock { color: var(--gray); border: 1px solid var(--gray); }
-.btn-lock:hover { background: var(--gray); color: white; }
-.btn-lock.locked { background: var(--danger); color: white; border-color: var(--danger); }
+.btn-lock:hover { background: var(--gray); color: var(--white); }
+.btn-lock.locked { background: var(--danger); color: var(--white); border-color: var(--danger); }
 
 .btn-delete { color: #c82333; border: 1px solid #c82333; }
-.btn-delete:hover { background: #c82333; color: white; }
+.btn-delete:hover { background: #c82333; color: var(--white); }
 
 .btn-ignore { color: var(--success); border: 1px solid var(--success); }
-.btn-ignore:hover { background: var(--success); color: white; }
+.btn-ignore:hover { background: var(--success); color: var(--white); }
+/* ========== FIN : BOUTONS D'ACTION EN TABLEAU ========== */
 
-.empty-message, .loading-placeholder {
-    text-align: center;
-    padding: 40px;
-    color: var(--gray);
-    font-size: 1rem;
-}
-/* ========== FIN : TABLEAUX ========== */
-
-/* ========== DÉBUT : MODALES GÉNÉRALES ========== */
+/* ========== DEBUT : MODALES GÉNÉRALES ========== */
 .modal {
     display: none;
     position: fixed;
@@ -493,51 +458,61 @@ tbody tr:last-child td {
     justify-content: center;
     backdrop-filter: blur(8px);
 }
-
 .modal.active {
     display: flex;
 }
-
 .modal-content {
-    background: white;
+    background: var(--white);
     border-radius: 30px;
     padding: 30px;
-    max-width: 600px;
+    max-width: 700px;
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 30px 60px rgba(0,0,0,0.3);
     border-bottom: 8px solid var(--primary);
+    animation: modalFadeIn 0.3s ease;
 }
-
 .modal-content.large {
     max-width: 1000px;
 }
-
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
 .close-modal {
-    float: right;
+    position: absolute;
+    top: 15px;
+    right: 20px;
     font-size: 2rem;
     cursor: pointer;
     color: var(--gray);
     transition: var(--transition);
-    line-height: 1;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #f1f5f9;
+    z-index: 10;
 }
 .close-modal:hover {
     color: var(--danger);
+    background: #e2e8f0;
+    transform: rotate(90deg);
 }
-
-.modal h2, .modal h3 {
-    color: var(--primary-dark);
+.modal h3 {
+    color: var(--primary);
     margin-bottom: 20px;
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     border-bottom: 2px solid var(--light-gray);
     padding-bottom: 15px;
 }
-
-.modal h2 i, .modal h3 i {
+.modal h3 i {
     color: var(--gold);
     background: var(--primary);
     padding: 10px;
@@ -545,18 +520,17 @@ tbody tr:last-child td {
 }
 /* ========== FIN : MODALES GÉNÉRALES ========== */
 
-/* ========== DÉBUT : FORMULAIRE DANS LA MODALE ========== */
+/* ========== DEBUT : FORMULAIRES DANS LES MODALES ========== */
 .form-group {
     margin-bottom: 20px;
 }
-
 .form-group label {
     display: block;
     font-weight: 600;
     margin-bottom: 8px;
     color: var(--dark);
+    font-size: 0.9rem;
 }
-
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -567,9 +541,8 @@ tbody tr:last-child td {
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
     transition: var(--transition);
-    background: white;
+    background: var(--white);
 }
-
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
@@ -577,18 +550,15 @@ tbody tr:last-child td {
     outline: none;
     box-shadow: 0 0 0 4px rgba(75,0,130,0.1);
 }
-
 .form-group textarea {
     min-height: 150px;
     resize: vertical;
 }
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+.form-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    transform: scale(1.2);
 }
-
 /* Upload de média */
 .file-upload-box {
     border: 2px dashed var(--gold);
@@ -601,24 +571,20 @@ tbody tr:last-child td {
     position: relative;
     min-height: 100px;
 }
-
 .file-upload-box:hover {
     background: rgba(255,204,0,0.08);
     border-color: var(--primary);
 }
-
 .file-upload-box i {
     font-size: 2rem;
     color: var(--gold);
     margin-bottom: 10px;
 }
-
 .file-upload-box span {
     display: block;
     color: var(--gray);
     font-size: 0.85rem;
 }
-
 .file-upload-box input[type="file"] {
     position: absolute;
     top: 0;
@@ -628,7 +594,6 @@ tbody tr:last-child td {
     opacity: 0;
     cursor: pointer;
 }
-
 .upload-status,
 .upload-success {
     position: absolute;
@@ -643,8 +608,8 @@ tbody tr:last-child td {
     border-radius: 40px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.15);
     font-size: 0.85rem;
+    z-index: 2;
 }
-
 .upload-spinner {
     display: inline-block;
     width: 20px;
@@ -654,16 +619,17 @@ tbody tr:last-child td {
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
-
 .upload-success i {
     color: var(--success);
     font-size: 1.5rem;
     margin: 0;
 }
+/* ========== FIN : FORMULAIRES DANS LES MODALES ========== */
 
+/* ========== DEBUT : BOUTONS DES MODALES ========== */
 .btn-submit {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
+    color: var(--white);
     border: none;
     padding: 16px 24px;
     border-radius: 50px;
@@ -678,28 +644,28 @@ tbody tr:last-child td {
     align-items: center;
     justify-content: center;
     gap: 10px;
+    font-family: 'Poppins', sans-serif;
 }
-
 .btn-submit i {
     color: var(--gold);
 }
-
 .btn-submit:hover {
     transform: translateY(-3px);
     box-shadow: 0 12px 24px rgba(75,0,130,0.3);
 }
-
 .btn-danger {
     background: var(--danger);
 }
-/* ========== FIN : FORMULAIRE DANS LA MODALE ========== */
+.btn-danger:hover {
+    background: #c82333;
+}
+/* ========== FIN : BOUTONS DES MODALES ========== */
 
-/* ========== DÉBUT : MODALE VISUALISATION ========== */
+/* ========== DEBUT : MODALE VISUALISATION ========== */
 .view-post-detail {
     max-height: 65vh;
     overflow-y: auto;
 }
-
 .post-content-full {
     background: var(--bg-light);
     border-radius: 16px;
@@ -707,46 +673,39 @@ tbody tr:last-child td {
     margin-bottom: 20px;
     line-height: 1.6;
 }
-
 .post-media-large {
     margin-bottom: 20px;
     text-align: center;
 }
-
 .post-media-large img,
 .post-media-large video {
     max-width: 100%;
     max-height: 400px;
     border-radius: 16px;
 }
-
 .comments-admin-list {
     background: #f8f9fa;
     border-radius: 16px;
     padding: 20px;
 }
-
 .comments-admin-list h4 {
     margin-bottom: 15px;
-    color: var(--primary-dark);
+    color: var(--primary);
 }
-
 .comment-admin-item {
     padding: 10px 0;
     border-bottom: 1px solid var(--light-gray);
 }
-
 .comment-admin-item:last-child {
     border-bottom: none;
 }
-
 .comment-admin-item small {
     color: var(--gray);
     margin-left: 10px;
 }
 /* ========== FIN : MODALE VISUALISATION ========== */
 
-/* ========== DÉBUT : TOASTS ========== */
+/* ========== DEBUT : TOASTS ========== */
 .toast-container {
     position: fixed;
     bottom: 30px;
@@ -756,9 +715,8 @@ tbody tr:last-child td {
     flex-direction: column;
     gap: 12px;
 }
-
 .toast {
-    background: white;
+    background: var(--white);
     border-radius: 16px;
     padding: 16px 24px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -769,17 +727,14 @@ tbody tr:last-child td {
     animation: slideIn 0.3s forwards;
     min-width: 280px;
 }
-
 .toast.success { border-left-color: var(--success); }
 .toast.error { border-left-color: var(--danger); }
 .toast.info { border-left-color: var(--primary); }
 .toast.warning { border-left-color: var(--warning); }
-
 .toast-content {
     flex: 1;
     font-weight: 500;
 }
-
 .toast-close {
     background: none;
     border: none;
@@ -788,14 +743,24 @@ tbody tr:last-child td {
     font-size: 1.4rem;
     line-height: 1;
 }
-
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
 /* ========== FIN : TOASTS ========== */
 
-/* ========== DÉBUT : RESPONSIVE ========== */
+/* ========== DEBUT : FOOTER ========== */
+footer {
+    background: #0a0a0a;
+    color: var(--white);
+    padding: 20px 5%;
+    text-align: center;
+    margin-top: auto;
+    font-size: 0.85rem;
+}
+/* ========== FIN : FOOTER ========== */
+
+/* ========== DEBUT : RESPONSIVE ========== */
 @media (max-width: 1000px) {
     .menu-toggle {
         display: flex;
@@ -806,7 +771,7 @@ tbody tr:last-child td {
         position: absolute;
         top: 75px;
         right: 5%;
-        background: white;
+        background: var(--white);
         padding: 20px;
         border-radius: 15px;
         box-shadow: var(--shadow-hover);
@@ -833,14 +798,10 @@ tbody tr:last-child td {
     .actions-cell {
         flex-wrap: wrap;
     }
-    .form-row {
-        grid-template-columns: 1fr;
-    }
     .modal-content.large {
         max-width: 95%;
     }
 }
-
 @media (max-width: 600px) {
     .admin-main {
         padding: 20px 15px;
@@ -869,4 +830,4 @@ tbody tr:last-child td {
     }
 }
 /* ========== FIN : RESPONSIVE ========== */
-/* ========== FIN DE COMMUNITY-ADMIN.CSS ========== */
+/* ========== FIN : community-admin.css ========== */

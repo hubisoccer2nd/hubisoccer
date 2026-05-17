@@ -1,12 +1,15 @@
-// ========== DEBUT : e-marketing.js (correction placeholder + médias) ==========
+// ========== DEBUT : e-marketing.js (version complète et définitive) ==========
+// ========== DEBUT : configuration Supabase ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseMarket = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ========== FIN : configuration Supabase ==========
 
-// Placeholder interne (SVG encodé) – ne déclenche aucune erreur réseau
+// ========== DEBUT : placeholder interne (SVG) ==========
 const PLACEHOLDER_IMG = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect width=\'200\' height=\'200\' fill=\'%23e9ecef\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%236c757d\' font-family=\'Poppins, sans-serif\' font-size=\'16\'%3EPas d\'image%3C/text%3E%3C/svg%3E';
+// ========== FIN : placeholder interne (SVG) ==========
 
-// ========== TRADUCTIONS (FR + EN + FON + ES) ==========
+// ========== DEBUT : traductions ==========
 const translations = {
     fr: {
         'loader.message': 'Chargement...',
@@ -357,16 +360,22 @@ const translations = {
         'toast.forgot_disabled': 'Función de restablecimiento de contraseña próximamente.'
     }
 };
+// ========== FIN : traductions ==========
 
+// ========== DEBUT : variables globales de langue ==========
 let currentLang = localStorage.getItem('emarket_lang') || navigator.language.split('-')[0];
 if (!translations[currentLang]) currentLang = 'fr';
+// ========== FIN : variables globales de langue ==========
 
+// ========== DEBUT : fonction t ==========
 function t(key, params = {}) {
     let text = translations[currentLang]?.[key] || translations.fr[key] || key;
     for (const [k, v] of Object.entries(params)) text = text.replace(`{${k}}`, v);
     return text;
 }
+// ========== FIN : fonction t ==========
 
+// ========== DEBUT : fonction applyTranslations ==========
 function applyTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -380,7 +389,9 @@ function applyTranslations() {
         if (key) opt.textContent = t(key);
     });
 }
+// ========== FIN : fonction applyTranslations ==========
 
+// ========== DEBUT : fonction changeLanguage ==========
 function changeLanguage(lang) {
     if (translations[lang]) {
         currentLang = lang;
@@ -390,102 +401,39 @@ function changeLanguage(lang) {
         if (currentCustomer) emarketUpdateCustomerUI();
     }
 }
+// ========== FIN : fonction changeLanguage ==========
 
-// ========== ÉLÉMENTS DOM ==========
-const featuredContainer = document.getElementById('featuredPacks');
-const allProductsContainer = document.getElementById('allProducts');
-const cartCountSpan = document.getElementById('cartCount');
-const cartFloat = document.getElementById('cartFloat');
-const cartModal = document.getElementById('cartModal');
-const cartItemsDiv = document.getElementById('cartItems');
-const cartTotalHTSpan = document.getElementById('cartTotalHT');
-const cartTVASpan = document.getElementById('cartTVA');
-const cartTotalTTCSpan = document.getElementById('cartTotalTTC');
-const checkoutBtn = document.getElementById('checkoutBtn');
-const authModal = document.getElementById('authModal');
-const checkoutModal = document.getElementById('checkoutModal');
-const accountModal = document.getElementById('accountModal');
-const sendMessageModal = document.getElementById('sendMessageModal');
-const orderDetailModal = document.getElementById('orderDetailModal');
-const productDetailModal = document.getElementById('productDetailModal');
+// ========== DEBUT : références DOM (remplies dans DOMContentLoaded) ==========
+let featuredContainer, allProductsContainer, cartCountSpan, cartFloat, cartModal, cartItemsDiv, cartTotalHTSpan, cartTVASpan, cartTotalTTCSpan;
+let checkoutBtn, authModal, checkoutModal, accountModal, sendMessageModal, orderDetailModal, productDetailModal;
+let loginForm, registerForm, forgotForm, authModalTitle;
+let loginEmail, loginPassword, regFirstName, regLastName, regEmail, regPhone, regPassword, regPasswordConfirm, forgotEmail;
+let customerGreeting, logoutCustomerLink, myAccountLink, loginBtn, signupBtn;
+let checkoutFullName, checkoutEmail, checkoutPhone, checkoutSummary, checkoutTotalHTSpan, checkoutTVASpan, checkoutTotalTTCSpan, checkoutForm;
+let ordersListDiv, messagesListDiv, profileFirstName, profileLastName, profileEmail, profilePhone, editProfileBtn, saveProfileBtn, profileForm, newMessageBtn, tabBtns;
+let messageOrderId, newMessageText, sendMessageForm;
+let orderDetailContent;
+let detailName, detailDescription, detailPrice, detailStockBadge, detailImage, detailVideo, detailAddToCart;
+// ========== FIN : références DOM ==========
 
-// Formulaires auth
-const loginForm = document.getElementById('loginForm');
-const registerForm = document.getElementById('registerForm');
-const forgotForm = document.getElementById('forgotForm');
-const authModalTitle = document.getElementById('authModalTitle');
-
-// Champs auth
-const loginEmail = document.getElementById('loginEmail');
-const loginPassword = document.getElementById('loginPassword');
-const regFirstName = document.getElementById('regFirstName');
-const regLastName = document.getElementById('regLastName');
-const regEmail = document.getElementById('regEmail');
-const regPhone = document.getElementById('regPhone');
-const regPassword = document.getElementById('regPassword');
-const regPasswordConfirm = document.getElementById('regPasswordConfirm');
-const forgotEmail = document.getElementById('forgotEmail');
-
-// Éléments de navigation
-const customerGreeting = document.getElementById('customerGreeting');
-const logoutCustomerLink = document.getElementById('logoutCustomerLink');
-const myAccountLink = document.getElementById('myAccountLink');
-const loginBtn = document.getElementById('loginBtn');
-const signupBtn = document.getElementById('signupBtn');
-
-// Éléments checkout
-const checkoutFullName = document.getElementById('checkoutFullName');
-const checkoutEmail = document.getElementById('checkoutEmail');
-const checkoutPhone = document.getElementById('checkoutPhone');
-const checkoutSummary = document.getElementById('checkoutSummary');
-const checkoutTotalHTSpan = document.getElementById('checkoutTotalHT');
-const checkoutTVASpan = document.getElementById('checkoutTVA');
-const checkoutTotalTTCSpan = document.getElementById('checkoutTotalTTC');
-const checkoutForm = document.getElementById('checkoutForm');
-
-// Éléments compte client
-const ordersListDiv = document.getElementById('ordersList');
-const messagesListDiv = document.getElementById('messagesList');
-const profileFirstName = document.getElementById('profileFirstName');
-const profileLastName = document.getElementById('profileLastName');
-const profileEmail = document.getElementById('profileEmail');
-const profilePhone = document.getElementById('profilePhone');
-const editProfileBtn = document.getElementById('editProfileBtn');
-const saveProfileBtn = document.getElementById('saveProfileBtn');
-const profileForm = document.getElementById('profileForm');
-const newMessageBtn = document.getElementById('newMessageBtn');
-const tabBtns = document.querySelectorAll('.tab-btn');
-
-// Éléments message
-const messageOrderId = document.getElementById('messageOrderId');
-const newMessageText = document.getElementById('newMessageText');
-const sendMessageForm = document.getElementById('sendMessageForm');
-
-// Élément détail commande
-const orderDetailContent = document.getElementById('orderDetailContent');
-
-// Éléments détail produit
-const detailName = document.getElementById('detailName');
-const detailDescription = document.getElementById('detailDescription');
-const detailPrice = document.getElementById('detailPrice');
-const detailStockBadge = document.getElementById('detailStockBadge');
-const detailImage = document.getElementById('detailImage');
-const detailVideo = document.getElementById('detailVideo');
-const detailAddToCart = document.getElementById('detailAddToCart');
-
-// ===== ÉTAT GLOBAL =====
+// ========== DEBUT : état global ==========
 let currentCustomer = null;
 let cart = JSON.parse(localStorage.getItem('emarket_cart')) || [];
 let products = [];
-let mediaMap = {}; // { productId: [ {media_url, media_type}, ... ] }
+let mediaMap = {};
+// ========== FIN : état global ==========
 
-// ===== FONCTIONS DE PANIER =====
+// ========== DEBUT : fonction emarketUpdateCartCount ==========
 function emarketUpdateCartCount() {
     const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
     if (cartCountSpan) cartCountSpan.textContent = totalItems;
+    // Afficher/masquer le bouton checkout flottant
+    if (checkoutBtn) checkoutBtn.style.display = cart.length > 0 ? 'flex' : 'none';
     localStorage.setItem('emarket_cart', JSON.stringify(cart));
 }
+// ========== FIN : fonction emarketUpdateCartCount ==========
 
+// ========== DEBUT : fonction emarketRenderCartModal ==========
 function emarketRenderCartModal() {
     if (!cartItemsDiv) return;
     if (cart.length === 0) {
@@ -524,7 +472,9 @@ function emarketRenderCartModal() {
     if (cartTVASpan) cartTVASpan.textContent = tva;
     if (cartTotalTTCSpan) cartTotalTTCSpan.textContent = totalTTC;
 }
+// ========== FIN : fonction emarketRenderCartModal ==========
 
+// ========== DEBUT : fonction emarketAddToCart ==========
 function emarketAddToCart(productId) {
     const product = products.find(p => p.id === productId);
     if (!product || product.stock < 1) {
@@ -545,7 +495,9 @@ function emarketAddToCart(productId) {
     emarketRenderCartModal();
     showToast(t('toast.cart_added'), 'success');
 }
+// ========== FIN : fonction emarketAddToCart ==========
 
+// ========== DEBUT : fonction emarketUpdateCartItem ==========
 function emarketUpdateCartItem(productId, delta) {
     const index = cart.findIndex(item => item.id === productId);
     if (index === -1) return;
@@ -561,15 +513,18 @@ function emarketUpdateCartItem(productId, delta) {
     emarketRenderCartModal();
     showToast(t('toast.cart_updated'), 'info');
 }
+// ========== FIN : fonction emarketUpdateCartItem ==========
 
+// ========== DEBUT : fonction emarketRemoveCartItem ==========
 function emarketRemoveCartItem(productId) {
     cart = cart.filter(item => item.id !== productId);
     emarketUpdateCartCount();
     emarketRenderCartModal();
     showToast(t('toast.cart_removed'), 'info');
 }
+// ========== FIN : fonction emarketRemoveCartItem ==========
 
-// ===== CHARGEMENT DES PRODUITS (AVEC MÉDIAS) =====
+// ========== DEBUT : fonction emarketLoadProducts ==========
 async function emarketLoadProducts() {
     showLoader();
     try {
@@ -580,14 +535,12 @@ async function emarketLoadProducts() {
         if (productsError) throw productsError;
         products = productsData || [];
 
-        // Charger tous les médias de tous les produits en une seule requête
         const { data: mediaData, error: mediaError } = await supabaseMarket
             .from('public_emarket_product_media')
             .select('*')
             .order('position');
         if (mediaError) throw mediaError;
 
-        // Mapper les médias par produit
         mediaMap = {};
         (mediaData || []).forEach(m => {
             if (!mediaMap[m.product_id]) mediaMap[m.product_id] = [];
@@ -604,7 +557,9 @@ async function emarketLoadProducts() {
         hideLoader();
     }
 }
+// ========== FIN : fonction emarketLoadProducts ==========
 
+// ========== DEBUT : fonction emarketRenderProducts ==========
 function emarketRenderProducts() {
     if (!products || products.length === 0) {
         if (featuredContainer) featuredContainer.innerHTML = '<p>Aucun produit.</p>';
@@ -616,17 +571,16 @@ function emarketRenderProducts() {
     if (featuredContainer) featuredContainer.innerHTML = featured.map(p => emarketRenderProductCard(p)).join('');
     if (allProductsContainer) allProductsContainer.innerHTML = others.map(p => emarketRenderProductCard(p)).join('');
 }
+// ========== FIN : fonction emarketRenderProducts ==========
 
+// ========== DEBUT : fonction emarketRenderProductCard ==========
 function emarketRenderProductCard(product) {
     const inStock = product.stock > 0;
     const stockClass = inStock ? 'in-stock' : 'out-of-stock';
     const stockText = inStock ? (currentLang === 'fr' ? 'En stock' : currentLang === 'en' ? 'In stock' : currentLang === 'es' ? 'En stock' : 'En stock') : (currentLang === 'fr' ? 'Épuisé' : currentLang === 'en' ? 'Out of stock' : currentLang === 'es' ? 'Agotado' : 'Épuisé');
 
-    // Récupérer le premier média image et la première vidéo depuis mediaMap
     const medias = mediaMap[product.id] || [];
     const firstImage = medias.find(m => m.media_type === 'image');
-    const firstVideo = medias.find(m => m.media_type === 'video');
-    // On utilise l'image si elle existe, sinon le placeholder interne
     const displayImage = firstImage ? firstImage.media_url : PLACEHOLDER_IMG;
 
     return `
@@ -654,8 +608,9 @@ function emarketRenderProductCard(product) {
         </div>
     `;
 }
+// ========== FIN : fonction emarketRenderProductCard ==========
 
-// ===== MODALE DÉTAIL PRODUIT (avec vidéo si présente) =====
+// ========== DEBUT : fonction emarketOpenProductDetail ==========
 function emarketOpenProductDetail(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -668,7 +623,6 @@ function emarketOpenProductDetail(productId) {
     detailStockBadge.textContent = inStock ? (currentLang === 'fr' ? 'En stock' : currentLang === 'en' ? 'In stock' : currentLang === 'es' ? 'En stock' : 'En stock') : (currentLang === 'fr' ? 'Épuisé' : currentLang === 'en' ? 'Out of stock' : currentLang === 'es' ? 'Agotado' : 'Épuisé');
     detailStockBadge.className = 'stock-badge ' + (inStock ? 'in-stock' : 'out-of-stock');
 
-    // Récupérer les médias
     const medias = mediaMap[product.id] || [];
     const firstImage = medias.find(m => m.media_type === 'image');
     const firstVideo = medias.find(m => m.media_type === 'video');
@@ -685,7 +639,6 @@ function emarketOpenProductDetail(productId) {
         detailImage.src = firstImage.media_url;
         detailImage.style.display = 'block';
     } else {
-        // Ni image ni vidéo : on affiche le placeholder dans l'image
         detailImage.src = PLACEHOLDER_IMG;
         detailImage.style.display = 'block';
     }
@@ -695,14 +648,19 @@ function emarketOpenProductDetail(productId) {
 
     productDetailModal.classList.add('active');
 }
+// ========== FIN : fonction emarketOpenProductDetail ==========
 
+// ========== DEBUT : fonction emarketCloseProductDetail ==========
 function emarketCloseProductDetail() {
     productDetailModal.classList.remove('active');
-    detailVideo.pause();
-    detailVideo.src = '';
+    if (detailVideo) {
+        detailVideo.pause();
+        detailVideo.src = '';
+    }
 }
+// ========== FIN : fonction emarketCloseProductDetail ==========
 
-// ===== AUTHENTIFICATION (avec bcrypt) =====
+// ========== DEBUT : fonction emarketWaitForBcrypt ==========
 async function emarketWaitForBcrypt() {
     return new Promise((resolve) => {
         if (typeof dcodeIO !== 'undefined' && typeof dcodeIO.bcrypt !== 'undefined') { resolve(); return; }
@@ -712,7 +670,9 @@ async function emarketWaitForBcrypt() {
         const timeout = setTimeout(() => { clearInterval(interval); resolve(); }, 5000);
     });
 }
+// ========== FIN : fonction emarketWaitForBcrypt ==========
 
+// ========== DEBUT : fonction emarketRegisterCustomer ==========
 async function emarketRegisterCustomer(firstName, lastName, email, phone, password) {
     if (!firstName || !lastName || !email || !password) {
         showToast(t('toast.fill_fields'), 'error');
@@ -741,7 +701,9 @@ async function emarketRegisterCustomer(firstName, lastName, email, phone, passwo
     emarketCloseAuthModal();
     return data;
 }
+// ========== FIN : fonction emarketRegisterCustomer ==========
 
+// ========== DEBUT : fonction emarketLoginCustomer ==========
 async function emarketLoginCustomer(email, password) {
     if (!email || !password) {
         showToast(t('toast.fill_fields'), 'error');
@@ -773,14 +735,18 @@ async function emarketLoginCustomer(email, password) {
     emarketCloseAuthModal();
     return data;
 }
+// ========== FIN : fonction emarketLoginCustomer ==========
 
+// ========== DEBUT : fonction emarketHandleLogoutCustomer ==========
 function emarketHandleLogoutCustomer() {
     currentCustomer = null;
     localStorage.removeItem('emarket_customer');
     emarketUpdateCustomerUI();
     showToast('Déconnecté', 'info');
 }
+// ========== FIN : fonction emarketHandleLogoutCustomer ==========
 
+// ========== DEBUT : fonction emarketUpdateCustomerUI ==========
 function emarketUpdateCustomerUI() {
     if (!customerGreeting || !logoutCustomerLink || !myAccountLink || !loginBtn || !signupBtn) return;
     if (currentCustomer) {
@@ -798,8 +764,9 @@ function emarketUpdateCustomerUI() {
         signupBtn.style.display = 'inline-block';
     }
 }
+// ========== FIN : fonction emarketUpdateCustomerUI ==========
 
-// ===== MODALES =====
+// ========== DEBUT : fonctions de modales ==========
 function emarketOpenCartModal() { if (cartModal) cartModal.classList.add('active'); emarketRenderCartModal(); }
 function emarketCloseCartModal() { if (cartModal) cartModal.classList.remove('active'); }
 function emarketOpenAuthModal() { if (authModal) authModal.classList.add('active'); emarketShowLoginForm(); }
@@ -869,13 +836,9 @@ function emarketOpenOrderDetailModal(orderId) {
     if (orderDetailModal) orderDetailModal.classList.add('active');
 }
 function emarketCloseOrderDetailModal() { if (orderDetailModal) orderDetailModal.classList.remove('active'); }
-function emarketTogglePassword(inputId) {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    input.type = input.type === 'password' ? 'text' : 'password';
-}
+// ========== FIN : fonctions de modales ==========
 
-// ===== CHARGEMENT DES COMMANDES ET MESSAGES =====
+// ========== DEBUT : fonction emarketLoadCustomerOrders ==========
 async function emarketLoadCustomerOrders() {
     if (!currentCustomer || !ordersListDiv) return;
     const { data, error } = await supabaseMarket
@@ -898,7 +861,9 @@ async function emarketLoadCustomerOrders() {
     });
     ordersListDiv.innerHTML = html;
 }
+// ========== FIN : fonction emarketLoadCustomerOrders ==========
 
+// ========== DEBUT : fonction emarketLoadCustomerMessages ==========
 async function emarketLoadCustomerMessages() {
     if (!currentCustomer || !messagesListDiv) return;
     const { data, error } = await supabaseMarket
@@ -920,7 +885,9 @@ async function emarketLoadCustomerMessages() {
     });
     messagesListDiv.innerHTML = html;
 }
+// ========== FIN : fonction emarketLoadCustomerMessages ==========
 
+// ========== DEBUT : fonction emarketLoadOrderDetail ==========
 async function emarketLoadOrderDetail(orderId) {
     if (!orderDetailContent) return;
     const { data: order, error } = await supabaseMarket
@@ -947,8 +914,9 @@ async function emarketLoadOrderDetail(orderId) {
         ${order.tracking_info ? `<p>Suivi : ${order.tracking_info}</p>` : ''}
     `;
 }
+// ========== FIN : fonction emarketLoadOrderDetail ==========
 
-// ===== CRÉATION DE COMMANDE =====
+// ========== DEBUT : fonction emarketCreateOrder ==========
 async function emarketCreateOrder() {
     const totalHT = cart.reduce((sum, item) => {
         const p = products.find(p => p.id === item.id);
@@ -958,33 +926,21 @@ async function emarketCreateOrder() {
     const totalTTC = totalHT + tva;
     const { data: order, error } = await supabaseMarket
         .from('public_emarket_orders')
-        .insert([{
-            customer_id: currentCustomer.id,
-            total_ht: totalHT,
-            tva: tva,
-            total_ttc: totalTTC,
-            status: 'en_attente'
-        }])
+        .insert([{ customer_id: currentCustomer.id, total_ht: totalHT, tva: tva, total_ttc: totalTTC, status: 'en_attente' }])
         .select()
         .single();
     if (error) { showToast('Erreur création commande', 'error'); return null; }
     const items = cart.map(item => {
         const p = products.find(p => p.id === item.id);
-        return {
-            order_id: order.id,
-            product_id: item.id,
-            quantity: item.quantity,
-            unit_price: p.price,
-            total_price: p.price * item.quantity
-        };
+        return { order_id: order.id, product_id: item.id, quantity: item.quantity, unit_price: p.price, total_price: p.price * item.quantity };
     });
-    const { error: itemsError } = await supabaseMarket
-        .from('public_emarket_order_items')
-        .insert(items);
+    const { error: itemsError } = await supabaseMarket.from('public_emarket_order_items').insert(items);
     if (itemsError) { showToast('Erreur enregistrement articles', 'error'); return null; }
     return order;
 }
+// ========== FIN : fonction emarketCreateOrder ==========
 
+// ========== DEBUT : fonction emarketGenerateProformaInvoice ==========
 async function emarketGenerateProformaInvoice(order, customer) {
     const element = document.createElement('div');
     element.innerHTML = `<h1>Facture Proforma</h1><p>Commande #${order.id}</p><p>Client : ${customer.first_name} ${customer.last_name}</p>`;
@@ -996,7 +952,9 @@ async function emarketGenerateProformaInvoice(order, customer) {
     const { data: urlData } = supabaseMarket.storage.from('emarket_invoices').getPublicUrl(fileName);
     return urlData.publicUrl;
 }
+// ========== FIN : fonction emarketGenerateProformaInvoice ==========
 
+// ========== DEBUT : fonction emarketHandleCheckout ==========
 async function emarketHandleCheckout(e) {
     e.preventDefault();
     if (!currentCustomer) { emarketOpenAuthModal(); return; }
@@ -1011,11 +969,10 @@ async function emarketHandleCheckout(e) {
     emarketUpdateCartCount();
     emarketCloseCheckoutModal();
     emarketCloseCartModal();
-    // Redirection vers FedaPay (à implémenter après intégration API)
-    // window.location.href = 'https://fedapay.com?orderId=' + order.id;
 }
+// ========== FIN : fonction emarketHandleCheckout ==========
 
-// ===== ENVOI DE MESSAGE =====
+// ========== DEBUT : fonction emarketSendCustomerMessage ==========
 async function emarketSendCustomerMessage(e) {
     e.preventDefault();
     if (!currentCustomer) return;
@@ -1030,8 +987,9 @@ async function emarketSendCustomerMessage(e) {
     emarketCloseSendMessageModal();
     if (accountModal && accountModal.classList.contains('active')) emarketLoadCustomerMessages();
 }
+// ========== FIN : fonction emarketSendCustomerMessage ==========
 
-// ===== PROFIL =====
+// ========== DEBUT : fonction emarketEnableProfileEdit ==========
 function emarketEnableProfileEdit() {
     if (profileFirstName) profileFirstName.readOnly = false;
     if (profileLastName) profileLastName.readOnly = false;
@@ -1040,19 +998,14 @@ function emarketEnableProfileEdit() {
     if (editProfileBtn) editProfileBtn.style.display = 'none';
     if (saveProfileBtn) saveProfileBtn.style.display = 'inline-block';
 }
+// ========== FIN : fonction emarketEnableProfileEdit ==========
+
+// ========== DEBUT : fonction emarketSaveProfile ==========
 async function emarketSaveProfile(e) {
     e.preventDefault();
     if (!currentCustomer) return;
-    const updates = {
-        first_name: profileFirstName.value,
-        last_name: profileLastName.value,
-        email: profileEmail.value,
-        phone: profilePhone.value
-    };
-    const { error } = await supabaseMarket
-        .from('public_emarket_customers')
-        .update(updates)
-        .eq('id', currentCustomer.id);
+    const updates = { first_name: profileFirstName.value, last_name: profileLastName.value, email: profileEmail.value, phone: profilePhone.value };
+    const { error } = await supabaseMarket.from('public_emarket_customers').update(updates).eq('id', currentCustomer.id);
     if (error) { showToast('Erreur mise à jour', 'error'); return; }
     currentCustomer = { ...currentCustomer, ...updates };
     localStorage.setItem('emarket_customer', JSON.stringify(currentCustomer));
@@ -1065,8 +1018,9 @@ async function emarketSaveProfile(e) {
     showToast(t('toast.profile_updated'), 'success');
     emarketUpdateCustomerUI();
 }
+// ========== FIN : fonction emarketSaveProfile ==========
 
-// ===== ONGLETS COMPTE =====
+// ========== DEBUT : fonction emarketSwitchTab ==========
 function emarketSwitchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1075,8 +1029,9 @@ function emarketSwitchTab(tabId) {
     const activeBtn = Array.from(tabBtns).find(btn => btn.dataset.tab === tabId.toLowerCase());
     if (activeBtn) activeBtn.classList.add('active');
 }
+// ========== FIN : fonction emarketSwitchTab ==========
 
-// ===== UTILITAIRES =====
+// ========== DEBUT : utilitaires ==========
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -1110,67 +1065,83 @@ function initLangSelector() {
     const sel = document.getElementById('langSelect');
     if (sel) { sel.value = currentLang; sel.addEventListener('change', (e) => changeLanguage(e.target.value)); }
 }
+// ========== FIN : utilitaires ==========
 
-// ===== ÉVÉNEMENTS =====
-document.addEventListener('click', (e) => {
-    const addBtn = e.target.closest('.btn-add-cart');
-    if (addBtn && !addBtn.disabled) { emarketAddToCart(parseInt(addBtn.dataset.id)); return; }
-    const detailsBtn = e.target.closest('.btn-details');
-    if (detailsBtn) { emarketOpenProductDetail(parseInt(detailsBtn.dataset.id)); return; }
-    const detailAddBtn = e.target.closest('#detailAddToCart');
-    if (detailAddBtn && !detailAddBtn.disabled) { emarketAddToCart(parseInt(detailAddBtn.dataset.id)); emarketCloseProductDetail(); return; }
-    const minusBtn = e.target.closest('.cart-qty-minus');
-    if (minusBtn) { emarketUpdateCartItem(parseInt(minusBtn.dataset.id), -1); return; }
-    const plusBtn = e.target.closest('.cart-qty-plus');
-    if (plusBtn) { emarketUpdateCartItem(parseInt(plusBtn.dataset.id), 1); return; }
-    const removeBtn = e.target.closest('.cart-remove');
-    if (removeBtn) { emarketRemoveCartItem(parseInt(removeBtn.dataset.id)); return; }
-});
-document.querySelectorAll('.close-modal').forEach(btn => {
-    btn.addEventListener('click', () => {
-        emarketCloseCartModal(); emarketCloseAuthModal(); emarketCloseCheckoutModal();
-        emarketCloseAccountModal(); emarketCloseSendMessageModal(); emarketCloseOrderDetailModal();
-        emarketCloseProductDetail();
-    });
-});
-window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal')) {
-        emarketCloseCartModal(); emarketCloseAuthModal(); emarketCloseCheckoutModal();
-        emarketCloseAccountModal(); emarketCloseSendMessageModal(); emarketCloseOrderDetailModal();
-        emarketCloseProductDetail();
-    }
-});
-if (loginForm) loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault(); await emarketLoginCustomer(loginEmail.value, loginPassword.value);
-});
-if (registerForm) registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (regPassword.value !== regPasswordConfirm.value) { showToast(t('toast.passwords_mismatch'), 'error'); return; }
-    await emarketRegisterCustomer(regFirstName.value, regLastName.value, regEmail.value, regPhone.value, regPassword.value);
-});
-if (forgotForm) forgotForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    // Fonctionnalité non encore disponible
-    showToast(t('toast.forgot_disabled'), 'info');
-    emarketShowLoginForm();
-});
-if (logoutCustomerLink) logoutCustomerLink.addEventListener('click', (e) => { e.preventDefault(); emarketHandleLogoutCustomer(); });
-if (myAccountLink) myAccountLink.addEventListener('click', (e) => { e.preventDefault(); emarketOpenAccountModal(); });
-if (loginBtn) loginBtn.addEventListener('click', (e) => { e.preventDefault(); emarketOpenAuthModal(); });
-if (signupBtn) signupBtn.addEventListener('click', (e) => { e.preventDefault(); emarketShowRegisterForm(); emarketOpenAuthModal(); });
-if (checkoutBtn) checkoutBtn.addEventListener('click', emarketOpenCheckoutModal);
-if (checkoutForm) checkoutForm.addEventListener('submit', emarketHandleCheckout);
-if (sendMessageForm) sendMessageForm.addEventListener('submit', emarketSendCustomerMessage);
-if (newMessageBtn) newMessageBtn.addEventListener('click', () => emarketOpenSendMessageModal());
-tabBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => { const tab = e.target.dataset.tab; emarketSwitchTab(tab.charAt(0).toUpperCase() + tab.slice(1)); });
-});
-if (editProfileBtn) editProfileBtn.addEventListener('click', emarketEnableProfileEdit);
-if (profileForm) profileForm.addEventListener('submit', emarketSaveProfile);
-if (cartFloat) cartFloat.addEventListener('click', emarketOpenCartModal);
-
-// ===== INIT =====
+// ========== DEBUT : initialisation (DOMContentLoaded) ==========
 document.addEventListener('DOMContentLoaded', async () => {
+    featuredContainer = document.getElementById('featuredPacks');
+    allProductsContainer = document.getElementById('allProducts');
+    cartCountSpan = document.getElementById('cartCount');
+    cartFloat = document.getElementById('cartFloat');
+    cartModal = document.getElementById('cartModal');
+    cartItemsDiv = document.getElementById('cartItems');
+    cartTotalHTSpan = document.getElementById('cartTotalHT');
+    cartTVASpan = document.getElementById('cartTVA');
+    cartTotalTTCSpan = document.getElementById('cartTotalTTC');
+    checkoutBtn = document.getElementById('checkoutBtn');
+    authModal = document.getElementById('authModal');
+    checkoutModal = document.getElementById('checkoutModal');
+    accountModal = document.getElementById('accountModal');
+    sendMessageModal = document.getElementById('sendMessageModal');
+    orderDetailModal = document.getElementById('orderDetailModal');
+    productDetailModal = document.getElementById('productDetailModal');
+
+    loginForm = document.getElementById('loginForm');
+    registerForm = document.getElementById('registerForm');
+    forgotForm = document.getElementById('forgotForm');
+    authModalTitle = document.getElementById('authModalTitle');
+
+    loginEmail = document.getElementById('loginEmail');
+    loginPassword = document.getElementById('loginPassword');
+    regFirstName = document.getElementById('regFirstName');
+    regLastName = document.getElementById('regLastName');
+    regEmail = document.getElementById('regEmail');
+    regPhone = document.getElementById('regPhone');
+    regPassword = document.getElementById('regPassword');
+    regPasswordConfirm = document.getElementById('regPasswordConfirm');
+    forgotEmail = document.getElementById('forgotEmail');
+
+    customerGreeting = document.getElementById('customerGreeting');
+    logoutCustomerLink = document.getElementById('logoutCustomerLink');
+    myAccountLink = document.getElementById('myAccountLink');
+    loginBtn = document.getElementById('loginBtn');
+    signupBtn = document.getElementById('signupBtn');
+
+    checkoutFullName = document.getElementById('checkoutFullName');
+    checkoutEmail = document.getElementById('checkoutEmail');
+    checkoutPhone = document.getElementById('checkoutPhone');
+    checkoutSummary = document.getElementById('checkoutSummary');
+    checkoutTotalHTSpan = document.getElementById('checkoutTotalHT');
+    checkoutTVASpan = document.getElementById('checkoutTVA');
+    checkoutTotalTTCSpan = document.getElementById('checkoutTotalTTC');
+    checkoutForm = document.getElementById('checkoutForm');
+
+    ordersListDiv = document.getElementById('ordersList');
+    messagesListDiv = document.getElementById('messagesList');
+    profileFirstName = document.getElementById('profileFirstName');
+    profileLastName = document.getElementById('profileLastName');
+    profileEmail = document.getElementById('profileEmail');
+    profilePhone = document.getElementById('profilePhone');
+    editProfileBtn = document.getElementById('editProfileBtn');
+    saveProfileBtn = document.getElementById('saveProfileBtn');
+    profileForm = document.getElementById('profileForm');
+    newMessageBtn = document.getElementById('newMessageBtn');
+    tabBtns = document.querySelectorAll('.tab-btn');
+
+    messageOrderId = document.getElementById('messageOrderId');
+    newMessageText = document.getElementById('newMessageText');
+    sendMessageForm = document.getElementById('sendMessageForm');
+
+    orderDetailContent = document.getElementById('orderDetailContent');
+
+    detailName = document.getElementById('detailName');
+    detailDescription = document.getElementById('detailDescription');
+    detailPrice = document.getElementById('detailPrice');
+    detailStockBadge = document.getElementById('detailStockBadge');
+    detailImage = document.getElementById('detailImage');
+    detailVideo = document.getElementById('detailVideo');
+    detailAddToCart = document.getElementById('detailAddToCart');
+
     const saved = localStorage.getItem('emarket_customer');
     if (saved) { try { currentCustomer = JSON.parse(saved); } catch(e) {} }
     emarketUpdateCustomerUI();
@@ -1179,5 +1150,98 @@ document.addEventListener('DOMContentLoaded', async () => {
     initMenuMobile();
     await emarketLoadProducts();
     emarketUpdateCartCount();
+
+    // ========== DEBUT : attachement des événements ==========
+    document.addEventListener('click', (e) => {
+        const addBtn = e.target.closest('.btn-add-cart');
+        if (addBtn && !addBtn.disabled) { emarketAddToCart(parseInt(addBtn.dataset.id)); return; }
+        const detailsBtn = e.target.closest('.btn-details');
+        if (detailsBtn) { emarketOpenProductDetail(parseInt(detailsBtn.dataset.id)); return; }
+        const detailAddBtn = e.target.closest('#detailAddToCart');
+        if (detailAddBtn && !detailAddBtn.disabled) { emarketAddToCart(parseInt(detailAddBtn.dataset.id)); emarketCloseProductDetail(); return; }
+        const minusBtn = e.target.closest('.cart-qty-minus');
+        if (minusBtn) { emarketUpdateCartItem(parseInt(minusBtn.dataset.id), -1); return; }
+        const plusBtn = e.target.closest('.cart-qty-plus');
+        if (plusBtn) { emarketUpdateCartItem(parseInt(plusBtn.dataset.id), 1); return; }
+        const removeBtn = e.target.closest('.cart-remove');
+        if (removeBtn) { emarketRemoveCartItem(parseInt(removeBtn.dataset.id)); return; }
+    });
+
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            emarketCloseCartModal(); emarketCloseAuthModal(); emarketCloseCheckoutModal();
+            emarketCloseAccountModal(); emarketCloseSendMessageModal(); emarketCloseOrderDetailModal();
+            emarketCloseProductDetail();
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+            emarketCloseCartModal(); emarketCloseAuthModal(); emarketCloseCheckoutModal();
+            emarketCloseAccountModal(); emarketCloseSendMessageModal(); emarketCloseOrderDetailModal();
+            emarketCloseProductDetail();
+        }
+    });
+
+    if (loginForm) loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); await emarketLoginCustomer(loginEmail.value, loginPassword.value);
+    });
+    if (registerForm) registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (regPassword.value !== regPasswordConfirm.value) { showToast(t('toast.passwords_mismatch'), 'error'); return; }
+        await emarketRegisterCustomer(regFirstName.value, regLastName.value, regEmail.value, regPhone.value, regPassword.value);
+    });
+    if (forgotForm) forgotForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        showToast(t('toast.forgot_disabled'), 'info');
+        emarketShowLoginForm();
+    });
+
+    if (document.getElementById('showRegisterForm')) {
+        document.getElementById('showRegisterForm').addEventListener('click', (e) => {
+            e.preventDefault();
+            emarketShowRegisterForm();
+        });
+    }
+    if (document.getElementById('showLoginForm')) {
+        document.getElementById('showLoginForm').addEventListener('click', (e) => {
+            e.preventDefault();
+            emarketShowLoginForm();
+        });
+    }
+    if (document.getElementById('showForgotPassword')) {
+        document.getElementById('showForgotPassword').addEventListener('click', (e) => {
+            e.preventDefault();
+            emarketShowForgotPassword();
+        });
+    }
+    if (document.getElementById('showLoginFormFromForgot')) {
+        document.getElementById('showLoginFormFromForgot').addEventListener('click', (e) => {
+            e.preventDefault();
+            emarketShowLoginForm();
+        });
+    }
+
+    if (logoutCustomerLink) logoutCustomerLink.addEventListener('click', (e) => { e.preventDefault(); emarketHandleLogoutCustomer(); });
+    if (myAccountLink) myAccountLink.addEventListener('click', (e) => { e.preventDefault(); emarketOpenAccountModal(); });
+    if (loginBtn) loginBtn.addEventListener('click', (e) => { e.preventDefault(); emarketOpenAuthModal(); });
+    if (signupBtn) signupBtn.addEventListener('click', (e) => { e.preventDefault(); emarketShowRegisterForm(); emarketOpenAuthModal(); });
+    if (checkoutBtn) checkoutBtn.addEventListener('click', emarketOpenCheckoutModal);
+
+    // ** Ajout crucial : bouton "Passer la commande" dans la modale panier **
+    const cartCheckoutBtn = document.getElementById('cartCheckoutBtn');
+    if (cartCheckoutBtn) cartCheckoutBtn.addEventListener('click', emarketOpenCheckoutModal);
+
+    if (checkoutForm) checkoutForm.addEventListener('submit', emarketHandleCheckout);
+    if (sendMessageForm) sendMessageForm.addEventListener('submit', emarketSendCustomerMessage);
+    if (newMessageBtn) newMessageBtn.addEventListener('click', () => emarketOpenSendMessageModal());
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => { const tab = e.target.dataset.tab; emarketSwitchTab(tab.charAt(0).toUpperCase() + tab.slice(1)); });
+    });
+    if (editProfileBtn) editProfileBtn.addEventListener('click', emarketEnableProfileEdit);
+    if (profileForm) profileForm.addEventListener('submit', emarketSaveProfile);
+    if (cartFloat) cartFloat.addEventListener('click', emarketOpenCartModal);
+    // ========== FIN : attachement des événements ==========
 });
+// ========== FIN : initialisation (DOMContentLoaded) ==========
 // ========== FIN : e-marketing.js ==========

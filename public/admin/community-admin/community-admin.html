@@ -22,11 +22,11 @@
             <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
-            <span class="admin-badge">Espace Administration - Hub Community</span>
+            <span class="admin-badge"><i class="fas fa-shield-alt"></i> Espace Administration - Hub Community</span>
             <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="../../index-admin/">Portail admin</a>
-                <a href="#" id="logoutBtn">Déconnexion</a>
+                <a href="../../index-admin/"><i class="fas fa-th-large"></i> Portail admin</a>
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
             </div>
         </div>
     </nav>
@@ -35,29 +35,60 @@
     <main class="admin-main">
         <div class="admin-container">
             <!-- ========== DEBUT : en-tête ========== -->
-            <h1 class="page-title"><i class="fas fa-users"></i> Gestion de la Hub Community</h1>
-            <p class="page-subtitle">Publiez des posts officiels, modérez les commentaires et consultez les signalements.</p>
-            <button id="refreshStatsBtn" class="btn-refresh" style="margin-bottom:20px;"><i class="fas fa-sync-alt"></i> Tout rafraîchir</button>
+            <div class="page-header">
+                <h1 class="page-title"><i class="fas fa-users"></i> Gestion de la Hub Community</h1>
+                <p class="page-subtitle">Publiez des posts officiels, modérez les commentaires et consultez les signalements.</p>
+            </div>
             <!-- ========== FIN : en-tête ========== -->
+
+            <!-- ========== DEBUT : barre de statistiques ========== -->
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <i class="fas fa-newspaper"></i>
+                    <div>
+                        <div class="stat-number" id="statPosts">0</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-comments"></i>
+                    <div>
+                        <div class="stat-number" id="statCommentaires">0</div>
+                        <div class="stat-label">Commentaires</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-thumbs-up"></i>
+                    <div>
+                        <div class="stat-number" id="statLikes">0</div>
+                        <div class="stat-label">Likes</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-flag"></i>
+                    <div>
+                        <div class="stat-number" id="statReports">0</div>
+                        <div class="stat-label">Signalements</div>
+                    </div>
+                </div>
+                <button id="refreshStatsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Tout rafraîchir</button>
+            </div>
+            <!-- ========== FIN : barre de statistiques ========== -->
 
             <!-- ========== DEBUT : onglets ========== -->
             <div class="admin-tabs">
-                <button class="tab-btn active" data-tab="posts">Posts</button>
-                <button class="tab-btn" data-tab="commentaires">Commentaires</button>
-                <button class="tab-btn" data-tab="reports">Signalements</button>
+                <button class="tab-btn active" data-tab="posts"><i class="fas fa-newspaper"></i> Posts</button>
+                <button class="tab-btn" data-tab="commentaires"><i class="fas fa-comments"></i> Commentaires</button>
+                <button class="tab-btn" data-tab="reports"><i class="fas fa-flag"></i> Signalements</button>
             </div>
             <!-- ========== FIN : onglets ========== -->
 
             <!-- ========== DEBUT : onglet Posts ========== -->
             <div id="posts" class="tab-content active">
-                <div class="list-header">
+                <div class="filters-bar">
                     <button id="newPostBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau post</button>
-                    <button id="refreshPostsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
-                </div>
-                <!-- Filtres -->
-                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-                    <input type="text" id="searchPost" placeholder="Rechercher un post..." style="flex:1; min-width:200px;">
-                    <select id="entityFilter" style="min-width:150px;">
+                    <input type="text" id="searchPost" placeholder="Rechercher un post...">
+                    <select id="entityFilter">
                         <option value="all">Toutes les entités</option>
                         <option value="club">Club</option>
                         <option value="tournoi">Tournoi</option>
@@ -65,62 +96,67 @@
                         <option value="market">Market</option>
                     </select>
                 </div>
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Auteur</th>
-                            <th>Contenu</th>
-                            <th>Entité</th>
-                            <th>Média</th>
-                            <th>Stats</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="postsBody"></tbody>
-                </table>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Auteur</th>
+                                <th>Contenu</th>
+                                <th>Entité</th>
+                                <th>Média</th>
+                                <th>Stats</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="postsBody"></tbody>
+                    </table>
+                </div>
             </div>
             <!-- ========== FIN : onglet Posts ========== -->
 
             <!-- ========== DEBUT : onglet Commentaires ========== -->
             <div id="commentaires" class="tab-content">
-                <div class="list-header">
-                    <input type="text" id="searchComment" placeholder="Rechercher un commentaire..." style="flex:1; min-width:200px;">
-                    <button id="refreshCommentsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                <div class="filters-bar">
+                    <input type="text" id="searchComment" placeholder="Rechercher un commentaire...">
                 </div>
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Auteur</th>
-                            <th>Contenu</th>
-                            <th>Post</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="commentsBody"></tbody>
-                </table>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Auteur</th>
+                                <th>Contenu</th>
+                                <th>Post</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="commentsBody"></tbody>
+                    </table>
+                </div>
             </div>
             <!-- ========== FIN : onglet Commentaires ========== -->
 
             <!-- ========== DEBUT : onglet Signalements ========== -->
             <div id="reports" class="tab-content">
-                <div class="list-header">
+                <div class="filters-bar">
                     <button id="refreshReportsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
                 </div>
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Contenu</th>
-                            <th>Motif</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportsBody"></tbody>
-                </table>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Contenu</th>
+                                <th>Motif</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsBody"></tbody>
+                    </table>
+                </div>
             </div>
             <!-- ========== FIN : onglet Signalements ========== -->
         </div>
@@ -140,7 +176,7 @@
     <div id="postModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h3 id="postModalTitle">Nouveau post</h3>
+            <h3 id="postModalTitle"><i class="fas fa-plus-circle"></i> Nouveau post</h3>
             <form id="postForm">
                 <input type="hidden" id="postId">
                 <div class="form-group">
@@ -149,10 +185,17 @@
                 </div>
                 <div class="form-group">
                     <label>Média (image ou vidéo)</label>
-                    <button type="button" id="uploadPostMedia" class="btn-secondary"><i class="fas fa-upload"></i> Choisir un fichier</button>
-                    <input type="file" id="postMediaFile" accept="image/*,video/*" style="display:none;">
-                    <div id="uploadStatusPostMedia" style="display:none;"><i class="fas fa-spinner fa-spin"></i> Téléversement...</div>
-                    <div id="uploadSuccessPostMedia" style="display:none;"><i class="fas fa-check-circle" style="color:green;"></i> Média téléversé</div>
+                    <div class="file-upload-box" id="uploadPostMedia">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Cliquez pour choisir un fichier</span>
+                        <input type="file" id="postMediaFile" accept="image/*,video/*">
+                        <div id="uploadStatusPostMedia" class="upload-status" style="display: none;">
+                            <div class="upload-spinner"></div> Téléversement...
+                        </div>
+                        <div id="uploadSuccessPostMedia" class="upload-success" style="display: none;">
+                            <i class="fas fa-check-circle"></i> Média téléversé
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Lien associé (optionnel)</label>
@@ -163,13 +206,19 @@
                         <option value="scouting">Scouting</option>
                         <option value="market">Market</option>
                     </select>
+                    <select id="entitySelect" style="margin-top:10px;" disabled>
+                        <option value="">-- Sélectionnez d'abord un type --</option>
+                    </select>
                     <input type="text" id="entityId" placeholder="ID de l'entité" style="margin-top:10px;">
                     <input type="text" id="entityName" placeholder="Nom à afficher" style="margin-top:10px;">
                 </div>
                 <div class="form-group">
                     <label><input type="checkbox" id="postEpingle"> Épingler le post</label>
                 </div>
-                <button type="submit" class="btn-submit">Enregistrer</button>
+                <div class="form-group">
+                    <label><input type="checkbox" id="postCommentairesActifs" checked> Commentaires actifs</label>
+                </div>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
             </form>
         </div>
     </div>
@@ -179,8 +228,8 @@
     <div id="viewPostModal" class="modal">
         <div class="modal-content large">
             <span class="close-modal">&times;</span>
-            <h3>Détail du post</h3>
-            <div id="viewPostContent"></div>
+            <h3><i class="fas fa-eye"></i> Détail du post</h3>
+            <div id="viewPostContent" class="view-post-detail"></div>
         </div>
     </div>
     <!-- ========== FIN : modale visualisation de post ========== -->
@@ -189,12 +238,9 @@
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h3>Confirmer la suppression</h3>
+            <h3><i class="fas fa-trash-alt"></i> Confirmer la suppression</h3>
             <p id="deleteModalText"></p>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button class="btn-secondary close-modal">Annuler</button>
-                <button id="confirmDeleteBtn" class="btn-danger"><i class="fas fa-trash-alt"></i> Supprimer</button>
-            </div>
+            <button id="confirmDeleteBtn" class="btn-submit btn-danger"><i class="fas fa-trash-alt"></i> Supprimer</button>
         </div>
     </div>
     <!-- ========== FIN : modale de suppression ========== -->

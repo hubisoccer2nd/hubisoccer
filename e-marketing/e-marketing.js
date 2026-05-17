@@ -1,8 +1,10 @@
-// ========== E-MARKETING.JS – VERSION FINALE COMPLÈTE ==========
-// ========== CONFIGURATION SUPABASE ==========
+// ========== DEBUT : e-marketing.js (correction placeholder + médias) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseMarket = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Placeholder interne (SVG encodé) – ne déclenche aucune erreur réseau
+const PLACEHOLDER_IMG = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect width=\'200\' height=\'200\' fill=\'%23e9ecef\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%236c757d\' font-family=\'Poppins, sans-serif\' font-size=\'16\'%3EPas d\'image%3C/text%3E%3C/svg%3E';
 
 // ========== TRADUCTIONS (FR + EN + FON + ES) ==========
 const translations = {
@@ -424,7 +426,7 @@ const regPassword = document.getElementById('regPassword');
 const regPasswordConfirm = document.getElementById('regPasswordConfirm');
 const forgotEmail = document.getElementById('forgotEmail');
 
-// Éléments de navigation (maintenant présents dans le HTML)
+// Éléments de navigation
 const customerGreeting = document.getElementById('customerGreeting');
 const logoutCustomerLink = document.getElementById('logoutCustomerLink');
 const myAccountLink = document.getElementById('myAccountLink');
@@ -475,6 +477,7 @@ const detailAddToCart = document.getElementById('detailAddToCart');
 let currentCustomer = null;
 let cart = JSON.parse(localStorage.getItem('emarket_cart')) || [];
 let products = [];
+let mediaMap = {}; // { productId: [ {media_url, media_type}, ... ] }
 
 // ===== FONCTIONS DE PANIER =====
 function emarketUpdateCartCount() {
@@ -566,16 +569,31 @@ function emarketRemoveCartItem(productId) {
     showToast(t('toast.cart_removed'), 'info');
 }
 
-// ===== CHARGEMENT DES PRODUITS =====
+// ===== CHARGEMENT DES PRODUITS (AVEC MÉDIAS) =====
 async function emarketLoadProducts() {
     showLoader();
     try {
-        const { data, error } = await supabaseMarket
+        const { data: productsData, error: productsError } = await supabaseMarket
             .from('public_emarket_products')
             .select('*')
             .order('id');
-        if (error) throw error;
-        products = data || [];
+        if (productsError) throw productsError;
+        products = productsData || [];
+
+        // Charger tous les médias de tous les produits en une seule requête
+        const { data: mediaData, error: mediaError } = await supabaseMarket
+            .from('public_emarket_product_media')
+            .select('*')
+            .order('position');
+        if (mediaError) throw mediaError;
+
+        // Mapper les médias par produit
+        mediaMap = {};
+        (mediaData || []).forEach(m => {
+            if (!mediaMap[m.product_id]) mediaMap[m.product_id] = [];
+            mediaMap[m.product_id].push(m);
+        });
+
         emarketRenderProducts();
     } catch (err) {
         console.error(err);
@@ -603,10 +621,18 @@ function emarketRenderProductCard(product) {
     const inStock = product.stock > 0;
     const stockClass = inStock ? 'in-stock' : 'out-of-stock';
     const stockText = inStock ? (currentLang === 'fr' ? 'En stock' : currentLang === 'en' ? 'In stock' : currentLang === 'es' ? 'En stock' : 'En stock') : (currentLang === 'fr' ? 'Épuisé' : currentLang === 'en' ? 'Out of stock' : currentLang === 'es' ? 'Agotado' : 'Épuisé');
+
+    // Récupérer le premier média image et la première vidéo depuis mediaMap
+    const medias = mediaMap[product.id] || [];
+    const firstImage = medias.find(m => m.media_type === 'image');
+    const firstVideo = medias.find(m => m.media_type === 'video');
+    // On utilise l'image si elle existe, sinon le placeholder interne
+    const displayImage = firstImage ? firstImage.media_url : PLACEHOLDER_IMG;
+
     return `
         <div class="product-card" data-id="${product.id}">
             <div class="product-image">
-                <img src="${product.image_url || 'img/placeholder.jpg'}" alt="${escapeHtml(product.name)}" onerror="this.src='img/placeholder.jpg'">
+                <img src="${displayImage}" alt="${escapeHtml(product.name)}">
                 ${product.featured ? '<span class="featured-badge">🔥 Vedette</span>' : ''}
             </div>
             <div class="product-info">
@@ -629,7 +655,7 @@ function emarketRenderProductCard(product) {
     `;
 }
 
-// ===== MODALE DÉTAIL PRODUIT =====
+// ===== MODALE DÉTAIL PRODUIT (avec vidéo si présente) =====
 function emarketOpenProductDetail(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -642,14 +668,25 @@ function emarketOpenProductDetail(productId) {
     detailStockBadge.textContent = inStock ? (currentLang === 'fr' ? 'En stock' : currentLang === 'en' ? 'In stock' : currentLang === 'es' ? 'En stock' : 'En stock') : (currentLang === 'fr' ? 'Épuisé' : currentLang === 'en' ? 'Out of stock' : currentLang === 'es' ? 'Agotado' : 'Épuisé');
     detailStockBadge.className = 'stock-badge ' + (inStock ? 'in-stock' : 'out-of-stock');
 
+    // Récupérer les médias
+    const medias = mediaMap[product.id] || [];
+    const firstImage = medias.find(m => m.media_type === 'image');
+    const firstVideo = medias.find(m => m.media_type === 'video');
+
     detailImage.style.display = 'none';
     detailVideo.style.display = 'none';
+    detailImage.src = '';
+    detailVideo.src = '';
 
-    if (product.video_url) {
-        detailVideo.src = product.video_url;
+    if (firstVideo) {
+        detailVideo.src = firstVideo.media_url;
         detailVideo.style.display = 'block';
-    } else if (product.image_url) {
-        detailImage.src = product.image_url;
+    } else if (firstImage) {
+        detailImage.src = firstImage.media_url;
+        detailImage.style.display = 'block';
+    } else {
+        // Ni image ni vidéo : on affiche le placeholder dans l'image
+        detailImage.src = PLACEHOLDER_IMG;
         detailImage.style.display = 'block';
     }
 
@@ -661,6 +698,8 @@ function emarketOpenProductDetail(productId) {
 
 function emarketCloseProductDetail() {
     productDetailModal.classList.remove('active');
+    detailVideo.pause();
+    detailVideo.src = '';
 }
 
 // ===== AUTHENTIFICATION (avec bcrypt) =====
@@ -1111,7 +1150,7 @@ if (registerForm) registerForm.addEventListener('submit', async (e) => {
 });
 if (forgotForm) forgotForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    // Fonctionnalité non encore disponible – ne pas simuler
+    // Fonctionnalité non encore disponible
     showToast(t('toast.forgot_disabled'), 'info');
     emarketShowLoginForm();
 });
@@ -1141,3 +1180,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     await emarketLoadProducts();
     emarketUpdateCartCount();
 });
+// ========== FIN : e-marketing.js ==========

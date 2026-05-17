@@ -10,10 +10,13 @@
     <link rel="stylesheet" href="community-admin.css">
 </head>
 <body>
+    <!-- ========== DEBUT : globalLoader ========== -->
     <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
         <div class="spinner"></div> Chargement...
     </div>
+    <!-- ========== FIN : globalLoader ========== -->
 
+    <!-- ========== DEBUT : navigation ========== -->
     <nav>
         <a href="../../../index.html" class="logo-link">
             <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
@@ -27,45 +30,113 @@
             </div>
         </div>
     </nav>
+    <!-- ========== FIN : navigation ========== -->
 
     <main class="admin-main">
         <div class="admin-container">
+            <!-- ========== DEBUT : en-tête ========== -->
             <h1 class="page-title"><i class="fas fa-users"></i> Gestion de la Hub Community</h1>
             <p class="page-subtitle">Publiez des posts officiels, modérez les commentaires et consultez les signalements.</p>
+            <button id="refreshStatsBtn" class="btn-refresh" style="margin-bottom:20px;"><i class="fas fa-sync-alt"></i> Tout rafraîchir</button>
+            <!-- ========== FIN : en-tête ========== -->
 
+            <!-- ========== DEBUT : onglets ========== -->
             <div class="admin-tabs">
                 <button class="tab-btn active" data-tab="posts">Posts</button>
+                <button class="tab-btn" data-tab="commentaires">Commentaires</button>
                 <button class="tab-btn" data-tab="reports">Signalements</button>
             </div>
+            <!-- ========== FIN : onglets ========== -->
 
-            <!-- Onglet Posts -->
+            <!-- ========== DEBUT : onglet Posts ========== -->
             <div id="posts" class="tab-content active">
                 <div class="list-header">
                     <button id="newPostBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouveau post</button>
                     <button id="refreshPostsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
                 </div>
-                <div id="postsList" class="items-list"></div>
+                <!-- Filtres -->
+                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                    <input type="text" id="searchPost" placeholder="Rechercher un post..." style="flex:1; min-width:200px;">
+                    <select id="entityFilter" style="min-width:150px;">
+                        <option value="all">Toutes les entités</option>
+                        <option value="club">Club</option>
+                        <option value="tournoi">Tournoi</option>
+                        <option value="scouting">Scouting</option>
+                        <option value="market">Market</option>
+                    </select>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Auteur</th>
+                            <th>Contenu</th>
+                            <th>Entité</th>
+                            <th>Média</th>
+                            <th>Stats</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="postsBody"></tbody>
+                </table>
             </div>
+            <!-- ========== FIN : onglet Posts ========== -->
 
-            <!-- Onglet Signalements -->
+            <!-- ========== DEBUT : onglet Commentaires ========== -->
+            <div id="commentaires" class="tab-content">
+                <div class="list-header">
+                    <input type="text" id="searchComment" placeholder="Rechercher un commentaire..." style="flex:1; min-width:200px;">
+                    <button id="refreshCommentsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Auteur</th>
+                            <th>Contenu</th>
+                            <th>Post</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commentsBody"></tbody>
+                </table>
+            </div>
+            <!-- ========== FIN : onglet Commentaires ========== -->
+
+            <!-- ========== DEBUT : onglet Signalements ========== -->
             <div id="reports" class="tab-content">
                 <div class="list-header">
                     <button id="refreshReportsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
                 </div>
-                <div id="reportsList" class="items-list"></div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Contenu</th>
+                            <th>Motif</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsBody"></tbody>
+                </table>
             </div>
+            <!-- ========== FIN : onglet Signalements ========== -->
         </div>
     </main>
 
+    <!-- ========== DEBUT : footer ========== -->
     <footer>
         <div class="legal">
             <p>© 2026 HubISoccer - Administration Hub Community. Tous droits réservés.</p>
         </div>
     </footer>
+    <!-- ========== FIN : footer ========== -->
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Modale création/édition de post -->
+    <!-- ========== DEBUT : modale création/édition de post ========== -->
     <div id="postModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -74,11 +145,14 @@
                 <input type="hidden" id="postId">
                 <div class="form-group">
                     <label>Contenu *</label>
-                    <textarea id="postContent" rows="6" required></textarea>
+                    <textarea id="postEditor" rows="6" required></textarea>
                 </div>
                 <div class="form-group">
                     <label>Média (image ou vidéo)</label>
-                    <input type="file" id="postMedia" accept="image/*,video/*">
+                    <button type="button" id="uploadPostMedia" class="btn-secondary"><i class="fas fa-upload"></i> Choisir un fichier</button>
+                    <input type="file" id="postMediaFile" accept="image/*,video/*" style="display:none;">
+                    <div id="uploadStatusPostMedia" style="display:none;"><i class="fas fa-spinner fa-spin"></i> Téléversement...</div>
+                    <div id="uploadSuccessPostMedia" style="display:none;"><i class="fas fa-check-circle" style="color:green;"></i> Média téléversé</div>
                 </div>
                 <div class="form-group">
                     <label>Lien associé (optionnel)</label>
@@ -99,15 +173,31 @@
             </form>
         </div>
     </div>
+    <!-- ========== FIN : modale création/édition de post ========== -->
 
-    <!-- Modale de visualisation des commentaires -->
-    <div id="commentsModal" class="modal">
+    <!-- ========== DEBUT : modale visualisation de post ========== -->
+    <div id="viewPostModal" class="modal">
         <div class="modal-content large">
             <span class="close-modal">&times;</span>
-            <h3>Commentaires du post</h3>
-            <div id="commentsList" class="comments-list"></div>
+            <h3>Détail du post</h3>
+            <div id="viewPostContent"></div>
         </div>
     </div>
+    <!-- ========== FIN : modale visualisation de post ========== -->
+
+    <!-- ========== DEBUT : modale de suppression ========== -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Confirmer la suppression</h3>
+            <p id="deleteModalText"></p>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn-secondary close-modal">Annuler</button>
+                <button id="confirmDeleteBtn" class="btn-danger"><i class="fas fa-trash-alt"></i> Supprimer</button>
+            </div>
+        </div>
+    </div>
+    <!-- ========== FIN : modale de suppression ========== -->
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="community-admin.js"></script>

@@ -4,11 +4,19 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ========== DEBUT : LANGUE & TRADUCTIONS ==========
-// Utilise `window.translations` défini dans tournoi-i18n.js (si non présent, fallback fr minimal)
 const translations = window.translations || {
     fr: {
         loader_message: 'Chargement...',
-        // ... (fallback minimal déjà présent dans ton fichier actuel, je ne le répète pas pour ne pas alourdir)
+        toast_no_live: 'Aucun live en ce moment.',
+        no_tournoi: 'Aucun tournoi à venir.',
+        copy: 'Copier',
+        inscrire: 'S\'inscrire',
+        code_complet: 'Complet',
+        toast_code_copied: 'Code copié !',
+        toast_inscription_ok: 'Demande envoyée avec succès !',
+        toast_inscription_error: 'Erreur lors de l\'inscription.',
+        toast_fill_fields: 'Veuillez remplir tous les champs obligatoires.',
+        media_no_media: 'Aucun média pour ce tournoi.'
     }
 };
 
@@ -117,9 +125,10 @@ async function loadTournois() {
                     mediaHtml = `<div class="video-thumb"><video src="${first.media_url}" muted preload="metadata"></video><span class="play-icon"><i class="fas fa-play-circle"></i></span></div>`;
                 }
             } else {
-                const initials = (tournoi.titre || '?').substring(0,2).toUpperCase();
+                const initials = (tournoi.titre || '?').replace(/<[^>]*>/g, '').substring(0,2).toUpperCase();
                 mediaHtml = `<div class="initials-placeholder">${initials}</div>`;
             }
+            // Le titre et la description sont insérés en HTML (l'admin peut utiliser du HTML/CSS)
             html += `
                 <div class="tournoi-card" data-tournoi-id="${tournoi.id}">
                     <div class="card-image-container">
@@ -127,8 +136,8 @@ async function loadTournois() {
                         <div class="card-badge">${escapeHtml(tournoi.sport)}</div>
                     </div>
                     <div class="card-content">
-                        <h3>${escapeHtml(tournoi.titre)}</h3>
-                        <p class="tournoi-desc">${escapeHtml(tournoi.description || '')}</p>
+                        <h3 class="tournoi-title">${tournoi.titre || ''}</h3>
+                        <div class="tournoi-desc">${tournoi.description || ''}</div>
                         <div class="tournoi-meta">
                             <span><i class="fas fa-calendar-alt"></i> ${formatDate(tournoi.date_debut)} - ${formatDate(tournoi.date_fin)}</span>
                             <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(tournoi.ville)}${tournoi.quartier ? ' - ' + escapeHtml(tournoi.quartier) : ''}</span>
@@ -185,12 +194,12 @@ async function loadTournois() {
 }
 // ========== FIN : CHARGEMENT DES TOURNOIS ==========
 
-// ========== DEBUT : MODALE MÉDIA ==========
+// ========== DEBUT : MODALE MÉDIA / DÉTAILS ==========
 async function openMediaModal(tournoiId) {
     try {
         const { data: tournoi, error: errTournoi } = await supabasePublic
             .from('public_tournois')
-            .select('titre, description')
+            .select('*')
             .eq('id', tournoiId)
             .single();
         if (errTournoi) throw errTournoi;
@@ -232,8 +241,13 @@ async function openMediaModal(tournoiId) {
         }
 
         display.innerHTML = html;
-        titleEl.textContent = tournoi.titre;
-        descEl.textContent = tournoi.description || '';
+        // Le titre, la description et les règlements sont affichés en HTML
+        titleEl.innerHTML = tournoi.titre || '';
+        let descHtml = tournoi.description || '';
+        if (tournoi.reglements) {
+            descHtml += `<div class="tournoi-reglements"><h4>Règlement</h4>${tournoi.reglements}</div>`;
+        }
+        descEl.innerHTML = descHtml;
         modal.classList.add('active');
 
         // Carrousel
@@ -259,7 +273,7 @@ async function openMediaModal(tournoiId) {
         showToast('Erreur chargement médias', 'error');
     }
 }
-// ========== FIN : MODALE MÉDIA ==========
+// ========== FIN : MODALE MÉDIA / DÉTAILS ==========
 
 // ========== DEBUT : GESTION DU CODE D'INSCRIPTION ==========
 async function loadCodeForTournoi(tournoiId) {

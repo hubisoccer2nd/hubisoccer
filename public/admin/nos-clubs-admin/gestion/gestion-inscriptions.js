@@ -1,21 +1,21 @@
-/* DEBUT : public/admin/nos-clubs-admin/gestion/gestion-inscriptions.js */
-// ========== GESTION-INSCRIPTIONS.JS ==========
-// ========== DÉBUT : CONFIGURATION SUPABASE ==========
+// ========== DEBUT : gestion-inscriptions.js ==========
+// ========== DEBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ========== FIN : CONFIGURATION SUPABASE ==========
 
-// ========== DÉBUT : VARIABLES GLOBALES ==========
+// ========== DEBUT : VARIABLES GLOBALES ==========
 let allInscriptions = [];
 let allAttentes = [];
 let allClubs = [];
 let currentInscription = null;
 let currentAttente = null;
 let uploadedPreuveUrl = null;
+let newGeneratedPassword = null; // Pour stocker un nouveau mot de passe généré dans la modale d'approbation
 // ========== FIN : VARIABLES GLOBALES ==========
 
-// ========== DÉBUT : FONCTIONS UTILITAIRES ==========
+// ========== DEBUT : FONCTIONS UTILITAIRES ==========
 function showToast(message, type = 'info', duration = 15000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -83,7 +83,7 @@ async function generateUniqueLogin(nom) {
             .eq('login', login)
             .maybeSingle();
         if (error || !data) {
-            return login; // pas de conflit
+            return login;
         }
         login = generateLogin(nom);
         attempts++;
@@ -101,7 +101,7 @@ function generatePassword() {
 function hashPassword(password) { return btoa(password); }
 // ========== FIN : FONCTIONS UTILITAIRES ==========
 
-// ========== DÉBUT : CHARGEMENT DES CLUBS ==========
+// ========== DEBUT : CHARGEMENT DES CLUBS ==========
 async function loadClubs() {
     try {
         const { data, error } = await supabaseAdmin
@@ -124,7 +124,7 @@ function populateClubFilter() {
 }
 // ========== FIN : CHARGEMENT DES CLUBS ==========
 
-// ========== DÉBUT : CHARGEMENT DES INSCRIPTIONS ==========
+// ========== DEBUT : CHARGEMENT DES INSCRIPTIONS ==========
 async function loadInscriptions() {
     showLoader();
     try {
@@ -164,6 +164,8 @@ function renderInscriptionsTable() {
     tbody.innerHTML = filtered.map(ins => {
         const clubNom = ins.nosclub_clubs?.nom || 'Club inconnu';
         const paiementOk = ins.preuve_paiement_url ? '<i class="fas fa-check-circle" style="color:var(--success)"></i>' : '<i class="fas fa-times-circle" style="color:var(--danger)"></i>';
+        // Ajout du bouton de régénération pour les inscriptions validées
+        const regenerateBtn = ins.statut === 'valide' ? `<button class="btn-icon btn-regenerate" data-id="${ins.id}" title="Régénérer identifiants"><i class="fas fa-sync-alt"></i></button>` : '';
         return `
             <tr data-id="${ins.id}">
                 <td class="id-cell">${ins.id}</td>
@@ -181,6 +183,7 @@ function renderInscriptionsTable() {
                     ${ins.statut !== 'rejete' ? `<button class="btn-icon btn-reject" data-id="${ins.id}" title="Rejeter"><i class="fas fa-times-circle"></i></button>` : ''}
                     ${ins.statut !== 'bloque' ? `<button class="btn-icon btn-block" data-id="${ins.id}" title="Bloquer"><i class="fas fa-ban"></i></button>` : ''}
                     <button class="btn-icon btn-delete" data-id="${ins.id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+                    ${regenerateBtn}
                 </td>
             </tr>
         `;
@@ -192,10 +195,11 @@ function renderInscriptionsTable() {
     tbody.querySelectorAll('.btn-reject').forEach(b => b.addEventListener('click', () => openRejectModal(b.dataset.id)));
     tbody.querySelectorAll('.btn-block').forEach(b => b.addEventListener('click', () => openBlockModal(b.dataset.id)));
     tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => openDeleteModal(b.dataset.id)));
+    tbody.querySelectorAll('.btn-regenerate').forEach(b => b.addEventListener('click', () => openRegenerateModal(b.dataset.id)));
 }
 // ========== FIN : CHARGEMENT DES INSCRIPTIONS ==========
 
-// ========== DÉBUT : GESTION MODALE VISUALISATION ==========
+// ========== DEBUT : GESTION MODALE VISUALISATION ==========
 function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
 
 async function openViewModal(id) {
@@ -278,7 +282,7 @@ async function sendViewMessage() {
 }
 // ========== FIN : GESTION MODALE VISUALISATION ==========
 
-// ========== DÉBUT : APPROBATION (AVEC VÉRIFICATION D'UNICITÉ DU LOGIN) ==========
+// ========== DEBUT : APPROBATION (MODIFIÉE) ==========
 async function openApproveModal(id) {
     const ins = allInscriptions.find(i => i.id == id);
     if (!ins) return;
@@ -288,30 +292,73 @@ async function openApproveModal(id) {
         return;
     }
 
-    let login, password;
+    // Réinitialiser la variable de nouveau mot de passe
+    newGeneratedPassword = null;
+
+    // Préparer le login : si déjà existant, on l'affiche en lecture seule
+    const existingLogin = ins.login || '';
+    const loginField = existingLogin
+        ? `<input type="text" id="generatedLogin" value="${escapeHtml(existingLogin)}" readonly>`
+        : `<input type="text" id="generatedLogin" value="${escapeHtml(await generateUniqueLogin(ins.nom_complet))}" readonly>`;
+
+    // Mot de passe : si déjà existant, on masque, sinon on génère automatiquement
+    let passwordField = '';
     if (ins.login) {
-        login = ins.login;
-        password = '';
-        document.getElementById('generatedLogin').value = login;
-        document.getElementById('generatedPassword').value = '******** (déjà défini)';
+        // Login existant : on propose de générer un nouveau mot de passe
+        passwordField = `
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="text" id="generatedPassword" value="******** (inchangé)" readonly style="flex:1;">
+                <button type="button" id="generateNewPasswordBtn" class="btn-secondary"><i class="fas fa-sync-alt"></i> Générer nouveau</button>
+            </div>
+        `;
     } else {
-        // Génération avec vérification d'unicité
-        login = await generateUniqueLogin(ins.nom_complet);
-        password = generatePassword();
-        document.getElementById('generatedLogin').value = login;
-        document.getElementById('generatedPassword').value = password;
+        // Pas de login : on génère un mot de passe
+        const generatedPwd = generatePassword();
+        passwordField = `<input type="text" id="generatedPassword" value="${generatedPwd}" readonly>`;
+        newGeneratedPassword = generatedPwd; // sera utilisé si l'admin ne change rien
     }
 
     document.getElementById('approveInfo').innerHTML = `<p><strong>Nom :</strong> ${escapeHtml(ins.nom_complet)}</p>`;
+
+    // Construire le contenu de la modale (on injecte dans la div existante)
+    const modalContent = document.querySelector('#approveModal .modal-content');
+    // On supprime les anciens champs et on recrée
+    const existingFormGroupLogin = modalContent.querySelector('.form-group:nth-child(2)');
+    const existingFormGroupPassword = modalContent.querySelector('.form-group:nth-child(3)');
+    if (existingFormGroupLogin) existingFormGroupLogin.innerHTML = `<label>Login généré</label>${loginField}`;
+    if (existingFormGroupPassword) existingFormGroupPassword.innerHTML = `<label>Mot de passe généré</label>${passwordField}`;
+
+    // Gestionnaire pour le bouton "Générer nouveau mot de passe"
+    const generateBtn = document.getElementById('generateNewPasswordBtn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', () => {
+            const newPwd = generatePassword();
+            document.getElementById('generatedPassword').value = newPwd;
+            newGeneratedPassword = newPwd;
+        });
+    }
 
     document.getElementById('confirmApprovalBtn').onclick = async () => {
         showLoader();
         try {
             const updateData = { statut: 'valide', updated_at: new Date().toISOString() };
-            if (!ins.login) {
-                updateData.login = login;
-                updateData.mot_de_passe_hash = hashPassword(password);
+            // Gestion du mot de passe
+            if (newGeneratedPassword) {
+                updateData.mot_de_passe_hash = hashPassword(newGeneratedPassword);
             }
+            // Si le login n'existait pas, on l'enregistre
+            if (!ins.login) {
+                const loginValue = document.getElementById('generatedLogin').value;
+                updateData.login = loginValue;
+                if (!newGeneratedPassword) {
+                    // Si aucun mot de passe généré explicitement, on prend celui affiché
+                    const pwd = document.getElementById('generatedPassword').value;
+                    if (pwd && pwd !== '******** (inchangé)') {
+                        updateData.mot_de_passe_hash = hashPassword(pwd);
+                    }
+                }
+            }
+
             const { error } = await supabaseAdmin
                 .from('nosclub_inscriptions')
                 .update(updateData)
@@ -333,8 +380,8 @@ async function openApproveModal(id) {
 
             currentInscription.statut = 'valide';
             if (!ins.login) {
-                currentInscription.login = login;
-                currentInscription.mot_de_passe_hash = hashPassword(password);
+                currentInscription.login = updateData.login;
+                currentInscription.mot_de_passe_hash = updateData.mot_de_passe_hash;
             }
             showToast('Inscription approuvée', 'success');
             closeAllModals();
@@ -346,7 +393,69 @@ async function openApproveModal(id) {
 }
 // ========== FIN : APPROBATION ==========
 
-// ========== DÉBUT : REJET ==========
+// ========== DEBUT : RÉGÉNÉRATION DES IDENTIFIANTS (NOUVEAU) ==========
+async function openRegenerateModal(id) {
+    const ins = allInscriptions.find(i => i.id == id);
+    if (!ins || ins.statut !== 'valide') return;
+
+    // Générer un nouveau login et mot de passe
+    const newLogin = await generateUniqueLogin(ins.nom_complet);
+    const newPassword = generatePassword();
+
+    // Créer une modale dynamique
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-sync-alt"></i> Régénérer les identifiants</h3>
+            <p><strong>Candidat :</strong> ${escapeHtml(ins.nom_complet)}</p>
+            <div class="form-group">
+                <label>Nouveau login</label>
+                <input type="text" id="regLogin" value="${escapeHtml(newLogin)}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Nouveau mot de passe</label>
+                <input type="text" id="regPassword" value="${newPassword}" readonly>
+            </div>
+            <button id="confirmRegenerateBtn" class="btn-submit"><i class="fas fa-save"></i> Enregistrer et notifier</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('.close-modal').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+    modal.querySelector('#confirmRegenerateBtn').addEventListener('click', async () => {
+        showLoader();
+        try {
+            const hashed = hashPassword(newPassword);
+            const { error } = await supabaseAdmin
+                .from('nosclub_inscriptions')
+                .update({
+                    login: newLogin,
+                    mot_de_passe_hash: hashed,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', ins.id);
+            if (error) throw error;
+
+            // Mettre à jour l'objet local pour refléter le changement
+            ins.login = newLogin;
+            ins.mot_de_passe_hash = hashed;
+            showToast(`Identifiants régénérés : Login = ${newLogin} / Mot de passe = ${newPassword}`, 'success', 30000);
+            modal.remove();
+            // Pas besoin de recharger la liste car le statut ne change pas
+        } catch (err) {
+            showToast('Erreur lors de la régénération', 'error');
+        } finally {
+            hideLoader();
+        }
+    });
+}
+// ========== FIN : RÉGÉNÉRATION DES IDENTIFIANTS ==========
+
+// ========== DEBUT : REJET ==========
 function openRejectModal(id) {
     const ins = allInscriptions.find(i => i.id == id);
     if (!ins) return;
@@ -373,7 +482,7 @@ function openRejectModal(id) {
 }
 // ========== FIN : REJET ==========
 
-// ========== DÉBUT : MODIFICATION ==========
+// ========== DEBUT : MODIFICATION ==========
 function openEditModal(id) {
     const ins = allInscriptions.find(i => i.id == id);
     if (!ins) return;
@@ -422,7 +531,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
 });
 // ========== FIN : MODIFICATION ==========
 
-// ========== DÉBUT : PREUVE DE PAIEMENT ==========
+// ========== DEBUT : PREUVE DE PAIEMENT ==========
 function openPaymentModal(id) {
     currentInscription = allInscriptions.find(i => i.id == id);
     if (!currentInscription) return;
@@ -475,7 +584,7 @@ document.getElementById('savePaymentBtn').addEventListener('click', async () => 
 });
 // ========== FIN : PREUVE DE PAIEMENT ==========
 
-// ========== DÉBUT : BLOCAGE ==========
+// ========== DEBUT : BLOCAGE ==========
 function openBlockModal(id) {
     const ins = allInscriptions.find(i => i.id == id);
     if (!ins) return;
@@ -498,7 +607,7 @@ function openBlockModal(id) {
 }
 // ========== FIN : BLOCAGE ==========
 
-// ========== DÉBUT : SUPPRESSION INSCRIPTION ==========
+// ========== DEBUT : SUPPRESSION INSCRIPTION ==========
 function openDeleteModal(id) {
     const ins = allInscriptions.find(i => i.id == id);
     if (!ins) return;
@@ -519,7 +628,7 @@ function openDeleteModal(id) {
 }
 // ========== FIN : SUPPRESSION INSCRIPTION ==========
 
-// ========== DÉBUT : LISTE D'ATTENTE ==========
+// ========== DEBUT : LISTE D'ATTENTE ==========
 async function loadAttentes() {
     try {
         const { data, error } = await supabaseAdmin
@@ -723,18 +832,18 @@ function openConvertModal(id) {
 }
 // ========== FIN : LISTE D'ATTENTE ==========
 
-// ========== DÉBUT : FERMETURE MODALES GÉNÉRALES ==========
+// ========== DEBUT : FERMETURE MODALES GÉNÉRALES ==========
 document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', closeAllModals));
 window.addEventListener('click', (e) => { if (e.target.classList.contains('modal')) closeAllModals(); });
 // ========== FIN : FERMETURE MODALES ==========
 
-// ========== DÉBUT : ÉVÉNEMENTS FILTRES ==========
+// ========== DEBUT : ÉVÉNEMENTS FILTRES ==========
 document.getElementById('searchInput').addEventListener('input', renderInscriptionsTable);
 document.getElementById('clubFilter').addEventListener('change', renderInscriptionsTable);
 document.getElementById('statusFilter').addEventListener('change', renderInscriptionsTable);
 // ========== FIN : ÉVÉNEMENTS FILTRES ==========
 
-// ========== DÉBUT : MENU MOBILE ET DÉCONNEXION ==========
+// ========== DEBUT : MENU MOBILE ET DÉCONNEXION ==========
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 if (menuToggle && navLinks) {
@@ -763,4 +872,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 // ========== FIN DE GESTION-INSCRIPTIONS.JS ==========
-/* FIN : public/admin/nos-clubs-admin/gestion/gestion-inscriptions.js */

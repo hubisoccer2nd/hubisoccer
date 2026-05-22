@@ -1,4 +1,4 @@
-// ========== PREMIER-PAS-ADMIN.JS ==========
+// ========== PREMIER-PAS-ADMIN.JS (CORRECTION COMPLÈTE – AJOUT BOUTON MODIFIER + SPORT_DATA ÉDITABLE) ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -14,7 +14,7 @@ let viewQuill = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
-function showToast(message, type = 'info', duration = 3000) {
+function showToast(message, type = 'info', duration = 15000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -153,6 +153,7 @@ function renderSportifsTable() {
                 ${ins.status !== 'bloque' ? `<button class="btn-icon btn-block" data-ppid="${ins.pp_id}" title="Bloquer"><i class="fas fa-ban"></i></button>` : ''}
                 ${ins.status !== 'test_ecrit' ? `<button class="btn-icon btn-test-ecrit" data-ppid="${ins.pp_id}" title="Test écrit"><i class="fas fa-pencil-alt"></i></button>` : ''}
                 ${ins.status !== 'test_pratique' ? `<button class="btn-icon btn-test-pratique" data-ppid="${ins.pp_id}" title="Test pratique"><i class="fas fa-video"></i></button>` : ''}
+                <button class="btn-icon btn-edit" data-ppid="${ins.pp_id}" title="Modifier"><i class="fas fa-pen-to-square"></i></button>
                 <button class="btn-icon btn-delete" data-ppid="${ins.pp_id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
             </td>
         </tr>
@@ -164,11 +165,12 @@ function renderSportifsTable() {
     tbody.querySelectorAll('.btn-block').forEach(b => b.addEventListener('click', () => openBlockModal(b.dataset.ppid)));
     tbody.querySelectorAll('.btn-test-ecrit').forEach(b => b.addEventListener('click', () => openTestEcritModal(b.dataset.ppid)));
     tbody.querySelectorAll('.btn-test-pratique').forEach(b => b.addEventListener('click', () => openTestPratiqueModal(b.dataset.ppid)));
+    tbody.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', () => openEditModal(b.dataset.ppid)));
     tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => openDeleteModal(b.dataset.ppid)));
 }
 // ========== FIN : TABLEAU SPORTIFS ==========
 
-// ========== DÉBUT : MODALE VISUALISATION (avec Quill) ==========
+// ========== DÉBUT : MODALE VISUALISATION (COMPLÈTE) ==========
 function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
 
 async function openViewModal(ppId) {
@@ -176,27 +178,42 @@ async function openViewModal(ppId) {
     if (!ins) return;
     currentInscription = ins;
 
+    let sportDataHtml = '';
+    if (ins.sport_data && typeof ins.sport_data === 'object') {
+        const entries = Object.entries(ins.sport_data);
+        if (entries.length) {
+            sportDataHtml = entries.map(([key, value]) => `<p><strong>${escapeHtml(key)}:</strong> ${escapeHtml(String(value))}</p>`).join('');
+        }
+    }
+
     const viewContent = document.getElementById('viewContent');
     viewContent.innerHTML = `
         <div class="view-details">
-            <div class="detail-section"><h4><i class="fas fa-user"></i> Identité</h4>
+            <div class="detail-section">
+                <h4><i class="fas fa-id-card"></i> Identité</h4>
+                <p><strong>ID PP :</strong> ${escapeHtml(ins.pp_id)}</p>
                 <p><strong>Nom :</strong> ${escapeHtml(ins.full_name)}</p>
                 <p><strong>Date de naissance :</strong> ${formatDate(ins.birth_date)}</p>
                 <p><strong>Email :</strong> ${escapeHtml(ins.email || '-')}</p>
                 <p><strong>Téléphone :</strong> ${escapeHtml(ins.phone)}</p>
                 <p><strong>Sport :</strong> ${getSportLabel(ins.sport)}</p>
-                <p><strong>Rôle :</strong> ${escapeHtml(ins.role)}</p>
+                <p><strong>Rôle :</strong> ${escapeHtml(ins.role || '-')}</p>
                 <p><strong>Statut :</strong> <span class="status-badge ${getStatusClass(ins.status)}">${getStatusLabel(ins.status)}</span></p>
-                <p><strong>Date :</strong> ${formatDate(ins.created_at)}</p>
+                <p><strong>Date d'inscription :</strong> ${formatDate(ins.created_at)}</p>
                 ${ins.parent_name ? `<p><strong>Parent / tuteur :</strong> ${escapeHtml(ins.parent_name)}</p>` : ''}
                 ${ins.inscription_code ? `<p><strong>Code d'inscription :</strong> ${escapeHtml(ins.inscription_code)}</p>` : ''}
-                ${ins.affiliate_id ? `<p><strong>ID affilié :</strong> ${escapeHtml(ins.affiliate_id)}</p>` : ''}
+                ${ins.affiliate_id ? `<p><strong>ID Affilié :</strong> ${escapeHtml(ins.affiliate_id)}</p>` : ''}
+                ${ins.hubisoccer_id ? `<p><strong>HubISoccer ID :</strong> ${escapeHtml(ins.hubisoccer_id)}</p>` : ''}
+                ${ins.definition ? `<p><strong>Motif rejet / Note :</strong> ${escapeHtml(ins.definition)}</p>` : ''}
             </div>
-            <div class="detail-section"><h4><i class="fas fa-file-alt"></i> Documents</h4>
+            <div class="detail-section">
+                <h4><i class="fas fa-file-alt"></i> Documents</h4>
                 <p>Diplôme : ${ins.diploma_url ? `<a href="${escapeHtml(ins.diploma_url)}" target="_blank">Télécharger</a>` : '-'}</p>
                 <p>Pièce d'identité : ${ins.id_card_url ? `<a href="${escapeHtml(ins.id_card_url)}" target="_blank">Télécharger</a>` : '-'}</p>
             </div>
-            <div class="detail-section"><h4><i class="fas fa-comments"></i> Messagerie</h4>
+            ${sportDataHtml ? `<div class="detail-section"><h4><i class="fas fa-info-circle"></i> Données sportives</h4>${sportDataHtml}</div>` : ''}
+            <div class="detail-section">
+                <h4><i class="fas fa-comments"></i> Messagerie</h4>
                 <div id="adminMessagesContainer" class="messages-container"></div>
                 <div class="message-compose">
                     <div id="viewMessageEditor" style="height:120px;"></div>
@@ -206,11 +223,7 @@ async function openViewModal(ppId) {
         </div>
     `;
 
-    // Nettoyer l'ancien Quill s'il existe
-    if (viewQuill) {
-        viewQuill = null;
-    }
-    // Initialiser Quill
+    if (viewQuill) { viewQuill = null; }
     viewQuill = new Quill('#viewMessageEditor', {
         theme: 'snow',
         placeholder: 'Votre message...',
@@ -224,12 +237,8 @@ async function openViewModal(ppId) {
         }
     });
 
-    // Charger les messages
     loadMessages(ins.pp_id);
-
-    // Bouton envoi
     document.getElementById('sendViewMsgBtn').addEventListener('click', sendViewMessage);
-
     document.getElementById('viewModal').classList.add('active');
 }
 
@@ -272,6 +281,185 @@ async function sendViewMessage() {
     finally { hideLoader(); }
 }
 // ========== FIN : MODALE VISUALISATION ==========
+
+// ========== DÉBUT : MODALE MODIFICATION (NOUVEAU) ==========
+async function openEditModal(ppId) {
+    const ins = allInscriptions.find(i => i.pp_id === ppId);
+    if (!ins) return;
+    currentInscription = ins;
+
+    let modal = document.getElementById('editModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'editModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content large">
+                <span class="close-modal">&times;</span>
+                <h3><i class="fas fa-pen-to-square"></i> Modifier la candidature</h3>
+                <form id="editForm">
+                    <input type="hidden" id="editPpId">
+                    <div class="form-section">
+                        <legend>Identité</legend>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nom complet *</label>
+                                <input type="text" id="editFullName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Date de naissance</label>
+                                <input type="date" id="editBirthDate">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Téléphone *</label>
+                                <input type="text" id="editPhone" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="editEmail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Sport *</label>
+                            <select id="editSport" required>
+                                <option value="football">Football</option>
+                                <option value="basketball">Basketball</option>
+                                <option value="tennis">Tennis</option>
+                                <option value="athletisme">Athlétisme</option>
+                                <option value="handball">Handball</option>
+                                <option value="volleyball">Volley‑ball</option>
+                                <option value="rugby">Rugby</option>
+                                <option value="natation">Natation</option>
+                                <option value="arts_martiaux">Arts martiaux</option>
+                                <option value="cyclisme">Cyclisme</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rôle</label>
+                            <input type="text" id="editRole">
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <legend>Données sportives (JSONB)</legend>
+                        <div id="sportDataFields"></div>
+                        <button type="button" id="addSportDataField" class="btn-secondary"><i class="fas fa-plus"></i> Ajouter un champ</button>
+                    </div>
+                    <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('.close-modal').addEventListener('click', () => modal.classList.remove('active'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+
+        document.getElementById('addSportDataField').addEventListener('click', () => {
+            const container = document.getElementById('sportDataFields');
+            const row = document.createElement('div');
+            row.className = 'form-row sport-data-row';
+            row.innerHTML = `
+                <div class="form-group">
+                    <input type="text" class="sport-data-key" placeholder="Clé">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="sport-data-value" placeholder="Valeur">
+                </div>
+                <button type="button" class="btn-icon btn-delete remove-sport-row"><i class="fas fa-trash-alt"></i></button>
+            `;
+            container.appendChild(row);
+            row.querySelector('.remove-sport-row').addEventListener('click', () => row.remove());
+        });
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ppId = document.getElementById('editPpId').value;
+            const fullName = document.getElementById('editFullName').value.trim();
+            const birthDate = document.getElementById('editBirthDate').value;
+            const phone = document.getElementById('editPhone').value.trim();
+            const email = document.getElementById('editEmail').value.trim();
+            const sport = document.getElementById('editSport').value;
+            const role = document.getElementById('editRole').value.trim();
+
+            const sportData = {};
+            document.querySelectorAll('.sport-data-row').forEach(row => {
+                const key = row.querySelector('.sport-data-key').value.trim();
+                const value = row.querySelector('.sport-data-value').value.trim();
+                if (key) sportData[key] = value;
+            });
+
+            showLoader();
+            try {
+                const { error } = await supabaseAdmin
+                    .from('public_premierpas')
+                    .update({
+                        full_name: fullName,
+                        birth_date: birthDate || null,
+                        phone: phone,
+                        email: email || null,
+                        sport: sport,
+                        role: role || null,
+                        sport_data: Object.keys(sportData).length ? sportData : null,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('pp_id', ppId);
+                if (error) throw error;
+
+                const idx = allInscriptions.findIndex(i => i.pp_id === ppId);
+                if (idx !== -1) {
+                    allInscriptions[idx].full_name = fullName;
+                    allInscriptions[idx].birth_date = birthDate || null;
+                    allInscriptions[idx].phone = phone;
+                    allInscriptions[idx].email = email || null;
+                    allInscriptions[idx].sport = sport;
+                    allInscriptions[idx].role = role || null;
+                    allInscriptions[idx].sport_data = Object.keys(sportData).length ? sportData : null;
+                }
+
+                showToast('Candidature modifiée avec succès', 'success');
+                modal.classList.remove('active');
+                renderSportifsTable();
+                updateStats();
+            } catch (err) {
+                showToast('Erreur modification : ' + err.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        });
+    }
+
+    document.getElementById('editPpId').value = ins.pp_id;
+    document.getElementById('editFullName').value = ins.full_name || '';
+    document.getElementById('editBirthDate').value = ins.birth_date || '';
+    document.getElementById('editPhone').value = ins.phone || '';
+    document.getElementById('editEmail').value = ins.email || '';
+    document.getElementById('editSport').value = ins.sport || 'football';
+    document.getElementById('editRole').value = ins.role || '';
+
+    const container = document.getElementById('sportDataFields');
+    container.innerHTML = '';
+    if (ins.sport_data && typeof ins.sport_data === 'object') {
+        Object.entries(ins.sport_data).forEach(([key, value]) => {
+            const row = document.createElement('div');
+            row.className = 'form-row sport-data-row';
+            row.innerHTML = `
+                <div class="form-group">
+                    <input type="text" class="sport-data-key" placeholder="Clé" value="${escapeHtml(key)}">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="sport-data-value" placeholder="Valeur" value="${escapeHtml(String(value))}">
+                </div>
+                <button type="button" class="btn-icon btn-delete remove-sport-row"><i class="fas fa-trash-alt"></i></button>
+            `;
+            container.appendChild(row);
+            row.querySelector('.remove-sport-row').addEventListener('click', () => row.remove());
+        });
+    }
+
+    modal.classList.add('active');
+}
+// ========== FIN : MODALE MODIFICATION ==========
 
 // ========== DÉBUT : APPROBATION ==========
 function openApproveModal(ppId) {
@@ -322,7 +510,7 @@ function openApproveModal(ppId) {
 }
 // ========== FIN : APPROBATION ==========
 
-// ========== DÉBUT : REJET ==========
+// ========== DÉBUT : REJET (CORRIGÉ – UTILISE `definition`) ==========
 function openRejectModal(ppId) {
     const ins = allInscriptions.find(i => i.pp_id === ppId);
     if (!ins) return;
@@ -338,7 +526,7 @@ function openRejectModal(ppId) {
                 .from('public_premierpas')
                 .update({
                     status: 'rejete',
-                    role_data: { ... (ins.role_data || {}), motif_rejet: reason },
+                    definition: reason,
                     updated_at: new Date().toISOString()
                 })
                 .eq('pp_id', currentInscription.pp_id);
@@ -347,7 +535,7 @@ function openRejectModal(ppId) {
             showToast('Sportif rejeté', 'success');
             closeAllModals();
             loadSportifs();
-        } catch (err) { showToast('Erreur rejet', 'error'); }
+        } catch (err) { showToast('Erreur rejet : ' + err.message, 'error'); }
         finally { hideLoader(); }
     };
     document.getElementById('rejectModal').classList.add('active');

@@ -1,4 +1,4 @@
-/* ========== ARTISTES-ADMIN.CSS ========== */
+/* ========== DEBUT : artistes-admin.css ========== */
 /* ========== DÉBUT : VARIABLES ========== */
 :root {
     --primary: #4B0082;
@@ -412,13 +412,17 @@ tbody tr:last-child td {
 .status-rejete { background: var(--danger); color: white; }
 .status-bloque { background: var(--gray); color: white; }
 .status-supprime { background: #444; color: white; }
+.status-test_ecrit { background: var(--info); color: white; }
+.status-test_pratique { background: var(--info); color: white; }
 
 .actions-cell {
     display: flex;
     gap: 8px;
     flex-wrap: nowrap;
 }
+/* ========== FIN : TABLEAUX ========== */
 
+/* ========== DÉBUT : BOUTONS D'ACTION EN TABLEAU ========== */
 .btn-icon {
     border: none;
     cursor: pointer;
@@ -447,21 +451,23 @@ tbody tr:last-child td {
 .btn-block { color: var(--gray); border: 1px solid var(--gray); }
 .btn-block:hover { background: var(--gray); color: white; }
 
+.btn-test-ecrit { color: var(--info); border: 1px solid var(--info); }
+.btn-test-ecrit:hover { background: var(--info); color: white; }
+
+.btn-test-pratique { color: var(--info); border: 1px solid var(--info); }
+.btn-test-pratique:hover { background: var(--info); color: white; }
+
+.btn-edit { color: var(--primary); border: 1px solid var(--primary); }
+.btn-edit:hover { background: var(--primary); color: white; }
+
 .btn-delete { color: #c82333; border: 1px solid #c82333; }
 .btn-delete:hover { background: #c82333; color: white; }
 
 .btn-correct, .btn-evaluate { color: var(--primary); border: 1px solid var(--primary); }
 .btn-correct:hover, .btn-evaluate:hover { background: var(--primary); color: white; }
+/* ========== FIN : BOUTONS D'ACTION EN TABLEAU ========== */
 
-.empty-message, .loading-placeholder {
-    text-align: center;
-    padding: 40px;
-    color: var(--gray);
-    font-size: 1rem;
-}
-/* ========== FIN : TABLEAUX ========== */
-
-/* ========== DÉBUT : MODALES ========== */
+/* ========== DÉBUT : MODALES GÉNÉRALES ========== */
 .modal {
     display: none;
     position: fixed;
@@ -525,7 +531,9 @@ tbody tr:last-child td {
     padding: 10px;
     border-radius: 50%;
 }
+/* ========== FIN : MODALES GÉNÉRALES ========== */
 
+/* ========== DÉBUT : FORMULAIRES DANS LES MODALES ========== */
 .form-group {
     margin-bottom: 20px;
 }
@@ -558,6 +566,98 @@ tbody tr:last-child td {
     box-shadow: 0 0 0 4px rgba(75,0,130,0.1);
 }
 
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-section {
+    border: 2px solid var(--light-gray);
+    border-radius: 20px;
+    padding: 20px 25px;
+    margin-bottom: 25px;
+    background: #fafafa;
+}
+
+.form-section legend {
+    background: var(--primary);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-left: 10px;
+    box-shadow: 0 4px 8px rgba(75,0,130,0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-section legend i {
+    color: var(--gold);
+}
+
+/* Bouton secondaire (utilisé pour "Ajouter un champ") */
+.btn-secondary {
+    background: var(--light-gray);
+    color: var(--primary);
+    border: none;
+    padding: 10px 18px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.btn-secondary:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Rangée dynamique pour artist_data */
+.artist-data-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.artist-data-row .form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.artist-data-row .btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.artist-data-row .btn-icon.remove-data-row {
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.artist-data-row .btn-icon.remove-data-row:hover {
+    background: var(--danger);
+    color: white;
+}
+/* ========== FIN : FORMULAIRES DANS LES MODALES ========== */
+
+/* ========== DÉBUT : BOUTONS DES MODALES ========== */
 .btn-submit {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
@@ -596,8 +696,9 @@ tbody tr:last-child td {
 .btn-warning i {
     color: black;
 }
+/* ========== FIN : BOUTONS DES MODALES ========== */
 
-/* Détails dans la modale de visualisation */
+/* ========== DÉBUT : MODALE VISUALISATION ========== */
 .view-details {
     max-height: 65vh;
     overflow-y: auto;
@@ -694,6 +795,18 @@ tbody tr:last-child td {
     outline: none;
 }
 
+/* Éditeur Quill */
+#viewMessageEditor .ql-toolbar {
+    border-radius: 12px 12px 0 0;
+    background: white;
+}
+#viewMessageEditor .ql-container {
+    border-radius: 0 0 12px 12px;
+    background: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+}
+
 .btn-send {
     background: var(--primary);
     color: white;
@@ -711,7 +824,7 @@ tbody tr:last-child td {
 .btn-send:hover {
     background: var(--primary-light);
 }
-/* ========== FIN : MODALES ========== */
+/* ========== FIN : MODALE VISUALISATION ========== */
 
 /* ========== DÉBUT : SECTION ENVOI MESSAGE (ONGLET) ========== */
 .send-message-section {
@@ -833,6 +946,9 @@ tbody tr:last-child td {
     .actions-cell {
         flex-wrap: wrap;
     }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 600px) {
@@ -863,4 +979,4 @@ tbody tr:last-child td {
     }
 }
 /* ========== FIN : RESPONSIVE ========== */
-/* ========== FIN DE ARTISTES-ADMIN.CSS ========== */
+/* ========== FIN : artistes-admin.css ========== */

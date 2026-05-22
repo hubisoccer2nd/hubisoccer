@@ -1,4 +1,4 @@
-<!-- DEBUT : public/admin/nos-clubs-admin/presentation/gestion-clubs.html -->
+<!-- DEBUT : public/admin/nos-clubs-admin/gestion/gestion-clubs.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -17,19 +17,22 @@
     <!-- ========== FIN : LOADER GLOBAL ========== -->
 
     <!-- ========== DÉBUT : NAVIGATION ADMIN ========== -->
+
     <nav>
         <a href="../../../index.html" class="logo-link">
-            <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
-        </a>
+        <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav"></a>
         <div class="nav-right">
-            <span class="admin-badge"><i class="fas fa-users"></i> Administration Clubs</span>
-            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+        <span class="admin-badge"><i class="fas fa-users"></i> Administration Clubs</span>
+        <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="../../index-admin/"><i class="fas fa-th-large"></i> Portail</a>
-                <a href="../../acteurs-admin/acteurs-admin.html"><i class="fas fa-users"></i> Acteurs</a>
-                <a href="../../premierpas-admin/premier-pas-admin.html"><i class="fas fa-running"></i> Premier Pas</a>
-                <a href="../../artistes-admin/artistes-admin.html"><i class="fas fa-paint-brush"></i> Artistes</a>
-                <a href="../../tournoi-admin/tournoi-admin.html"><i class="fas fa-trophy"></i> Tournois</a>
+                <a href="../../administration.html"><i class="fas fa-th-large"></i> Portail</a>
+                <a href="gestion-clubs.html" class="active"><i class="fas fa-users"></i> Clubs</a>
+                <a href="../gestion/gestion-inscriptions.html"><i class="fas fa-file-alt"></i> Inscriptions</a>
+                <a href="../gestion/gestion-contrats-signatures.html"><i class="fas fa-file-signature"></i> Contrats signés</a>
+                <a href="../gestion/gestion-contrats-templates.html"><i class="fas fa-file-contract"></i> Templates</a>
+                <a href="../gestion/gestion-messages.html"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="../gestion/gestion-performances.html"><i class="fas fa-chart-line"></i> Performances</a>
+                <a href="../gestion/gestion-presences.html"><i class="fas fa-calendar-check"></i> Présences</a>
                 <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
             </div>
         </div>
@@ -47,9 +50,9 @@
             <div class="filters-bar">
                 <input type="text" id="searchInput" placeholder="Rechercher par nom ou ville...">
                 <select id="statutFilter">
-                    <option value="actif" selected>Actifs</option>
-                    <option value="archive">Archivés</option>
                     <option value="all">Tous les statuts</option>
+                    <option value="actif">Actifs</option>
+                    <option value="archive">Archivés</option>
                 </select>
                 <button id="newClubBtn" class="btn-primary"><i class="fas fa-plus-circle"></i> Créer un club</button>
                 <button id="refreshClubsBtn" class="btn-refresh"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
@@ -211,4 +214,4 @@
     <script src="gestion-clubs.js"></script>
 </body>
 </html>
-<!-- FIN : public/admin/nos-clubs-admin/presentation/gestion-clubs.html -->
+<!-- FIN : public/admin/nos-clubs-admin/gestion/gestion-clubs.html -->

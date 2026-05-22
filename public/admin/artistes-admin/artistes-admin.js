@@ -1,5 +1,4 @@
-/* DEBUT : public/admin/artistes-admin/artistes-admin.js */
-// ========== ARTISTES-ADMIN.JS ==========
+// ========== DEBUT : artistes-admin.js ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -15,7 +14,7 @@ let viewQuill = null;
 // ========== FIN : VARIABLES GLOBALES ==========
 
 // ========== DÉBUT : FONCTIONS UTILITAIRES ==========
-function showToast(message, type = 'info', duration = 3000) {
+function showToast(message, type = 'info', duration = 15000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -69,7 +68,8 @@ function getDisciplineLabel(code) {
 function getStatusLabel(status) {
     const labels = {
         'en_attente': 'En attente', 'valide_public': 'Approuvé',
-        'rejete': 'Rejeté', 'bloque': 'Bloqué', 'supprime': 'Supprimé'
+        'rejete': 'Rejeté', 'bloque': 'Bloqué', 'supprime': 'Supprimé',
+        'test_ecrit': 'Test écrit', 'test_pratique': 'Test pratique'
     };
     return labels[status] || status;
 }
@@ -111,7 +111,7 @@ async function loadArtistes() {
 
 // ========== DÉBUT : STATISTIQUES ==========
 function updateStats() {
-    const s = { en_attente:0, valide_public:0, rejete:0, bloque:0, supprime:0 };
+    const s = { en_attente:0, valide_public:0, rejete:0, bloque:0, supprime:0, test_ecrit:0, test_pratique:0 };
     allInscriptions.forEach(i => { if (s[i.status] !== undefined) s[i.status]++; });
     document.getElementById('statEnAttente').textContent = s.en_attente;
     document.getElementById('statApprouve').textContent = s.valide_public;
@@ -152,6 +152,9 @@ function renderArtistesTable() {
                 ${ins.status !== 'valide_public' ? `<button class="btn-icon btn-approve" data-artisteid="${ins.artiste_id}" title="Approuver"><i class="fas fa-check-circle"></i></button>` : ''}
                 ${ins.status !== 'rejete' ? `<button class="btn-icon btn-reject" data-artisteid="${ins.artiste_id}" title="Rejeter"><i class="fas fa-times-circle"></i></button>` : ''}
                 ${ins.status !== 'bloque' ? `<button class="btn-icon btn-block" data-artisteid="${ins.artiste_id}" title="Bloquer"><i class="fas fa-ban"></i></button>` : ''}
+                ${ins.status !== 'test_ecrit' ? `<button class="btn-icon btn-test-ecrit" data-artisteid="${ins.artiste_id}" title="Test écrit"><i class="fas fa-pencil-alt"></i></button>` : ''}
+                ${ins.status !== 'test_pratique' ? `<button class="btn-icon btn-test-pratique" data-artisteid="${ins.artiste_id}" title="Test pratique"><i class="fas fa-video"></i></button>` : ''}
+                <button class="btn-icon btn-edit" data-artisteid="${ins.artiste_id}" title="Modifier"><i class="fas fa-pen-to-square"></i></button>
                 <button class="btn-icon btn-delete" data-artisteid="${ins.artiste_id}" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
             </td>
         </tr>
@@ -161,11 +164,14 @@ function renderArtistesTable() {
     tbody.querySelectorAll('.btn-approve').forEach(b => b.addEventListener('click', () => openApproveModal(b.dataset.artisteid)));
     tbody.querySelectorAll('.btn-reject').forEach(b => b.addEventListener('click', () => openRejectModal(b.dataset.artisteid)));
     tbody.querySelectorAll('.btn-block').forEach(b => b.addEventListener('click', () => openBlockModal(b.dataset.artisteid)));
+    tbody.querySelectorAll('.btn-test-ecrit').forEach(b => b.addEventListener('click', () => openTestEcritModal(b.dataset.artisteid)));
+    tbody.querySelectorAll('.btn-test-pratique').forEach(b => b.addEventListener('click', () => openTestPratiqueModal(b.dataset.artisteid)));
+    tbody.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', () => openEditModal(b.dataset.artisteid)));
     tbody.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => openDeleteModal(b.dataset.artisteid)));
 }
 // ========== FIN : TABLEAU ARTISTES ==========
 
-// ========== DÉBUT : MODALE VISUALISATION (avec Quill) ==========
+// ========== DÉBUT : MODALE VISUALISATION (COMPLÈTE) ==========
 function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
 
 async function openViewModal(artisteId) {
@@ -173,22 +179,42 @@ async function openViewModal(artisteId) {
     if (!ins) return;
     currentInscription = ins;
 
+    let artistDataHtml = '';
+    if (ins.artist_data && typeof ins.artist_data === 'object') {
+        const entries = Object.entries(ins.artist_data);
+        if (entries.length) {
+            artistDataHtml = entries.map(([key, value]) => `<p><strong>${escapeHtml(key)}:</strong> ${escapeHtml(String(value))}</p>`).join('');
+        }
+    }
+
     const viewContent = document.getElementById('viewContent');
     viewContent.innerHTML = `
         <div class="view-details">
-            <div class="detail-section"><h4><i class="fas fa-user"></i> Identité</h4>
+            <div class="detail-section">
+                <h4><i class="fas fa-id-card"></i> Identité</h4>
+                <p><strong>ID Artiste :</strong> ${escapeHtml(ins.artiste_id)}</p>
                 <p><strong>Nom :</strong> ${escapeHtml(ins.full_name)}</p>
-                <p><strong>Email :</strong> ${escapeHtml(ins.email||'-')}</p>
+                <p><strong>Date de naissance :</strong> ${formatDate(ins.birth_date)}</p>
+                <p><strong>Email :</strong> ${escapeHtml(ins.email || '-')}</p>
                 <p><strong>Téléphone :</strong> ${escapeHtml(ins.phone)}</p>
                 <p><strong>Discipline :</strong> ${getDisciplineLabel(ins.discipline)}</p>
+                <p><strong>Rôle :</strong> ${escapeHtml(ins.role || '-')}</p>
                 <p><strong>Statut :</strong> <span class="status-badge ${getStatusClass(ins.status)}">${getStatusLabel(ins.status)}</span></p>
-                <p><strong>Date :</strong> ${formatDate(ins.created_at)}</p>
+                <p><strong>Date d'inscription :</strong> ${formatDate(ins.created_at)}</p>
+                ${ins.parent_name ? `<p><strong>Parent / tuteur :</strong> ${escapeHtml(ins.parent_name)}</p>` : ''}
+                ${ins.inscription_code ? `<p><strong>Code d'inscription :</strong> ${escapeHtml(ins.inscription_code)}</p>` : ''}
+                ${ins.affiliate_id ? `<p><strong>ID Affilié :</strong> ${escapeHtml(ins.affiliate_id)}</p>` : ''}
+                ${ins.definition ? `<p><strong>Description :</strong> ${escapeHtml(ins.definition)}</p>` : ''}
+                ${ins.motif_rejet ? `<p><strong>Motif rejet :</strong> ${escapeHtml(ins.motif_rejet)}</p>` : ''}
             </div>
-            <div class="detail-section"><h4><i class="fas fa-file-alt"></i> Documents</h4>
+            <div class="detail-section">
+                <h4><i class="fas fa-file-alt"></i> Documents</h4>
                 <p>Diplôme : ${ins.diploma_url ? `<a href="${escapeHtml(ins.diploma_url)}" target="_blank">Télécharger</a>` : '-'}</p>
                 <p>Pièce d'identité : ${ins.id_card_url ? `<a href="${escapeHtml(ins.id_card_url)}" target="_blank">Télécharger</a>` : '-'}</p>
             </div>
-            <div class="detail-section"><h4><i class="fas fa-comments"></i> Messagerie</h4>
+            ${artistDataHtml ? `<div class="detail-section"><h4><i class="fas fa-info-circle"></i> Données artistiques</h4>${artistDataHtml}</div>` : ''}
+            <div class="detail-section">
+                <h4><i class="fas fa-comments"></i> Messagerie</h4>
                 <div id="adminMessagesContainer" class="messages-container"></div>
                 <div class="message-compose">
                     <div id="viewMessageEditor" style="height:120px;"></div>
@@ -257,6 +283,185 @@ async function sendViewMessage() {
 }
 // ========== FIN : MODALE VISUALISATION ==========
 
+// ========== DÉBUT : MODALE MODIFICATION (AVEC ARTIST_DATA ÉDITABLE) ==========
+async function openEditModal(artisteId) {
+    const ins = allInscriptions.find(i => i.artiste_id === artisteId);
+    if (!ins) return;
+    currentInscription = ins;
+
+    let modal = document.getElementById('editModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'editModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content large">
+                <span class="close-modal">&times;</span>
+                <h3><i class="fas fa-pen-to-square"></i> Modifier la candidature</h3>
+                <form id="editForm">
+                    <input type="hidden" id="editArtisteId">
+                    <div class="form-section">
+                        <legend>Identité</legend>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nom complet *</label>
+                                <input type="text" id="editFullName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Date de naissance</label>
+                                <input type="date" id="editBirthDate">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Téléphone *</label>
+                                <input type="text" id="editPhone" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="editEmail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Discipline *</label>
+                            <select id="editDiscipline" required>
+                                <option value="chanteur">Chanteur</option>
+                                <option value="danseur">Danseur</option>
+                                <option value="compositeur">Compositeur</option>
+                                <option value="acteur_cinema">Acteur de cinéma</option>
+                                <option value="acteur_theatre">Acteur de théâtre</option>
+                                <option value="humoriste">Humoriste</option>
+                                <option value="slameur">Slameur</option>
+                                <option value="dj">DJ/producteur</option>
+                                <option value="cirque">Artiste de cirque</option>
+                                <option value="artiste_visuel">Artiste visuel</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rôle</label>
+                            <input type="text" id="editRole">
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <legend>Données artistiques (JSONB)</legend>
+                        <div id="artistDataFields"></div>
+                        <button type="button" id="addArtistDataField" class="btn-secondary"><i class="fas fa-plus"></i> Ajouter un champ</button>
+                    </div>
+                    <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('.close-modal').addEventListener('click', () => modal.classList.remove('active'));
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+
+        document.getElementById('addArtistDataField').addEventListener('click', () => {
+            const container = document.getElementById('artistDataFields');
+            const row = document.createElement('div');
+            row.className = 'form-row artist-data-row';
+            row.innerHTML = `
+                <div class="form-group">
+                    <input type="text" class="artist-data-key" placeholder="Clé">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="artist-data-value" placeholder="Valeur">
+                </div>
+                <button type="button" class="btn-icon btn-delete remove-data-row"><i class="fas fa-trash-alt"></i></button>
+            `;
+            container.appendChild(row);
+            row.querySelector('.remove-data-row').addEventListener('click', () => row.remove());
+        });
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const artisteId = document.getElementById('editArtisteId').value;
+            const fullName = document.getElementById('editFullName').value.trim();
+            const birthDate = document.getElementById('editBirthDate').value;
+            const phone = document.getElementById('editPhone').value.trim();
+            const email = document.getElementById('editEmail').value.trim();
+            const discipline = document.getElementById('editDiscipline').value;
+            const role = document.getElementById('editRole').value.trim();
+
+            const artistData = {};
+            document.querySelectorAll('.artist-data-row').forEach(row => {
+                const key = row.querySelector('.artist-data-key').value.trim();
+                const value = row.querySelector('.artist-data-value').value.trim();
+                if (key) artistData[key] = value;
+            });
+
+            showLoader();
+            try {
+                const { error } = await supabaseAdmin
+                    .from('public_artistes_adhesion')
+                    .update({
+                        full_name: fullName,
+                        birth_date: birthDate || null,
+                        phone: phone,
+                        email: email || null,
+                        discipline: discipline,
+                        role: role || null,
+                        artist_data: Object.keys(artistData).length ? artistData : null,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('artiste_id', artisteId);
+                if (error) throw error;
+
+                const idx = allInscriptions.findIndex(i => i.artiste_id === artisteId);
+                if (idx !== -1) {
+                    allInscriptions[idx].full_name = fullName;
+                    allInscriptions[idx].birth_date = birthDate || null;
+                    allInscriptions[idx].phone = phone;
+                    allInscriptions[idx].email = email || null;
+                    allInscriptions[idx].discipline = discipline;
+                    allInscriptions[idx].role = role || null;
+                    allInscriptions[idx].artist_data = Object.keys(artistData).length ? artistData : null;
+                }
+
+                showToast('Candidature modifiée avec succès', 'success');
+                modal.classList.remove('active');
+                renderArtistesTable();
+                updateStats();
+            } catch (err) {
+                showToast('Erreur modification : ' + err.message, 'error');
+            } finally {
+                hideLoader();
+            }
+        });
+    }
+
+    document.getElementById('editArtisteId').value = ins.artiste_id;
+    document.getElementById('editFullName').value = ins.full_name || '';
+    document.getElementById('editBirthDate').value = ins.birth_date || '';
+    document.getElementById('editPhone').value = ins.phone || '';
+    document.getElementById('editEmail').value = ins.email || '';
+    document.getElementById('editDiscipline').value = ins.discipline || 'chanteur';
+    document.getElementById('editRole').value = ins.role || '';
+
+    const container = document.getElementById('artistDataFields');
+    container.innerHTML = '';
+    if (ins.artist_data && typeof ins.artist_data === 'object') {
+        Object.entries(ins.artist_data).forEach(([key, value]) => {
+            const row = document.createElement('div');
+            row.className = 'form-row artist-data-row';
+            row.innerHTML = `
+                <div class="form-group">
+                    <input type="text" class="artist-data-key" placeholder="Clé" value="${escapeHtml(key)}">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="artist-data-value" placeholder="Valeur" value="${escapeHtml(String(value))}">
+                </div>
+                <button type="button" class="btn-icon btn-delete remove-data-row"><i class="fas fa-trash-alt"></i></button>
+            `;
+            container.appendChild(row);
+            row.querySelector('.remove-data-row').addEventListener('click', () => row.remove());
+        });
+    }
+
+    modal.classList.add('active');
+}
+// ========== FIN : MODALE MODIFICATION ==========
+
 // ========== DÉBUT : APPROBATION ==========
 function openApproveModal(artisteId) {
     const ins = allInscriptions.find(i => i.artiste_id === artisteId);
@@ -306,7 +511,7 @@ function openApproveModal(artisteId) {
 }
 // ========== FIN : APPROBATION ==========
 
-// ========== DÉBUT : REJET ==========
+// ========== DÉBUT : REJET (CORRIGÉ – UTILISE LA COLONNE motif_rejet) ==========
 function openRejectModal(artisteId) {
     const ins = allInscriptions.find(i => i.artiste_id === artisteId);
     if (!ins) return;
@@ -322,7 +527,7 @@ function openRejectModal(artisteId) {
                 .from('public_artistes_adhesion')
                 .update({
                     status: 'rejete',
-                    role_data: { ... (ins.role_data || {}), motif_rejet: reason },
+                    motif_rejet: reason,
                     updated_at: new Date().toISOString()
                 })
                 .eq('artiste_id', currentInscription.artiste_id);
@@ -331,7 +536,7 @@ function openRejectModal(artisteId) {
             showToast('Artiste rejeté', 'success');
             closeAllModals();
             loadArtistes();
-        } catch (err) { showToast('Erreur rejet', 'error'); }
+        } catch (err) { showToast('Erreur rejet : ' + err.message, 'error'); }
         finally { hideLoader(); }
     };
     document.getElementById('rejectModal').classList.add('active');
@@ -362,6 +567,69 @@ function openBlockModal(artisteId) {
     document.getElementById('blockModal').classList.add('active');
 }
 // ========== FIN : BLOCAGE ==========
+
+// ========== DÉBUT : TEST ÉCRIT ==========
+function openTestEcritModal(artisteId) {
+    const ins = allInscriptions.find(i => i.artiste_id === artisteId);
+    if (!ins) return;
+    currentInscription = ins;
+
+    document.getElementById('confirmTestEcritBtn')?.addEventListener('click', async () => {
+        showLoader();
+        try {
+            const { error } = await supabaseAdmin
+                .from('public_artistes_adhesion')
+                .update({ status: 'test_ecrit', updated_at: new Date().toISOString() })
+                .eq('artiste_id', currentInscription.artiste_id);
+            if (error) throw error;
+            currentInscription.status = 'test_ecrit';
+            showToast('Artiste envoyé en test écrit', 'success');
+            closeAllModals();
+            loadArtistes();
+        } catch (err) { showToast('Erreur', 'error'); }
+        finally { hideLoader(); }
+    });
+    // Créer un bouton s'il n'existe pas (normalement présent dans le HTML)
+    if (!document.getElementById('confirmTestEcritBtn')) {
+        const modal = document.getElementById('testEcritModal');
+        if (modal) {
+            modal.innerHTML += '<button id="confirmTestEcritBtn" class="btn-submit"><i class="fas fa-check"></i> Confirmer</button>';
+        }
+    }
+    document.getElementById('testEcritModal').classList.add('active');
+}
+// ========== FIN : TEST ÉCRIT ==========
+
+// ========== DÉBUT : TEST PRATIQUE ==========
+function openTestPratiqueModal(artisteId) {
+    const ins = allInscriptions.find(i => i.artiste_id === artisteId);
+    if (!ins) return;
+    currentInscription = ins;
+
+    document.getElementById('confirmTestPratiqueBtn')?.addEventListener('click', async () => {
+        showLoader();
+        try {
+            const { error } = await supabaseAdmin
+                .from('public_artistes_adhesion')
+                .update({ status: 'test_pratique', updated_at: new Date().toISOString() })
+                .eq('artiste_id', currentInscription.artiste_id);
+            if (error) throw error;
+            currentInscription.status = 'test_pratique';
+            showToast('Artiste envoyé en test pratique', 'success');
+            closeAllModals();
+            loadArtistes();
+        } catch (err) { showToast('Erreur', 'error'); }
+        finally { hideLoader(); }
+    });
+    if (!document.getElementById('confirmTestPratiqueBtn')) {
+        const modal = document.getElementById('testPratiqueModal');
+        if (modal) {
+            modal.innerHTML += '<button id="confirmTestPratiqueBtn" class="btn-submit"><i class="fas fa-check"></i> Confirmer</button>';
+        }
+    }
+    document.getElementById('testPratiqueModal').classList.add('active');
+}
+// ========== FIN : TEST PRATIQUE ==========
 
 // ========== DÉBUT : SUPPRESSION ==========
 function openDeleteModal(artisteId) {
@@ -442,7 +710,7 @@ async function saveExamenCorrection() {
 }
 // ========== FIN : EXAMENS ==========
 
-// ========== DÉBUT : TESTS PRATIQUES ==========
+// ========== DÉBUT : TESTS PRATIQUES (ANALYSES) ==========
 async function loadAnalyses() {
     try {
         const { data, error } = await supabaseAdmin
@@ -495,7 +763,7 @@ async function saveAnalyseEvaluation() {
 }
 // ========== FIN : TESTS PRATIQUES ==========
 
-// ========== DÉBUT : ONGLET MESSAGES ==========
+// ========== DÉBUT : ONGLET MESSAGES (GLOBAL) ==========
 async function loadAllMessages() {
     try {
         const { data, error } = await supabaseAdmin
@@ -573,7 +841,6 @@ if (menuToggle && navLinks) {
 }
 document.getElementById('logoutBtn')?.addEventListener('click', e => { 
     e.preventDefault(); 
-    // Nettoyage d'une éventuelle session légère et redirection vers l'accueil public
     localStorage.removeItem('hubiLang');
     window.location.href = '../../../index.html'; 
 });
@@ -598,4 +865,3 @@ document.addEventListener('DOMContentLoaded', () => {
     populateArtisteSelect();
 });
 // ========== FIN DE ARTISTES-ADMIN.JS ==========
-/* FIN : public/admin/artistes-admin/artistes-admin.js */

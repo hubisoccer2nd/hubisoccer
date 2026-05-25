@@ -10,7 +10,7 @@
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ----- RESET & VARIABLES ----- */
+        /* DEBUT : RESET & VARIABLES */
         * {
             margin: 0;
             padding: 0;
@@ -26,9 +26,9 @@
         }
 
         :root {
-            --primary: #551B8C;
-            --primary-light: #7e3db0;
-            --primary-dark: #3d1266;
+            --primary: #4B0082;
+            --primary-light: #7B2FBE;
+            --primary-dark: #2E004F;
             --gold: #FFCC00;
             --gold-dark: #e6b800;
             --bg-light: #F0F8FF;
@@ -42,8 +42,9 @@
             --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
             --transition: all 0.3s ease;
         }
+        /* FIN : RESET & VARIABLES */
 
-        /* ----- NAVBAR ----- */
+        /* DEBUT : NAVBAR */
         .navbar {
             background: var(--white);
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -98,8 +99,9 @@
             background: var(--primary);
             color: white;
         }
+        /* FIN : NAVBAR */
 
-        /* ----- MAIN CONTENT ----- */
+        /* DEBUT : MAIN CONTENT */
         .main-content {
             flex: 1;
             display: flex;
@@ -143,7 +145,8 @@
             width: 20px;
         }
 
-        input, select {
+        input,
+        select {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid var(--light-gray);
@@ -154,7 +157,8 @@
             background: white;
         }
 
-        input:focus, select:focus {
+        input:focus,
+        select:focus {
             border-color: var(--primary);
             outline: none;
             box-shadow: 0 0 0 4px rgba(85,27,140,0.1);
@@ -245,8 +249,9 @@
             color: var(--gray);
             margin-top: 4px;
         }
+        /* FIN : MAIN CONTENT */
 
-        /* ----- FOOTER ----- */
+        /* DEBUT : FOOTER */
         .footer {
             background: var(--white);
             padding: 1.2rem 2rem;
@@ -273,8 +278,9 @@
         .footer-links a:hover {
             color: var(--primary);
         }
+        /* FIN : FOOTER */
 
-        /* ----- TOAST ----- */
+        /* DEBUT : TOAST */
         .toast-container {
             position: fixed;
             bottom: 20px;
@@ -292,43 +298,65 @@
             animation: slideIn 0.3s ease;
         }
 
-        .toast.success { border-left-color: #28a745; }
-        .toast.error { border-left-color: #dc3545; }
-        .toast.warning { border-left-color: #ffc107; }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .toast.success {
+            border-left-color: #28a745;
         }
 
-        /* ----- RESPONSIVE ----- */
+        .toast.error {
+            border-left-color: #dc3545;
+        }
+
+        .toast.warning {
+            border-left-color: #ffc107;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        /* FIN : TOAST */
+
+        /* DEBUT : RESPONSIVE */
         @media (max-width: 600px) {
             .navbar {
                 padding: 0.8rem 1rem;
                 flex-direction: column;
                 gap: 10px;
             }
+
             .navbar-links {
                 flex-wrap: wrap;
                 justify-content: center;
             }
-            .glass-card { padding: 20px; }
+
+            .glass-card {
+                padding: 20px;
+            }
+
             .input-group {
                 flex-direction: column;
                 gap: 0;
             }
+
             .footer {
                 flex-direction: column;
                 gap: 10px;
                 text-align: center;
             }
+
             .footer-links {
                 flex-wrap: wrap;
                 justify-content: center;
             }
         }
+        /* FIN : RESPONSIVE */
 
-        /* Cache le contenu principal tant que le rôle n'est pas validé */
         #mainContent {
             display: none;
         }
@@ -336,7 +364,7 @@
 </head>
 <body>
 
-<!-- ===== SCRIPT CRITIQUE : VÉRIFICATION DU RÔLE (exécuté immédiatement) ===== -->
+<!-- ===== VÉRIFICATION DU RÔLE ===== -->
 <script>
     (function() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -357,19 +385,19 @@
 
 <!-- ===== NAVBAR ===== -->
 <nav class="navbar">
-    <a href="../../../index.html" class="navbar-brand">
+    <a href="/" class="navbar-brand">
         <i class="fas fa-futbol"></i>
         <span>HubISoccer</span>
     </a>
     <div class="navbar-links">
-        <a href="../../../public/premier-pas.html">Premier pas</a>
-        <a href="../../../public/actualites.html">Actualités</a>
-        <a href="../../../public/contact.html">Contact</a>
+        <a href="/premier-pas/">Premier pas</a>
+        <a href="/actualites/">Actualités</a>
+        <a href="/contact/">Contact</a>
         <a href="#" class="btn-outline"><i class="fas fa-question-circle"></i> Aide</a>
     </div>
 </nav>
 
-<!-- ===== MAIN CONTENT (caché par défaut, affiché si rôle valide) ===== -->
+<!-- ===== MAIN CONTENT ===== -->
 <div id="mainContent" class="main-content">
     <div class="glass-card">
         <h1><i class="fas fa-user-plus"></i> Inscription</h1>
@@ -439,8 +467,8 @@
             <div class="checkbox-group">
                 <input type="checkbox" id="acceptTerms" required>
                 <label for="acceptTerms">
-                    J'ai lu et j'accepte les <a href="../../../public/cgu.html" target="_blank">Conditions Générales d'Utilisation</a> 
-                    et la <a href="../../../public/mentions-legales.html" target="_blank">Politique de confidentialité</a>. 
+                    J'ai lu et j'accepte les <a href="/cgu/" target="_blank">Conditions Générales d'Utilisation</a> 
+                    et la <a href="/mentions-legales/" target="_blank">Politique de confidentialité</a>. 
                     Je reconnais avoir plus de 16 ans.
                 </label>
             </div>
@@ -462,10 +490,10 @@
         &copy; 2026 HubISoccer. Tous droits réservés.
     </div>
     <div class="footer-links">
-        <a href="../../../public/mentions-legales.html">Mentions légales</a>
-        <a href="../../../public/cgu.html">CGU</a>
-        <a href="../../../public/faq.html">FAQ</a>
-        <a href="../../../public/contact.html">Support</a>
+        <a href="/mentions-legales/">Mentions légales</a>
+        <a href="/cgu/">CGU</a>
+        <a href="/faq/">FAQ</a>
+        <a href="/contact/">Support</a>
     </div>
 </footer>
 
@@ -473,21 +501,19 @@
 <div id="toastContainer" class="toast-container"></div>
 
 <script>
-    // ----- INITIALISATION SUPABASE -----
+    /* DEBUT : INITIALISATION SUPABASE */
     const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
-    
-    // Utilisation d'un nom explicite pour le client d'authentification
     const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     const role = window.__HUBI_ROLE;
+    /* FIN : INITIALISATION SUPABASE */
 
     // Date max pour 16 ans
     const today = new Date();
     const maxDate = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
     document.getElementById('birthDate').setAttribute('max', maxDate.toISOString().split('T')[0]);
 
-    // ----- LISTE DES PAYS (complète) -----
+    /* DEBUT : LISTE DES PAYS */
     const countries = [
         { code: 'AF', name: 'Afghanistan' }, { code: 'ZA', name: 'Afrique du Sud' }, { code: 'AL', name: 'Albanie' },
         { code: 'DZ', name: 'Algérie' }, { code: 'DE', name: 'Allemagne' }, { code: 'AD', name: 'Andorre' },
@@ -556,13 +582,13 @@
         { code: 'ZW', name: 'Zimbabwe' }
     ];
 
-    // Peuplement du selecteur pays (exécuté après que le DOM est prêt)
     document.addEventListener('DOMContentLoaded', function() {
         const countrySelect = document.getElementById('country');
         if (countrySelect) {
-            // Trier les pays par nom
-            const sortedCountries = [...countries].sort((a, b) => a.name.localeCompare(b.name));
-            sortedCountries.forEach(c => {
+            const sortedCountries = [...countries].sort(function(a, b) {
+                return a.name.localeCompare(b.name);
+            });
+            sortedCountries.forEach(function(c) {
                 const option = document.createElement('option');
                 option.value = c.code;
                 option.textContent = c.name;
@@ -570,25 +596,35 @@
             });
         }
     });
+    /* FIN : LISTE DES PAYS */
 
-    // ----- FONCTIONS UTILITAIRES -----
-    function showToast(message, type = 'info') {
+    /* DEBUT : FONCTION SHOWTOAST */
+    function showToast(message, type) {
+        type = type || 'info';
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<div>${message}</div>`;
+        toast.className = 'toast ' + type;
+        toast.innerHTML = '<div>' + message + '</div>';
         container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
+        setTimeout(function() {
+            toast.remove();
+        }, 30000);
     }
+    /* FIN : FONCTION SHOWTOAST */
 
+    /* DEBUT : VALIDATION MOT DE PASSE */
     function validatePassword(pwd) {
         return pwd.length >= 8 && /[A-Z]/.test(pwd) && /[0-9]/.test(pwd);
     }
+    /* FIN : VALIDATION MOT DE PASSE */
 
+    /* DEBUT : VALIDATION TELEPHONE */
     function validatePhone(phone) {
         return /^\+?[0-9\s\-]{8,20}$/.test(phone);
     }
+    /* FIN : VALIDATION TELEPHONE */
 
+    /* DEBUT : VERIFICATION ID HUBISOCCER */
     async function verifyHubisoccerId(id, expectedRole) {
         const { data, error } = await supabaseAuth
             .from('supabaseAuthPrive_ids_pregenerees')
@@ -596,13 +632,21 @@
             .eq('id', id)
             .single();
         
-        if (error || !data) throw new Error('ID HubISoccer invalide ou inexistant.');
-        if (data.used) throw new Error('Cet ID a déjà été utilisé.');
-        if (data.role_code !== expectedRole) throw new Error(`Cet ID est destiné au rôle "${data.role_code}", pas à "${expectedRole}".`);
+        if (error || !data) {
+            throw new Error('ID HubISoccer invalide ou inexistant.');
+        }
+        if (data.used) {
+            throw new Error('Cet ID a déjà été utilisé.');
+        }
+        if (data.role_code !== expectedRole) {
+            throw new Error('Cet ID est destiné au rôle "' + data.role_code + '", pas à "' + expectedRole + '".');
+        }
         return true;
     }
+    /* FIN : VERIFICATION ID HUBISOCCER */
 
-    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    /* DEBUT : GESTIONNAIRE D'INSCRIPTION */
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const lastName = document.getElementById('lastName').value.trim();
@@ -651,12 +695,24 @@
 
             showToast('Création du compte...', 'info');
             const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
-                email, password,
-                options: { data: { first_name: firstName, last_name: lastName, hubisoccer_id: hubisoccerId, role_code: role } }
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        first_name: firstName,
+                        last_name: lastName,
+                        hubisoccer_id: hubisoccerId,
+                        role_code: role
+                    }
+                }
             });
 
-            if (authError) throw authError;
-            if (!authData.user) throw new Error('Erreur lors de la création du compte.');
+            if (authError) {
+                throw authError;
+            }
+            if (!authData.user) {
+                throw new Error('Erreur lors de la création du compte.');
+            }
 
             showToast('Enregistrement du profil...', 'info');
             const { error: profileError } = await supabaseAuth
@@ -669,20 +725,29 @@
                     first_name: firstName,
                     birth_date: birthDate,
                     country_code: country,
-                    phone, email,
-                    display_name: `${firstName} ${lastName}`,
+                    phone: phone,
+                    email: email,
+                    display_name: firstName + ' ' + lastName,
                     created_at: new Date().toISOString()
                 });
 
-            if (profileError) throw new Error('Erreur lors de la création du profil.');
+            if (profileError) {
+                throw new Error('Erreur lors de la création du profil.');
+            }
 
             await supabaseAuth
                 .from('supabaseAuthPrive_ids_pregenerees')
-                .update({ used: true, used_by: authData.user.id, used_at: new Date().toISOString() })
+                .update({
+                    used: true,
+                    used_by: authData.user.id,
+                    used_at: new Date().toISOString()
+                })
                 .eq('id', hubisoccerId);
 
             showToast('Inscription réussie ! Redirection...', 'success');
-            setTimeout(() => window.location.href = 'login.html', 2500);
+            setTimeout(function() {
+                window.location.href = 'login.html';
+            }, 2500);
 
         } catch (err) {
             console.error(err);
@@ -691,6 +756,7 @@
             submitBtn.innerHTML = '<i class="fas fa-user-check"></i> Créer mon compte';
         }
     });
+    /* FIN : GESTIONNAIRE D'INSCRIPTION */
 </script>
 </body>
 </html>

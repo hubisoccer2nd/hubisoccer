@@ -10,8 +10,13 @@
     <!-- SDK Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ----- RESET & VARIABLES ----- */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* DEBUT : RESET & VARIABLES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
@@ -19,10 +24,11 @@
             display: flex;
             flex-direction: column;
         }
+
         :root {
-            --primary: #551B8C;
-            --primary-light: #7e3db0;
-            --primary-dark: #3d1266;
+            --primary: #4B0082;
+            --primary-light: #7B2FBE;
+            --primary-dark: #2E004F;
             --gold: #FFCC00;
             --gold-dark: #e6b800;
             --bg-light: #F0F8FF;
@@ -36,8 +42,9 @@
             --shadow-hover: 0 15px 40px rgba(85,27,140,0.15);
             --transition: all 0.3s ease;
         }
+        /* FIN : RESET & VARIABLES */
 
-        /* ----- NAVBAR ADMINISTRATION ----- */
+        /* DEBUT : NAVBAR ADMINISTRATION */
         .admin-nav {
             background: var(--white);
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -50,103 +57,285 @@
             top: 0;
             z-index: 100;
         }
-        .logo-area { display: flex; align-items: center; gap: 15px; }
-        .logo-nav { height: 40px; }
-        .admin-title { font-weight: 700; color: var(--primary); font-size: 1.2rem; }
-        .nav-links { display: flex; gap: 2rem; align-items: center; }
-        .nav-links a {
-            color: var(--dark); text-decoration: none; font-weight: 500;
-            transition: var(--transition); font-size: 0.95rem;
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
-        .nav-links a:hover { color: var(--primary); }
-        .nav-links a.active { color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--gold); }
+
+        .logo-nav {
+            height: 40px;
+        }
+
+        .admin-title {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a.active {
+            color: var(--primary);
+            font-weight: 600;
+            border-bottom: 2px solid var(--gold);
+        }
+
         .logout-btn {
-            background: var(--danger); color: white; border: none; padding: 8px 18px;
-            border-radius: 30px; font-weight: 500; cursor: pointer; transition: var(--transition);
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
             font-size: 0.9rem;
         }
-        .logout-btn:hover { background: #c82333; transform: translateY(-2px); }
 
-        /* ----- MAIN CONTENT ----- */
-        .admin-container { max-width: 1300px; margin: 0 auto; padding: 30px 5%; flex: 1; }
-        h1 { color: var(--primary); font-size: 2rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-        .subtitle { color: var(--gray); margin-bottom: 30px; border-left: 4px solid var(--gold); padding-left: 15px; }
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        /* FIN : NAVBAR ADMINISTRATION */
+
+        /* DEBUT : MAIN CONTENT */
+        .admin-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 30px 5%;
+            flex: 1;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            margin-bottom: 30px;
+            border-left: 4px solid var(--gold);
+            padding-left: 15px;
+        }
+
         .glass-card {
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border-radius: 30px;
-            padding: 25px; margin-bottom: 30px; box-shadow: var(--shadow);
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(8px);
+            border-radius: 30px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
         }
+
         .filters {
-            display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            align-items: center;
         }
-        .filters input, .filters select {
-            padding: 10px 15px; border-radius: 30px; border: 1px solid var(--light-gray);
-            background: white; font-family: 'Poppins', sans-serif;
+
+        .filters input,
+        .filters select {
+            padding: 10px 15px;
+            border-radius: 30px;
+            border: 1px solid var(--light-gray);
+            background: white;
+            font-family: 'Poppins', sans-serif;
         }
+
         .btn-refresh {
-            background: var(--primary); color: white; border: none; padding: 10px 20px;
-            border-radius: 30px; cursor: pointer; font-weight: 500; transition: var(--transition);
-            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .btn-refresh:hover { background: var(--primary-light); transform: translateY(-2px); }
-        .logs-list { background: white; border-radius: 20px; padding: 20px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--light-gray); }
-        th { background: var(--bg-light); color: var(--primary); font-weight: 600; }
+
+        .btn-refresh:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .logs-list {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        th {
+            background: var(--bg-light);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
         .badge-action {
-            display: inline-block; padding: 4px 12px; border-radius: 20px;
-            font-size: 0.75rem; font-weight: 600; background: #e9ecef; color: var(--dark);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #e9ecef;
+            color: var(--dark);
         }
+        /* FIN : MAIN CONTENT */
 
-        /* ----- FOOTER ADMINISTRATION ----- */
+        /* DEBUT : FOOTER ADMINISTRATION */
         .admin-footer {
-            background: var(--white); padding: 1.2rem 5%; border-top: 1px solid var(--light-gray);
-            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-            font-size: 0.85rem; color: var(--gray);
+            background: var(--white);
+            padding: 1.2rem 5%;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--gray);
         }
-        .footer-links { display: flex; gap: 1.5rem; }
-        .footer-links a { color: var(--gray); text-decoration: none; transition: var(--transition); }
-        .footer-links a:hover { color: var(--primary); }
 
-        /* ----- TOAST ----- */
-        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--gray);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+        /* FIN : FOOTER ADMINISTRATION */
+
+        /* DEBUT : TOAST */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
         .toast {
-            background: white; border-radius: 12px; padding: 12px 20px; margin-top: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-left: 4px solid; animation: slideIn 0.3s ease;
+            background: white;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
         }
-        .toast.success { border-left-color: #28a745; }
-        .toast.error { border-left-color: #dc3545; }
-        .toast.warning { border-left-color: #ffc107; }
+
+        .toast.success {
+            border-left-color: #28a745;
+        }
+
+        .toast.error {
+            border-left-color: #dc3545;
+        }
+
+        .toast.warning {
+            border-left-color: #ffc107;
+        }
+
         @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
+        /* FIN : TOAST */
 
-        /* ----- RESPONSIVE ----- */
+        /* DEBUT : RESPONSIVE */
         @media (max-width: 700px) {
-            .nav-links { display: none; }
-            .filters { flex-direction: column; align-items: stretch; }
-            .admin-footer { flex-direction: column; gap: 10px; text-align: center; }
-            .footer-links { flex-wrap: wrap; justify-content: center; }
-        }
+            .nav-links {
+                display: none;
+            }
 
-        #mainContent { display: none; }
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .admin-footer {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+        /* FIN : RESPONSIVE */
+
+        #mainContent {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-<!-- ===== INITIALISATION SUPABASE (exécution synchrone) ===== -->
+<!-- ===== INITIALISATION SUPABASE ===== -->
 <script>
-    // Début initialisation Supabase
+    /* DEBUT : INITIALISATION SUPABASE */
     const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
     const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window.__SUPABASE_CLIENT = supabaseAuth;
-    // Fin initialisation Supabase
+    /* FIN : INITIALISATION SUPABASE */
 </script>
 
-<!-- ===== VÉRIFICATION ADMIN ASYNCHRONE ===== -->
+<!-- ===== VÉRIFICATION ADMIN ===== -->
 <script>
-    // Début vérification session admin
+    /* DEBUT : VERIFICATION SESSION ADMIN */
     (async function() {
         try {
             const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
@@ -166,10 +355,10 @@
         } catch (err) {
             console.error(err);
             alert('Accès réservé aux administrateurs. Veuillez vous connecter.');
-            window.location.href = '../users/login.html';
+            window.location.href = '../users/login.html?role=ADMIN';
         }
     })();
-    // Fin vérification session admin
+    /* FIN : VERIFICATION SESSION ADMIN */
 </script>
 
 <!-- ===== NAVBAR ADMIN ===== -->
@@ -218,10 +407,10 @@
 <footer class="admin-footer">
     <div class="copyright">&copy; 2026 HubISoccer. Tous droits réservés.</div>
     <div class="footer-links">
-        <a href="../../../public/mentions-legales.html">Mentions légales</a>
-        <a href="../../../public/cgu.html">CGU</a>
-        <a href="../../../public/faq.html">FAQ</a>
-        <a href="../../../public/contact.html">Support</a>
+        <a href="/mentions-legales/">Mentions légales</a>
+        <a href="/cgu/">CGU</a>
+        <a href="/faq/">FAQ</a>
+        <a href="/contact/">Support</a>
     </div>
 </footer>
 
@@ -229,32 +418,37 @@
 <div id="toastContainer" class="toast-container"></div>
 
 <script>
-    // Début script principal logs
+    /* DEBUT : SCRIPT PRINCIPAL LOGS */
     const supabaseClient = window.__SUPABASE_CLIENT;
     const currentUser = window.__CURRENT_USER;
 
     let allLogs = [];
     let userCache = new Map();
 
-    // Début fonction showToast
-    function showToast(message, type = 'info') {
+    /* DEBUT : FONCTION SHOWTOAST */
+    function showToast(message, type) {
+        type = type || 'info';
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<div>${message}</div>`;
+        toast.className = 'toast ' + type;
+        toast.innerHTML = '<div>' + message + '</div>';
         container.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
+        setTimeout(function() {
+            toast.remove();
+        }, 30000);
     }
-    // Fin fonction showToast
+    /* FIN : FONCTION SHOWTOAST */
 
-    // Début fonction escapeHtml
+    /* DEBUT : FONCTION ESCAPEHTML */
     function escapeHtml(str) {
         if (!str) return '';
-        return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        return str.replace(/[&<>]/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m];
+        });
     }
-    // Fin fonction escapeHtml
+    /* FIN : FONCTION ESCAPEHTML */
 
-    // Début fonction getUserInfo
+    /* DEBUT : FONCTION GETUSERINFO */
     async function getUserInfo(userId) {
         if (!userId) return { email: null, display_name: null };
         if (userCache.has(userId)) return userCache.get(userId);
@@ -272,9 +466,9 @@
             return { email: null, display_name: null };
         }
     }
-    // Fin fonction getUserInfo
+    /* FIN : FONCTION GETUSERINFO */
 
-    // Début fonction loadLogs
+    /* DEBUT : FONCTION LOADLOGS */
     async function loadLogs() {
         const container = document.getElementById('logsList');
         container.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Chargement des logs...</p>';
@@ -294,8 +488,7 @@
                 throw error;
             }
 
-            // Récupérer les informations utilisateur pour chaque log
-            const logsWithUsers = await Promise.all(data.map(async (log) => {
+            const logsWithUsers = await Promise.all(data.map(async function(log) {
                 const userInfo = await getUserInfo(log.user_id);
                 return { ...log, user_email: userInfo.email, user_display: userInfo.display_name };
             }));
@@ -308,14 +501,14 @@
             showToast(err.message, 'error');
         }
     }
-    // Fin fonction loadLogs
+    /* FIN : FONCTION LOADLOGS */
 
-    // Début fonction renderLogs
+    /* DEBUT : FONCTION RENDERLOGS */
     function renderLogs() {
         const search = document.getElementById('searchUser').value.toLowerCase();
         const actionFilter = document.getElementById('filterAction').value;
 
-        let filtered = allLogs.filter(log => {
+        let filtered = allLogs.filter(function(log) {
             const email = log.user_email || '';
             const display = log.user_display || '';
             const userId = log.user_id || '';
@@ -338,21 +531,21 @@
             const displayName = log.user_display || '';
             const email = log.user_email || '';
             const userName = displayName || email || log.user_id?.substring(0, 8) || 'Système';
-            html += `<tr>
-                <td>${new Date(log.created_at).toLocaleString()}</td>
-                <td>${escapeHtml(userName)}</td>
-                <td><span class="badge-action">${escapeHtml(log.action)}</span></td>
-                <td>${escapeHtml(log.details || '—')}</td>
-                <td>${escapeHtml(log.ip || '—')}</td>
-            </tr>`;
+            html += '<tr>' +
+                '<td>' + new Date(log.created_at).toLocaleString() + '</td>' +
+                '<td>' + escapeHtml(userName) + '</td>' +
+                '<td><span class="badge-action">' + escapeHtml(log.action) + '</span></td>' +
+                '<td>' + escapeHtml(log.details || '—') + '</td>' +
+                '<td>' + escapeHtml(log.ip || '—') + '</td>' +
+            '</tr>';
         }
         html += '</tbody></table>';
         container.innerHTML = html;
     }
-    // Fin fonction renderLogs
+    /* FIN : FONCTION RENDERLOGS */
 
-    // Début fonction logAdminAction
-    async function logAdminAction(action, details = null) {
+    /* DEBUT : FONCTION LOGADMINACTION */
+    async function logAdminAction(action, details) {
         if (!currentUser) return;
         try {
             const ip = '';
@@ -370,25 +563,24 @@
             console.warn('Erreur logAdminAction:', err);
         }
     }
-    // Fin fonction logAdminAction
+    /* FIN : FONCTION LOGADMINACTION */
 
     window.logAdminAction = logAdminAction;
 
-    // Début événements
+    /* DEBUT : EVENEMENTS */
     document.getElementById('refreshBtn').addEventListener('click', loadLogs);
     document.getElementById('searchUser').addEventListener('input', renderLogs);
     document.getElementById('filterAction').addEventListener('change', renderLogs);
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
+    document.getElementById('logoutBtn').addEventListener('click', async function() {
         await logAdminAction('LOGOUT', 'Déconnexion manuelle');
         await supabaseClient.auth.signOut();
         window.location.href = '../users/login.html';
     });
-    // Fin événements
+    /* FIN : EVENEMENTS */
 
-    // Chargement initial
     loadLogs();
-    // Fin script principal logs
+    /* FIN : SCRIPT PRINCIPAL LOGS */
 </script>
 </body>
 </html>

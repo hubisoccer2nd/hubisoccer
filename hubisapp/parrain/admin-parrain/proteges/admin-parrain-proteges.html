@@ -1,0 +1,287 @@
+<!-- ============================================================
+   HubISoccer — admin-parrain-proteges.html
+   Administration Parrains · Gestion des Protégés
+   ============================================================ -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <!-- DEBUT : MÉTADONNÉES -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, touch-action=manipulation">
+    <title>Admin Protégés | HubISoccer</title>
+    <!-- FIN : MÉTADONNÉES -->
+
+    <!-- DEBUT : POLICES & ICÔNES -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- FIN : POLICES & ICÔNES -->
+
+    <!-- DEBUT : CSS LOCAL -->
+    <link rel="stylesheet" href="admin-parrain-proteges.css">
+    <!-- FIN : CSS LOCAL -->
+
+    <!-- DEBUT : SDK SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FIN : SDK SUPABASE -->
+</head>
+<body>
+
+<!-- DEBUT : LOADER GLOBAL -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- FIN : LOADER GLOBAL -->
+
+<!-- DEBUT : NAVBAR -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='/'">
+        <span class="dashboard-title"><i class="fas fa-hands-helping"></i> Admin Parrains - Protégés</span>
+    </div>
+    <div class="nav-right">
+        <!-- Sélecteur de langue (24 langues) -->
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <!-- Notifications -->
+        <div class="notif-icon" id="notifIcon" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <!-- Menu utilisateur -->
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../dashboard/admin-parrain-dash.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="../scouting/admin-parrain-scout.html"><i class="fas fa-binoculars"></i> Scouting</a>
+                <a href="../dons/admin-parrain-dons.html"><i class="fas fa-hand-holding-usd"></i> Dons</a>
+                <a href="../mentorat/admin-parrain-mentorat.html"><i class="fas fa-comments"></i> Mentorat</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <!-- Bouton hamburger -->
+        <button class="menu-toggle" id="menuToggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- FIN : NAVBAR -->
+
+<!-- DEBUT : SIDEBAR -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-hands-helping"></i><h3>Admin Parrain</h3></div>
+        <button class="close-sidebar" id="closeSidebar" aria-label="Fermer"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Administration</div>
+        <a href="../dashboard/admin-parrain-dash.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+        <a href="../scouting/admin-parrain-scout.html"><i class="fas fa-binoculars"></i><span>Scouting</span></a>
+        <a href="../dons/admin-parrain-dons.html"><i class="fas fa-hand-holding-usd"></i><span>Dons</span></a>
+        <a href="../mentorat/admin-parrain-mentorat.html"><i class="fas fa-comments"></i><span>Mentorat</span></a>
+        <a href="admin-parrain-proteges.html" class="active"><i class="fas fa-user-check"></i><span>Protégés</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Retour</div>
+        <a href="../../proteges/parrain-proteges.html"><i class="fas fa-hands-helping"></i><span>Espace Parrain</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- FIN : SIDEBAR -->
+
+<!-- DEBUT : CONTENU PRINCIPAL -->
+<main class="admin-main">
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-user-check"></i> Gestion des Protégés</h1>
+            <div class="header-actions">
+                <button class="btn-refresh" id="refreshBtn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+                <button class="btn-add" id="addProtegeBtn"><i class="fas fa-plus"></i> Nouveau protégé</button>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="stats-cards" id="statsContainer">
+            <div class="stat-card total"><span class="stat-label">Total protégés</span><span class="stat-value" id="totalCount">0</span></div>
+            <div class="stat-card pending"><span class="stat-label">En cours</span><span class="stat-value" id="enCoursCount">0</span></div>
+            <div class="stat-card approved"><span class="stat-label">Diplômés / Pros</span><span class="stat-value" id="diplomesCount">0</span></div>
+            <div class="stat-card rejected"><span class="stat-label">Abandonnés</span><span class="stat-value" id="abandonCount">0</span></div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filters-panel">
+            <input type="text" id="searchInput" placeholder="Rechercher par nom, prénom ou club...">
+            <select id="filterStatus">
+                <option value="">Tous statuts</option>
+                <option value="En cours">En cours</option>
+                <option value="Diplômé">Diplômé</option>
+                <option value="Pro">Pro</option>
+                <option value="Abandonné">Abandonné</option>
+            </select>
+            <button class="btn-refresh" id="refreshBtn2"><i class="fas fa-sync-alt"></i> Actualiser</button>
+        </div>
+
+        <!-- Liste des protégés -->
+        <div id="protegesList" class="items-list"></div>
+    </div>
+</main>
+<!-- FIN : CONTENU PRINCIPAL -->
+
+<!-- DEBUT : MODALE AJOUT / MODIFICATION -->
+<div id="protegeModal" class="modal">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <h2 id="protegeModalTitle">Ajouter un protégé</h2>
+            <span class="close-modal" onclick="closeProtegeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="protegeForm">
+                <input type="hidden" id="protegeId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nom du protégé</label>
+                        <input type="text" id="protegeNom" placeholder="Nom" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Prénom</label>
+                        <input type="text" id="protegePrenom" placeholder="Prénom">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rôle / Discipline</label>
+                        <input type="text" id="protegeRole" placeholder="Ex: Footballeur, Étudiant...">
+                    </div>
+                    <div class="form-group">
+                        <label>Club / Académie</label>
+                        <input type="text" id="protegeClub" placeholder="Club ou académie">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <select id="protegeStatut">
+                            <option value="En cours">En cours</option>
+                            <option value="Diplômé">Diplômé</option>
+                            <option value="Pro">Pro</option>
+                            <option value="Abandonné">Abandonné</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date début parrainage</label>
+                        <input type="date" id="protegeDebut">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Montant bourse (€)</label>
+                        <input type="number" id="protegeBourse" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Niveau scolaire</label>
+                        <input type="text" id="protegeNiveau" placeholder="Niveau scolaire">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Parrain associé (ID HubISoccer)</label>
+                    <select id="protegeParrainId" required>
+                        <option value="">Sélectionner un parrain</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Résultats / Réussites</label>
+                    <textarea id="protegeResultats" rows="3" placeholder="Résultats..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="protegeNotes" rows="3" placeholder="Notes..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeProtegeModal()">Annuler</button>
+                    <button type="submit" class="btn-save">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- FIN : MODALE AJOUT / MODIFICATION -->
+
+<!-- DEBUT : MODALE DE CONFIRMATION -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content small">
+        <div class="modal-header">
+            <h2>Confirmation</h2>
+            <span class="close-modal" onclick="closeConfirmModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="confirmModalMessage">Êtes-vous sûr de vouloir effectuer cette action ?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeConfirmModal()">Annuler</button>
+                <button class="btn-confirm" id="confirmActionBtn" onclick="executeAction()">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- FIN : MODALE DE CONFIRMATION -->
+
+<!-- DEBUT : TOAST CONTAINER -->
+<div id="toastContainer" class="toast-container"></div>
+<!-- FIN : TOAST CONTAINER -->
+
+<!-- DEBUT : FOOTER -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- FIN : FOOTER -->
+
+<!-- DEBUT : SCRIPT -->
+<script src="admin-parrain-proteges.js"></script>
+<!-- FIN : SCRIPT -->
+
+</body>
+</html>

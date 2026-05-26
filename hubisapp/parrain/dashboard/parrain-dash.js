@@ -5,21 +5,23 @@
    ============================================================ */
 'use strict';
 
-/* ---------- 1. SUPABASE ---------- */
+/* DEBUT : CONFIGURATION SUPABASE */
 const SUPABASE_URL      = 'https://niewavngipvowwxxguqu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.__SUPABASE_CLIENT = supabaseClient;
+/* FIN : CONFIGURATION SUPABASE */
 
-/* ---------- 2. ÉTAT GLOBAL ---------- */
+/* DEBUT : ÉTAT GLOBAL */
 let currentUser         = null;
 let parrainProfile      = null;
 let scoutingData        = null;
 const AVATAR_BUCKET     = 'avatars-parrain';
 const PROFILES_TABLE    = 'supabaseAuthPrive_profiles';
 const SCOUTING_TABLE    = 'supabaseAuthPrive_parrain_scouting';
+/* FIN : ÉTAT GLOBAL */
 
-/* ---------- 3. LOADER ---------- */
+/* DEBUT : LOADER */
 function showLoader() {
     const l = document.getElementById('globalLoader');
     if (l) {
@@ -33,8 +35,9 @@ function hideLoader() {
         l.style.display = 'none';
     }
 }
+/* FIN : LOADER */
 
-/* ---------- 4. TOAST (durée 30 secondes) ---------- */
+/* DEBUT : TOAST (durée 30 secondes) */
 function showToast(message, type, duration) {
     if (!type) {
         type = 'info';
@@ -80,12 +83,13 @@ function showToast(message, type, duration) {
         }
     }, duration);
 }
+/* FIN : TOAST */
 
-/* ---------- 5. UTILITAIRES ---------- */
+/* DEBUT : UTILITAIRES */
 function setText(id, value) {
     const el = document.getElementById(id);
     if (el) {
-        if (value !== null && value !== undefined) {
+        if (value !== null && value !== undefined && value !== '') {
             el.textContent = value;
         } else {
             el.textContent = '—';
@@ -142,8 +146,9 @@ function setSkill(id, v) {
         span.textContent = v;
     }
 }
+/* FIN : UTILITAIRES */
 
-/* ---------- 6. DRAPEAUX (250+ pays) ---------- */
+/* DEBUT : DRAPEAUX (250+ pays) */
 const flagMap = {
     'DZ':'🇩🇿','AO':'🇦🇴','BJ':'🇧🇯','BW':'🇧🇼','BF':'🇧🇫','BI':'🇧🇮','CM':'🇨🇲','CV':'🇨🇻',
     'CF':'🇨🇫','KM':'🇰🇲','CG':'🇨🇬','CD':'🇨🇩','CI':'🇨🇮','DJ':'🇩🇯','EG':'🇪🇬','GQ':'🇬🇶',
@@ -173,23 +178,23 @@ const flagMap = {
     'AU':'🇦🇺','FJ':'🇫🇯','KI':'🇰🇮','MH':'🇲🇭','FM':'🇫🇲','NR':'🇳🇷','NZ':'🇳🇿','PW':'🇵🇼',
     'PG':'🇵🇬','WS':'🇼🇸','SB':'🇸🇧','TO':'🇹🇴','TV':'🇹🇻','VU':'🇻🇺',
 };
+/* FIN : DRAPEAUX */
 
-/* ---------- 7. SESSION ---------- */
+/* DEBUT : SESSION (via getUser) */
 async function checkSession() {
     showLoader();
-    const { data } = await supabaseClient.auth.getSession();
-    const session = data.session;
-    const error = !session;
+    const { data: { user }, error } = await supabaseClient.auth.getUser();
     hideLoader();
-    if (error || !session) {
-        window.location.href = '../../authprive/users/login.html';
+    if (error || !user) {
+        window.location.href = '../../authprive/users/login.html?role=PARRAIN';
         return null;
     }
-    currentUser = session.user;
+    currentUser = user;
     return currentUser;
 }
+/* FIN : SESSION */
 
-/* ---------- 8. CHARGEMENT PROFIL ---------- */
+/* DEBUT : CHARGEMENT PROFIL */
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
@@ -206,8 +211,9 @@ async function loadProfile() {
     document.getElementById('userName').textContent = parrainProfile.full_name || 'Parrain';
     return parrainProfile;
 }
+/* FIN : CHARGEMENT PROFIL */
 
-/* ---------- 9. CHARGEMENT DONNÉES PARRAIN ---------- */
+/* DEBUT : CHARGEMENT DONNÉES PARRAIN */
 async function loadScoutingData() {
     if (!parrainProfile) {
         return;
@@ -240,8 +246,9 @@ async function loadScoutingData() {
     updateProfileUI();
     updateDataUI();
 }
+/* FIN : CHARGEMENT DONNÉES PARRAIN */
 
-/* ---------- 10. UI PROFIL ---------- */
+/* DEBUT : UI PROFIL */
 function updateProfileUI() {
     if (!parrainProfile) {
         return;
@@ -253,21 +260,23 @@ function updateProfileUI() {
     setText('parrainPhone',          pro.phone);
     setText('parrainEmail',          pro.email);
     setText('parrainNationality',    pro.nationality);
-    setText('parrainSpecialite',     pro.type_engagement);
-    setText('parrainClub',           pro.club || pro.structure || pro.organisme || pro.nom_cabinet);
-    setText('parrainAge',            calculateAge(pro.date_of_birth));
+    // type_engagement déplacé dans updateDataUI
+    setText('parrainClub',           pro.club || (scoutingData && scoutingData.organisme) || '');
+    setText('parrainAge',            calculateAge(pro.birth_date));
     setText('parrainID',             'ID : ' + (pro.hubisoccer_id || ''));
     setText('profileCompletion',     pro.profile_completion || 0);
     setText('scoutingViews',         pro.scouting_views || 0);
     setText('recruiterFavs',         pro.recruiter_favs || 0);
-    const flag = flagMap[pro.country || ''] || '🌍';
+    const countryCode = pro.country_code || '';
+    const flag = flagMap[countryCode] || '🌍';
     setText('parrainCountryFlag', flag);
-    setText('parrainCountryName', pro.country);
+    setText('parrainCountryName', countryCode);
     updateAvatarDisplay();
     updateProfileCompletion();
 }
+/* FIN : UI PROFIL */
 
-/* ---------- 11. UI DONNÉES PARRAIN ---------- */
+/* DEBUT : UI DONNÉES PARRAIN */
 function updateDataUI() {
     if (!scoutingData) {
         return;
@@ -279,6 +288,10 @@ function updateDataUI() {
     setText('contractExpiry', d.expire_le ? new Date(d.expire_le).toLocaleDateString('fr-FR') : '—');
     setText('marketValue',    d.valeur_marche ? formatMoney(d.valeur_marche) : (d.chiffre_affaires ? formatMoney(d.chiffre_affaires) : '—'));
     setText('statutPro',      d.statut_professionnel);
+
+    // Type d'engagement (spécialité du parrain)
+    setText('parrainSpecialite', d.type_engagement || 'Non renseigné');
+    setText('parrainPosition',   d.type_engagement || 'Type d\'engagement non renseigné');
 
     // Compétences (valeurs numériques)
     setText('cp_acc', d.comp_accompagnement != null ? d.comp_accompagnement : 0);
@@ -323,8 +336,9 @@ function updateDataUI() {
     setSkill('skill_eth',    d.skill_eth    || 0);
     setSkill('skill_impact', d.skill_impact || 0);
 }
+/* FIN : UI DONNÉES PARRAIN */
 
-/* ---------- 12. AVATAR ---------- */
+/* DEBUT : AVATAR */
 function updateAvatarDisplay() {
     const pi = document.getElementById('profileDisplay');
     const pr = document.getElementById('profileDisplayInitials');
@@ -352,7 +366,7 @@ async function updateProfileCompletion() {
     if (!parrainProfile) {
         return;
     }
-    const fields = ['full_name', 'pseudo', 'phone', 'country', 'date_of_birth'];
+    const fields = ['full_name', 'pseudo', 'phone', 'country_code', 'birth_date'];
     let filled = 0;
     for (let i = 0; i < fields.length; i++) {
         if (parrainProfile[fields[i]] && parrainProfile[fields[i]] !== '') {
@@ -421,8 +435,9 @@ async function deleteAvatar() {
     updateAvatarDisplay();
     showToast('Photo supprimée', 'info');
 }
+/* FIN : AVATAR */
 
-/* ---------- 13. COPIER ID ---------- */
+/* DEBUT : COPIER ID */
 async function copyID() {
     const id = parrainProfile?.hubisoccer_id;
     if (!id) {
@@ -442,8 +457,9 @@ async function copyID() {
         showToast('Erreur copie', 'error');
     }
 }
+/* FIN : COPIER ID */
 
-/* ---------- 14. ONGLETS ---------- */
+/* DEBUT : ONGLETS */
 function initAttrTabs() {
     document.querySelectorAll('.attr-tab').forEach(function(tab) {
         tab.addEventListener('click', function() {
@@ -462,8 +478,9 @@ function initAttrTabs() {
         });
     });
 }
+/* FIN : ONGLETS */
 
-/* ---------- 15. MENU UTILISATEUR ---------- */
+/* DEBUT : MENU UTILISATEUR */
 function initUserMenu() {
     const menu = document.getElementById('userMenu');
     const dropdown = document.getElementById('userDropdown');
@@ -478,8 +495,9 @@ function initUserMenu() {
         dropdown.classList.remove('show');
     });
 }
+/* FIN : MENU UTILISATEUR */
 
-/* ---------- 16. SIDEBAR + SWIPE ---------- */
+/* DEBUT : SIDEBAR + SWIPE */
 function initSidebar() {
     const sb = document.getElementById('leftSidebar');
     const ov = document.getElementById('sidebarOverlay');
@@ -523,14 +541,16 @@ function initSidebar() {
         }
     }, { passive: false });
 }
+/* FIN : SIDEBAR + SWIPE */
 
-/* ---------- 17. DÉCONNEXION ---------- */
+/* DEBUT : DÉCONNEXION */
 async function logout() {
     showLoader();
     await supabaseClient.auth.signOut();
     hideLoader();
-    window.location.href = '../../authprive/users/login.html';
+    window.location.href = '../../authprive/users/login.html?role=PARRAIN';
 }
+/* FIN : DÉCONNEXION */
 
 function triggerUpload() {
     const input = document.getElementById('fileInput');
@@ -539,7 +559,7 @@ function triggerUpload() {
     }
 }
 
-/* ---------- 18. INIT ---------- */
+/* DEBUT : INITIALISATION */
 document.addEventListener('DOMContentLoaded', async function() {
     const user = await checkSession();
     if (!user) {
@@ -588,3 +608,4 @@ document.addEventListener('DOMContentLoaded', async function() {
     window.copyID = copyID;
     window.showToast = showToast;
 });
+/* FIN : INITIALISATION */

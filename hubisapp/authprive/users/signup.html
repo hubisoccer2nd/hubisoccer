@@ -711,8 +711,15 @@
             if (authError) {
                 throw authError;
             }
-            if (!authData.user) {
-                throw new Error('Erreur lors de la création du compte.');
+
+            // Récupération robuste de l'utilisateur (même si signUp renvoie null)
+            let user = authData.user;
+            if (!user) {
+                const { data: userData, error: userError } = await supabaseAuth.auth.getUser();
+                if (userError || !userData.user) {
+                    throw new Error('Erreur lors de la création du compte.');
+                }
+                user = userData.user;
             }
 
             showToast('Enregistrement du profil...', 'info');
@@ -720,7 +727,7 @@
                 .from('supabaseAuthPrive_profiles')
                 .insert({
                     hubisoccer_id: hubisoccerId,
-                    auth_uuid: authData.user.id,
+                    auth_uuid: user.id,
                     role_code: role,
                     last_name: lastName,
                     first_name: firstName,
@@ -740,7 +747,7 @@
                 .from('supabaseAuthPrive_ids_pregenerees')
                 .update({
                     used: true,
-                    used_by: authData.user.id,
+                    used_by: user.id,
                     used_at: new Date().toISOString()
                 })
                 .eq('id', hubisoccerId);

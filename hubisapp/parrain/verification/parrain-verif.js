@@ -555,4 +555,4 @@ document.addEventListener('DOMContentLoaded', async function() {
         showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
 });
-/* FIN : INITIALISATION */
+/* FIN : INITIALISATIONINITIALISATION */

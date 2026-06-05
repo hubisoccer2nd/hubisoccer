@@ -12,6 +12,7 @@ const translations = {
         'gerer.logout': 'Déconnexion',
         'gerer.dashboard': 'Tableau de bord',
         'gerer.title': 'Mon équipe',
+        'gerer.composer': 'Composer l\'équipe',
         'gerer.matchs': 'Matchs',
         'gerer.classement': 'Classement',
         'gerer.messagerie': 'Messages',
@@ -47,6 +48,7 @@ const translations = {
         'gerer.logout': 'Logout',
         'gerer.dashboard': 'Dashboard',
         'gerer.title': 'My team',
+        'gerer.composer': 'Compose team',
         'gerer.matchs': 'Matches',
         'gerer.classement': 'Ranking',
         'gerer.messagerie': 'Messages',
@@ -299,6 +301,31 @@ ajoutForm.addEventListener('submit', async (e) => {
                 pied_fort: pied
             }]);
         if (error) throw error;
+
+        // *** CORRECTION : Rattacher le joueur à l'équipe dans public_utilisateurs_tournoi ***
+        // On cherche un utilisateur tournoi dont le nom complet contient ce prénom + nom
+        // (car l'admin peut avoir créé un compte joueur avec ces mêmes informations)
+        const recherche = prenom + ' ' + nom;
+        const { data: inscriptions } = await supabasePublic
+            .from('public_inscriptions_tournoi')
+            .select('id')
+            .eq('nom_complet', recherche)
+            .limit(1);
+
+        if (inscriptions && inscriptions.length > 0) {
+            const inscriptionId = inscriptions[0].id;
+            const { error: updateError } = await supabasePublic
+                .from('public_utilisateurs_tournoi')
+                .update({ equipe_id: equipeId })
+                .eq('inscription_id', inscriptionId);
+
+            if (updateError) {
+                console.error('Erreur lors du rattachement du joueur à l\'équipe:', updateError);
+                // On ne bloque pas l'ajout, on log juste l'erreur
+            }
+        }
+        // *** FIN CORRECTION ***
+
         showToast(t('toast.ajout_ok'), 'success');
         modal.classList.remove('active');
         chargerSportifs();

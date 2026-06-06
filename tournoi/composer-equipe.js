@@ -1,89 +1,7 @@
-// ========== DEBUT : tournoi/composer-equipe.js (version multi‑sports complète) ==========
+// ========== DEBUT : tournoi/composer-equipe.js (version multi‑formats, design épuré) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-/* ============================================================
-   CONFIGURATION DES SPORTS
-   ============================================================ */
-const SPORT_CONFIG = {
-    football: { nbJoueurs: 11, positions: generateFootballPositions(11) },
-    football7: { nbJoueurs: 7, positions: generateFootballPositions(7) },
-    football5: { nbJoueurs: 5, positions: generateFootballPositions(5) },
-    basketball: { nbJoueurs: 5, positions: generateBasketballPositions() },
-    handball: { nbJoueurs: 7, positions: generateHandballPositions() },
-    rugby: { nbJoueurs: 15, positions: generateRugbyPositions() },
-    volleyball: { nbJoueurs: 6, positions: generateVolleyballPositions() },
-    default: { nbJoueurs: 11, positions: generateFootballPositions(11) }
-};
-
-function generateFootballPositions(nb) {
-    const positions = [];
-    positions.push({ label: 'Gardien', top: '85%', left: '50%' });
-    if (nb >= 2) positions.push({ label: 'Défenseur G', top: '65%', left: '20%' });
-    if (nb >= 3) positions.push({ label: 'Défenseur D', top: '65%', left: '80%' });
-    if (nb >= 4) positions.push({ label: 'Défenseur central', top: '65%', left: '50%' });
-    if (nb >= 5) positions.push({ label: 'Milieu G', top: '40%', left: '25%' });
-    if (nb >= 6) positions.push({ label: 'Milieu D', top: '40%', left: '75%' });
-    if (nb >= 7) positions.push({ label: 'Milieu central', top: '40%', left: '50%' });
-    if (nb >= 8) positions.push({ label: 'Attaquant G', top: '15%', left: '35%' });
-    if (nb >= 9) positions.push({ label: 'Attaquant D', top: '15%', left: '65%' });
-    if (nb >= 10) positions.push({ label: 'Attaquant central', top: '15%', left: '50%' });
-    if (nb >= 11) positions.push({ label: 'Milieu offensif', top: '25%', left: '50%' });
-    return positions.slice(0, nb);
-}
-
-function generateBasketballPositions() {
-    return [
-        { label: 'Meneur', top: '50%', left: '50%' },
-        { label: 'Arrière G', top: '30%', left: '35%' },
-        { label: 'Arrière D', top: '30%', left: '65%' },
-        { label: 'Ailier G', top: '70%', left: '30%' },
-        { label: 'Ailier D', top: '70%', left: '70%' }
-    ];
-}
-
-function generateHandballPositions() {
-    return [
-        { label: 'Gardien', top: '85%', left: '50%' },
-        { label: 'Ailier G', top: '60%', left: '15%' },
-        { label: 'Arrière G', top: '50%', left: '35%' },
-        { label: 'Arrière D', top: '50%', left: '65%' },
-        { label: 'Ailier D', top: '60%', left: '85%' },
-        { label: 'Pivot', top: '30%', left: '50%' },
-        { label: 'Demi-centre', top: '20%', left: '50%' }
-    ];
-}
-
-function generateRugbyPositions() {
-    const pos = [];
-    for (let i = 1; i <= 15; i++) {
-        pos.push({ label: `Joueur ${i}`, top: `${10 + (i-1)*5}%`, left: `${20 + (i%3)*25}%` });
-    }
-    return pos;
-}
-
-function generateVolleyballPositions() {
-    return [
-        { label: 'Passeur', top: '40%', left: '50%' },
-        { label: 'Pointu', top: '30%', left: '50%' },
-        { label: 'Central G', top: '60%', left: '30%' },
-        { label: 'Central D', top: '60%', left: '70%' },
-        { label: 'Récep. G', top: '20%', left: '30%' },
-        { label: 'Récep. D', top: '20%', left: '70%' }
-    ];
-}
-
-function getConfigForSport(sport) {
-    const key = (sport || '').toLowerCase().replace(/[^a-z]/g, '');
-    if (key === 'football') return SPORT_CONFIG.football;
-    if (key === 'basketball') return SPORT_CONFIG.basketball;
-    if (key === 'handball') return SPORT_CONFIG.handball;
-    if (key === 'rugby') return SPORT_CONFIG.rugby;
-    if (key === 'volleyball') return SPORT_CONFIG.volleyball;
-    if (key === 'tennis') return { nbJoueurs: 1, positions: [{ label: 'Joueur', top: '50%', left: '50%' }] };
-    return SPORT_CONFIG.default;
-}
 
 /* ============================================================
    TRADUCTIONS
@@ -109,10 +27,6 @@ const translations = {
         'composer.reset': 'Réinitialiser',
         'composer.save': 'Enregistrer la composition',
         'composer.titulaires_count': '{count}/{nb} titulaires',
-        'composer.terrain_title': 'Terrain',
-        'composer.banc_title': 'Remplaçants',
-        'composer.terrain_info': 'Faites glisser les joueurs du banc vers les postes souhaités.',
-        'composer.banc_info': 'Glissez un joueur hors du terrain pour le remettre sur le banc.',
         'footer.badge1': 'Conformité APDP Bénin',
         'footer.badge2': 'Règlementation FIFA',
         'footer.badge3': 'Triple Projet Sport-Études-Carrière',
@@ -141,10 +55,6 @@ const translations = {
         'composer.reset': 'Reset',
         'composer.save': 'Save lineup',
         'composer.titulaires_count': '{count}/{nb} starters',
-        'composer.terrain_title': 'Field',
-        'composer.banc_title': 'Substitutes',
-        'composer.terrain_info': 'Drag players from the bench to the desired positions.',
-        'composer.banc_info': 'Drag a player off the field to put them back on the bench.',
         'footer.badge1': 'APDP Benin Compliance',
         'footer.badge2': 'FIFA Regulations',
         'footer.badge3': 'Triple Project Sport-Studies-Career',
@@ -185,7 +95,7 @@ function changeLanguage(lang) {
 /* FIN TRADUCTIONS */
 
 /* ============================================================
-   GESTION SESSION
+   SESSION
    ============================================================ */
 const userId = sessionStorage.getItem('tournoi_user_id');
 const userNom = sessionStorage.getItem('tournoi_nom');
@@ -203,10 +113,10 @@ const matchId = urlParams.get('id');
    VARIABLES GLOBALES
    ============================================================ */
 let equipeId = null;
-let joueurs = [];
-let titulaires = [];
+let joueurs = [];            // tous les joueurs de l'équipe (objets complets)
+let titulairesIds = [];      // tableau d'IDs des joueurs titulaires
+let nbTitulairesRequis = 0;  // nombre de titulaires attendus (format_equipe)
 let matchData = null;
-let sportConfig = null;
 /* FIN VARIABLES */
 
 /* ============================================================
@@ -259,11 +169,12 @@ async function initialiserPage() {
     const tournoiId = sessionStorage.getItem('tournoi_tournoi_id');
     const { data: tournoi } = await supabasePublic
         .from('public_tournois')
-        .select('sport')
+        .select('format_equipe')
         .eq('id', tournoiId)
         .single();
-    const sport = tournoi?.sport || 'football';
-    sportConfig = getConfigForSport(sport);
+    nbTitulairesRequis = tournoi?.format_equipe || 11; // valeur par défaut 11 si non défini
+
+    document.getElementById('nbTitulairesRequis').textContent = nbTitulairesRequis;
 
     if (matchId) {
         await chargerCompositionMatch(matchId);
@@ -280,7 +191,7 @@ async function afficherProchainsMatchs() {
     try {
         const { data: matchs, error } = await supabasePublic
             .from('public_matchs')
-            .select('id, date_match, equipe_domicile_id, equipe_exterieur_id, score_domicile, score_exterieur, statut')
+            .select('id, date_match, equipe_domicile_id, equipe_exterieur_id, statut')
             .or(`equipe_domicile_id.eq.${equipeId},equipe_exterieur_id.eq.${equipeId}`)
             .eq('statut', 'a_venir')
             .order('date_match', { ascending: true });
@@ -336,141 +247,153 @@ async function chargerCompositionMatch(idMatch) {
             .select('*, equipe_domicile:equipe_domicile_id (id, nom_equipe), equipe_exterieur:equipe_exterieur_id (id, nom_equipe)')
             .eq('id', idMatch)
             .single();
-        if (matchErr || !match) {
-            showToast('Match non trouvé', 'error');
-            return;
-        }
-        matchData = match;
-        if (matchData.statut === 'termine') {
-            showToast(t('composer.match_passe'), 'warning');
-            return;
-        }
-        if (matchData.equipe_domicile_id !== equipeId && matchData.equipe_exterieur_id !== equipeId) {
+        if (matchErr || !match) { showToast('Match non trouvé', 'error'); return; }
+        if (match.statut === 'termine') { showToast(t('composer.match_passe'), 'warning'); return; }
+        if (match.equipe_domicile_id !== equipeId && match.equipe_exterieur_id !== equipeId) {
             showToast('Votre équipe ne participe pas à ce match', 'error');
             return;
         }
+        matchData = match;
 
         document.getElementById('matchInfo').innerHTML = `
-            <h2>${escapeHtml(matchData.equipe_domicile?.nom_equipe)} vs ${escapeHtml(matchData.equipe_exterieur?.nom_equipe)}</h2>
-            <p>Date : ${new Date(matchData.date_match).toLocaleDateString()} | ${matchData.heure ? 'Heure : ' + matchData.heure : ''}</p>
-            <p>Sport : ${sportConfig.nbJoueurs} joueurs</p>
+            <h2>${escapeHtml(match.equipe_domicile?.nom_equipe)} vs ${escapeHtml(match.equipe_exterieur?.nom_equipe)}</h2>
+            <p>Date : ${new Date(match.date_match).toLocaleDateString()} | Format : ${nbTitulairesRequis} joueurs</p>
         `;
 
-        const { data: sportifs, error: sErr } = await supabasePublic
+        const { data: sportifs } = await supabasePublic
             .from('public_sportifs_equipe')
             .select('*')
             .eq('equipe_id', equipeId)
             .order('numero_maillot', { ascending: true });
-        if (sErr) throw sErr;
         joueurs = sportifs || [];
 
-        const { data: comps, error: cErr } = await supabasePublic
+        // Charger les compositions existantes
+        const { data: comps } = await supabasePublic
             .from('public_compositions_match')
-            .select('*')
+            .select('joueur_id, titulaire')
             .eq('match_id', idMatch)
             .eq('equipe_id', equipeId);
-        if (cErr) throw cErr;
-
-        titulaires = (comps || []).filter(c => c.titulaire).map(c => c.joueur_id);
-        titulaires = titulaires.slice(0, sportConfig.nbJoueurs);
+        titulairesIds = (comps || []).filter(c => c.titulaire).map(c => c.joueur_id);
+        // Limiter au nombre requis
+        titulairesIds = titulairesIds.slice(0, nbTitulairesRequis);
 
         document.getElementById('selectMatchSection').style.display = 'none';
         document.getElementById('compositionSection').style.display = 'block';
-        renderTerrain();
+        renderComposition();
     } catch (err) {
         console.error(err);
-        showToast('Erreur chargement des données', 'error');
+        showToast(t('composer.error'), 'error');
     } finally {
         hideLoader();
     }
 }
 
 /* ============================================================
-   RENDU DU TERRAIN ET DU BANC
+   RENDU DES LISTES (TITULAIRES / REMPLAÇANTS)
    ============================================================ */
-function renderTerrain() {
-    const terrainEl = document.getElementById('terrain');
-    const bancEl = document.getElementById('banc');
-    const positions = sportConfig.positions;
+function renderComposition() {
+    const titulairesList = document.getElementById('titulairesList');
+    const remplacantsList = document.getElementById('remplacantsList');
 
-    // Ajuster la longueur de titulaires
-    while (titulaires.length < positions.length) titulaires.push(null);
-    if (titulaires.length > positions.length) titulaires = titulaires.slice(0, positions.length);
+    // Joueurs titulaires (ceux dont l'ID est dans titulairesIds)
+    const titulaires = joueurs.filter(j => titulairesIds.includes(j.id));
+    // Joueurs remplaçants (les autres)
+    const remplacants = joueurs.filter(j => !titulairesIds.includes(j.id));
 
-    let terrainHTML = '';
-    positions.forEach((pos, index) => {
-        const joueurId = titulaires[index];
-        const joueur = joueurId ? joueurs.find(j => j.id == joueurId) : null;
-        terrainHTML += `
-            <div class="position-slot" data-position="pos${index}" data-index="${index}"
-                 ondragover="allowDrop(event)" ondrop="dropOnTerrain(event, ${index})"
-                 style="position:absolute; top:${pos.top}; left:${pos.left}; transform:translate(-50%, -50%);">
-                <span class="position-label">${pos.label}</span>
-                ${joueur ? `
-                    <div class="joueur-badge titulaire" draggable="true" data-joueur-id="${joueur.id}" ondragstart="drag(event, ${joueur.id})">
-                        ${joueur.numero_maillot ? `<span class="joueur-numero">#${joueur.numero_maillot}</span>` : ''}
-                        <span class="joueur-nom">${escapeHtml(joueur.prenom)} ${escapeHtml(joueur.nom)}</span>
-                    </div>
-                ` : '<div class="position-empty">Vide</div>'}
-            </div>
-        `;
-    });
-    terrainEl.innerHTML = terrainHTML;
+    // Rendu des titulaires
+    let titulairesHTML = '';
+    if (titulaires.length === 0) {
+        titulairesHTML = '<p class="empty-message">Aucun titulaire. Faites glisser des joueurs ici.</p>';
+    } else {
+        titulaires.forEach(j => {
+            titulairesHTML += `
+                <div class="joueur-card titulaire" draggable="true" data-joueur-id="${j.id}" ondragstart="drag(event, ${j.id})">
+                    ${j.numero_maillot ? `<span class="joueur-numero">#${j.numero_maillot}</span>` : ''}
+                    <span class="joueur-nom">${escapeHtml(j.prenom)} ${escapeHtml(j.nom)}</span>
+                </div>
+            `;
+        });
+    }
+    titulairesList.innerHTML = titulairesHTML;
+    titulairesList.setAttribute('data-droppable', 'true');
 
-    // Banc
-    const remplacants = joueurs.filter(j => !titulaires.includes(j.id));
-    let bancHTML = remplacants.length ? '' : '<p class="empty-message">Tous les joueurs sont sur le terrain.</p>';
-    remplacants.forEach(j => {
-        bancHTML += `
-            <div class="joueur-badge remplacant" draggable="true" data-joueur-id="${j.id}" ondragstart="drag(event, ${j.id})">
-                ${j.numero_maillot ? `<span class="joueur-numero">#${j.numero_maillot}</span>` : ''}
-                <span class="joueur-nom">${escapeHtml(j.prenom)} ${escapeHtml(j.nom)}</span>
-            </div>
-        `;
-    });
-    bancEl.innerHTML = bancHTML;
+    // Rendu des remplaçants
+    let remplacantsHTML = '';
+    if (remplacants.length === 0) {
+        remplacantsHTML = '<p class="empty-message">Tous les joueurs sont titulaires.</p>';
+    } else {
+        remplacants.forEach(j => {
+            remplacantsHTML += `
+                <div class="joueur-card remplacant" draggable="true" data-joueur-id="${j.id}" ondragstart="drag(event, ${j.id})">
+                    ${j.numero_maillot ? `<span class="joueur-numero">#${j.numero_maillot}</span>` : ''}
+                    <span class="joueur-nom">${escapeHtml(j.prenom)} ${escapeHtml(j.nom)}</span>
+                </div>
+            `;
+        });
+    }
+    remplacantsList.innerHTML = remplacantsHTML;
+    remplacantsList.setAttribute('data-droppable', 'true');
 
-    // Compteur
-    const nb = sportConfig.nbJoueurs;
-    const nbTitulaires = titulaires.filter(id => id !== null).length;
-    document.getElementById('saveCompositionBtn').disabled = (nbTitulaires !== nb);
-    const countEl = document.getElementById('titulairesCount');
-    if (countEl) countEl.textContent = t('composer.titulaires_count', { count: nbTitulaires, nb });
+    // Mettre à jour le compteur
+    updateCompteur();
+}
+
+function updateCompteur() {
+    const count = titulairesIds.length;
+    const nb = nbTitulairesRequis;
+    const compteurEl = document.getElementById('titulairesCount');
+    if (compteurEl) {
+        compteurEl.textContent = t('composer.titulaires_count', { count, nb });
+        compteurEl.className = count === nb ? 'compteur ok' : 'compteur pas-ok';
+    }
+    const saveBtn = document.getElementById('saveCompositionBtn');
+    if (saveBtn) {
+        saveBtn.disabled = (count !== nb);
+    }
 }
 
 /* ============================================================
    DRAG & DROP
    ============================================================ */
-function allowDrop(ev) {
-    ev.preventDefault();
-}
+function allowDrop(ev) { ev.preventDefault(); }
 
 function drag(ev, joueurId) {
     ev.dataTransfer.setData("text/plain", joueurId);
 }
 
-function dropOnTerrain(ev, index) {
-    ev.preventDefault();
-    const joueurId = parseInt(ev.dataTransfer.getData("text/plain"));
-    if (!joueurId) return;
-    // Retirer le joueur de sa position actuelle
-    titulaires = titulaires.map(id => id === joueurId ? null : id);
-    // Placer à l'index
-    titulaires[index] = joueurId;
-    renderTerrain();
-}
-
-// Drop sur le banc
+// Rendre les zones de dépôt fonctionnelles
 document.addEventListener('DOMContentLoaded', () => {
-    const bancEl = document.getElementById('banc');
-    if (bancEl) {
-        bancEl.addEventListener('dragover', allowDrop);
-        bancEl.addEventListener('drop', (ev) => {
+    const titulairesZone = document.getElementById('titulairesList');
+    const remplacantsZone = document.getElementById('remplacantsList');
+
+    if (titulairesZone) {
+        titulairesZone.addEventListener('dragover', allowDrop);
+        titulairesZone.addEventListener('drop', (ev) => {
             ev.preventDefault();
             const joueurId = parseInt(ev.dataTransfer.getData("text/plain"));
             if (!joueurId) return;
-            titulaires = titulaires.map(id => id === joueurId ? null : id);
-            renderTerrain();
+            // Ajouter aux titulaires si pas déjà présent et si le quota n'est pas atteint
+            if (!titulairesIds.includes(joueurId)) {
+                if (titulairesIds.length < nbTitulairesRequis) {
+                    titulairesIds.push(joueurId);
+                } else {
+                    showToast(`Vous ne pouvez avoir que ${nbTitulairesRequis} titulaires.`, 'warning');
+                    return;
+                }
+            }
+            renderComposition();
+        });
+    }
+
+    if (remplacantsZone) {
+        remplacantsZone.addEventListener('dragover', allowDrop);
+        remplacantsZone.addEventListener('drop', (ev) => {
+            ev.preventDefault();
+            const joueurId = parseInt(ev.dataTransfer.getData("text/plain"));
+            if (!joueurId) return;
+            // Retirer des titulaires (le joueur devient remplaçant)
+            titulairesIds = titulairesIds.filter(id => id !== joueurId);
+            renderComposition();
         });
     }
 });
@@ -479,8 +402,8 @@ document.addEventListener('DOMContentLoaded', () => {
    RÉINITIALISER
    ============================================================ */
 document.getElementById('resetCompositionBtn').addEventListener('click', () => {
-    titulaires = [];
-    renderTerrain();
+    titulairesIds = [];
+    renderComposition();
     showToast('Composition réinitialisée', 'info');
 });
 
@@ -488,9 +411,8 @@ document.getElementById('resetCompositionBtn').addEventListener('click', () => {
    SAUVEGARDE
    ============================================================ */
 document.getElementById('saveCompositionBtn').addEventListener('click', async () => {
-    const nbTitulaires = titulaires.filter(id => id !== null).length;
-    if (nbTitulaires !== sportConfig.nbJoueurs) {
-        showToast(`Vous devez sélectionner exactement ${sportConfig.nbJoueurs} titulaires.`, 'warning');
+    if (titulairesIds.length !== nbTitulairesRequis) {
+        showToast(`Vous devez avoir exactement ${nbTitulairesRequis} titulaires.`, 'warning');
         return;
     }
     if (!equipeId || !matchId) return;
@@ -504,27 +426,14 @@ document.getElementById('saveCompositionBtn').addEventListener('click', async ()
             .eq('equipe_id', equipeId);
         if (delErr) throw delErr;
 
-        // Insérer les nouvelles
+        // Préparer les nouvelles compositions
         const compositions = [];
-        for (let i = 0; i < titulaires.length; i++) {
-            const joueurId = titulaires[i];
-            if (joueurId === null) continue;
-            const j = joueurs.find(p => p.id == joueurId);
-            compositions.push({
-                match_id: parseInt(matchId),
-                equipe_id: equipeId,
-                joueur_id: joueurId,
-                titulaire: true,
-                poste: j?.role_sportif || null
-            });
-        }
-        // Remplaçants non titulaires
-        joueurs.filter(j => !titulaires.includes(j.id)).forEach(j => {
+        joueurs.forEach(j => {
             compositions.push({
                 match_id: parseInt(matchId),
                 equipe_id: equipeId,
                 joueur_id: j.id,
-                titulaire: false,
+                titulaire: titulairesIds.includes(j.id),
                 poste: j.role_sportif || null
             });
         });

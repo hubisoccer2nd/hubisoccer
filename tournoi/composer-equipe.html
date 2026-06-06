@@ -1,4 +1,4 @@
-<!-- DEBUT : tournoi/composer-equipe.html -->
+<!-- DEBUT : tournoi/composer-equipe.html (version refondue avec terrain visuel) -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -15,6 +15,7 @@
         <span data-i18n="loader.message">Chargement...</span>
     </div>
 
+    <!-- ========== NAVIGATION ========== -->
     <nav>
         <a href="../" class="logo-link">
             <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
@@ -65,10 +66,41 @@
         <div class="container">
             <h1 class="page-title"><i class="fas fa-users"></i> <span data-i18n="composer.title">Composition d'équipe</span></h1>
             <div id="matchInfo" class="match-info-card"></div>
-            <div id="compositionForm" class="composition-form">
-                <div id="joueursList"></div>
+
+            <!-- Sélecteur de match (si pas d'ID) -->
+            <div id="selectMatchSection" style="display:none;">
+                <h2 data-i18n="composer.select_match">Sélectionnez un match à composer</h2>
+                <div id="matchsList" class="matchs-list"></div>
             </div>
-            <button id="saveCompositionBtn" class="btn-save" data-i18n="composer.save">Enregistrer la composition</button>
+
+            <!-- Interface de composition (apparaît quand un match est sélectionné) -->
+            <div id="compositionSection" style="display:none;">
+                <div class="composition-grid">
+                    <!-- Terrain de football à 7 -->
+                    <div class="terrain-container">
+                        <h3 class="terrain-title"><i class="fas fa-futbol"></i> Terrain</h3>
+                        <div class="terrain" id="terrain">
+                            <!-- Les 7 positions seront générées par le JS -->
+                        </div>
+                        <p class="terrain-info">Faites glisser les joueurs du banc vers les postes souhaités.</p>
+                    </div>
+
+                    <!-- Banc des remplaçants -->
+                    <div class="banc-container">
+                        <h3 class="banc-title"><i class="fas fa-chair"></i> Remplaçants</h3>
+                        <div class="banc" id="banc">
+                            <!-- Les joueurs non titulaires apparaîtront ici -->
+                        </div>
+                        <p class="banc-info">Glissez un joueur hors du terrain pour le remettre sur le banc.</p>
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="actions-bar">
+                    <button id="resetCompositionBtn" class="btn-secondary"><i class="fas fa-undo"></i> Réinitialiser</button>
+                    <button id="saveCompositionBtn" class="btn-save"><i class="fas fa-save"></i> Enregistrer la composition</button>
+                </div>
+            </div>
         </div>
     </main>
 

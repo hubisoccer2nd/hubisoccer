@@ -46,15 +46,8 @@ nav {
     box-shadow: var(--shadow);
     border-bottom: 1px solid var(--light-gray);
 }
-
 .logo-nav { height: 45px; }
-
-.nav-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
+.nav-right { display: flex; align-items: center; gap: 20px; }
 .user-badge {
     background: var(--primary);
     color: white;
@@ -65,7 +58,6 @@ nav {
     align-items: center;
     gap: 8px;
 }
-
 .lang-picker {
     background: var(--white);
     color: var(--primary);
@@ -78,7 +70,6 @@ nav {
     transition: var(--transition);
 }
 .lang-picker:hover { border-color: var(--gold); }
-
 .btn-logout {
     background: var(--danger);
     color: white;
@@ -89,10 +80,7 @@ nav {
     font-weight: 600;
     transition: var(--transition);
 }
-.btn-logout:hover {
-    background: #c82333;
-    transform: translateY(-2px);
-}
+.btn-logout:hover { background: #c82333; transform: translateY(-2px); }
 
 /* ========== MENU HAMBURGER ========== */
 .menu-toggle {
@@ -106,7 +94,6 @@ nav {
     cursor: pointer;
     z-index: 1001;
 }
-
 .menu-toggle span {
     display: block;
     width: 100%;
@@ -115,17 +102,9 @@ nav {
     border-radius: 3px;
     transition: var(--transition);
 }
-
-.menu-toggle.open span:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px);
-}
-.menu-toggle.open span:nth-child(2) {
-    opacity: 0;
-}
-.menu-toggle.open span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -7px);
-}
-
+.menu-toggle.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.menu-toggle.open span:nth-child(2) { opacity: 0; }
+.menu-toggle.open span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
 .nav-links { display: flex; gap: 15px; align-items: center; }
 .nav-links a {
     color: var(--primary);
@@ -136,22 +115,11 @@ nav {
     border-radius: 30px;
     transition: var(--transition);
 }
-.nav-links a:hover,
-.nav-links a.active {
-    background: var(--primary);
-    color: white;
-}
+.nav-links a:hover, .nav-links a.active { background: var(--primary); color: white; }
 
 /* ========== CONTENU PRINCIPAL ========== */
-.gerer-main {
-    padding: 40px 5%;
-}
-
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
+.gerer-main { padding: 40px 5%; }
+.container { max-width: 1400px; margin: 0 auto; }
 .page-title {
     font-size: 2rem;
     color: var(--primary);
@@ -181,7 +149,6 @@ nav {
     margin-bottom: 30px;
     flex-wrap: wrap;
 }
-
 .btn-primary {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
@@ -197,11 +164,7 @@ nav {
     gap: 10px;
     box-shadow: 0 4px 10px rgba(75,0,130,0.2);
 }
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(75,0,130,0.3);
-}
-
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(75,0,130,0.3); }
 .btn-save {
     background: linear-gradient(135deg, var(--gold), var(--gold-dark));
     color: var(--dark);
@@ -217,10 +180,7 @@ nav {
     gap: 10px;
     box-shadow: 0 4px 10px rgba(255,204,0,0.3);
 }
-.btn-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(255,204,0,0.5);
-}
+.btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,204,0,0.5); }
 
 /* ========== GRILLE DE GESTION (deux colonnes) ========== */
 .gestion-grid {
@@ -229,18 +189,14 @@ nav {
     gap: 25px;
     margin-bottom: 40px;
 }
-
-.colonne-disponibles,
-.colonne-equipes {
+.colonne-disponibles, .colonne-equipes {
     background: var(--white);
     border-radius: 20px;
     padding: 25px;
     box-shadow: var(--shadow);
     border: 1px solid var(--light-gray);
 }
-
-.colonne-disponibles h2,
-.colonne-equipes h2 {
+.colonne-disponibles h2, .colonne-equipes h2 {
     color: var(--primary);
     font-size: 1.3rem;
     margin-bottom: 20px;
@@ -248,38 +204,42 @@ nav {
     align-items: center;
     gap: 10px;
 }
-.colonne-disponibles h2 i,
-.colonne-equipes h2 i { color: var(--gold); }
+.colonne-disponibles h2 i, .colonne-equipes h2 i { color: var(--gold); }
 
 /* Liste des joueurs disponibles */
 .joueurs-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-height: 100px;
 }
-
-.joueur-disponible {
+.joueur-card {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    background: var(--bg-light);
+    gap: 10px;
+    padding: 10px 15px;
     border-radius: 12px;
-    padding: 12px 15px;
-    border: 1px solid var(--light-gray);
-}
-
-.joueur-disponible span {
     font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    cursor: grab;
+    transition: var(--transition);
+    user-select: none;
+}
+.joueur-card:active { cursor: grabbing; }
+.joueur-card:hover { transform: scale(1.02); box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
+.joueur-card.disponible {
+    background: var(--white);
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+.joueur-card.titulaire {
+    background: var(--gold);
     color: var(--dark);
+    border-left: 5px solid var(--primary);
 }
-
-.joueur-disponible select {
-    padding: 8px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--light-gray);
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.85rem;
-}
+.joueur-nom { flex: 1; }
+.info-texte { text-align: center; color: var(--gray); font-size: 0.85rem; margin-top: 10px; }
 
 /* Cartes des équipes */
 .equipes-list {
@@ -287,7 +247,6 @@ nav {
     flex-direction: column;
     gap: 20px;
 }
-
 .equipe-card {
     background: var(--bg-light);
     border-radius: 16px;
@@ -295,38 +254,31 @@ nav {
     border: 1px solid var(--light-gray);
     transition: var(--transition);
 }
-.equipe-card:hover {
-    border-color: var(--primary-light);
-    box-shadow: var(--shadow);
-}
-
+.equipe-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow); }
 .equipe-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px;
     margin-bottom: 12px;
 }
-
-.equipe-nom {
-    font-size: 1.1rem;
-    color: var(--primary-dark);
-}
-
-.equipe-places {
-    font-size: 0.85rem;
-    font-weight: 600;
+.drag-handle {
+    cursor: grab;
     color: var(--gray);
+    font-size: 1.2rem;
+    padding: 4px;
+    transition: var(--transition);
 }
-
+.drag-handle:active { cursor: grabbing; }
+.drag-handle:hover { color: var(--primary); }
+.equipe-nom { font-size: 1.1rem; color: var(--primary-dark); flex: 1; }
+.equipe-places { font-size: 0.85rem; font-weight: 600; color: var(--gray); }
 .equipe-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 15px;
 }
-
-.equipe-actions button,
-.equipe-actions select {
+.equipe-actions button {
     padding: 6px 14px;
     border-radius: 20px;
     border: 1px solid var(--light-gray);
@@ -341,21 +293,13 @@ nav {
     gap: 5px;
     color: var(--primary);
 }
-
-.equipe-actions button:hover {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-.equipe-actions select:hover { border-color: var(--primary); }
-
+.equipe-actions button:hover { background: var(--primary); color: white; border-color: var(--primary); }
 .equipe-joueurs {
     list-style: none;
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
-
 .equipe-joueurs li {
     display: flex;
     justify-content: space-between;
@@ -365,7 +309,6 @@ nav {
     border-radius: 8px;
     font-size: 0.9rem;
 }
-
 .btn-retirer {
     background: none;
     border: none;
@@ -384,7 +327,6 @@ nav {
     box-shadow: var(--shadow);
     border: 1px solid var(--light-gray);
 }
-
 .groupes-section h2 {
     color: var(--primary);
     font-size: 1.3rem;
@@ -394,32 +336,20 @@ nav {
     gap: 10px;
 }
 .groupes-section h2 i { color: var(--gold); }
-
 .groupes-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 20px;
 }
-
 .groupe-card {
     background: var(--bg-light);
     border-radius: 16px;
     padding: 20px;
     border: 2px dashed var(--primary-light);
+    min-height: 150px;
 }
-
-.groupe-card h3 {
-    color: var(--primary);
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-}
-
-.groupe-equipes {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
+.groupe-card h3 { color: var(--primary); margin-bottom: 15px; font-size: 1.2rem; }
+.groupe-equipes { display: flex; flex-direction: column; gap: 8px; }
 .groupe-equipe-item {
     display: flex;
     justify-content: space-between;
@@ -430,7 +360,6 @@ nav {
     font-weight: 600;
     box-shadow: var(--shadow);
 }
-
 .btn-retirer-groupe {
     background: none;
     border: none;
@@ -438,13 +367,7 @@ nav {
     cursor: pointer;
     font-size: 0.9rem;
 }
-
-.empty-message {
-    text-align: center;
-    padding: 40px;
-    color: var(--gray);
-    font-size: 1rem;
-}
+.empty-message { text-align: center; padding: 40px; color: var(--gray); font-size: 1rem; }
 
 /* ========== FOOTER ========== */
 footer {
@@ -454,13 +377,7 @@ footer {
     text-align: center;
     margin-top: auto;
 }
-.compliance-badges {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-bottom: 30px;
-}
+.compliance-badges { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
 .badge-item {
     background: rgba(255,255,255,0.05);
     padding: 8px 20px;
@@ -472,30 +389,12 @@ footer {
     letter-spacing: 1px;
 }
 .contact-box { margin-bottom: 20px; }
-.contact-item {
-    color: var(--gold);
-    text-decoration: none;
-    margin: 0 15px;
-    font-weight: 500;
-    transition: var(--transition);
-}
+.contact-item { color: var(--gold); text-decoration: none; margin: 0 15px; font-weight: 500; transition: var(--transition); }
 .contact-item:hover { color: white; }
-.legal p {
-    font-size: 0.8rem;
-    color: rgba(255,255,255,0.5);
-    margin: 5px 0;
-}
+.legal p { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin: 5px 0; }
 
 /* ========== TOASTS ========== */
-.toast-container {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+.toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; }
 .toast {
     background: white;
     border-radius: 16px;
@@ -513,23 +412,13 @@ footer {
 .toast.info { border-left-color: var(--primary); }
 .toast.warning { border-left-color: var(--warning); }
 .toast-content { flex: 1; font-weight: 500; }
-.toast-close {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--gray);
-    font-size: 1.4rem;
-}
-@keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
+.toast-close { background: none; border: none; cursor: pointer; color: var(--gray); font-size: 1.4rem; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 1024px) {
     .gestion-grid { grid-template-columns: 1fr; }
 }
-
 @media (max-width: 768px) {
     .menu-toggle { display: flex; }
     .nav-links {
@@ -553,16 +442,15 @@ footer {
     .page-title { font-size: 1.6rem; }
     .actions-bar { flex-direction: column; }
     .btn-primary, .btn-save { width: 100%; justify-content: center; }
+    .groupes-grid { grid-template-columns: 1fr 1fr; }
 }
-
 @media (max-width: 480px) {
     .page-title { font-size: 1.4rem; }
     .equipe-info { padding: 20px; }
-    .colonne-disponibles,
-    .colonne-equipes { padding: 15px; }
+    .colonne-disponibles, .colonne-equipes { padding: 15px; }
     .equipe-actions { flex-direction: column; }
+    .groupes-grid { grid-template-columns: 1fr; }
 }
-
 @media (max-width: 200px) {
     body { font-size: 0.8rem; }
     nav { flex-direction: column; padding: 10px; }

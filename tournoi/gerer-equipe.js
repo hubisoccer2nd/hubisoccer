@@ -17,31 +17,30 @@ const translations = {
         'gerer.classement': 'Classement',
         'gerer.messagerie': 'Messages',
         'gerer.portefeuille': 'Portefeuille',
-        'gerer.ajouter': 'Ajouter un sportif',
-        'gerer.modal.titre': 'Ajouter un sportif',
-        'gerer.modal.nom': 'Nom *',
-        'gerer.modal.prenom': 'Prénom *',
-        'gerer.modal.numero': 'Numéro de maillot',
-        'gerer.modal.poste': 'Poste / Rôle sportif',
-        'gerer.modal.pied': 'Pied fort',
-        'gerer.modal.ajouter': 'Ajouter',
-        'gerer.aucun_sportif': 'Aucun sportif dans votre équipe.',
+        'gerer.importer': 'Importer les inscrits',
+        'gerer.creer_equipe': 'Nouvelle équipe',
+        'gerer.enregistrer_tout': 'Enregistrer tout',
+        'gerer.renommer': 'Renommer',
+        'gerer.supprimer_equipe': 'Supprimer l\'équipe',
+        'gerer.ajouter_joueur': 'Ajouter à l\'équipe',
+        'gerer.retirer_joueur': 'Retirer',
+        'gerer.assigner_groupe': 'Groupe',
+        'gerer.aucun_inscrit': 'Aucun inscrit trouvé pour ce code.',
+        'gerer.aucune_equipe': 'Aucune équipe créée.',
+        'gerer.aucun_disponible': 'Tous les joueurs sont assignés.',
+        'gerer.places_restantes': '{count} place(s) restante(s)',
+        'gerer.complet': 'Complet',
+        'gerer.sauvegarde_ok': 'Composition enregistrée avec succès.',
+        'gerer.sauvegarde_erreur': 'Erreur lors de la sauvegarde.',
         'gerer.equipe_non_trouvee': 'Équipe non trouvée',
-        'gerer.supprimer_confirm': 'Supprimer ce sportif ?',
+        'gerer.non_autorise': 'Vous n\'êtes pas autorisé à gérer cette équipe.',
         'footer.badge1': 'Conformité APDP Bénin',
         'footer.badge2': 'Règlementation FIFA',
         'footer.badge3': 'Triple Projet Sport-Études-Carrière',
         'footer.tel': '📞 +229 01 95 97 31 57',
         'footer.email': '📧 contacthubisoccer@gmail.com',
         'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.',
-        'toast.chargement_erreur': 'Erreur chargement des données',
-        'toast.ajout_ok': 'Sportif ajouté avec succès',
-        'toast.ajout_erreur': 'Erreur lors de l\'ajout',
-        'toast.suppr_ok': 'Sportif supprimé',
-        'toast.suppr_erreur': 'Erreur lors de la suppression',
-        'toast.non_autorise': 'Vous n\'êtes pas autorisé à gérer cette équipe',
-        'toast.champs_obligatoires': 'Nom et prénom requis'
+        'footer.copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
     },
     en: {
         'loader.message': 'Loading...',
@@ -53,31 +52,30 @@ const translations = {
         'gerer.classement': 'Ranking',
         'gerer.messagerie': 'Messages',
         'gerer.portefeuille': 'Wallet',
-        'gerer.ajouter': 'Add a player',
-        'gerer.modal.titre': 'Add a player',
-        'gerer.modal.nom': 'Last name *',
-        'gerer.modal.prenom': 'First name *',
-        'gerer.modal.numero': 'Jersey number',
-        'gerer.modal.poste': 'Position / Role',
-        'gerer.modal.pied': 'Preferred foot',
-        'gerer.modal.ajouter': 'Add',
-        'gerer.aucun_sportif': 'No players in your team.',
+        'gerer.importer': 'Import registered',
+        'gerer.creer_equipe': 'New team',
+        'gerer.enregistrer_tout': 'Save all',
+        'gerer.renommer': 'Rename',
+        'gerer.supprimer_equipe': 'Delete team',
+        'gerer.ajouter_joueur': 'Add to team',
+        'gerer.retirer_joueur': 'Remove',
+        'gerer.assigner_groupe': 'Group',
+        'gerer.aucun_inscrit': 'No registered found for this code.',
+        'gerer.aucune_equipe': 'No team created.',
+        'gerer.aucun_disponible': 'All players are assigned.',
+        'gerer.places_restantes': '{count} spot(s) left',
+        'gerer.complet': 'Full',
+        'gerer.sauvegarde_ok': 'Lineup saved successfully.',
+        'gerer.sauvegarde_erreur': 'Error during save.',
         'gerer.equipe_non_trouvee': 'Team not found',
-        'gerer.supprimer_confirm': 'Delete this player?',
+        'gerer.non_autorise': 'You are not authorized to manage this team.',
         'footer.badge1': 'APDP Benin Compliance',
         'footer.badge2': 'FIFA Regulations',
         'footer.badge3': 'Triple Project Sport-Studies-Career',
         'footer.tel': '📞 +229 01 95 97 31 57',
         'footer.email': '📧 contacthubisoccer@gmail.com',
         'footer.rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
-        'footer.copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.',
-        'toast.chargement_erreur': 'Error loading data',
-        'toast.ajout_ok': 'Player added successfully',
-        'toast.ajout_erreur': 'Error adding player',
-        'toast.suppr_ok': 'Player deleted',
-        'toast.suppr_erreur': 'Error deleting player',
-        'toast.non_autorise': 'You are not authorized to manage this team',
-        'toast.champs_obligatoires': 'First name and last name are required'
+        'footer.copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.'
     }
 };
 
@@ -86,9 +84,7 @@ if (!translations[currentLang]) currentLang = 'fr';
 
 function t(key, params = {}) {
     let text = translations[currentLang]?.[key] || translations.fr[key] || key;
-    for (const [k, v] of Object.entries(params)) {
-        text = text.replace(`{${k}}`, v);
-    }
+    for (const [k, v] of Object.entries(params)) text = text.replace(`{${k}}`, v);
     return text;
 }
 
@@ -96,16 +92,9 @@ function applyTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (key) {
-            if (el.tagName === 'INPUT' && el.getAttribute('data-i18n-placeholder')) {
-                el.placeholder = t(key);
-            } else {
-                el.innerHTML = t(key);
-            }
+            if (el.tagName === 'INPUT' && el.getAttribute('data-i18n-placeholder')) el.placeholder = t(key);
+            else el.innerHTML = t(key);
         }
-    });
-    document.querySelectorAll('select option').forEach(opt => {
-        const key = opt.getAttribute('data-i18n');
-        if (key) opt.textContent = t(key);
     });
 }
 
@@ -114,7 +103,7 @@ function changeLanguage(lang) {
         currentLang = lang;
         localStorage.setItem('gerer_lang', lang);
         applyTranslations();
-        if (equipeId) chargerSportifs();
+        chargerInterface();
     }
 }
 /* FIN TRADUCTIONS */
@@ -127,216 +116,411 @@ const userRole = sessionStorage.getItem('tournoi_role');
 const userNom = sessionStorage.getItem('tournoi_nom');
 const tournoiId = sessionStorage.getItem('tournoi_tournoi_id');
 
-if (!userId) {
-    window.location.href = 'connexion-tournoi.html';
-}
-
+if (!userId) window.location.href = 'connexion-tournoi.html';
 document.getElementById('userName').textContent = userNom || sessionStorage.getItem('tournoi_login');
 
-// Blocage non-capitaine : on cache le bouton et on empêche l'ajout
 if (userRole !== 'capitaine') {
-    document.getElementById('ajouterSportifBtn').style.display = 'none';
-    document.getElementById('sportifsList').innerHTML = '<p class="empty-message">' + t('toast.non_autorise') + '</p>';
-    // On désactive le formulaire dans la modale (au cas où)
-    const ajoutForm = document.getElementById('ajoutForm');
-    if (ajoutForm) ajoutForm.style.display = 'none';
+    document.body.innerHTML = '<div style="text-align:center;padding:50px;"><h2>' + t('gerer.non_autorise') + '</h2></div>';
 }
 /* FIN SESSION */
 
 /* ============================================================
    VARIABLES GLOBALES
    ============================================================ */
-let equipeId = null;
+let equipeCapitaine = null;     // l'équipe originale du capitaine
+let tousInscrits = [];          // tous les inscrits du même code
+let toutesEquipes = [];         // toutes les équipes créées (objets enrichis)
+let groupesActuels = {};        // { 'A': [equipeId, ...], ... }
 /* FIN VARIABLES */
 
 /* ============================================================
-   CHARGEMENT DE L'ÉQUIPE ET DES SPORTIFS
+   UTILITAIRES
    ============================================================ */
-async function chargerEquipe() {
-    if (!userId) return;
-    const { data: equipe, error } = await supabasePublic
-        .from('public_equipes')
-        .select('id, nom_equipe, type_equipe, tournoi_id')
-        .eq('capitaine_id', userId)
-        .single();
-    if (error || !equipe) {
-        console.error('Erreur équipe:', error);
-        document.getElementById('equipeInfo').innerHTML = '<p>' + t('gerer.equipe_non_trouvee') + '</p>';
-        equipeId = null;
-        return;
+function showToast(message, type = 'info', duration = 3000) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
     }
-    // Vérifier que le tournoi de l'équipe correspond au tournoi en session
-    if (equipe.tournoi_id && tournoiId && equipe.tournoi_id != tournoiId) {
-        document.getElementById('equipeInfo').innerHTML = '<p>Cette équipe n\'appartient pas au tournoi en cours.</p>';
-        equipeId = null;
-        return;
-    }
-    equipeId = equipe.id;
-    sessionStorage.setItem('tournoi_equipe_id', equipeId);
-    document.getElementById('equipeInfo').innerHTML = `
-        <h2>${escapeHtml(equipe.nom_equipe)}</h2>
-        <p>Type : ${equipe.type_equipe === 'club' ? 'Club' : 'Fan club'}</p>
-    `;
-    chargerSportifs();
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-content">${escapeHtml(message)}</div><button class="toast-close">×</button>`;
+    container.appendChild(toast);
+    toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+    setTimeout(() => toast.remove(), duration);
 }
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+}
+function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
+function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
+/* FIN UTILITAIRES */
 
-async function chargerSportifs() {
-    if (!equipeId) return;
+/* ============================================================
+   CHARGEMENT INITIAL
+   ============================================================ */
+async function chargerInterface() {
     showLoader();
     try {
-        const { data, error } = await supabasePublic
-            .from('public_sportifs_equipe')
-            .select('*')
-            .eq('equipe_id', equipeId)
-            .order('numero_maillot', { ascending: true });
-        if (error) throw error;
-        renderSportifs(data || []);
+        // 1. Récupérer l'équipe du capitaine
+        const { data: equipe, error: eqErr } = await supabasePublic
+            .from('public_equipes')
+            .select('id, nom_equipe, type_equipe, tournoi_id, groupe')
+            .eq('capitaine_id', userId)
+            .single();
+        if (eqErr || !equipe) {
+            document.getElementById('equipeInfo').innerHTML = '<p>' + t('gerer.equipe_non_trouvee') + '</p>';
+            return;
+        }
+        equipeCapitaine = equipe;
+        document.getElementById('equipeInfo').innerHTML = `<h2>${escapeHtml(equipe.nom_equipe)}</h2><p>Type : ${equipe.type_equipe === 'club' ? 'Club' : 'Fan club'}</p>`;
+
+        // 2. Récupérer le code_id du capitaine
+        const { data: capInscription } = await supabasePublic
+            .from('public_inscriptions_tournoi')
+            .select('code_id')
+            .eq('nom_complet', userNom)
+            .eq('statut', 'valide')
+            .limit(1)
+            .single();
+        const codeId = capInscription?.code_id;
+        if (!codeId) {
+            showToast('Impossible de récupérer le code d\'inscription du capitaine.', 'error');
+            return;
+        }
+
+        // 3. Récupérer tous les inscrits avec ce code
+        const { data: inscrits } = await supabasePublic
+            .from('public_inscriptions_tournoi')
+            .select('id, nom_complet, email, telephone, equipe_id')
+            .eq('code_id', codeId)
+            .eq('statut', 'valide');
+        tousInscrits = inscrits || [];
+
+        // 4. Récupérer toutes les équipes déjà créées par ce capitaine (liées au tournoi)
+        const { data: equipes } = await supabasePublic
+            .from('public_equipes')
+            .select('id, nom_equipe, groupe, tournoi_id')
+            .eq('tournoi_id', tournoiId);
+        // On conserve l'équipe du capitaine plus les autres
+        const autresEquipes = (equipes || []).filter(e => e.id !== equipeCapitaine.id);
+        toutesEquipes = [equipeCapitaine, ...autresEquipes];
+
+        // 5. Initialiser les groupes à partir des données existantes
+        groupesActuels = { A: [], B: [], C: [], D: [] };
+        toutesEquipes.forEach(e => {
+            if (e.groupe && groupesActuels[e.groupe]) {
+                groupesActuels[e.groupe].push(e.id);
+            }
+        });
+
+        // 6. Rendu
+        renderDisponibles();
+        renderEquipes();
+        renderGroupes();
     } catch (err) {
         console.error(err);
-        showToast(t('toast.chargement_erreur'), 'error');
+        showToast('Erreur de chargement', 'error');
     } finally {
         hideLoader();
     }
 }
 
-function renderSportifs(sportifs) {
-    const container = document.getElementById('sportifsList');
-    if (!sportifs.length) {
-        container.innerHTML = '<p class="empty-message">' + t('gerer.aucun_sportif') + '</p>';
+/* ============================================================
+   RENDU DES JOUEURS DISPONIBLES (colonne gauche)
+   ============================================================ */
+function renderDisponibles() {
+    const container = document.getElementById('disponiblesList');
+    const assignes = toutesEquipes.flatMap(e => (e.joueurs || []).map(j => j.inscription_id));
+    const disponibles = tousInscrits.filter(ins => !assignes.includes(ins.id));
+
+    if (!disponibles.length) {
+        container.innerHTML = '<p class="empty-message">' + t('gerer.aucun_disponible') + '</p>';
         return;
     }
     let html = '';
-    for (const s of sportifs) {
+    disponibles.forEach(ins => {
         html += `
-            <div class="sportif-card" data-id="${s.id}">
-                <h3>${escapeHtml(s.prenom)} ${escapeHtml(s.nom)}</h3>
-                ${s.numero_maillot ? `<p><strong>Numéro :</strong> ${s.numero_maillot}</p>` : ''}
-                ${s.role_sportif ? `<p><strong>Poste :</strong> ${escapeHtml(s.role_sportif)}</p>` : ''}
-                ${s.pied_fort ? `<p><strong>Pied :</strong> ${escapeHtml(s.pied_fort)}</p>` : ''}
-                <div class="card-actions">
-                    <button class="btn-delete" data-id="${s.id}">Supprimer</button>
-                </div>
+            <div class="joueur-disponible" data-inscription-id="${ins.id}">
+                <span>${escapeHtml(ins.nom_complet)}</span>
+                <select class="assigner-equipe-select">
+                    <option value="">-- Ajouter à --</option>
+                    ${toutesEquipes.map(eq => `<option value="${eq.id}">${escapeHtml(eq.nom_equipe)}</option>`).join('')}
+                </select>
             </div>
         `;
-    }
+    });
     container.innerHTML = html;
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const id = btn.dataset.id;
-            if (confirm(t('gerer.supprimer_confirm'))) {
-                await supprimerSportif(id);
+
+    // Écouteurs pour chaque select
+    container.querySelectorAll('.assigner-equipe-select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+            const equipeId = parseInt(e.target.value);
+            const inscriptionId = parseInt(e.target.closest('.joueur-disponible').dataset.inscriptionId);
+            if (equipeId) {
+                await ajouterJoueurAEquipe(inscriptionId, equipeId);
             }
         });
     });
 }
 
-async function supprimerSportif(id) {
+/* ============================================================
+   RENDU DES ÉQUIPES (colonne droite)
+   ============================================================ */
+async function renderEquipes() {
+    const container = document.getElementById('equipesList');
+
+    // Charger les joueurs pour chaque équipe
+    for (const eq of toutesEquipes) {
+        const { data: joueurs } = await supabasePublic
+            .from('public_inscriptions_tournoi')
+            .select('id, nom_complet')
+            .eq('equipe_id', eq.id);
+        eq.joueurs = (joueurs || []).map(j => ({ inscription_id: j.id, nom: j.nom_complet }));
+    }
+
+    if (!toutesEquipes.length) {
+        container.innerHTML = '<p class="empty-message">' + t('gerer.aucune_equipe') + '</p>';
+        return;
+    }
+
+    let html = '';
+    toutesEquipes.forEach(eq => {
+        const nbJoueurs = (eq.joueurs || []).length;
+        const maxJoueurs = 10;
+        const places = maxJoueurs - nbJoueurs;
+        const placesText = places > 0 ? t('gerer.places_restantes', { count: places }) : t('gerer.complet');
+
+        html += `
+            <div class="equipe-card" data-equipe-id="${eq.id}">
+                <div class="equipe-header">
+                    <h3 class="equipe-nom">${escapeHtml(eq.nom_equipe)}</h3>
+                    <span class="equipe-places">${nbJoueurs}/${maxJoueurs} - ${placesText}</span>
+                </div>
+                <div class="equipe-actions">
+                    <button class="btn-renommer" data-equipe-id="${eq.id}"><i class="fas fa-pen"></i> ${t('gerer.renommer')}</button>
+                    <button class="btn-supprimer-equipe" data-equipe-id="${eq.id}"><i class="fas fa-trash"></i> ${t('gerer.supprimer_equipe')}</button>
+                    <select class="groupe-select" data-equipe-id="${eq.id}">
+                        <option value="">${t('gerer.assigner_groupe')}</option>
+                        <option value="A" ${eq.groupe === 'A' ? 'selected' : ''}>Groupe A</option>
+                        <option value="B" ${eq.groupe === 'B' ? 'selected' : ''}>Groupe B</option>
+                        <option value="C" ${eq.groupe === 'C' ? 'selected' : ''}>Groupe C</option>
+                        <option value="D" ${eq.groupe === 'D' ? 'selected' : ''}>Groupe D</option>
+                    </select>
+                </div>
+                <ul class="equipe-joueurs">
+                    ${(eq.joueurs || []).map(j => `
+                        <li>
+                            <span>${escapeHtml(j.nom)}</span>
+                            <button class="btn-retirer" data-inscription-id="${j.inscription_id}"><i class="fas fa-times"></i> ${t('gerer.retirer_joueur')}</button>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+
+    // Écouteurs
+    container.querySelectorAll('.btn-renommer').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const equipeId = parseInt(btn.dataset.equipeId);
+            const nouveauNom = prompt('Nouveau nom de l\'équipe :');
+            if (nouveauNom && nouveauNom.trim()) {
+                await renommerEquipe(equipeId, nouveauNom.trim());
+            }
+        });
+    });
+    container.querySelectorAll('.btn-supprimer-equipe').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const equipeId = parseInt(btn.dataset.equipeId);
+            if (confirm('Supprimer cette équipe ? Les joueurs redeviendront disponibles.')) {
+                await supprimerEquipe(equipeId);
+            }
+        });
+    });
+    container.querySelectorAll('.groupe-select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+            const equipeId = parseInt(e.target.dataset.equipeId);
+            const groupe = e.target.value;
+            await assignerGroupe(equipeId, groupe || null);
+        });
+    });
+    container.querySelectorAll('.btn-retirer').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const inscriptionId = parseInt(btn.dataset.inscriptionId);
+            await retirerJoueur(inscriptionId);
+        });
+    });
+}
+
+/* ============================================================
+   RENDU DES GROUPES
+   ============================================================ */
+function renderGroupes() {
+    ['A', 'B', 'C', 'D'].forEach(groupe => {
+        const container = document.getElementById('groupe-' + groupe);
+        if (!container) return;
+        const ids = groupesActuels[groupe] || [];
+        const equipesDuGroupe = toutesEquipes.filter(eq => ids.includes(eq.id));
+        container.innerHTML = equipesDuGroupe.map(eq => `
+            <div class="groupe-equipe-item">
+                <span>${escapeHtml(eq.nom_equipe)}</span>
+                <button class="btn-retirer-groupe" data-equipe-id="${eq.id}"><i class="fas fa-times"></i></button>
+            </div>
+        `).join('');
+    });
+
+    // Écouteurs retirer du groupe
+    document.querySelectorAll('.btn-retirer-groupe').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const equipeId = parseInt(btn.dataset.equipeId);
+            await assignerGroupe(equipeId, null);
+        });
+    });
+}
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+async function ajouterJoueurAEquipe(inscriptionId, equipeId) {
+    const { error } = await supabasePublic
+        .from('public_inscriptions_tournoi')
+        .update({ equipe_id: equipeId })
+        .eq('id', inscriptionId);
+    if (error) {
+        showToast('Erreur ajout', 'error');
+    } else {
+        await chargerInterface(); // recharge tout
+    }
+}
+
+async function retirerJoueur(inscriptionId) {
+    const { error } = await supabasePublic
+        .from('public_inscriptions_tournoi')
+        .update({ equipe_id: null })
+        .eq('id', inscriptionId);
+    if (error) {
+        showToast('Erreur retrait', 'error');
+    } else {
+        await chargerInterface();
+    }
+}
+
+async function renommerEquipe(equipeId, nouveauNom) {
+    const { error } = await supabasePublic
+        .from('public_equipes')
+        .update({ nom_equipe: nouveauNom })
+        .eq('id', equipeId);
+    if (error) {
+        showToast('Erreur renommage', 'error');
+    } else {
+        showToast('Équipe renommée', 'success');
+        await chargerInterface();
+    }
+}
+
+async function supprimerEquipe(equipeId) {
+    // Remettre les joueurs à disponible
+    const { data: joueurs } = await supabasePublic
+        .from('public_inscriptions_tournoi')
+        .select('id')
+        .eq('equipe_id', equipeId);
+    if (joueurs) {
+        for (const j of joueurs) {
+            await supabasePublic.from('public_inscriptions_tournoi').update({ equipe_id: null }).eq('id', j.id);
+        }
+    }
+    // Supprimer l'équipe
+    const { error } = await supabasePublic
+        .from('public_equipes')
+        .delete()
+        .eq('id', equipeId);
+    if (error) {
+        showToast('Erreur suppression', 'error');
+    } else {
+        showToast('Équipe supprimée', 'success');
+        await chargerInterface();
+    }
+}
+
+async function assignerGroupe(equipeId, groupe) {
+    const { error } = await supabasePublic
+        .from('public_equipes')
+        .update({ groupe: groupe })
+        .eq('id', equipeId);
+    if (error) {
+        showToast('Erreur assignation groupe', 'error');
+    } else {
+        await chargerInterface();
+    }
+}
+
+async function creerNouvelleEquipe() {
+    const nom = prompt('Nom de la nouvelle équipe :');
+    if (!nom || !nom.trim()) return;
+    const { error } = await supabasePublic
+        .from('public_equipes')
+        .insert([{
+            nom_equipe: nom.trim(),
+            tournoi_id: tournoiId,
+            type_equipe: equipeCapitaine.type_equipe || 'fan_club',
+            capitaine_id: userId
+        }]);
+    if (error) {
+        showToast('Erreur création équipe', 'error');
+    } else {
+        showToast('Équipe créée', 'success');
+        await chargerInterface();
+    }
+}
+
+async function enregistrerTout() {
     showLoader();
     try {
-        const { error } = await supabasePublic
-            .from('public_sportifs_equipe')
-            .delete()
-            .eq('id', id);
-        if (error) throw error;
-        showToast(t('toast.suppr_ok'), 'success');
-        chargerSportifs();
+        // Sauvegarde des groupes dans la table equipes
+        for (const eq of toutesEquipes) {
+            let groupe = null;
+            for (const [g, ids] of Object.entries(groupesActuels)) {
+                if (ids.includes(eq.id)) {
+                    groupe = g;
+                    break;
+                }
+            }
+            await supabasePublic
+                .from('public_equipes')
+                .update({ groupe: groupe })
+                .eq('id', eq.id);
+        }
+        showToast(t('gerer.sauvegarde_ok'), 'success');
     } catch (err) {
         console.error(err);
-        showToast(t('toast.suppr_erreur'), 'error');
+        showToast(t('gerer.sauvegarde_erreur'), 'error');
     } finally {
         hideLoader();
     }
 }
-/* FIN CHARGEMENT */
+/* FIN ACTIONS */
 
 /* ============================================================
-   AJOUT SPORTIF
+   ÉVÉNEMENTS BOUTONS PRINCIPAUX
    ============================================================ */
-const modal = document.getElementById('ajoutModal');
-const ajoutBtn = document.getElementById('ajouterSportifBtn');
-const closeModal = document.querySelectorAll('.close-modal');
-const ajoutForm = document.getElementById('ajoutForm');
-
-ajoutBtn.addEventListener('click', () => {
-    document.getElementById('nom').value = '';
-    document.getElementById('prenom').value = '';
-    document.getElementById('numero').value = '';
-    document.getElementById('poste').value = '';
-    document.getElementById('pied').value = '';
-    modal.classList.add('active');
-});
-
-closeModal.forEach(btn => {
-    btn.addEventListener('click', () => {
-        modal.classList.remove('active');
-    });
-});
-window.addEventListener('click', (e) => {
-    if (e.target === modal) modal.classList.remove('active');
-});
-
-ajoutForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const nom = document.getElementById('nom').value.trim();
-    const prenom = document.getElementById('prenom').value.trim();
-    const numero = document.getElementById('numero').value ? parseInt(document.getElementById('numero').value) : null;
-    const poste = document.getElementById('poste').value.trim() || null;
-    const pied = document.getElementById('pied').value || null;
-
-    if (!nom || !prenom) {
-        showToast(t('toast.champs_obligatoires'), 'warning');
-        return;
-    }
-
+document.getElementById('importerInscritsBtn').addEventListener('click', async () => {
     showLoader();
     try {
-        const { error } = await supabasePublic
-            .from('public_sportifs_equipe')
-            .insert([{
-                equipe_id: equipeId,
-                nom: nom,
-                prenom: prenom,
-                numero_maillot: numero,
-                role_sportif: poste,
-                pied_fort: pied
-            }]);
-        if (error) throw error;
-
-        // *** CORRECTION : Rattacher le joueur à l'équipe dans public_utilisateurs_tournoi ***
-        // On cherche un utilisateur tournoi dont le nom complet contient ce prénom + nom
-        // (car l'admin peut avoir créé un compte joueur avec ces mêmes informations)
-        const recherche = prenom + ' ' + nom;
-        const { data: inscriptions } = await supabasePublic
-            .from('public_inscriptions_tournoi')
-            .select('id')
-            .eq('nom_complet', recherche)
-            .limit(1);
-
-        if (inscriptions && inscriptions.length > 0) {
-            const inscriptionId = inscriptions[0].id;
-            const { error: updateError } = await supabasePublic
-                .from('public_utilisateurs_tournoi')
-                .update({ equipe_id: equipeId })
-                .eq('inscription_id', inscriptionId);
-
-            if (updateError) {
-                console.error('Erreur lors du rattachement du joueur à l\'équipe:', updateError);
-                // On ne bloque pas l'ajout, on log juste l'erreur
-            }
-        }
-        // *** FIN CORRECTION ***
-
-        showToast(t('toast.ajout_ok'), 'success');
-        modal.classList.remove('active');
-        chargerSportifs();
+        await chargerInterface();
+        showToast('Inscrits chargés.', 'success');
     } catch (err) {
-        console.error(err);
-        showToast(t('toast.ajout_erreur'), 'error');
+        showToast('Erreur importation', 'error');
     } finally {
         hideLoader();
     }
 });
-/* FIN AJOUT SPORTIF */
+document.getElementById('creerEquipeBtn').addEventListener('click', creerNouvelleEquipe);
+document.getElementById('enregistrerToutBtn').addEventListener('click', enregistrerTout);
 
 /* ============================================================
    DÉCONNEXION
@@ -345,10 +529,9 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     sessionStorage.clear();
     window.location.href = 'connexion-tournoi.html';
 });
-/* FIN DÉCONNEXION */
 
 /* ============================================================
-   MENU MOBILE ET LANGUE
+   MENU MOBILE & LANGUE
    ============================================================ */
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
@@ -373,41 +556,6 @@ function initLangSelector() {
         langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
     }
 }
-/* FIN MENU ET LANGUE */
-
-/* ============================================================
-   UTILITAIRES
-   ============================================================ */
-function showToast(message, type = 'info', duration = 3000) {
-    let container = document.getElementById('toastContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toastContainer';
-        container.className = 'toast-container';
-        document.body.appendChild(container);
-    }
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<div class="toast-content">${escapeHtml(message)}</div><button class="toast-close">×</button>`;
-    container.appendChild(toast);
-    toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
-    setTimeout(() => toast.remove(), duration);
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
-}
-
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
-/* FIN UTILITAIRES */
 
 /* ============================================================
    INITIALISATION
@@ -416,9 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTranslations();
     initLangSelector();
     initMenuMobile();
-    if (userRole === 'capitaine') {
-        chargerEquipe();
-    }
+    chargerInterface();
 });
 /* FIN INITIALISATION */
 // ========== FIN : tournoi/gerer-equipe.js ==========

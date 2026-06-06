@@ -1,4 +1,4 @@
-/* ========== DEBUT : tournoi/composer-equipe.css ========== */
+/* ========== DEBUT : tournoi/composer-equipe.css (version terrain visuel multi‑sports) ========== */
 :root {
     --primary: #4B0082;
     --primary-light: #7B2FBE;
@@ -47,9 +47,7 @@ nav {
     border-bottom: 1px solid var(--light-gray);
 }
 
-.logo-nav {
-    height: 45px;
-}
+.logo-nav { height: 45px; }
 
 .nav-right {
     display: flex;
@@ -118,7 +116,6 @@ nav {
     transition: var(--transition);
 }
 
-/* Transformation en croix */
 .menu-toggle.open span:nth-child(1) {
     transform: rotate(45deg) translate(5px, 5px);
 }
@@ -151,7 +148,7 @@ nav {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
@@ -183,101 +180,212 @@ nav {
     opacity: 0.9;
 }
 
-/* Formulaire de composition */
-.composition-form {
+/* Sélection de match */
+.matchs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+.match-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 15px 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--light-gray);
+}
+.match-item .teams { font-weight: 600; color: var(--dark); }
+.match-item .date { color: var(--gray); font-size: 0.9rem; }
+.btn-composer {
+    background: var(--primary);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+.btn-composer:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+/* ========== GRILLE DE COMPOSITION (terrain + banc) ========== */
+.composition-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* ---- TERRAIN ---- */
+.terrain-container {
     background: var(--white);
     border-radius: 20px;
     padding: 25px;
     box-shadow: var(--shadow);
-    margin-bottom: 30px;
-}
-
-/* Liste des joueurs */
-#joueursList {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.joueur-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-light);
-    border-radius: 12px;
-    padding: 15px 20px;
     border: 1px solid var(--light-gray);
-    transition: var(--transition);
-}
-.joueur-item:hover {
-    border-color: var(--primary-light);
-    box-shadow: var(--shadow);
 }
 
-.joueur-info {
+.terrain-title {
+    font-size: 1.2rem;
+    color: var(--primary);
+    margin-bottom: 15px;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    gap: 10px;
+}
+.terrain-title i { color: var(--gold); }
+
+.terrain {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    background: linear-gradient(180deg, #2d8a4e 0%, #1e6b36 100%);
+    border-radius: 12px;
+    border: 4px solid white;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.3), 0 0 0 2px var(--light-gray);
+    /* Lignes du terrain */
+    background-image:
+        linear-gradient(white 2px, transparent 2px),
+        linear-gradient(90deg, white 2px, transparent 2px),
+        radial-gradient(circle at 50% 50%, transparent 70%, white 70%, white 72%, transparent 72%);
+    background-size: 100% 50%, 50% 100%, 100% 100%;
+    background-position: 0 50%, 50% 0, 0 0;
+    background-repeat: no-repeat;
+    margin-bottom: 10px;
+    overflow: hidden;
 }
 
-.joueur-nom {
+.terrain-info {
+    text-align: center;
+    color: var(--gray);
+    font-size: 0.85rem;
+    margin-top: 10px;
+}
+
+/* ---- Positions sur le terrain ---- */
+.position-slot {
+    position: absolute;
+    width: 100px;
+    text-align: center;
+    z-index: 2;
+}
+
+.position-label {
+    display: block;
+    font-size: 0.7rem;
     font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.position-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 30px;
+    margin: 0 auto;
+    border: 2px dashed rgba(255,255,255,0.5);
+    border-radius: 15px;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.7rem;
+    cursor: default;
+}
+
+/* ---- Badge joueur (commun titulaire et remplaçant) ---- */
+.joueur-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: grab;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+.joueur-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+.joueur-badge:active {
+    cursor: grabbing;
+}
+
+.joueur-badge.titulaire {
+    background: var(--gold);
     color: var(--dark);
-    font-size: 1rem;
+}
+
+.joueur-badge.remplacant {
+    background: var(--white);
+    color: var(--primary);
+    border: 2px solid var(--primary);
 }
 
 .joueur-numero {
-    font-size: 0.85rem;
+    background: rgba(0,0,0,0.2);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.joueur-nom {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---- BANC DES REMPLAÇANTS ---- */
+.banc-container {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--light-gray);
+}
+
+.banc-title {
+    font-size: 1.2rem;
     color: var(--primary);
-    font-weight: 700;
-}
-
-.joueur-poste {
-    font-size: 0.8rem;
-    color: var(--gray);
-}
-
-.titulaire-toggle {
+    margin-bottom: 15px;
     display: flex;
     align-items: center;
     gap: 10px;
 }
-.titulaire-toggle label {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--dark);
-}
-.titulaire-toggle input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--primary);
-    cursor: pointer;
+.banc-title i { color: var(--gold); }
+
+.banc {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 200px;
+    padding: 15px;
+    background: var(--bg-light);
+    border-radius: 12px;
+    border: 2px dashed var(--light-gray);
+    margin-bottom: 10px;
 }
 
-/* Bouton d'enregistrement */
-.btn-save {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    border: none;
-    padding: 16px 32px;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 10px rgba(75,0,130,0.2);
-}
-.btn-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(75,0,130,0.3);
-}
-.btn-save:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
+.banc-info {
+    text-align: center;
+    color: var(--gray);
+    font-size: 0.85rem;
+    margin-top: 10px;
 }
 
 .empty-message {
@@ -285,9 +393,60 @@ nav {
     padding: 40px;
     color: var(--gray);
     font-size: 1rem;
+}
+
+/* ========== BARRE D'ACTIONS ========== */
+.actions-bar {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-secondary {
     background: var(--white);
-    border-radius: 16px;
-    box-shadow: var(--shadow);
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+.btn-secondary:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-save {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--dark);
+    border: none;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(255,204,0,0.3);
+}
+.btn-save:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255,204,0,0.5);
+}
+.btn-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* ========== FOOTER ========== */
@@ -371,7 +530,12 @@ footer {
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 1024px) {
-    .nav-right { gap: 10px; }
+    .composition-grid {
+        grid-template-columns: 1fr;
+    }
+    .terrain {
+        height: 400px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -395,13 +559,16 @@ footer {
     .nav-links.active { display: flex; }
     .composer-main { padding: 20px 3%; }
     .page-title { font-size: 1.6rem; }
-    .match-info-card { padding: 20px; }
-    .joueur-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .terrain { height: 350px; }
+    .match-item { flex-direction: column; gap: 8px; }
 }
 
 @media (max-width: 480px) {
     .page-title { font-size: 1.4rem; }
-    .btn-save { padding: 12px 20px; font-size: 0.9rem; }
+    .match-info-card { padding: 20px; }
+    .terrain { height: 280px; }
+    .actions-bar { flex-direction: column; }
+    .btn-secondary, .btn-save { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 200px) {

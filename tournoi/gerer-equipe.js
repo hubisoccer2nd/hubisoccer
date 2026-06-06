@@ -1,4 +1,4 @@
-// ========== DEBUT : tournoi/gerer-equipe.js ==========
+// ========== DEBUT : tournoi/gerer-equipe.js (version finale, drag & drop équipes inclus) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -20,16 +20,17 @@ const translations = {
         'gerer.importer': 'Importer les inscrits',
         'gerer.creer_equipe': 'Nouvelle équipe',
         'gerer.enregistrer_tout': 'Enregistrer tout',
+        'gerer.disponibles': 'Joueurs disponibles',
+        'gerer.mes_equipes': 'Mes équipes',
+        'gerer.repartition_groupes': 'Répartition en groupes',
+        'gerer.info_disponibles': 'Glissez un joueur ici pour le retirer des équipes.',
         'gerer.renommer': 'Renommer',
         'gerer.supprimer_equipe': 'Supprimer l\'équipe',
-        'gerer.ajouter_joueur': 'Ajouter à l\'équipe',
-        'gerer.retirer_joueur': 'Retirer',
-        'gerer.assigner_groupe': 'Groupe',
+        'gerer.places_restantes': '{count} place(s) restante(s)',
+        'gerer.complet': 'Complet',
         'gerer.aucun_inscrit': 'Aucun inscrit trouvé pour ce code.',
         'gerer.aucune_equipe': 'Aucune équipe créée.',
         'gerer.aucun_disponible': 'Tous les joueurs sont assignés.',
-        'gerer.places_restantes': '{count} place(s) restante(s)',
-        'gerer.complet': 'Complet',
         'gerer.sauvegarde_ok': 'Composition enregistrée avec succès.',
         'gerer.sauvegarde_erreur': 'Erreur lors de la sauvegarde.',
         'gerer.equipe_non_trouvee': 'Équipe non trouvée',
@@ -55,17 +56,18 @@ const translations = {
         'gerer.importer': 'Import registered',
         'gerer.creer_equipe': 'New team',
         'gerer.enregistrer_tout': 'Save all',
+        'gerer.disponibles': 'Available players',
+        'gerer.mes_equipes': 'My teams',
+        'gerer.repartition_groupes': 'Group distribution',
+        'gerer.info_disponibles': 'Drag a player here to remove them from teams.',
         'gerer.renommer': 'Rename',
         'gerer.supprimer_equipe': 'Delete team',
-        'gerer.ajouter_joueur': 'Add to team',
-        'gerer.retirer_joueur': 'Remove',
-        'gerer.assigner_groupe': 'Group',
+        'gerer.places_restantes': '{count} spot(s) left',
+        'gerer.complet': 'Full',
         'gerer.aucun_inscrit': 'No registered found for this code.',
         'gerer.aucune_equipe': 'No team created.',
         'gerer.aucun_disponible': 'All players are assigned.',
-        'gerer.places_restantes': '{count} spot(s) left',
-        'gerer.complet': 'Full',
-        'gerer.sauvegarde_ok': 'Lineup saved successfully.',
+        'gerer.sauvegarde_ok': 'Composition saved successfully.',
         'gerer.sauvegarde_erreur': 'Error during save.',
         'gerer.equipe_non_trouvee': 'Team not found',
         'gerer.non_autorise': 'You are not authorized to manage this team.',
@@ -127,10 +129,10 @@ if (userRole !== 'capitaine') {
 /* ============================================================
    VARIABLES GLOBALES
    ============================================================ */
-let equipeCapitaine = null;     // l'équipe originale du capitaine
-let tousInscrits = [];          // tous les inscrits du même code
-let toutesEquipes = [];         // toutes les équipes créées (objets enrichis)
-let groupesActuels = {};        // { 'A': [equipeId, ...], ... }
+let equipeCapitaine = null;
+let tousInscrits = [];
+let toutesEquipes = [];
+let groupesActuels = { A: [], B: [], C: [], D: [] };
 /* FIN VARIABLES */
 
 /* ============================================================
@@ -151,10 +153,12 @@ function showToast(message, type = 'info', duration = 3000) {
     toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
     setTimeout(() => toast.remove(), duration);
 }
+
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
 }
+
 function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
 function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
 /* FIN UTILITAIRES */
@@ -165,7 +169,6 @@ function hideLoader() { const l = document.getElementById('globalLoader'); if (l
 async function chargerInterface() {
     showLoader();
     try {
-        // 1. Récupérer l'équipe du capitaine
         const { data: equipe, error: eqErr } = await supabasePublic
             .from('public_equipes')
             .select('id, nom_equipe, type_equipe, tournoi_id, groupe')
@@ -178,7 +181,6 @@ async function chargerInterface() {
         equipeCapitaine = equipe;
         document.getElementById('equipeInfo').innerHTML = `<h2>${escapeHtml(equipe.nom_equipe)}</h2><p>Type : ${equipe.type_equipe === 'club' ? 'Club' : 'Fan club'}</p>`;
 
-        // 2. Récupérer le code_id du capitaine
         const { data: capInscription } = await supabasePublic
             .from('public_inscriptions_tournoi')
             .select('code_id')
@@ -192,7 +194,6 @@ async function chargerInterface() {
             return;
         }
 
-        // 3. Récupérer tous les inscrits avec ce code
         const { data: inscrits } = await supabasePublic
             .from('public_inscriptions_tournoi')
             .select('id, nom_complet, email, telephone, equipe_id')
@@ -200,16 +201,21 @@ async function chargerInterface() {
             .eq('statut', 'valide');
         tousInscrits = inscrits || [];
 
-        // 4. Récupérer toutes les équipes déjà créées par ce capitaine (liées au tournoi)
         const { data: equipes } = await supabasePublic
             .from('public_equipes')
             .select('id, nom_equipe, groupe, tournoi_id')
             .eq('tournoi_id', tournoiId);
-        // On conserve l'équipe du capitaine plus les autres
         const autresEquipes = (equipes || []).filter(e => e.id !== equipeCapitaine.id);
         toutesEquipes = [equipeCapitaine, ...autresEquipes];
 
-        // 5. Initialiser les groupes à partir des données existantes
+        for (const eq of toutesEquipes) {
+            const { data: joueurs } = await supabasePublic
+                .from('public_inscriptions_tournoi')
+                .select('id, nom_complet')
+                .eq('equipe_id', eq.id);
+            eq.joueurs = (joueurs || []).map(j => ({ inscription_id: j.id, nom: j.nom_complet }));
+        }
+
         groupesActuels = { A: [], B: [], C: [], D: [] };
         toutesEquipes.forEach(e => {
             if (e.groupe && groupesActuels[e.groupe]) {
@@ -217,7 +223,6 @@ async function chargerInterface() {
             }
         });
 
-        // 6. Rendu
         renderDisponibles();
         renderEquipes();
         renderGroupes();
@@ -230,7 +235,7 @@ async function chargerInterface() {
 }
 
 /* ============================================================
-   RENDU DES JOUEURS DISPONIBLES (colonne gauche)
+   RENDU DES JOUEURS DISPONIBLES
    ============================================================ */
 function renderDisponibles() {
     const container = document.getElementById('disponiblesList');
@@ -241,47 +246,23 @@ function renderDisponibles() {
         container.innerHTML = '<p class="empty-message">' + t('gerer.aucun_disponible') + '</p>';
         return;
     }
+
     let html = '';
     disponibles.forEach(ins => {
         html += `
-            <div class="joueur-disponible" data-inscription-id="${ins.id}">
-                <span>${escapeHtml(ins.nom_complet)}</span>
-                <select class="assigner-equipe-select">
-                    <option value="">-- Ajouter à --</option>
-                    ${toutesEquipes.map(eq => `<option value="${eq.id}">${escapeHtml(eq.nom_equipe)}</option>`).join('')}
-                </select>
+            <div class="joueur-card disponible" draggable="true" data-inscription-id="${ins.id}" ondragstart="dragJoueur(event, ${ins.id})">
+                <span class="joueur-nom">${escapeHtml(ins.nom_complet)}</span>
             </div>
         `;
     });
     container.innerHTML = html;
-
-    // Écouteurs pour chaque select
-    container.querySelectorAll('.assigner-equipe-select').forEach(select => {
-        select.addEventListener('change', async (e) => {
-            const equipeId = parseInt(e.target.value);
-            const inscriptionId = parseInt(e.target.closest('.joueur-disponible').dataset.inscriptionId);
-            if (equipeId) {
-                await ajouterJoueurAEquipe(inscriptionId, equipeId);
-            }
-        });
-    });
 }
 
 /* ============================================================
-   RENDU DES ÉQUIPES (colonne droite)
+   RENDU DES ÉQUIPES (avec poignée de drag pour les groupes)
    ============================================================ */
-async function renderEquipes() {
+function renderEquipes() {
     const container = document.getElementById('equipesList');
-
-    // Charger les joueurs pour chaque équipe
-    for (const eq of toutesEquipes) {
-        const { data: joueurs } = await supabasePublic
-            .from('public_inscriptions_tournoi')
-            .select('id, nom_complet')
-            .eq('equipe_id', eq.id);
-        eq.joueurs = (joueurs || []).map(j => ({ inscription_id: j.id, nom: j.nom_complet }));
-    }
-
     if (!toutesEquipes.length) {
         container.innerHTML = '<p class="empty-message">' + t('gerer.aucune_equipe') + '</p>';
         return;
@@ -295,27 +276,24 @@ async function renderEquipes() {
         const placesText = places > 0 ? t('gerer.places_restantes', { count: places }) : t('gerer.complet');
 
         html += `
-            <div class="equipe-card" data-equipe-id="${eq.id}">
+            <div class="equipe-card" data-equipe-id="${eq.id}"
+                 ondragover="allowDrop(event)" ondrop="dropOnEquipe(event, ${eq.id})">
                 <div class="equipe-header">
+                    <span class="drag-handle" draggable="true" ondragstart="dragEquipe(event, ${eq.id})" title="Glisser pour déplacer l'équipe">
+                        <i class="fas fa-grip-vertical"></i>
+                    </span>
                     <h3 class="equipe-nom">${escapeHtml(eq.nom_equipe)}</h3>
                     <span class="equipe-places">${nbJoueurs}/${maxJoueurs} - ${placesText}</span>
                 </div>
                 <div class="equipe-actions">
                     <button class="btn-renommer" data-equipe-id="${eq.id}"><i class="fas fa-pen"></i> ${t('gerer.renommer')}</button>
                     <button class="btn-supprimer-equipe" data-equipe-id="${eq.id}"><i class="fas fa-trash"></i> ${t('gerer.supprimer_equipe')}</button>
-                    <select class="groupe-select" data-equipe-id="${eq.id}">
-                        <option value="">${t('gerer.assigner_groupe')}</option>
-                        <option value="A" ${eq.groupe === 'A' ? 'selected' : ''}>Groupe A</option>
-                        <option value="B" ${eq.groupe === 'B' ? 'selected' : ''}>Groupe B</option>
-                        <option value="C" ${eq.groupe === 'C' ? 'selected' : ''}>Groupe C</option>
-                        <option value="D" ${eq.groupe === 'D' ? 'selected' : ''}>Groupe D</option>
-                    </select>
                 </div>
                 <ul class="equipe-joueurs">
                     ${(eq.joueurs || []).map(j => `
                         <li>
                             <span>${escapeHtml(j.nom)}</span>
-                            <button class="btn-retirer" data-inscription-id="${j.inscription_id}"><i class="fas fa-times"></i> ${t('gerer.retirer_joueur')}</button>
+                            <button class="btn-retirer" data-inscription-id="${j.inscription_id}"><i class="fas fa-times"></i></button>
                         </li>
                     `).join('')}
                 </ul>
@@ -324,35 +302,32 @@ async function renderEquipes() {
     });
     container.innerHTML = html;
 
-    // Écouteurs
     container.querySelectorAll('.btn-renommer').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const equipeId = parseInt(btn.dataset.equipeId);
             const nouveauNom = prompt('Nouveau nom de l\'équipe :');
             if (nouveauNom && nouveauNom.trim()) {
-                await renommerEquipe(equipeId, nouveauNom.trim());
+                renommerEquipe(equipeId, nouveauNom.trim());
             }
         });
     });
+
     container.querySelectorAll('.btn-supprimer-equipe').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const equipeId = parseInt(btn.dataset.equipeId);
             if (confirm('Supprimer cette équipe ? Les joueurs redeviendront disponibles.')) {
-                await supprimerEquipe(equipeId);
+                supprimerEquipe(equipeId);
             }
         });
     });
-    container.querySelectorAll('.groupe-select').forEach(select => {
-        select.addEventListener('change', async (e) => {
-            const equipeId = parseInt(e.target.dataset.equipeId);
-            const groupe = e.target.value;
-            await assignerGroupe(equipeId, groupe || null);
-        });
-    });
+
     container.querySelectorAll('.btn-retirer').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const inscriptionId = parseInt(btn.dataset.inscriptionId);
-            await retirerJoueur(inscriptionId);
+            retirerJoueur(inscriptionId);
         });
     });
 }
@@ -374,19 +349,23 @@ function renderGroupes() {
         `).join('');
     });
 
-    // Écouteurs retirer du groupe
     document.querySelectorAll('.btn-retirer-groupe').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
             const equipeId = parseInt(btn.dataset.equipeId);
-            await assignerGroupe(equipeId, null);
+            assignerGroupe(equipeId, null);
         });
     });
 }
 
 /* ============================================================
-   ACTIONS
+   ACTIONS SUR LES JOUEURS / ÉQUIPES
    ============================================================ */
 async function ajouterJoueurAEquipe(inscriptionId, equipeId) {
+    const equipe = toutesEquipes.find(e => e.id == equipeId);
+    if (equipe && (equipe.joueurs || []).length >= 10) {
+        showToast('Cette équipe est complète (10 joueurs max).', 'warning');
+        return;
+    }
     const { error } = await supabasePublic
         .from('public_inscriptions_tournoi')
         .update({ equipe_id: equipeId })
@@ -394,7 +373,7 @@ async function ajouterJoueurAEquipe(inscriptionId, equipeId) {
     if (error) {
         showToast('Erreur ajout', 'error');
     } else {
-        await chargerInterface(); // recharge tout
+        await chargerInterface();
     }
 }
 
@@ -424,7 +403,6 @@ async function renommerEquipe(equipeId, nouveauNom) {
 }
 
 async function supprimerEquipe(equipeId) {
-    // Remettre les joueurs à disponible
     const { data: joueurs } = await supabasePublic
         .from('public_inscriptions_tournoi')
         .select('id')
@@ -434,7 +412,6 @@ async function supprimerEquipe(equipeId) {
             await supabasePublic.from('public_inscriptions_tournoi').update({ equipe_id: null }).eq('id', j.id);
         }
     }
-    // Supprimer l'équipe
     const { error } = await supabasePublic
         .from('public_equipes')
         .delete()
@@ -481,7 +458,6 @@ async function creerNouvelleEquipe() {
 async function enregistrerTout() {
     showLoader();
     try {
-        // Sauvegarde des groupes dans la table equipes
         for (const eq of toutesEquipes) {
             let groupe = null;
             for (const [g, ids] of Object.entries(groupesActuels)) {
@@ -503,7 +479,42 @@ async function enregistrerTout() {
         hideLoader();
     }
 }
-/* FIN ACTIONS */
+
+/* ============================================================
+   DRAG & DROP
+   ============================================================ */
+function allowDrop(ev) { ev.preventDefault(); }
+
+function dragJoueur(ev, inscriptionId) {
+    ev.dataTransfer.setData("text/plain", inscriptionId);
+    ev.dataTransfer.effectAllowed = "move";
+}
+
+function dropOnDisponibles(ev) {
+    ev.preventDefault();
+    const inscriptionId = parseInt(ev.dataTransfer.getData("text/plain"));
+    if (!inscriptionId) return;
+    retirerJoueur(inscriptionId);
+}
+
+function dropOnEquipe(ev, equipeId) {
+    ev.preventDefault();
+    const inscriptionId = parseInt(ev.dataTransfer.getData("text/plain"));
+    if (!inscriptionId) return;
+    ajouterJoueurAEquipe(inscriptionId, equipeId);
+}
+
+function dragEquipe(ev, equipeId) {
+    ev.dataTransfer.setData("text/plain", equipeId);
+    ev.dataTransfer.effectAllowed = "move";
+}
+
+function dropOnGroupe(ev, groupe) {
+    ev.preventDefault();
+    const equipeId = parseInt(ev.dataTransfer.getData("text/plain"));
+    if (!equipeId) return;
+    assignerGroupe(equipeId, groupe);
+}
 
 /* ============================================================
    ÉVÉNEMENTS BOUTONS PRINCIPAUX
@@ -566,5 +577,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile();
     chargerInterface();
 });
-/* FIN INITIALISATION */
 // ========== FIN : tournoi/gerer-equipe.js ==========

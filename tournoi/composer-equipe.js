@@ -105,8 +105,9 @@ document.getElementById('userName').textContent = userNom || userLogin;
 
 const urlParams = new URLSearchParams(window.location.search);
 const matchId = urlParams.get('id');
+// Correction : redirection vers le dossier matchs si pas d'ID
 if (!matchId) {
-    window.location.href = 'matchs.html';
+    window.location.href = '../matchs/';
 }
 /* FIN SESSION */
 
@@ -155,7 +156,7 @@ async function chargerComposition() {
         if (userRole !== 'capitaine') {
             showToast(t('composer.not_capitaine'), 'error');
             document.getElementById('compositionForm').style.display = 'none';
-            document.getElementById('saveCompositionBtn').disabled = true;
+            document.getElementById('saveCompositionBtn').style.display = 'none';
             return;
         }
 
@@ -172,7 +173,7 @@ async function chargerComposition() {
         if (matchData.statut === 'termine') {
             showToast(t('composer.match_passe'), 'warning');
             document.getElementById('compositionForm').style.display = 'none';
-            document.getElementById('saveCompositionBtn').disabled = true;
+            document.getElementById('saveCompositionBtn').style.display = 'none';
             return;
         }
 
@@ -217,8 +218,8 @@ async function chargerComposition() {
 
         renderJoueurs(compositionMap);
 
-        // Activer le bouton seulement si l'utilisateur est bien capitaine et match non terminé
-        document.getElementById('saveCompositionBtn').disabled = false;
+        // Le bouton est visible seulement pour le capitaine, match non terminé
+        document.getElementById('saveCompositionBtn').style.display = 'inline-block';
     } catch (err) {
         console.error(err);
         showToast('Erreur chargement des données', 'error');

@@ -15,15 +15,13 @@
         <span data-i18n="loader.message">Chargement...</span>
     </div>
 
+    <!-- ========== NAVIGATION ========== -->
     <nav>
         <a href="../" class="logo-link">
             <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
-            <span class="user-badge">
-                <i class="fas fa-user"></i>
-                <span id="userName"></span>
-            </span>
+            <span class="user-badge"><i class="fas fa-user"></i> <span id="userName"></span></span>
             <select class="lang-picker" id="langSelect">
                 <option value="fr">🇫🇷 Français</option>
                 <option value="en">🇺🇸 English</option>
@@ -51,9 +49,7 @@
                 <option value="vi">🇻🇳 Tiếng Việt</option>
             </select>
             <button id="logoutBtn" class="btn-logout" data-i18n="gerer.logout">Déconnexion</button>
-            <button class="menu-toggle" id="menuToggle">
-                <span></span><span></span><span></span>
-            </button>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
                 <a href="dashboard-tournoi.html" data-i18n="gerer.dashboard">Tableau de bord</a>
                 <a href="gerer-equipe.html" class="active" data-i18n="gerer.title">Mon équipe</a>
@@ -66,22 +62,56 @@
         </div>
     </nav>
 
+    <!-- ========== CONTENU PRINCIPAL ========== -->
     <main class="gerer-main">
         <div class="container">
-            <h1 class="page-title">
-                <i class="fas fa-users"></i>
-                <span data-i18n="gerer.title">Gérer mon équipe</span>
-            </h1>
+            <h1 class="page-title"><i class="fas fa-users"></i> <span data-i18n="gerer.title">Gérer mon équipe</span></h1>
             <div id="equipeInfo" class="equipe-info"></div>
 
-            <div class="actions">
-                <button id="ajouterSportifBtn" class="btn-primary">
-                    <i class="fas fa-plus"></i>
-                    <span data-i18n="gerer.ajouter">Ajouter un sportif</span>
-                </button>
+            <!-- Barre d'actions principale -->
+            <div class="actions-bar">
+                <button id="importerInscritsBtn" class="btn-primary"><i class="fas fa-download"></i> Importer les inscrits</button>
+                <button id="creerEquipeBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouvelle équipe</button>
+                <button id="enregistrerToutBtn" class="btn-save"><i class="fas fa-save"></i> Enregistrer tout</button>
             </div>
 
-            <div id="sportifsList" class="sportifs-list"></div>
+            <!-- Zone de gestion en deux colonnes -->
+            <div class="gestion-grid">
+                <!-- Colonne gauche : joueurs disponibles -->
+                <div class="colonne-disponibles">
+                    <h2><i class="fas fa-user-friends"></i> Joueurs disponibles</h2>
+                    <div id="disponiblesList" class="joueurs-list"></div>
+                </div>
+
+                <!-- Colonne droite : équipes -->
+                <div class="colonne-equipes">
+                    <h2><i class="fas fa-tshirt"></i> Mes équipes</h2>
+                    <div id="equipesList" class="equipes-list"></div>
+                </div>
+            </div>
+
+            <!-- Section groupes -->
+            <div class="groupes-section">
+                <h2><i class="fas fa-layer-group"></i> Répartition en groupes</h2>
+                <div class="groupes-grid" id="groupesGrid">
+                    <div class="groupe-card" data-groupe="A">
+                        <h3>Groupe A</h3>
+                        <div class="groupe-equipes" id="groupe-A"></div>
+                    </div>
+                    <div class="groupe-card" data-groupe="B">
+                        <h3>Groupe B</h3>
+                        <div class="groupe-equipes" id="groupe-B"></div>
+                    </div>
+                    <div class="groupe-card" data-groupe="C">
+                        <h3>Groupe C</h3>
+                        <div class="groupe-equipes" id="groupe-C"></div>
+                    </div>
+                    <div class="groupe-card" data-groupe="D">
+                        <h3>Groupe D</h3>
+                        <div class="groupe-equipes" id="groupe-D"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -103,42 +133,6 @@
     </footer>
 
     <div id="toastContainer" class="toast-container"></div>
-
-    <!-- Modale ajout sportif -->
-    <div id="ajoutModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h3 data-i18n="gerer.modal.titre">Ajouter un sportif</h3>
-            <form id="ajoutForm">
-                <div class="form-group">
-                    <label data-i18n="gerer.modal.nom">Nom *</label>
-                    <input type="text" id="nom" required>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="gerer.modal.prenom">Prénom *</label>
-                    <input type="text" id="prenom" required>
-                </div>
-                <div class="form-group">
-                    <label data-i18n="gerer.modal.numero">Numéro de maillot</label>
-                    <input type="number" id="numero">
-                </div>
-                <div class="form-group">
-                    <label data-i18n="gerer.modal.poste">Poste / Rôle sportif</label>
-                    <input type="text" id="poste">
-                </div>
-                <div class="form-group">
-                    <label data-i18n="gerer.modal.pied">Pied fort</label>
-                    <select id="pied">
-                        <option value="">--</option>
-                        <option value="Droit">Droit</option>
-                        <option value="Gauche">Gauche</option>
-                        <option value="Ambidextre">Ambidextre</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-submit" data-i18n="gerer.modal.ajouter">Ajouter</button>
-            </form>
-        </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="gerer-equipe.js"></script>

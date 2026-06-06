@@ -1,4 +1,4 @@
-<!-- DEBUT : tournoi/composer-equipe.html (version refondue avec terrain visuel) -->
+<!-- DEBUT : tournoi/composer-equipe.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -64,7 +64,7 @@
 
     <main class="composer-main">
         <div class="container">
-            <h1 class="page-title"><i class="fas fa-users"></i> <span data-i18n="composer.title">Composition d'équipe</span></h1>
+            <h1 class="page-title"><i class="fas fa-clipboard-list"></i> <span data-i18n="composer.title">Composition d'équipe</span></h1>
             <div id="matchInfo" class="match-info-card"></div>
 
             <!-- Sélecteur de match (si pas d'ID) -->
@@ -75,30 +75,34 @@
 
             <!-- Interface de composition (apparaît quand un match est sélectionné) -->
             <div id="compositionSection" style="display:none;">
+                <div class="composition-header">
+                    <span id="titulairesCount" class="compteur"></span>
+                </div>
+
                 <div class="composition-grid">
-                    <!-- Terrain de football à 7 -->
-                    <div class="terrain-container">
-                        <h3 class="terrain-title"><i class="fas fa-futbol"></i> Terrain</h3>
-                        <div class="terrain" id="terrain">
-                            <!-- Les 7 positions seront générées par le JS -->
+                    <!-- Colonne Titulaires -->
+                    <div class="colonne-titulaires">
+                        <h3 class="colonne-title"><i class="fas fa-tshirt"></i> Titulaires</h3>
+                        <div class="liste-titulaires" id="titulairesList">
+                            <!-- Les joueurs titulaires seront injectés ici par le JS -->
                         </div>
-                        <p class="terrain-info">Faites glisser les joueurs du banc vers les postes souhaités.</p>
+                        <p class="info-texte">Faites glisser un joueur ici pour le rendre titulaire. Vous devez avoir exactement <strong id="nbTitulairesRequis">0</strong> titulaires.</p>
                     </div>
 
-                    <!-- Banc des remplaçants -->
-                    <div class="banc-container">
-                        <h3 class="banc-title"><i class="fas fa-chair"></i> Remplaçants</h3>
-                        <div class="banc" id="banc">
-                            <!-- Les joueurs non titulaires apparaîtront ici -->
+                    <!-- Colonne Remplaçants -->
+                    <div class="colonne-remplacants">
+                        <h3 class="colonne-title"><i class="fas fa-chair"></i> Remplaçants</h3>
+                        <div class="liste-remplacants" id="remplacantsList">
+                            <!-- Les joueurs remplaçants seront injectés ici par le JS -->
                         </div>
-                        <p class="banc-info">Glissez un joueur hors du terrain pour le remettre sur le banc.</p>
+                        <p class="info-texte">Faites glisser un joueur ici pour le mettre sur le banc.</p>
                     </div>
                 </div>
 
                 <!-- Boutons d'action -->
                 <div class="actions-bar">
                     <button id="resetCompositionBtn" class="btn-secondary"><i class="fas fa-undo"></i> Réinitialiser</button>
-                    <button id="saveCompositionBtn" class="btn-save"><i class="fas fa-save"></i> Enregistrer la composition</button>
+                    <button id="saveCompositionBtn" class="btn-save" disabled><i class="fas fa-save"></i> Enregistrer la composition</button>
                 </div>
             </div>
         </div>

@@ -62,51 +62,52 @@
         </div>
     </nav>
 
-    <!-- ========== CONTENU PRINCIPAL ========== -->
     <main class="gerer-main">
         <div class="container">
             <h1 class="page-title"><i class="fas fa-users"></i> <span data-i18n="gerer.title">Gérer mon équipe</span></h1>
             <div id="equipeInfo" class="equipe-info"></div>
 
-            <!-- Barre d'actions principale -->
+            <!-- Barre d'actions -->
             <div class="actions-bar">
-                <button id="importerInscritsBtn" class="btn-primary"><i class="fas fa-download"></i> Importer les inscrits</button>
-                <button id="creerEquipeBtn" class="btn-primary"><i class="fas fa-plus"></i> Nouvelle équipe</button>
-                <button id="enregistrerToutBtn" class="btn-save"><i class="fas fa-save"></i> Enregistrer tout</button>
+                <button id="importerInscritsBtn" class="btn-primary"><i class="fas fa-download"></i> <span data-i18n="gerer.importer">Importer les inscrits</span></button>
+                <button id="creerEquipeBtn" class="btn-primary"><i class="fas fa-plus"></i> <span data-i18n="gerer.creer_equipe">Nouvelle équipe</span></button>
+                <button id="enregistrerToutBtn" class="btn-save"><i class="fas fa-save"></i> <span data-i18n="gerer.enregistrer_tout">Enregistrer tout</span></button>
             </div>
 
             <!-- Zone de gestion en deux colonnes -->
             <div class="gestion-grid">
                 <!-- Colonne gauche : joueurs disponibles -->
-                <div class="colonne-disponibles">
-                    <h2><i class="fas fa-user-friends"></i> Joueurs disponibles</h2>
+                <div class="colonne-disponibles" id="colonneDisponibles"
+                     ondragover="allowDrop(event)" ondrop="dropOnDisponibles(event)">
+                    <h2><i class="fas fa-user-friends"></i> <span data-i18n="gerer.disponibles">Joueurs disponibles</span></h2>
                     <div id="disponiblesList" class="joueurs-list"></div>
+                    <p class="info-texte"><span data-i18n="gerer.info_disponibles">Glissez un joueur ici pour le retirer des équipes.</span></p>
                 </div>
 
                 <!-- Colonne droite : équipes -->
                 <div class="colonne-equipes">
-                    <h2><i class="fas fa-tshirt"></i> Mes équipes</h2>
+                    <h2><i class="fas fa-tshirt"></i> <span data-i18n="gerer.mes_equipes">Mes équipes</span></h2>
                     <div id="equipesList" class="equipes-list"></div>
                 </div>
             </div>
 
             <!-- Section groupes -->
             <div class="groupes-section">
-                <h2><i class="fas fa-layer-group"></i> Répartition en groupes</h2>
+                <h2><i class="fas fa-layer-group"></i> <span data-i18n="gerer.repartition_groupes">Répartition en groupes</span></h2>
                 <div class="groupes-grid" id="groupesGrid">
-                    <div class="groupe-card" data-groupe="A">
+                    <div class="groupe-card" data-groupe="A" ondragover="allowDrop(event)" ondrop="dropOnGroupe(event, 'A')">
                         <h3>Groupe A</h3>
                         <div class="groupe-equipes" id="groupe-A"></div>
                     </div>
-                    <div class="groupe-card" data-groupe="B">
+                    <div class="groupe-card" data-groupe="B" ondragover="allowDrop(event)" ondrop="dropOnGroupe(event, 'B')">
                         <h3>Groupe B</h3>
                         <div class="groupe-equipes" id="groupe-B"></div>
                     </div>
-                    <div class="groupe-card" data-groupe="C">
+                    <div class="groupe-card" data-groupe="C" ondragover="allowDrop(event)" ondrop="dropOnGroupe(event, 'C')">
                         <h3>Groupe C</h3>
                         <div class="groupe-equipes" id="groupe-C"></div>
                     </div>
-                    <div class="groupe-card" data-groupe="D">
+                    <div class="groupe-card" data-groupe="D" ondragover="allowDrop(event)" ondrop="dropOnGroupe(event, 'D')">
                         <h3>Groupe D</h3>
                         <div class="groupe-equipes" id="groupe-D"></div>
                     </div>

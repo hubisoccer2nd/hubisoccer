@@ -1,4 +1,4 @@
-// ========== DEBUT : tournoi/gerer-equipe.js (version finale, drag & drop équipes inclus) ==========
+// ========== DEBUT : tournoi/gerer-equipe.js (version intégrale et définitive, sans aucune troncature) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -133,6 +133,7 @@ let equipeCapitaine = null;
 let tousInscrits = [];
 let toutesEquipes = [];
 let groupesActuels = { A: [], B: [], C: [], D: [] };
+let joueursMaxParEquipe = 10;
 /* FIN VARIABLES */
 
 /* ============================================================
@@ -169,6 +170,13 @@ function hideLoader() { const l = document.getElementById('globalLoader'); if (l
 async function chargerInterface() {
     showLoader();
     try {
+        const { data: tournoi } = await supabasePublic
+            .from('public_tournois')
+            .select('format_equipe')
+            .eq('id', tournoiId)
+            .single();
+        joueursMaxParEquipe = tournoi?.format_equipe || 10;
+
         const { data: equipe, error: eqErr } = await supabasePublic
             .from('public_equipes')
             .select('id, nom_equipe, type_equipe, tournoi_id, groupe')
@@ -271,8 +279,7 @@ function renderEquipes() {
     let html = '';
     toutesEquipes.forEach(eq => {
         const nbJoueurs = (eq.joueurs || []).length;
-        const maxJoueurs = 10;
-        const places = maxJoueurs - nbJoueurs;
+        const places = joueursMaxParEquipe - nbJoueurs;
         const placesText = places > 0 ? t('gerer.places_restantes', { count: places }) : t('gerer.complet');
 
         html += `
@@ -283,7 +290,7 @@ function renderEquipes() {
                         <i class="fas fa-grip-vertical"></i>
                     </span>
                     <h3 class="equipe-nom">${escapeHtml(eq.nom_equipe)}</h3>
-                    <span class="equipe-places">${nbJoueurs}/${maxJoueurs} - ${placesText}</span>
+                    <span class="equipe-places">${nbJoueurs}/${joueursMaxParEquipe} - ${placesText}</span>
                 </div>
                 <div class="equipe-actions">
                     <button class="btn-renommer" data-equipe-id="${eq.id}"><i class="fas fa-pen"></i> ${t('gerer.renommer')}</button>
@@ -362,8 +369,8 @@ function renderGroupes() {
    ============================================================ */
 async function ajouterJoueurAEquipe(inscriptionId, equipeId) {
     const equipe = toutesEquipes.find(e => e.id == equipeId);
-    if (equipe && (equipe.joueurs || []).length >= 10) {
-        showToast('Cette équipe est complète (10 joueurs max).', 'warning');
+    if (equipe && (equipe.joueurs || []).length >= joueursMaxParEquipe) {
+        showToast(`Cette équipe est complète (${joueursMaxParEquipe} joueurs max).`, 'warning');
         return;
     }
     const { error } = await supabasePublic

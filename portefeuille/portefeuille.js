@@ -1,4 +1,4 @@
-// ========== DEBUT : portefeuille/portefeuille.js ==========
+// ========== DEBUT : portefeuille/portefeuille.js (corrigé audit base de données) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -148,14 +148,14 @@ async function chargerSolde() {
     }
 }
 
-// ========== CHARGEMENT DE L'HISTORIQUE ==========
+// ========== CHARGEMENT DE L'HISTORIQUE (corrigé date_creation) ==========
 async function chargerTransactions() {
     try {
         const { data, error } = await supabasePublic
             .from('public_transactions')
             .select('*')
             .eq('utilisateur_id', userId)
-            .order('created_at', { ascending: false });
+            .order('date_creation', { ascending: false });  // ← colonne corrigée
         if (error) throw error;
         renderTransactions(data || []);
     } catch (err) {
@@ -192,11 +192,14 @@ function renderTransactions(transactions) {
             default:
                 statutLabel = tx.statut;
         }
+        // Utilisation de date_creation au lieu de created_at
+        const dateAffichage = tx.date_creation ? new Date(tx.date_creation).toLocaleString() : 'Date inconnue';
         html += `
             <div class="transaction-item ${typeClass}">
                 <div class="transaction-info">
                     <div class="transaction-montant">${typeLabel} : ${tx.montant.toLocaleString()} FCFA</div>
-                    <div class="transaction-date">${new Date(tx.created_at).toLocaleString()}</div>
+                    <div class="transaction-date">${dateAffichage}</div>
+                    ${tx.description ? `<div class="transaction-desc">${escapeHtml(tx.description)}</div>` : ''}
                 </div>
                 <div class="transaction-statut statut-${statutClass}">${statutLabel}</div>
             </div>
@@ -205,7 +208,7 @@ function renderTransactions(transactions) {
     container.innerHTML = html;
 }
 
-// ========== DEMANDE DE DÉPÔT ==========
+// ========== DEMANDE DE DÉPÔT (corrigée : colonnes methode/identifiant dans description) ==========
 const depotForm = document.getElementById('depotForm');
 depotForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -217,21 +220,22 @@ depotForm.addEventListener('submit', async (e) => {
     }
     showLoader();
     try {
+        const description = `Méthode: ${methode}`;
         const { error } = await supabasePublic
             .from('public_transactions')
             .insert([{
                 utilisateur_id: userId,
                 type: 'depot',
                 montant: montant,
-                methode: methode,
                 statut: 'en_attente',
-                identifiant: null,
-                created_at: new Date().toISOString()
+                description: description,
+                date_creation: new Date().toISOString()   // ← colonne corrigée
             }]);
         if (error) throw error;
         showToast(t('toast.demande_envoyee'), 'success');
         depotForm.reset();
         chargerTransactions();
+        // Envoi d'une notification à l'admin via la messagerie privée
         await supabasePublic.from('public_messages_prives').insert([{
             expediteur_id: userId,
             destinataire_id: 'admin',
@@ -241,13 +245,14 @@ depotForm.addEventListener('submit', async (e) => {
             created_at: new Date().toISOString()
         }]);
     } catch (err) {
+        console.error(err);
         showToast(t('toast.erreur'), 'error');
     } finally {
         hideLoader();
     }
 });
 
-// ========== DEMANDE DE RETRAIT ==========
+// ========== DEMANDE DE RETRAIT (corrigée) ==========
 const retraitForm = document.getElementById('retraitForm');
 retraitForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -264,16 +269,16 @@ retraitForm.addEventListener('submit', async (e) => {
     }
     showLoader();
     try {
+        const description = `Méthode: ${methode}, Identifiant: ${identifiant}`;
         const { error } = await supabasePublic
             .from('public_transactions')
             .insert([{
                 utilisateur_id: userId,
                 type: 'retrait',
                 montant: montant,
-                methode: methode,
-                identifiant: identifiant,
                 statut: 'en_attente',
-                created_at: new Date().toISOString()
+                description: description,
+                date_creation: new Date().toISOString()   // ← colonne corrigée
             }]);
         if (error) throw error;
         showToast(t('toast.demande_envoyee'), 'success');
@@ -283,11 +288,12 @@ retraitForm.addEventListener('submit', async (e) => {
             expediteur_id: userId,
             destinataire_id: 'admin',
             sujet: 'Demande de retrait',
-            contenu: `Nouvelle demande de retrait de ${montant} FCFA par ${userNom || userId}. Méthode: ${methode}, Identifiant: ${identifiant}`,
+            contenu: `Nouvelle demande de retrait de ${montant} FCFA par ${userNom || userId}. ${description}`,
             lu: false,
             created_at: new Date().toISOString()
         }]);
     } catch (err) {
+        console.error(err);
         showToast(t('toast.erreur'), 'error');
     } finally {
         hideLoader();

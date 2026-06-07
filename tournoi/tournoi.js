@@ -1,4 +1,4 @@
-// ========== DEBUT : tournoi.js ==========
+// ========== DEBUT : tournoi.js (correction filtre actif + clés manquantes) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -124,7 +124,6 @@ async function loadLive() {
 const tournoiGrid = document.getElementById('tournoiGrid');
 let allTournois = [];
 
-// Éléments de filtre (existent dans le HTML)
 const searchInput = document.getElementById('searchInput');
 const sportFilter = document.getElementById('sportFilter');
 
@@ -159,6 +158,7 @@ async function loadTournois() {
         const { data: tournois, error } = await supabasePublic
             .from('public_tournois')
             .select('*')
+            .eq('actif', true)                     // ← CORRECTION : seuls les tournois actifs
             .order('date_debut', { ascending: true });
         if (error) throw error;
         allTournois = tournois || [];
@@ -179,13 +179,10 @@ function renderTournois() {
     }
     let html = '';
     filtered.forEach(tournoi => {
-        // Les médias seront chargés plus tard via loadCodeForTournoi et les événements
-        // Pour l'instant on prépare la structure
         const typeLabel = tournoi.type_tournoi === 'individuel' ? t('type_individuel') : t('type_collectif');
         html += `
             <div class="tournoi-card" data-tournoi-id="${tournoi.id}">
                 <div class="card-image-container" id="card-media-${tournoi.id}">
-                    <!-- placeholder temporaire -->
                     <div class="initials-placeholder">${(tournoi.titre || '?').replace(/<[^>]*>/g, '').substring(0,2).toUpperCase()}</div>
                     <div class="card-badge">${escapeHtml(tournoi.sport)}</div>
                 </div>
@@ -213,9 +210,7 @@ function renderTournois() {
     });
     tournoiGrid.innerHTML = html;
 
-    // Attacher les événements après avoir injecté le HTML
     attachCardEvents();
-    // Charger les médias et les codes pour chaque tournoi affiché
     filtered.forEach(t => {
         loadMediaForCard(t.id);
         loadCodeForTournoi(t.id);
@@ -242,10 +237,8 @@ async function loadMediaForCard(tournoiId) {
                 mediaHtml = `<div class="video-thumb"><video src="${first.media_url}" muted preload="metadata"></video><span class="play-icon"><i class="fas fa-play-circle"></i></span></div>`;
             }
         } else {
-            // garder le placeholder existant
             return;
         }
-        // Conserver le badge
         const badge = container.querySelector('.card-badge');
         container.innerHTML = mediaHtml;
         if (badge) container.appendChild(badge);
@@ -255,7 +248,6 @@ async function loadMediaForCard(tournoiId) {
 }
 
 function attachCardEvents() {
-    // Clic sur la carte -> ouvre la modale média
     document.querySelectorAll('.tournoi-card').forEach(card => {
         card.addEventListener('click', function(e) {
             if (e.target.closest('button') || e.target.closest('a')) return;
@@ -264,7 +256,6 @@ function attachCardEvents() {
         });
     });
 
-    // Bouton Copier
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
@@ -273,7 +264,6 @@ function attachCardEvents() {
         });
     });
 
-    // Bouton S'inscrire (toujours visible)
     document.querySelectorAll('.btn-inscrire').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
@@ -282,7 +272,6 @@ function attachCardEvents() {
         });
     });
 
-    // Bouton Partage
     document.querySelectorAll('.share-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -291,7 +280,6 @@ function attachCardEvents() {
         });
     });
 }
-
 // ========== FIN : CHARGEMENT DES TOURNOIS ==========
 
 // ========== DEBUT : MODALE MÉDIA / DÉTAILS (avec onglets) ==========
@@ -316,13 +304,11 @@ async function openMediaModal(tournoiId) {
         const titleEl = document.getElementById('mediaTitle');
         const descEl = document.getElementById('mediaDescription');
 
-        // Construire les onglets
         let tabsHtml = `<div class="modal-tabs">
             <button class="modal-tab-btn active" data-tab="details">Détails</button>
             ${tournoi.reglements ? '<button class="modal-tab-btn" data-tab="reglement">'+t('reglement_title')+'</button>' : ''}
         </div>`;
 
-        // Onglet Détails
         let detailsHtml = `<div id="tab-details" class="modal-tab-content active">
             <div class="media-carousel-wrapper">`;
 
@@ -352,7 +338,6 @@ async function openMediaModal(tournoiId) {
             <div class="tournoi-desc-full">${tournoi.description || ''}</div>
         </div>`;
 
-        // Onglet Règlement
         let reglementHtml = '';
         if (tournoi.reglements) {
             reglementHtml = `<div id="tab-reglement" class="modal-tab-content">
@@ -362,10 +347,9 @@ async function openMediaModal(tournoiId) {
 
         display.innerHTML = tabsHtml + detailsHtml + reglementHtml;
         titleEl.innerHTML = tournoi.titre || '';
-        descEl.innerHTML = ''; // on n'utilise plus cette zone
+        descEl.innerHTML = '';
         modal.classList.add('active');
 
-        // Gestion des onglets
         const tabBtns = modal.querySelectorAll('.modal-tab-btn');
         const tabContents = modal.querySelectorAll('.modal-tab-content');
         tabBtns.forEach(btn => {
@@ -379,7 +363,6 @@ async function openMediaModal(tournoiId) {
             });
         });
 
-        // Carrousel
         let currentSlide = 0;
         const slides = display.querySelectorAll('.slide');
         if (slides.length > 1) {
@@ -438,7 +421,6 @@ async function loadCodeForTournoi(tournoiId) {
             } else {
                 copyBtn.disabled = false;
                 copyBtn.innerHTML = `<i class="fas fa-copy"></i> ${t('copy')}`;
-                // Stocker les infos pour l'inscription
                 inscrireBtn.dataset.codeId = codeInfo.id;
                 inscrireBtn.dataset.codeValue = codeInfo.code;
                 inscrireBtn.dataset.type = codeInfo.type_inscription;
@@ -461,7 +443,6 @@ async function loadCodeForTournoi(tournoiId) {
 async function handleCopyCode(tournoiId, btn) {
     const code = btn.dataset.codeValue;
     if (!code) {
-        // Si pas de code encore chargé, on recharge
         await loadCodeForTournoi(tournoiId);
         return;
     }
@@ -478,26 +459,21 @@ async function handleCopyCode(tournoiId, btn) {
     showToast(t('toast_code_copied'), 'success');
 }
 
-// Nouvelle fonction : inscription directe (copie + ouvre modale)
 async function handleDirectInscription(tournoiId) {
-    // S'assurer que le code est chargé
     const btn = document.querySelector(`#code-${tournoiId} .btn-inscrire`);
     if (!btn || btn.disabled) return;
     if (!btn.dataset.codeValue) {
         await loadCodeForTournoi(tournoiId);
         if (!btn.dataset.codeValue) return;
     }
-    // Copier le code automatiquement
     try {
         await navigator.clipboard.writeText(btn.dataset.codeValue);
     } catch (err) {
         // fallback
     }
-    // Ouvrir la modale d'inscription
     openInscriptionModal(tournoiId, btn.dataset.codeId, btn.dataset.codeValue, btn.dataset.type, btn.dataset.entite);
 }
 
-// Partage social
 async function shareTournoi(tournoiId) {
     const tournoi = allTournois.find(t => t.id == tournoiId);
     if (!tournoi) return;
@@ -514,7 +490,6 @@ async function shareTournoi(tournoiId) {
             console.log('Partage annulé');
         }
     } else {
-        // Fallback copier le lien
         try {
             await navigator.clipboard.writeText(shareUrl);
             showToast('Lien copié !', 'success');
@@ -530,7 +505,6 @@ const inscriptionModal = document.getElementById('inscriptionModal');
 const modalCodeId = document.getElementById('modalCodeId');
 const modalTournoiId = document.getElementById('modalTournoiId');
 
-// Champs dynamiques (identiques à avant)
 const categorieSelect = document.getElementById('inscriptionCategorie');
 const disciplineSportGroup = document.getElementById('disciplineSportGroup');
 const disciplineArtisteGroup = document.getElementById('disciplineArtisteGroup');
@@ -602,7 +576,6 @@ function openInscriptionModal(tournoiId, codeId, codeValue, type, entite) {
     inscriptionModal.classList.add('active');
 }
 
-// Fermeture des modales
 document.querySelectorAll('.close-modal').forEach(btn => {
     btn.addEventListener('click', () => {
         inscriptionModal.classList.remove('active');
@@ -781,7 +754,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadLive();
     loadTournois();
 
-    // Écouteurs des filtres (existants dans le HTML)
     if (searchInput) {
         searchInput.addEventListener('input', () => renderTournois());
     }

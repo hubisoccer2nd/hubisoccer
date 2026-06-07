@@ -89,6 +89,7 @@ nav {
     transform: translateY(-2px);
 }
 
+/* ========== MENU HAMBURGER ========== */
 .menu-toggle {
     display: none;
     flex-direction: column;
@@ -98,6 +99,7 @@ nav {
     background: none;
     border: none;
     cursor: pointer;
+    z-index: 1001;
 }
 
 .menu-toggle span {
@@ -107,6 +109,17 @@ nav {
     background: var(--primary);
     border-radius: 3px;
     transition: var(--transition);
+}
+
+/* Animation en croix */
+.menu-toggle.open span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+.menu-toggle.open span:nth-child(2) {
+    opacity: 0;
+}
+.menu-toggle.open span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
 }
 
 .nav-links { display: flex; gap: 15px; align-items: center; }
@@ -355,6 +368,7 @@ footer {
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         border: 1px solid var(--light-gray);
         z-index: 999;
+        gap: 10px;
     }
     .nav-links.active { display: flex; }
     .details-main { padding: 20px 3%; }

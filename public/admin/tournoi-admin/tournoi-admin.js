@@ -1,4 +1,4 @@
-// ========== DEBUT : tournoi-admin.js ==========
+// ========== DEBUT : tournoi-admin.js (correction affichage HTML des titres) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -116,7 +116,7 @@ async function loadTournois() {
         list.innerHTML = data.map(t => `
             <div class="list-item">
                 <div class="info">
-                    <strong>${escapeHtml(t.titre)}</strong><br>
+                    <strong style="max-height:40px; overflow:hidden; display:block;">${t.titre || ''}</strong><br>
                     <small>${escapeHtml(t.sport)} – ${escapeHtml(t.ville)} | ${t.format_equipe || 7} joueurs</small>
                     <div class="details">${formatDate(t.date_debut)} → ${formatDate(t.date_fin)}</div>
                 </div>
@@ -153,7 +153,7 @@ window.editTournoi = async (id) => {
     document.getElementById('tournoiDateFin').value = data.date_fin;
     document.getElementById('tournoiReglements').value = data.reglements || '';
     document.getElementById('tournoiType').value = data.type_tournoi || 'collectif';
-    document.getElementById('tournoiFormatEquipe').value = data.format_equipe || 7;  // ← NOUVEAU
+    document.getElementById('tournoiFormatEquipe').value = data.format_equipe || 7;
     document.getElementById('tournoiModalTitle').textContent = 'Modifier le tournoi';
     document.getElementById('tournoiModal').classList.add('active');
     existingMediaIds = []; deletedMediaIds = []; pendingMediaFiles = [];
@@ -327,7 +327,7 @@ document.getElementById('tournoiForm').addEventListener('submit', async (e) => {
         date_fin: document.getElementById('tournoiDateFin').value,
         reglements: document.getElementById('tournoiReglements').value,
         type_tournoi: document.getElementById('tournoiType').value,
-        format_equipe: parseInt(document.getElementById('tournoiFormatEquipe').value) || 7, // ← NOUVEAU
+        format_equipe: parseInt(document.getElementById('tournoiFormatEquipe').value) || 7,
         updated_at: new Date().toISOString()
     };
     showLoader();
@@ -368,7 +368,7 @@ document.getElementById('newTournoiBtn').addEventListener('click', () => {
     document.getElementById('tournoiForm').reset();
     document.getElementById('tournoiId').value = '';
     document.getElementById('tournoiModalTitle').textContent = 'Nouveau tournoi';
-    document.getElementById('tournoiFormatEquipe').value = '7'; // valeur par défaut
+    document.getElementById('tournoiFormatEquipe').value = '7';
     document.getElementById('tournoiModal').classList.add('active');
     existingMediaIds = []; deletedMediaIds = []; pendingMediaFiles = [];
     renderMediaList([], []);

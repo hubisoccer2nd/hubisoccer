@@ -1,6 +1,6 @@
 /* ============================================================
    HubISoccer — create-tournament.js
-   Page Création d'un tournoi – Version adaptée
+   Page Création d'un tournoi privé– Version adaptée
    ============================================================ */
 'use strict';
 

@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Inviter des participants | HubISoccer</title>
+    <!-- Polices & Icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ============================================================
+           HubISoccer — invite-participants.css (intégré)
+           ============================================================ */
+        :root {
+            --primary:        #551B8C;
+            --primary-light:  #7e3db0;
+            --primary-dark:   #3d1266;
+            --primary-xlight: rgba(85, 27, 140, 0.08);
+            --gold:           #FFCC00;
+            --gold-dark:      #e6b800;
+            --gold-light:     rgba(255, 204, 0, 0.15);
+            --corps-color:    #e74c3c;
+            --ame-color:      #3498db;
+            --esprit-color:   #27ae60;
+            --white:          #ffffff;
+            --bg-page:        #f4f1f9;
+            --bg-card:        #ffffff;
+            --dark:           #1a1a2e;
+            --gray-dark:      #4a4a6a;
+            --gray:           #7c7c9e;
+            --gray-light:     #e8e4f0;
+            --gray-xlight:    #f9f7fd;
+            --danger:         #dc3545;
+            --success:        #28a745;
+            --warning:        #f39c12;
+            --shadow-sm:      0 2px 8px  rgba(85, 27, 140, 0.08);
+            --shadow-md:      0 6px 24px rgba(85, 27, 140, 0.12);
+            --shadow-lg:      0 12px 48px rgba(85, 27, 140, 0.16);
+            --transition-fast: all 0.15s ease;
+            --transition:      all 0.3s ease;
+            --radius-xs:   4px;
+            --radius-sm:   8px;
+            --radius:      12px;
+            --radius-lg:   18px;
+            --radius-xl:   24px;
+            --radius-pill: 9999px;
+            --nav-h: 66px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-page);
+            color: var(--dark);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-top: var(--nav-h);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition-fast);
+        }
+
+        button {
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            border: none;
+            background: none;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* Loader */
+        .global-loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(21, 0, 46, 0.88);
+            backdrop-filter: blur(6px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .spinner {
+            width: 52px;
+            height: 52px;
+            border: 4px solid rgba(255, 204, 0, 0.25);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loader-text {
+            color: var(--gold);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Navbar */
+        .dashboard-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--nav-h);
+            background: var(--white);
+            border-bottom: 2px solid var(--gray-light);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 500;
+        }
+        .nav-left { display: flex; align-items: center; gap: 14px; }
+        .logo-nav { height: 38px; cursor: pointer; }
+        .dashboard-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--primary);
+            border-left: 2px solid var(--gray-light);
+            padding-left: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .dashboard-title i { color: var(--gold-dark); }
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+        .lang-picker {
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            border: 1.5px solid var(--gray-light);
+            background: var(--white);
+            font-size: 0.82rem;
+            color: var(--dark);
+            cursor: pointer;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+        }
+        .notif-icon {
+            position: relative;
+            font-size: 1.15rem;
+            color: var(--gray);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+        }
+        .notif-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: var(--corps-color);
+            color: var(--white);
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: var(--radius-pill);
+            min-width: 16px;
+            text-align: center;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            cursor: pointer;
+            position: relative;
+            padding: 5px 10px;
+            border-radius: var(--radius-pill);
+        }
+        .user-avatar-container {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+        }
+        .user-avatar,
+        .avatar-initials {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .avatar-initials {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+        .user-name {
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--dark);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            min-width: 190px;
+            overflow: hidden;
+            z-index: 200;
+        }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            font-size: 0.85rem;
+        }
+        .logout-link { color: #e74c3c !important; }
+        .menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            color: var(--primary);
+            border: 1.5px solid var(--gray-light);
+        }
+
+        /* Sidebar */
+        .left-sidebar {
+            position: fixed;
+            left: -290px;
+            top: var(--nav-h);
+            width: 270px;
+            height: calc(100vh - var(--nav-h));
+            background: var(--white);
+            border-right: 1px solid var(--gray-light);
+            box-shadow: var(--shadow-lg);
+            z-index: 600;
+            transition: left 0.35s ease;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .left-sidebar.active { left: 0; }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+        .close-sidebar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-nav { flex: 1; padding: 12px 0; }
+        .nav-group-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--gray);
+            padding: 12px 20px 6px;
+        }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            font-size: 0.87rem;
+            font-weight: 500;
+            color: var(--gray-dark);
+            border-left: 3px solid transparent;
+        }
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: var(--primary-xlight);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+        .nav-divider { height: 1px; background: var(--gray-light); margin: 8px 16px; }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(2px);
+            z-index: 550;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* Main content */
+        .dashboard-main {
+            padding: 28px 24px 48px;
+            min-height: calc(100vh - var(--nav-h));
+        }
+        .invite-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .btn-back {
+            background: var(--gray-xlight);
+            border: 1px solid var(--gray-light);
+            color: var(--gray-dark);
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn-back:hover {
+            background: var(--primary-xlight);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .page-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-header h1 i { color: var(--gold-dark); }
+
+        .tournament-info {
+            background: var(--white);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+        .tournament-info h2 { color: var(--primary); font-size: 1.2rem; margin-bottom: 4px; }
+        .tournament-info p { color: var(--gray-dark); font-size: 0.9rem; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: var(--gray-xlight);
+            color: var(--gray-dark);
+            border: 1px solid var(--gray-light);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .search-section {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .search-box {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            border: 1.5px solid var(--gray-light);
+            border-radius: var(--radius-pill);
+            padding: 10px 16px;
+        }
+        .search-box i { color: var(--gray); }
+        .search-box input {
+            border: none;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            flex: 1;
+            background: transparent;
+        }
+        .btn-secondary {
+            background: var(--gray-xlight);
+            border: 1px solid var(--gray-light);
+            color: var(--gray-dark);
+            padding: 10px 18px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-family: 'Poppins', sans-serif;
+            white-space: nowrap;
+        }
+        .btn-secondary:hover {
+            background: var(--primary-xlight);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .item-card {
+            background: var(--white);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-fast);
+        }
+        .item-card:hover {
+            border-color: var(--primary);
+        }
+        .item-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gray-xlight);
+        }
+        .item-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-initials-small {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+        .item-info {
+            flex: 1;
+        }
+        .item-name {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        .item-detail {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        .btn-invite {
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-invite:hover {
+            background: var(--primary-light);
+        }
+        .btn-invite:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .badge-invited {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success);
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Invitations list */
+        .invitations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Modale */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow-lg);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        .close-modal {
+            font-size: 1.4rem;
+            color: var(--gray);
+            cursor: pointer;
+        }
+        .close-modal:hover {
+            color: var(--danger);
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gray-dark);
+        }
+        .form-group input {
+            padding: 10px 14px;
+            border: 1.5px solid var(--gray-light);
+            border-radius: var(--radius);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+        .btn-cancel {
+            background: var(--gray-xlight);
+            border: 1px solid var(--gray-light);
+            color: var(--gray-dark);
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn-confirm {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Footer */
+        .dashboard-footer {
+            background: var(--dark);
+            color: white;
+            padding: 28px 20px 20px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .footer-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .compliance-badges {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--gold);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 0.72rem;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge i { color: var(--gold-dark); }
+        .contact-info { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .contact-info a { font-size: 0.82rem; color: var(--gold); transition: var(--transition-fast); }
+        .contact-info a:hover { color: var(--gold-dark); }
+        .legal p { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-bottom: 3px; }
+
+        /* Toasts */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            min-width: 280px;
+            max-width: 400px;
+            animation: toastSlideIn 0.45s ease;
+            border-left: 5px solid var(--primary);
+            pointer-events: all;
+        }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error   { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+        .toast-icon { font-size: 1.5rem; }
+        .toast-content { flex: 1; font-size: 0.9rem; }
+        .toast-close { color: var(--gray); cursor: pointer; }
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateX(80px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-toggle { display: flex; }
+            .user-name { display: none; }
+            .tabs { flex-wrap: wrap; }
+            .search-section { flex-direction: column; }
+        }
+        @media (max-width: 480px) {
+            .dashboard-nav { padding: 0 12px; }
+            .dashboard-main { padding: 16px 12px 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loader -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+
+<!-- Navbar -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-tasks"></i> Gestion des tournois</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../../footballeur/profile-edit/foot-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../../footballeur/settings/foot-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+
+<!-- Sidebar -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-tasks"></i><h3>Menu Tournois</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Gestion Tournois</div>
+        <a href="acceuil.html"><i class="fas fa-home"></i><span>Accueil</span></a>
+        <a href="create-tournament.html"><i class="fas fa-plus-circle"></i><span>Créer un tournoi</span></a>
+        <a href="my-tournaments.html"><i class="fas fa-list"></i><span>Mes tournois</span></a>
+        <a href="my-registrations.html"><i class="fas fa-calendar-check"></i><span>Mes inscriptions</span></a>
+        <a href="rankings.html"><i class="fas fa-chart-line"></i><span>Classements</span></a>
+        <a href="tournament-rules.html"><i class="fas fa-gavel"></i><span>Règlement</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../suivi-tournoi/suivi-tournoi.html"><i class="fas fa-trophy"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="help-tournament.html"><i class="fas fa-question-circle"></i><span>Aide</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Contenu principal -->
+<main class="dashboard-main">
+    <div class="invite-container">
+
+        <div class="page-header">
+            <button class="btn-back" id="backBtn"><i class="fas fa-arrow-left"></i> Retour</button>
+            <h1><i class="fas fa-envelope-open-text"></i> Inviter des participants</h1>
+        </div>
+
+        <div id="tournamentInfo" class="tournament-info">
+            <h2 id="tournamentName">Chargement...</h2>
+            <p id="tournamentDetails">-</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="teams">Équipes</button>
+            <button class="tab-btn" data-tab="players">Joueurs</button>
+            <button class="tab-btn" data-tab="invitations">Invitations envoyées</button>
+        </div>
+
+        <!-- Onglet Équipes -->
+        <div id="teamsTab" class="tab-content active">
+            <div class="search-section">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="teamSearch" placeholder="Rechercher une équipe...">
+                </div>
+                <button id="createTeamBtn" class="btn-secondary">
+                    <i class="fas fa-plus"></i> Créer une équipe
+                </button>
+            </div>
+            <div id="teamsList" class="items-list">
+                <div class="loader"><i class="fas fa-spinner fa-pulse"></i> Chargement...</div>
+            </div>
+        </div>
+
+        <!-- Onglet Joueurs -->
+        <div id="playersTab" class="tab-content">
+            <div class="search-section">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="playerSearch" placeholder="Rechercher un joueur...">
+                </div>
+            </div>
+            <div id="playersList" class="items-list">
+                <div class="loader"><i class="fas fa-spinner fa-pulse"></i> Chargement...</div>
+            </div>
+        </div>
+
+        <!-- Onglet Invitations -->
+        <div id="invitationsTab" class="tab-content">
+            <div id="invitationsList" class="invitations-list">
+                <div class="loader"><i class="fas fa-spinner fa-pulse"></i> Chargement...</div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- Modale Créer une équipe -->
+<div id="createTeamModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-plus"></i> Créer une nouvelle équipe</h2>
+            <span class="close-modal" id="closeTeamModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="createTeamForm">
+                <div class="form-group">
+                    <label>Nom de l'équipe *</label>
+                    <input type="text" id="teamName" required>
+                </div>
+                <div class="form-group">
+                    <label>Catégorie d'âge (optionnel)</label>
+                    <input type="text" id="teamAgeCategory">
+                </div>
+                <div class="form-group">
+                    <label>Logo (URL)</label>
+                    <input type="url" id="teamLogo">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="cancelTeamBtn">Annuler</button>
+                    <button type="submit" class="btn-confirm"><i class="fas fa-check"></i> Créer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Footer -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- ===== SCRIPT ===== -->
+<script>
+'use strict';
+
+// Configuration Supabase
+const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let userProfile = null;
+let currentTournamentId = null;
+
+// Loader
+function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
+function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
+
+// Toast
+function showToast(message, type, duration) {
+    if (!type) type = 'info';
+    if (!duration) duration = 30000;
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.innerHTML = '<div class="toast-icon"><i class="fas ' + (icons[type]||icons.info) + '"></i></div><div class="toast-content">' + message + '</div><button class="toast-close"><i class="fas fa-times"></i></button>';
+    container.appendChild(toast);
+    toast.querySelector('.toast-close').addEventListener('click', function() {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+    });
+    setTimeout(function() {
+        if (toast.parentNode) {
+            toast.style.animation = 'fadeOut 0.3s forwards';
+            setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+        }
+    }, duration);
+}
+
+// Utilitaires
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name[0].toUpperCase();
+}
+
+// Session
+async function checkSession() {
+    showLoader();
+    const { data } = await supabaseClient.auth.getSession();
+    const session = data.session;
+    hideLoader();
+    if (!session) { window.location.href = '../../authprive/users/login.html'; return null; }
+    currentUser = session.user;
+    return currentUser;
+}
+
+// Profil
+async function loadProfile() {
+    showLoader();
+    const { data, error } = await supabaseClient
+        .from('supabaseAuthPrive_profiles')
+        .select('*')
+        .eq('auth_uuid', currentUser.id)
+        .single();
+    hideLoader();
+    if (error || !data) { showToast('Erreur chargement du profil', 'error'); return null; }
+    userProfile = data;
+    updateNavbarUI();
+    return userProfile;
+}
+
+function updateNavbarUI() {
+    if (!userProfile) return;
+    document.getElementById('userName').textContent = userProfile.full_name || 'Utilisateur';
+    const avatarUrl = userProfile.avatar_url;
+    const userAvatar = document.getElementById('userAvatar');
+    const userInitials = document.getElementById('userAvatarInitials');
+    if (avatarUrl && avatarUrl !== '') {
+        if (userAvatar) { userAvatar.src = avatarUrl; userAvatar.style.display = 'block'; }
+        if (userInitials) userInitials.style.display = 'none';
+    } else {
+        const initials = getInitials(userProfile.full_name || 'U');
+        if (userInitials) { userInitials.textContent = initials; userInitials.style.display = 'flex'; }
+        if (userAvatar) userAvatar.style.display = 'none';
+    }
+}
+
+// Charger les infos du tournoi
+async function loadTournamentInfo() {
+    const params = new URLSearchParams(window.location.search);
+    currentTournamentId = params.get('tournament_id');
+    if (!currentTournamentId) {
+        document.getElementById('tournamentName').textContent = 'Aucun tournoi sélectionné';
+        return;
+    }
+    const { data } = await supabaseClient
+        .from('gestionnairetournoi_tournaments')
+        .select('name, start_date, end_date')
+        .eq('id', currentTournamentId)
+        .single();
+    if (data) {
+        document.getElementById('tournamentName').textContent = data.name;
+        document.getElementById('tournamentDetails').textContent =
+            new Date(data.start_date).toLocaleDateString('fr-FR') + ' - ' +
+            new Date(data.end_date).toLocaleDateString('fr-FR');
+    }
+}
+
+// Charger les équipes existantes pour ce tournoi
+async function loadTeams(searchTerm) {
+    if (!currentTournamentId) return;
+    let query = supabaseClient
+        .from('gestionnairetournoi_teams')
+        .select('*')
+        .eq('tournament_id', currentTournamentId);
+    if (searchTerm) query = query.ilike('name', '%' + searchTerm + '%');
+    const { data, error } = await query;
+    if (error) { showToast('Erreur chargement équipes', 'error'); return; }
+
+    const container = document.getElementById('teamsList');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p>Aucune équipe trouvée.</p>';
+        return;
+    }
+    container.innerHTML = data.map(function(team) {
+        return '<div class="item-card">' +
+               '<div class="item-avatar">' + (team.logo_url ? '<img src="' + team.logo_url + '" alt="">' : '<span class="avatar-initials-small">' + getInitials(team.name) + '</span>') + '</div>' +
+               '<div class="item-info"><div class="item-name">' + team.name + '</div><div class="item-detail">Équipe</div></div>' +
+               '<button class="btn-invite" onclick="inviteTeam(' + team.id + ')"><i class="fas fa-plus"></i> Inviter</button>' +
+               '</div>';
+    }).join('');
+}
+
+// Charger les joueurs (participants) du tournoi
+async function loadPlayers(searchTerm) {
+    if (!currentTournamentId) return;
+    let query = supabaseClient
+        .from('gestionnairetournoi_participants')
+        .select('user_id, status, profiles:supabaseAuthPrive_profiles!inner(full_name, avatar_url)')
+        .eq('tournament_id', currentTournamentId);
+    if (searchTerm) query = query.ilike('profiles.full_name', '%' + searchTerm + '%');
+    const { data, error } = await query;
+    if (error) { showToast('Erreur chargement joueurs', 'error'); return; }
+
+    const container = document.getElementById('playersList');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p>Aucun joueur trouvé.</p>';
+        return;
+    }
+    container.innerHTML = data.map(function(p) {
+        const profile = p.profiles;
+        const isInvited = p.status === 'approved';
+        return '<div class="item-card">' +
+               '<div class="item-avatar">' + (profile.avatar_url ? '<img src="' + profile.avatar_url + '" alt="">' : '<span class="avatar-initials-small">' + getInitials(profile.full_name || '?') + '</span>') + '</div>' +
+               '<div class="item-info"><div class="item-name">' + (profile.full_name || 'Inconnu') + '</div><div class="item-detail">Joueur</div></div>' +
+               (isInvited ? '<span class="badge-invited"><i class="fas fa-check-circle"></i> Déjà invité</span>' : '<button class="btn-invite" onclick="invitePlayer(\'' + p.user_id + '\')"><i class="fas fa-plus"></i> Inviter</button>') +
+               '</div>';
+    }).join('');
+}
+
+// Charger les invitations envoyées
+async function loadInvitations() {
+    if (!currentTournamentId) return;
+    const { data, error } = await supabaseClient
+        .from('gestionnairetournoi_participants')
+        .select('user_id, status, created_at, profiles:supabaseAuthPrive_profiles!inner(full_name)')
+        .eq('tournament_id', currentTournamentId);
+    if (error) { showToast('Erreur chargement invitations', 'error'); return; }
+
+    const container = document.getElementById('invitationsList');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p>Aucune invitation envoyée.</p>';
+        return;
+    }
+    container.innerHTML = data.map(function(inv) {
+        const statusLabel = inv.status === 'approved' ? 'Acceptée' : inv.status === 'pending' ? 'En attente' : 'Refusée';
+        return '<div class="item-card">' +
+               '<div class="item-info"><div class="item-name">' + (inv.profiles?.full_name || 'Inconnu') + '</div><div class="item-detail">' + statusLabel + ' - ' + new Date(inv.created_at).toLocaleDateString('fr-FR') + '</div></div>' +
+               '</div>';
+    }).join('');
+}
+
+// Créer une équipe
+async function createTeam(e) {
+    e.preventDefault();
+    if (!currentTournamentId) return;
+    const name = document.getElementById('teamName').value.trim();
+    const ageCategory = document.getElementById('teamAgeCategory').value.trim();
+    const logo = document.getElementById('teamLogo').value.trim();
+    if (!name) { showToast('Veuillez saisir un nom.', 'warning'); return; }
+
+    showLoader();
+    const { error } = await supabaseClient
+        .from('gestionnairetournoi_teams')
+        .insert([{ tournament_id: currentTournamentId, name: name, logo_url: logo || null }]);
+    hideLoader();
+    if (error) {
+        showToast('Erreur création équipe.', 'error');
+    } else {
+        showToast('Équipe créée !', 'success');
+        closeModal('createTeamModal');
+        loadTeams('');
+    }
+}
+
+// Inviter un joueur individuel
+async function invitePlayer(playerId) {
+    if (!currentTournamentId || !currentUser) return;
+    showLoader();
+    const { error } = await supabaseClient
+        .from('gestionnairetournoi_participants')
+        .upsert([{ tournament_id: currentTournamentId, user_id: playerId, status: 'pending' }],
+                { onConflict: 'tournament_id, user_id' });
+    hideLoader();
+    if (error) {
+        showToast('Erreur invitation.', 'error');
+    } else {
+        showToast('Invitation envoyée !', 'success');
+        loadPlayers('');
+        loadInvitations();
+    }
+}
+
+// Inviter une équipe entière (à implémenter avec la table team_players)
+async function inviteTeam(teamId) {
+    // Récupérer les joueurs de l'équipe
+    const { data: members } = await supabaseClient
+        .from('gestionnairetournoi_team_players')
+        .select('user_id')
+        .eq('team_id', teamId);
+    if (!members || members.length === 0) {
+        showToast('Cette équipe n\'a pas de joueurs.', 'warning');
+        return;
+    }
+    showLoader();
+    const inserts = members.map(function(m) {
+        return { tournament_id: currentTournamentId, user_id: m.user_id, status: 'pending' };
+    });
+    const { error } = await supabaseClient
+        .from('gestionnairetournoi_participants')
+        .upsert(inserts, { onConflict: 'tournament_id, user_id' });
+    hideLoader();
+    if (error) {
+        showToast('Erreur invitation équipe.', 'error');
+    } else {
+        showToast('Équipe invitée !', 'success');
+        loadInvitations();
+    }
+}
+
+// Modales
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+// UI Tabs
+function initTabs() {
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
+            // Charger les données de l'onglet
+            if (btn.dataset.tab === 'teams') loadTeams('');
+            else if (btn.dataset.tab === 'players') loadPlayers('');
+            else if (btn.dataset.tab === 'invitations') loadInvitations();
+        });
+    });
+}
+
+// Sidebar / Menu / Logout
+function initUserMenu() {
+    const userMenu = document.getElementById('userMenu');
+    const dropdown = document.getElementById('userDropdown');
+    if (!userMenu || !dropdown) return;
+    userMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+    document.addEventListener('click', function() { dropdown.classList.remove('show'); });
+}
+
+function initSidebar() {
+    const sidebar = document.getElementById('leftSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const menuBtn = document.getElementById('menuToggle');
+    const closeBtn = document.getElementById('closeLeftSidebar');
+
+    function open() { sidebar?.classList.add('active'); overlay?.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function close() { sidebar?.classList.remove('active'); overlay?.classList.remove('active'); document.body.style.overflow = ''; }
+
+    menuBtn?.addEventListener('click', open);
+    closeBtn?.addEventListener('click', close);
+    overlay?.addEventListener('click', close);
+
+    let sx = 0, sy = 0;
+    document.addEventListener('touchstart', function(e) { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY; }, { passive: true });
+    document.addEventListener('touchend', function(e) {
+        const dx = e.changedTouches[0].screenX - sx, dy = e.changedTouches[0].screenY - sy;
+        if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) return;
+        if (e.cancelable) e.preventDefault();
+        if (dx > 0 && sx < 40) open();
+        else if (dx < 0) close();
+    }, { passive: false });
+}
+
+function initLogout() {
+    document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            supabaseClient.auth.signOut().then(function() {
+                window.location.href = '../../../index.html';
+            });
+        });
+    });
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', async function() {
+    const user = await checkSession();
+    if (!user) return;
+
+    await loadProfile();
+
+    initUserMenu();
+    initSidebar();
+    initLogout();
+    initTabs();
+
+    document.getElementById('langSelect')?.addEventListener('change', function(e) {
+        showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
+    });
+
+    document.getElementById('backBtn')?.addEventListener('click', function() {
+        window.history.back();
+    });
+
+    await loadTournamentInfo();
+    await loadTeams('');
+
+    // Recherche équipes
+    document.getElementById('teamSearch')?.addEventListener('input', function() {
+        loadTeams(this.value);
+    });
+
+    // Recherche joueurs
+    document.getElementById('playerSearch')?.addEventListener('input', function() {
+        loadPlayers(this.value);
+    });
+
+    // Créer une équipe
+    document.getElementById('createTeamBtn')?.addEventListener('click', function() {
+        openModal('createTeamModal');
+    });
+    document.getElementById('createTeamForm')?.addEventListener('submit', createTeam);
+    document.getElementById('closeTeamModal')?.addEventListener('click', function() {
+        closeModal('createTeamModal');
+    });
+    document.getElementById('cancelTeamBtn')?.addEventListener('click', function() {
+        closeModal('createTeamModal');
+    });
+
+    // Fermer modale en cliquant dehors
+    document.getElementById('createTeamModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeModal('createTeamModal');
+    });
+
+    // Exposer les fonctions globales
+    window.invitePlayer = invitePlayer;
+    window.inviteTeam = inviteTeam;
+});
+</script>
+
+</body>
+</html>

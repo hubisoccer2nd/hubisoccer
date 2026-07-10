@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Paiement | HubISoccer</title>
+    <!-- Polices & Icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ============================================================
+           HubISoccer — payment.css (intégré)
+           ============================================================ */
+        :root {
+            --primary:        #551B8C;
+            --primary-light:  #7e3db0;
+            --primary-dark:   #3d1266;
+            --primary-xlight: rgba(85, 27, 140, 0.08);
+            --gold:           #FFCC00;
+            --gold-dark:      #e6b800;
+            --gold-light:     rgba(255, 204, 0, 0.15);
+            --corps-color:    #e74c3c;
+            --ame-color:      #3498db;
+            --esprit-color:   #27ae60;
+            --white:          #ffffff;
+            --bg-page:        #f4f1f9;
+            --bg-card:        #ffffff;
+            --dark:           #1a1a2e;
+            --gray-dark:      #4a4a6a;
+            --gray:           #7c7c9e;
+            --gray-light:     #e8e4f0;
+            --gray-xlight:    #f9f7fd;
+            --danger:         #dc3545;
+            --success:        #28a745;
+            --warning:        #f39c12;
+            --shadow-sm:      0 2px 8px  rgba(85, 27, 140, 0.08);
+            --shadow-md:      0 6px 24px rgba(85, 27, 140, 0.12);
+            --shadow-lg:      0 12px 48px rgba(85, 27, 140, 0.16);
+            --transition-fast: all 0.15s ease;
+            --transition:      all 0.3s ease;
+            --radius-xs:   4px;
+            --radius-sm:   8px;
+            --radius:      12px;
+            --radius-lg:   18px;
+            --radius-xl:   24px;
+            --radius-pill: 9999px;
+            --nav-h: 66px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-page);
+            color: var(--dark);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-top: var(--nav-h);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition-fast);
+        }
+
+        button {
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            border: none;
+            background: none;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* Loader */
+        .global-loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(21, 0, 46, 0.88);
+            backdrop-filter: blur(6px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .spinner {
+            width: 52px;
+            height: 52px;
+            border: 4px solid rgba(255, 204, 0, 0.25);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loader-text {
+            color: var(--gold);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Navbar */
+        .dashboard-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--nav-h);
+            background: var(--white);
+            border-bottom: 2px solid var(--gray-light);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 500;
+        }
+        .nav-left { display: flex; align-items: center; gap: 14px; }
+        .logo-nav { height: 38px; cursor: pointer; }
+        .dashboard-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--primary);
+            border-left: 2px solid var(--gray-light);
+            padding-left: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .dashboard-title i { color: var(--gold-dark); }
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+        .lang-picker {
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            border: 1.5px solid var(--gray-light);
+            background: var(--white);
+            font-size: 0.82rem;
+            color: var(--dark);
+            cursor: pointer;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+        }
+        .notif-icon {
+            position: relative;
+            font-size: 1.15rem;
+            color: var(--gray);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+        }
+        .notif-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: var(--corps-color);
+            color: var(--white);
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: var(--radius-pill);
+            min-width: 16px;
+            text-align: center;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            cursor: pointer;
+            position: relative;
+            padding: 5px 10px;
+            border-radius: var(--radius-pill);
+        }
+        .user-avatar-container {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+        }
+        .user-avatar,
+        .avatar-initials {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .avatar-initials {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+        .user-name {
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--dark);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            min-width: 190px;
+            overflow: hidden;
+            z-index: 200;
+        }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            font-size: 0.85rem;
+        }
+        .logout-link { color: #e74c3c !important; }
+        .menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            color: var(--primary);
+            border: 1.5px solid var(--gray-light);
+        }
+
+        /* Sidebar */
+        .left-sidebar {
+            position: fixed;
+            left: -290px;
+            top: var(--nav-h);
+            width: 270px;
+            height: calc(100vh - var(--nav-h));
+            background: var(--white);
+            border-right: 1px solid var(--gray-light);
+            box-shadow: var(--shadow-lg);
+            z-index: 600;
+            transition: left 0.35s ease;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .left-sidebar.active { left: 0; }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+        .close-sidebar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-nav { flex: 1; padding: 12px 0; }
+        .nav-group-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--gray);
+            padding: 12px 20px 6px;
+        }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            font-size: 0.87rem;
+            font-weight: 500;
+            color: var(--gray-dark);
+            border-left: 3px solid transparent;
+        }
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: var(--primary-xlight);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+        .nav-divider { height: 1px; background: var(--gray-light); margin: 8px 16px; }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(2px);
+            z-index: 550;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* Main content */
+        .dashboard-main {
+            padding: 28px 24px 48px;
+            min-height: calc(100vh - var(--nav-h));
+        }
+        .payment-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .btn-back {
+            background: var(--gray-xlight);
+            border: 1px solid var(--gray-light);
+            color: var(--gray-dark);
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn-back:hover {
+            background: var(--primary-xlight);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .page-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-header h1 i { color: var(--gold-dark); }
+
+        .payment-card {
+            background: var(--white);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+        }
+        .payment-summary h2 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        .tournament-info p {
+            font-size: 0.9rem;
+            color: var(--gray-dark);
+            margin-bottom: 4px;
+        }
+        .amount-due {
+            background: var(--gray-xlight);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            font-size: 1.1rem;
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .amount-due strong {
+            color: var(--primary);
+        }
+        .payment-methods h3 {
+            font-size: 1rem;
+            color: var(--primary);
+            margin: 20px 0 12px;
+        }
+        .methods-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .method-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border: 1.5px solid var(--gray-light);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .method-option input[type="radio"] {
+            accent-color: var(--primary);
+        }
+        .method-option i {
+            color: var(--primary);
+            font-size: 1.2rem;
+            width: 20px;
+        }
+        .payment-details {
+            margin-top: 16px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gray-dark);
+        }
+        .form-group input,
+        .form-group select {
+            padding: 10px 14px;
+            border: 1.5px solid var(--gray-light);
+            border-radius: var(--radius);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            background: var(--white);
+            color: var(--dark);
+            transition: var(--transition-fast);
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .bank-info {
+            background: var(--gray-xlight);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            margin-bottom: 12px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius-pill);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn-primary:hover {
+            background: var(--primary-light);
+        }
+        .btn-secondary {
+            background: var(--gray-xlight);
+            border: 1px solid var(--gray-light);
+            color: var(--gray-dark);
+            padding: 12px 24px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn-secondary:hover {
+            background: var(--primary-xlight);
+            color: var(--primary);
+        }
+
+        /* Footer */
+        .dashboard-footer {
+            background: var(--dark);
+            color: white;
+            padding: 28px 20px 20px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .footer-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .compliance-badges {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--gold);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 0.72rem;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge i { color: var(--gold-dark); }
+        .contact-info { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .contact-info a { font-size: 0.82rem; color: var(--gold); transition: var(--transition-fast); }
+        .contact-info a:hover { color: var(--gold-dark); }
+        .legal p { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-bottom: 3px; }
+
+        /* Toasts */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            min-width: 280px;
+            max-width: 400px;
+            animation: toastSlideIn 0.45s ease;
+            border-left: 5px solid var(--primary);
+            pointer-events: all;
+        }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error   { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+        .toast-icon { font-size: 1.5rem; }
+        .toast-content { flex: 1; font-size: 0.9rem; }
+        .toast-close { color: var(--gray); cursor: pointer; }
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateX(80px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-toggle { display: flex; }
+            .user-name { display: none; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .dashboard-nav { padding: 0 12px; }
+            .dashboard-main { padding: 16px 12px 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loader -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+
+<!-- Navbar -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-tasks"></i> Gestion des tournois</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../../footballeur/profile-edit/foot-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../../footballeur/settings/foot-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+
+<!-- Sidebar -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-tasks"></i><h3>Menu Tournois</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Gestion Tournois</div>
+        <a href="acceuil.html"><i class="fas fa-home"></i><span>Accueil</span></a>
+        <a href="create-tournament.html"><i class="fas fa-plus-circle"></i><span>Créer un tournoi</span></a>
+        <a href="my-tournaments.html"><i class="fas fa-list"></i><span>Mes tournois</span></a>
+        <a href="my-registrations.html"><i class="fas fa-calendar-check"></i><span>Mes inscriptions</span></a>
+        <a href="rankings.html"><i class="fas fa-chart-line"></i><span>Classements</span></a>
+        <a href="tournament-rules.html"><i class="fas fa-gavel"></i><span>Règlement</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../suivi-tournoi/suivi-tournoi.html"><i class="fas fa-trophy"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="help-tournament.html"><i class="fas fa-question-circle"></i><span>Aide</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Contenu principal -->
+<main class="dashboard-main">
+    <div class="payment-container">
+        <div class="page-header">
+            <button class="btn-back" id="backBtn"><i class="fas fa-arrow-left"></i> Retour</button>
+            <h1><i class="fas fa-credit-card"></i> Paiement</h1>
+        </div>
+
+        <div class="payment-card">
+            <div class="payment-summary">
+                <h2>Récapitulatif</h2>
+                <div id="tournamentInfo" class="tournament-info"><p>Chargement...</p></div>
+                <div class="amount-due">
+                    <span>Montant à payer :</span>
+                    <strong id="amount">0 FCFA</strong>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <h3>Mode de paiement</h3>
+                <div class="methods-list">
+                    <label class="method-option">
+                        <input type="radio" name="paymentMethod" value="mobile_money" checked>
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Mobile Money (MTN, Moov)</span>
+                    </label>
+                    <label class="method-option">
+                        <input type="radio" name="paymentMethod" value="card">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Carte bancaire</span>
+                    </label>
+                    <label class="method-option">
+                        <input type="radio" name="paymentMethod" value="bank_transfer">
+                        <i class="fas fa-university"></i>
+                        <span>Virement bancaire</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="mobileMoneyFields" class="payment-details">
+                <div class="form-group">
+                    <label>Numéro de téléphone *</label>
+                    <input type="tel" id="phoneNumber" placeholder="+229 XX XX XX XX">
+                </div>
+                <div class="form-group">
+                    <label>Opérateur</label>
+                    <select id="operator">
+                        <option value="mtn">MTN</option>
+                        <option value="moov">Moov</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="cardFields" class="payment-details" style="display: none;">
+                <div class="form-group">
+                    <label>Numéro de carte *</label>
+                    <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date d'expiration</label>
+                        <input type="text" id="cardExpiry" placeholder="MM/AA">
+                    </div>
+                    <div class="form-group">
+                        <label>CVV</label>
+                        <input type="text" id="cardCvv" placeholder="123">
+                    </div>
+                </div>
+            </div>
+
+            <div id="bankTransferFields" class="payment-details" style="display: none;">
+                <div class="bank-info">
+                    <p><strong>Coordonnées bancaires :</strong></p>
+                    <p>Banque : HubISoccer Bank<br>
+                    IBAN : BJ66 1234 5678 9012 3456 7890 1234<br>
+                    BIC : HUBIBJBB</p>
+                    <p class="small">Veuillez utiliser votre email comme référence.</p>
+                </div>
+                <div class="form-group">
+                    <label>Preuve de virement (facultatif)</label>
+                    <input type="file" id="proofFile" accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button id="payBtn" class="btn-primary">Payer maintenant</button>
+                <button id="cancelBtn" class="btn-secondary">Annuler</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Toast container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== SCRIPT ===== -->
+<script>
+'use strict';
+
+// Configuration Supabase
+const SUPABASE_URL = 'https://niewavngipvowwxxguqu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let userProfile = null;
+
+// Loader
+function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
+function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
+
+// Toast
+function showToast(message, type, duration) {
+    if (!type) type = 'info';
+    if (!duration) duration = 30000;
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.innerHTML = '<div class="toast-icon"><i class="fas ' + (icons[type]||icons.info) + '"></i></div><div class="toast-content">' + message + '</div><button class="toast-close"><i class="fas fa-times"></i></button>';
+    container.appendChild(toast);
+    toast.querySelector('.toast-close').addEventListener('click', function() {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+    });
+    setTimeout(function() {
+        if (toast.parentNode) {
+            toast.style.animation = 'fadeOut 0.3s forwards';
+            setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+        }
+    }, duration);
+}
+
+// Utilitaires
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name[0].toUpperCase();
+}
+
+// Session
+async function checkSession() {
+    showLoader();
+    const { data } = await supabaseClient.auth.getSession();
+    const session = data.session;
+    hideLoader();
+    if (!session) { window.location.href = '../../authprive/users/login.html'; return null; }
+    currentUser = session.user;
+    return currentUser;
+}
+
+// Profil
+async function loadProfile() {
+    showLoader();
+    const { data, error } = await supabaseClient
+        .from('supabaseAuthPrive_profiles')
+        .select('*')
+        .eq('auth_uuid', currentUser.id)
+        .single();
+    hideLoader();
+    if (error || !data) { showToast('Erreur chargement du profil', 'error'); return null; }
+    userProfile = data;
+    updateNavbarUI();
+    return userProfile;
+}
+
+function updateNavbarUI() {
+    if (!userProfile) return;
+    document.getElementById('userName').textContent = userProfile.full_name || 'Utilisateur';
+    const avatarUrl = userProfile.avatar_url;
+    const userAvatar = document.getElementById('userAvatar');
+    const userInitials = document.getElementById('userAvatarInitials');
+    if (avatarUrl && avatarUrl !== '') {
+        if (userAvatar) { userAvatar.src = avatarUrl; userAvatar.style.display = 'block'; }
+        if (userInitials) userInitials.style.display = 'none';
+    } else {
+        const initials = getInitials(userProfile.full_name || 'U');
+        if (userInitials) { userInitials.textContent = initials; userInitials.style.display = 'flex'; }
+        if (userAvatar) userAvatar.style.display = 'none';
+    }
+}
+
+// Charger les infos du tournoi (depuis l'URL ?tournament_id=...)
+async function loadTournamentInfo() {
+    const params = new URLSearchParams(window.location.search);
+    const tournamentId = params.get('tournament_id');
+    if (!tournamentId) {
+        document.getElementById('tournamentInfo').innerHTML = '<p>Aucun tournoi spécifié.</p>';
+        return;
+    }
+    const { data, error } = await supabaseClient
+        .from('gestionnairetournoi_tournaments')
+        .select('name, prize_pool')
+        .eq('id', tournamentId)
+        .single();
+    if (error || !data) {
+        document.getElementById('tournamentInfo').innerHTML = '<p>Tournoi introuvable.</p>';
+        return;
+    }
+    document.getElementById('tournamentInfo').innerHTML =
+        '<p><i class="fas fa-trophy"></i> ' + data.name + '</p>' +
+        (data.prize_pool ? '<p><i class="fas fa-coins"></i> Prix : ' + data.prize_pool.toLocaleString() + ' FCFA</p>' : '');
+    document.getElementById('amount').textContent = (data.prize_pool || 0).toLocaleString() + ' FCFA';
+    window.tournamentData = data;
+}
+
+// Toggle des champs de paiement
+function togglePaymentFields() {
+    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+    document.getElementById('mobileMoneyFields').style.display = method === 'mobile_money' ? 'block' : 'none';
+    document.getElementById('cardFields').style.display = method === 'card' ? 'block' : 'none';
+    document.getElementById('bankTransferFields').style.display = method === 'bank_transfer' ? 'block' : 'none';
+}
+
+// Paiement
+async function processPayment() {
+    if (!window.tournamentData) {
+        showToast('Aucun tournoi à payer.', 'error');
+        return;
+    }
+    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const amount = window.tournamentData.prize_pool || 0;
+
+    // Ici on peut simuler un paiement (dans la vraie vie, intégration avec passerelle)
+    showLoader();
+    const { error } = await supabaseClient
+        .from('gestionnairetournoi_payments')
+        .insert([{
+            user_id: currentUser.id,
+            tournament_id: window.tournamentData.id,
+            amount: amount,
+            payment_method: method,
+            status: 'completed' // simulé
+        }]);
+    hideLoader();
+    if (error) {
+        showToast('Erreur lors du paiement.', 'error');
+        console.error(error);
+    } else {
+        showToast('Paiement effectué avec succès !', 'success');
+        setTimeout(function() {
+            window.location.href = 'acceuil.html';
+        }, 2000);
+    }
+}
+
+// UI
+function initUserMenu() {
+    const userMenu = document.getElementById('userMenu');
+    const dropdown = document.getElementById('userDropdown');
+    if (!userMenu || !dropdown) return;
+    userMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+    document.addEventListener('click', function() { dropdown.classList.remove('show'); });
+}
+
+function initSidebar() {
+    const sidebar = document.getElementById('leftSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const menuBtn = document.getElementById('menuToggle');
+    const closeBtn = document.getElementById('closeLeftSidebar');
+
+    function open() { sidebar?.classList.add('active'); overlay?.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function close() { sidebar?.classList.remove('active'); overlay?.classList.remove('active'); document.body.style.overflow = ''; }
+
+    menuBtn?.addEventListener('click', open);
+    closeBtn?.addEventListener('click', close);
+    overlay?.addEventListener('click', close);
+
+    let sx = 0, sy = 0;
+    document.addEventListener('touchstart', function(e) { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY; }, { passive: true });
+    document.addEventListener('touchend', function(e) {
+        const dx = e.changedTouches[0].screenX - sx, dy = e.changedTouches[0].screenY - sy;
+        if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) return;
+        if (e.cancelable) e.preventDefault();
+        if (dx > 0 && sx < 40) open();
+        else if (dx < 0) close();
+    }, { passive: false });
+}
+
+function initLogout() {
+    document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            supabaseClient.auth.signOut().then(function() {
+                window.location.href = '../../../index.html';
+            });
+        });
+    });
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', async function() {
+    const user = await checkSession();
+    if (!user) return;
+
+    await loadProfile();
+
+    initUserMenu();
+    initSidebar();
+    initLogout();
+
+    document.getElementById('langSelect')?.addEventListener('change', function(e) {
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        showToast('Langue : ' + selectedOption.text, 'info');
+    });
+
+    document.getElementById('backBtn')?.addEventListener('click', function() {
+        window.history.back();
+    });
+
+    document.getElementById('cancelBtn')?.addEventListener('click', function() {
+        window.history.back();
+    });
+
+    await loadTournamentInfo();
+
+    document.querySelectorAll('input[name="paymentMethod"]').forEach(function(radio) {
+        radio.addEventListener('change', togglePaymentFields);
+    });
+    togglePaymentFields();
+
+    document.getElementById('payBtn')?.addEventListener('click', processPayment);
+});
+</script>
+
+</body>
+</html>

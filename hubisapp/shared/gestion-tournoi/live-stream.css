@@ -1,0 +1,396 @@
+/* ============================================================
+   HubISoccer — live-stream.css
+   Styles de la page Live Stream – Gestion des tournois
+   ============================================================ */
+
+/* ===== DEBUT VARIABLES (héritées) ===== */
+:root {
+    --primary:        #551B8C;
+    --primary-light:  #7e3db0;
+    --primary-dark:   #3d1266;
+    --primary-xlight: rgba(85, 27, 140, 0.08);
+    --gold:           #FFCC00;
+    --gold-dark:      #e6b800;
+    --gold-light:     rgba(255, 204, 0, 0.15);
+    --white:          #ffffff;
+    --bg-page:        #f4f1f9;
+    --bg-card:        #ffffff;
+    --dark:           #1a1a2e;
+    --gray-dark:      #4a4a6a;
+    --gray:           #7c7c9e;
+    --gray-light:     #e8e4f0;
+    --gray-xlight:    #f9f7fd;
+    --danger:         #dc3545;
+    --success:        #28a745;
+    --warning:        #f39c12;
+    --shadow-sm:      0 2px 8px  rgba(85, 27, 140, 0.08);
+    --shadow-md:      0 6px 24px rgba(85, 27, 140, 0.12);
+    --shadow-lg:      0 12px 48px rgba(85, 27, 140, 0.16);
+    --transition-fast: all 0.15s ease;
+    --transition:      all 0.3s ease;
+    --radius-xs:   4px;
+    --radius-sm:   8px;
+    --radius:      12px;
+    --radius-lg:   18px;
+    --radius-xl:   24px;
+    --radius-pill: 9999px;
+}
+/* ===== FIN VARIABLES ===== */
+
+/* ===== DEBUT CONTENU PRINCIPAL ===== */
+.dashboard-main {
+    padding: 28px 24px 48px;
+    min-height: calc(100vh - 66px - 28px);
+}
+
+.live-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* En-tête */
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.btn-back {
+    background: var(--gray-xlight);
+    border: 1px solid var(--gray-light);
+    color: var(--gray-dark);
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn-back:hover {
+    background: var(--primary-xlight);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.page-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-header h1 i {
+    color: var(--gold-dark);
+}
+
+/* Sélecteur de match */
+.match-selector {
+    margin-bottom: 24px;
+}
+
+.match-selector label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.match-selector select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--gray-light);
+    border-radius: var(--radius);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    background: var(--white);
+    color: var(--dark);
+    transition: var(--transition-fast);
+}
+
+.match-selector select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-xlight);
+}
+
+/* Conteneur du stream */
+.stream-container {
+    margin-bottom: 24px;
+}
+
+.player-container {
+    background: #000;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    max-height: 500px;
+}
+
+.player-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.player-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--gray);
+    background: var(--gray-xlight);
+}
+
+.player-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    color: var(--gray-light);
+}
+
+.player-placeholder p {
+    font-size: 1rem;
+}
+
+/* ===== STATISTIQUES EN DIRECT ===== */
+.live-stats {
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.score-board {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--gray-light);
+}
+
+.team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 1rem;
+}
+
+.score {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.vs {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray);
+}
+
+/* Grille des statistiques */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--gray-xlight);
+    border: 1px solid var(--gray-light);
+    border-radius: var(--radius);
+    padding: 16px;
+}
+
+.stat-card h3 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gray-dark);
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.shots,
+.shots-on-target,
+.fouls,
+.corners {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--dark);
+    text-align: center;
+}
+
+/* Barre de possession */
+.possession-bar {
+    display: flex;
+    height: 24px;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    line-height: 24px;
+}
+
+.possession-home {
+    background: var(--primary);
+    color: white;
+}
+
+.possession-away {
+    background: var(--gold-dark);
+    color: var(--dark);
+}
+
+/* ===== ÉVÉNEMENTS DU MATCH ===== */
+.events-feed {
+    border-top: 1px solid var(--gray-light);
+    padding-top: 20px;
+}
+
+.events-feed h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.event-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--gray-xlight);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    color: var(--dark);
+}
+
+.event-minute {
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 32px;
+}
+
+.event-icon {
+    font-size: 1.2rem;
+}
+
+.event-desc {
+    flex: 1;
+}
+
+.loader {
+    text-align: center;
+    padding: 20px;
+    color: var(--gray);
+}
+
+/* ===== TOASTS (rappel) ===== */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    min-width: 280px;
+    max-width: 400px;
+    animation: toastSlideIn 0.45s ease;
+    border-left: 5px solid var(--primary);
+    pointer-events: all;
+}
+
+.toast.success { border-left-color: var(--success); }
+.toast.error   { border-left-color: var(--danger); }
+.toast.warning { border-left-color: var(--warning); }
+
+.toast-icon {
+    font-size: 1.5rem;
+}
+
+.toast-content {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.toast-close {
+    color: var(--gray);
+    cursor: pointer;
+}
+
+@keyframes toastSlideIn {
+    from { opacity: 0; transform: translateX(80px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: translateX(400px); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .score-board {
+        gap: 12px;
+    }
+
+    .score {
+        font-size: 2rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 400px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* ===== FIN RESPONSIVE ===== */

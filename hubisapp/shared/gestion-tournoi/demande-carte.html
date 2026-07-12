@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Ma carte de tournoi · HubISoccer</title>
+    <!-- Polices & Icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="acceuil.css">
+    <link rel="stylesheet" href="demande-carte.css">
+    <!-- Bibliothèques -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-tasks"></i> Gestion des tournois</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../../footballeur/profile-edit/foot-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../../footballeur/settings/foot-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-tasks"></i><h3>Menu Tournois</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Gestion Tournois</div>
+        <a href="acceuil.html"><i class="fas fa-home"></i><span>Accueil</span></a>
+        <a href="create-tournament.html"><i class="fas fa-plus-circle"></i><span>Créer un tournoi</span></a>
+        <a href="my-tournaments.html"><i class="fas fa-list"></i><span>Mes tournois</span></a>
+        <a href="my-registrations.html"><i class="fas fa-calendar-check"></i><span>Mes inscriptions</span></a>
+        <a href="rankings.html"><i class="fas fa-chart-line"></i><span>Classements</span></a>
+        <a href="tournament-rules.html"><i class="fas fa-gavel"></i><span>Règlement</span></a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../suivi-tournoi/suivi-tournoi.html"><i class="fas fa-trophy"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="help-tournament.html"><i class="fas fa-question-circle"></i><span>Aide</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="dashboard-main">
+    <div class="carte-container">
+        <h1><i class="fas fa-id-card"></i> Demande de carte de tournoi</h1>
+
+        <!-- Formulaire -->
+        <div class="form-section" id="formSection">
+            <h2><i class="fas fa-user-edit"></i> Informations personnelles</h2>
+            <form id="carteForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Nom complet *</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-birthday-cake"></i> Date de naissance *</label>
+                        <input type="date" id="birthDate" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-flag"></i> Nationalité *</label>
+                        <input type="text" id="nationality" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-globe-africa"></i> Pays de résidence *</label>
+                        <input type="text" id="country" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-users"></i> Club / Équipe</label>
+                        <input type="text" id="club" placeholder="Facultatif">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-image"></i> Logo du club</label>
+                        <input type="file" id="clubLogoFile" accept="image/*" style="display: none;">
+                        <button type="button" class="file-label" onclick="document.getElementById('clubLogoFile').click()"><i class="fas fa-upload"></i> Choisir un logo</button>
+                        <div id="clubLogoPreview" class="image-preview"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-camera"></i> Photo du titulaire *</label>
+                        <input type="file" id="photoFile" accept="image/*" style="display: none;" required>
+                        <button type="button" class="file-label" onclick="document.getElementById('photoFile').click()"><i class="fas fa-camera"></i> Choisir une photo</button>
+                        <div id="photoPreview" class="image-preview"></div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-globe"></i> Code pays (ex: BJ, FR)</label>
+                        <input type="text" id="countryCode" placeholder="BJ" maxlength="2">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-tag"></i> Catégorie de tournoi</label>
+                        <input type="text" id="categoryDisplay" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-trophy"></i> Nom du tournoi</label>
+                        <input type="text" id="tournamentName" placeholder="Ex: Coupe des Étoiles">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-pen"></i> Signature du titulaire *</label>
+                        <div class="signature-preview" id="ownerSignaturePreview" onclick="openSignatureModal('owner')">
+                            <i class="fas fa-pen"></i> Cliquez pour signer
+                        </div>
+                        <input type="hidden" id="ownerSignatureData">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="rules-checkbox">
+                        <input type="checkbox" id="acceptRules" required>
+                        <label for="acceptRules">J'ai lu et j'accepte le règlement du tournoi</label>
+                    </div>
+                </div>
+                <div class="footer-buttons">
+                    <button type="button" class="btn btn-primary" id="generateCardBtn"><i class="fas fa-id-card"></i> Générer ma carte</button>
+                    <button type="button" class="btn btn-secondary" id="resetFormBtn"><i class="fas fa-redo"></i> Réinitialiser</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Aperçu de la carte -->
+        <div class="card-section" id="cardPreviewSection" style="display: none;">
+            <h2><i class="fas fa-eye"></i> Aperçu de votre carte</h2>
+            <div class="card-preview" id="cardPreview">
+                <div class="card-face card-front" id="cardFront">
+                    <div class="card-header">
+                        <img id="organizerLogo" src="../../img/logo-navbar.png" alt="Logo organisateur">
+                        <img id="clubLogoDisplay" src="../../img/logo-navbar.png" alt="Logo club">
+                    </div>
+                    <div class="card-info" id="frontInfo"></div>
+                    <div class="signature-area">
+                        <div><strong>Signature titulaire</strong><br><img id="ownerSignImg" style="max-height:50px;"></div>
+                        <div><strong>Signature organisateur</strong><br><img id="organizerSignImg" style="max-height:50px;"></div>
+                    </div>
+                    <div class="qr-code" id="qrCode"></div>
+                </div>
+                <div class="card-face card-back" id="cardBack">
+                    <div class="card-header">
+                        <img id="flagImg" src="https://flagcdn.com/64x48/bj.png" alt="Drapeau">
+                        <img id="hubisoccerLogo" src="../../img/logo-navbar.png" alt="HubISoccer">
+                    </div>
+                    <div class="card-info" id="backInfo"></div>
+                    <div class="signature-area">
+                        <div><strong>Signature du président</strong><br><img id="presidentSignImg" style="max-height:50px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-buttons">
+                <button class="btn btn-primary" id="printCardBtn"><i class="fas fa-file-pdf"></i> Imprimer / PDF</button>
+                <button class="btn btn-secondary" id="editCardBtn"><i class="fas fa-edit"></i> Modifier ma demande</button>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== MODALE SIGNATURE ===== -->
+<div id="signatureModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="signatureModalTitle"><i class="fas fa-pen"></i> Signature</h3>
+            <span class="close-modal" onclick="closeSignatureModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <canvas id="signatureCanvas" class="signature-canvas" width="400" height="200" style="width:100%; height:200px;"></canvas>
+            <div class="signature-actions">
+                <button class="btn btn-secondary" id="clearSignatureBtn"><i class="fas fa-eraser"></i> Effacer</button>
+                <button class="btn btn-primary" id="saveSignatureBtn"><i class="fas fa-check"></i> Valider</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<!-- ===== SCRIPT ===== -->
+<script src="demande-carte.js"></script>
+</body>
+</html>

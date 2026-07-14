@@ -220,7 +220,11 @@ async function loadProfile() {
     return coachProfile;
 }
 
-/* ---------- 10. CHARGEMENT DONNÉES DE CETTE PAGE (coach_dash) ---------- */
+/* ---------- 10. CHARGEMENT DONNÉES DE CETTE PAGE (coach_dash) ----------
+   IMPORTANT : cette fonction ne doit JAMAIS bloquer l'affichage du profil.
+   Le profil (updateProfileUI) est affiché AVANT, dans l'init.
+   Si la table n'existe pas encore (404), on affiche un avertissement
+   clair et la page reste utilisable.                                     */
 async function loadDashData() {
     if (!coachProfile) {
         return;
@@ -233,7 +237,8 @@ async function loadDashData() {
         .maybeSingle();
     hideLoader();
     if (error) {
-        showToast('Erreur chargement des données', 'error');
+        console.warn('⚠️ Table ' + DASH_TABLE + ' indisponible :', error.message);
+        showToast('Table de données du tableau de bord absente. Exécutez le script SQL <b>coach-espace-tables.sql</b> dans Supabase.', 'warning');
         return;
     }
     if (data) {
@@ -246,12 +251,12 @@ async function loadDashData() {
             .select()
             .single();
         if (ie) {
-            showToast('Erreur initialisation', 'error');
+            console.warn('⚠️ Impossible d\'initialiser ' + DASH_TABLE + ' :', ie.message);
+            showToast('Initialisation impossible : vérifiez les policies RLS de ' + DASH_TABLE, 'warning');
             return;
         }
         dashData = nd;
     }
-    updateProfileUI();
     updateDataUI();
 }
 
@@ -705,6 +710,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!coachProfile) {
         return;
     }
+    /* CORRECTION CRITIQUE : le profil s'affiche IMMÉDIATEMENT,
+       indépendamment des tables métier qui suivent. Si une table
+       manque, la carte profil reste complète.                    */
+    updateProfileUI();
     await loadDashData();
     await loadPilotWidgets();
     initUserMenu();

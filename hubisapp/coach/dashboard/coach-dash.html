@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Espace Coach / Entraîneur · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="coach-dash.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-clipboard-list"></i> Espace Coach / Entraîneur</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/coach-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/coach-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR (LES 13 PAGES DE L'ESPACE COACH) ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-clipboard-list"></i><h3>Menu Coach / Entraîneur</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <!-- Groupe 1 : Pilotage de mes talents -->
+        <div class="nav-group-label">Pilotage des Talents</div>
+        <a href="coach-dash.html" class="active">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../talents/coach-talents.html">
+            <i class="fas fa-users"></i><span>Mes Talents (Sportifs & Artistes)</span>
+        </a>
+        <a href="../evaluations/coach-eval.html">
+            <i class="fas fa-star-half-alt"></i><span>Évaluations & Scouting</span>
+        </a>
+        <a href="../planning/coach-planning.html">
+            <i class="fas fa-calendar-alt"></i><span>Planning & Séances</span>
+        </a>
+        <a href="../analyse/coach-video.html">
+            <i class="fas fa-film"></i><span>Analyse Vidéo</span>
+        </a>
+        <a href="../triple-projet/coach-triple.html">
+            <i class="fas fa-seedling"></i><span>Suivi Triple Projet</span>
+        </a>
+        <a href="../recommandations/coach-recos.html">
+            <i class="fas fa-award"></i><span>Recommandations</span>
+        </a>
+        <a href="../statistiques/coach-stats.html">
+            <i class="fas fa-chart-line"></i><span>Statistiques du Groupe</span>
+        </a>
+        <!-- Groupe 2 : Ma carrière de coach -->
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Ma Carrière</div>
+        <a href="../verification/coach-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../licences/coach-licences.html">
+            <i class="fas fa-certificate"></i><span>Licences & Certifs</span>
+        </a>
+        <a href="../cv/coach-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <a href="../opportunites/coach-offres.html">
+            <i class="fas fa-briefcase"></i><span>Opportunités & Offres</span>
+        </a>
+        <a href="../revenus/coach-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <!-- Groupe 3 : Pages unifiées de la plateforme -->
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/coach-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="dashboard-main">
+<div class="dashboard-container">
+
+    <!-- ===== DEBUT CARTE PROFIL (colonne gauche) ===== -->
+    <aside class="profile-card glass-card">
+        <div class="avatar-upload" onclick="triggerUpload()">
+            <div id="profileAvatarContainer" class="avatar-container">
+                <img src="" id="profileDisplay" alt="Avatar" style="display:none;">
+                <div class="profile-initials" id="profileDisplayInitials"></div>
+            </div>
+            <div class="edit-badge"><i class="fas fa-camera"></i></div>
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        </div>
+        <button id="deleteAvatarBtn" class="btn-delete-avatar" style="display:none;">
+            <i class="fas fa-trash-alt"></i> Supprimer la photo
+        </button>
+        <h2 id="dashboardName">—</h2>
+        <div class="coach-pseudo"><i class="fas fa-clipboard-list"></i><span id="coachPseudo">—</span></div>
+        <div class="coach-contact">
+            <p><i class="fas fa-phone-alt"></i> <span id="coachPhone">—</span></p>
+            <p><i class="fas fa-envelope"></i> <span id="coachEmail">—</span></p>
+            <p><i class="fas fa-flag"></i> <span id="coachCountryFlag">🌍</span> <span id="coachCountryName">—</span></p>
+        </div>
+        <p class="role-badge">Coach / Entraîneur</p>
+        <!-- Domaine d'encadrement : Sportif, Artiste ou les deux -->
+        <div class="coach-domaine" id="coachDomaineBox">
+            <span class="domaine-chip" id="coachDomaine"><i class="fas fa-globe"></i> Domaine : —</span>
+        </div>
+        <div class="id-copy-box" onclick="copyID()">
+            <i class="fas fa-id-card"></i><span id="coachID">ID : —</span><i class="fas fa-copy copy-icon"></i>
+        </div>
+        <div class="stats-mini-container">
+            <button class="mini-stat-btn" onclick="location.href='../verification/coach-verif.html'">
+                <i class="fas fa-chart-pie"></i>
+                <span class="mini-stat-value" id="profileCompletion">0</span>%
+                <span class="mini-stat-label">Profil complété</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-binoculars"></i>
+                <span class="mini-stat-value" id="scoutingViews">0</span>
+                <span class="mini-stat-label">Vues profil</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-star"></i>
+                <span class="mini-stat-value" id="recruiterFavs">0</span>
+                <span class="mini-stat-label">Favoris</span>
+            </button>
+        </div>
+        <a href="../cv/coach-cv.html" class="btn-download-cv">
+            <i class="fas fa-file-pdf"></i> Télécharger mon CV PDF
+        </a>
+    </aside>
+    <!-- ===== FIN CARTE PROFIL ===== -->
+
+    <!-- ===== DEBUT PANNEAU PRINCIPAL ===== -->
+    <div class="main-panel">
+
+        <!-- En-tête coach -->
+        <div class="coach-header glass-card">
+            <div class="coach-header-left">
+                <h1 id="coachFullName">—</h1>
+                <p class="coach-position" id="coachPosition">Spécialité non renseignée</p>
+            </div>
+            <div class="coach-header-right">
+                <div class="coach-basic-info">
+                    <span><i class="fas fa-birthday-cake"></i> <span id="coachAge">—</span> ans</span>
+                    <span><i class="fas fa-globe-africa"></i> <span id="coachNationality">—</span></span>
+                    <span><i class="fas fa-clipboard-list"></i> <span id="coachSpecialite">—</span></span>
+                    <span><i class="fas fa-building"></i> <span id="coachClub">—</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== DEBUT WIDGETS DE PILOTAGE (LE VRAI RÔLE DU COACH) ===== -->
+        <div class="pilot-grid">
+            <!-- Talents encadrés : lit supabaseAuthPrive_coach_talents -->
+            <button class="pilot-card" onclick="location.href='../talents/coach-talents.html'">
+                <div class="pilot-icon corps"><i class="fas fa-users"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotTalents">0</span>
+                    <span class="pilot-label">Talents encadrés</span>
+                    <span class="pilot-sub" id="pilotTalentsSub">Sportifs & Artistes</span>
+                </div>
+            </button>
+            <!-- Demandes de liaison en attente -->
+            <button class="pilot-card" onclick="location.href='../talents/coach-talents.html'">
+                <div class="pilot-icon ame"><i class="fas fa-user-plus"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotDemandes">0</span>
+                    <span class="pilot-label">Demandes de liaison</span>
+                    <span class="pilot-sub">À accepter ou refuser</span>
+                </div>
+            </button>
+            <!-- Évaluations en attente : lit supabaseAuthPrive_coach_eval -->
+            <button class="pilot-card" onclick="location.href='../evaluations/coach-eval.html'">
+                <div class="pilot-icon esprit"><i class="fas fa-star-half-alt"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotEvals">0</span>
+                    <span class="pilot-label">Évaluations à faire</span>
+                    <span class="pilot-sub">Talents non évalués ce mois</span>
+                </div>
+            </button>
+            <!-- Prochaine séance : lit supabaseAuthPrive_coach_planning -->
+            <button class="pilot-card" onclick="location.href='../planning/coach-planning.html'">
+                <div class="pilot-icon gold"><i class="fas fa-calendar-day"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value pilot-value-sm" id="pilotSeance">—</span>
+                    <span class="pilot-label">Prochaine séance</span>
+                    <span class="pilot-sub" id="pilotSeanceTheme">Aucune séance planifiée</span>
+                </div>
+            </button>
+        </div>
+        <!-- ===== FIN WIDGETS DE PILOTAGE ===== -->
+
+        <!-- ===== DEBUT ALERTES TRIPLE PROJET ===== -->
+        <div class="alerts-section glass-card">
+            <h3 class="section-title"><i class="fas fa-seedling"></i> Alertes Triple Projet — Sport · Étude · Carrière</h3>
+            <div id="alertsList" class="alerts-list">
+                <p class="empty-state" id="alertsEmpty">
+                    <i class="fas fa-check-circle"></i> Aucune alerte. Tous vos talents sont en équilibre. 🌱
+                </p>
+            </div>
+        </div>
+        <!-- ===== FIN ALERTES TRIPLE PROJET ===== -->
+
+        <!-- Statistiques globales carrière coach -->
+        <div class="global-stats-grid">
+            <div class="stat-card-global"><div class="stat-card-label">TALENTS ENTRAÎNÉS (TOTAL)</div><div class="stat-card-value" id="nbJoueurs">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">MATCHS / SPECTACLES DIRIGÉS</div><div class="stat-card-value" id="nbMatchs">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">TAUX DE RÉUSSITE (%)</div><div class="stat-card-value" id="tauxVict">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">CERTIFICATIONS ACTIVES</div><div class="stat-card-value" id="nbCertifs">—</div></div>
+        </div>
+
+        <!-- Situation contractuelle -->
+        <div class="info-contrat glass-card">
+            <h3 class="section-title"><i class="fas fa-file-contract"></i> Situation contractuelle</h3>
+            <div class="info-contrat-grid">
+                <div class="info-item"><span class="info-label"><i class="fas fa-coins"></i> Salaire / Honoraires</span><span class="info-value" id="salary">—</span></div>
+                <div class="info-item"><span class="info-label"><i class="fas fa-calendar-times"></i> Expire le</span><span class="info-value" id="contractExpiry">—</span></div>
+                <div class="info-item"><span class="info-label"><i class="fas fa-chart-line"></i> Évaluation / Cote</span><span class="info-value" id="marketValue">—</span></div>
+                <div class="info-item"><span class="info-label"><i class="fas fa-id-badge"></i> Statut professionnel</span><span class="info-value" id="statutPro">—</span></div>
+            </div>
+        </div>
+
+        <!-- Compétences principales du coach -->
+        <div class="main-skills glass-card">
+            <h3 class="section-title"><i class="fas fa-chart-bar"></i> Compétences principales</h3>
+            <div class="skills-grid">
+                    <div class="skill-item"><span class="skill-label">Tactique</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_tact" style="width:0%"></div></div><span class="skill-value" id="skill_tact_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Communication</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_comm" style="width:0%"></div></div><span class="skill-value" id="skill_comm_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Motivation</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_motiv" style="width:0%"></div></div><span class="skill-value" id="skill_motiv_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Analyse vidéo</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_video" style="width:0%"></div></div><span class="skill-value" id="skill_video_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Prépa physique</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_physique" style="width:0%"></div></div><span class="skill-value" id="skill_physique_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Mental coach</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_mental" style="width:0%"></div></div><span class="skill-value" id="skill_mental_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Gestion groupe</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_groupe" style="width:0%"></div></div><span class="skill-value" id="skill_groupe_value">0</span></div>
+                    <div class="skill-item"><span class="skill-label">Leadership</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_lead" style="width:0%"></div></div><span class="skill-value" id="skill_lead_value">0</span></div>
+            </div>
+        </div>
+
+        <!-- Profil détaillé Trinité -->
+        <div class="attributes-section glass-card">
+            <h3 class="section-title"><i class="fas fa-list-ul"></i> Profil détaillé — Corps · Âme · Esprit</h3>
+            <div class="attributes-tabs">
+                    <button class="attr-tab active" data-cat="competences"><i class="fas fa-clipboard-list"></i> Esprit — Compétences Entraîneur</button>
+                    <button class="attr-tab" data-cat="resultats"><i class="fas fa-chart-bar"></i> Âme — Résultats & Bilan</button>
+                    <button class="attr-tab" data-cat="contrat"><i class="fas fa-file-contract"></i> Corps — Contrat & Licence</button>
+            </div>
+                <div id="competences-attrs" class="attr-content active">
+                    <div class="attr-grid">
+                        <div class="attr-item"><span class="attr-name">Tactique / Stratégie</span><span class="attr-value" id="cp_tac">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Communication talents</span><span class="attr-value" id="cp_com">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Motivation équipe</span><span class="attr-value" id="cp_mot">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Analyse vidéo</span><span class="attr-value" id="cp_vid">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Préparation physique</span><span class="attr-value" id="cp_phy">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Scouting adverse</span><span class="attr-value" id="cp_sco">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Gestion de groupe</span><span class="attr-value" id="cp_grp">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Leadership</span><span class="attr-value" id="cp_lea">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Gestion du stress</span><span class="attr-value" id="cp_str">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Formation des jeunes</span><span class="attr-value" id="cp_jeu">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Psychologie sportive</span><span class="attr-value" id="cp_psy">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Prise de décision</span><span class="attr-value" id="cp_dec">0</span></div>
+                    </div>
+                </div>
+                <div id="resultats-attrs" class="attr-content">
+                    <div class="attr-grid">
+                        <div class="attr-item"><span class="attr-name">Total talents entraînés</span><span class="attr-value" id="re_jou">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Matchs / Spectacles dirigés</span><span class="attr-value" id="re_mat">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Victoires / Succès</span><span class="attr-value" id="re_vic">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Taux de réussite (%)</span><span class="attr-value" id="re_tau">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Titres / Prix remportés</span><span class="attr-value" id="re_tit">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Années d'expérience</span><span class="attr-value" id="re_exp">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Clubs / Structures gérés</span><span class="attr-value" id="re_clu">0</span></div>
+                    </div>
+                </div>
+                <div id="contrat-attrs" class="attr-content">
+                    <div class="attr-grid">
+                        <div class="attr-item"><span class="attr-name">Club / Structure actuelle</span><span class="attr-value" id="co_clu">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Niveau (Pro / Amateur)</span><span class="attr-value" id="co_niv">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Salaire mensuel</span><span class="attr-value" id="co_sal">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Durée contrat</span><span class="attr-value" id="co_dur">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Expire le</span><span class="attr-value" id="co_exp">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Licence UEFA (Pro/A/B)</span><span class="attr-value" id="co_uef">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Licence CAF</span><span class="attr-value" id="co_caf">0</span></div>
+                        <div class="attr-item"><span class="attr-name">Note professionnelle</span><span class="attr-value" id="co_not">0</span></div>
+                    </div>
+                </div>
+        </div>
+
+        <!-- Notes & Évaluations reçues -->
+        <div class="reports-section glass-card">
+            <h3 class="section-title"><i class="fas fa-file-signature"></i> Notes & Évaluations</h3>
+            <div class="reports-body">
+                <p id="scoutingReports" class="reports-text">Aucune note pour le moment.</p>
+            </div>
+        </div>
+
+        <!-- ===== DEBUT ACCÈS RAPIDES MÉTIER ===== -->
+        <div class="quick-actions glass-card">
+            <h3 class="section-title"><i class="fas fa-bolt"></i> Actions rapides</h3>
+            <div class="quick-grid">
+                <a href="../evaluations/coach-eval.html" class="quick-btn">
+                    <i class="fas fa-star-half-alt"></i><span>Évaluer un talent</span>
+                </a>
+                <a href="../planning/coach-planning.html" class="quick-btn">
+                    <i class="fas fa-plus-circle"></i><span>Créer une séance</span>
+                </a>
+                <a href="../recommandations/coach-recos.html" class="quick-btn">
+                    <i class="fas fa-award"></i><span>Rédiger une recommandation</span>
+                </a>
+                <a href="../analyse/coach-video.html" class="quick-btn">
+                    <i class="fas fa-film"></i><span>Analyser une vidéo</span>
+                </a>
+                <a href="../triple-projet/coach-triple.html" class="quick-btn">
+                    <i class="fas fa-seedling"></i><span>Suivi Triple Projet</span>
+                </a>
+                <a href="../talents/coach-talents.html" class="quick-btn">
+                    <i class="fas fa-user-plus"></i><span>Lier un nouveau talent</span>
+                </a>
+            </div>
+        </div>
+        <!-- ===== FIN ACCÈS RAPIDES MÉTIER ===== -->
+
+    </div>
+    <!-- ===== FIN PANNEAU PRINCIPAL ===== -->
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-clipboard-list"></i> UEFA · CAF · FIFA</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="coach-dash.js"></script>
+</body>
+</html>

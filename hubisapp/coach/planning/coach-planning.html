@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Planning & Séances · Espace Coach · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="coach-planning.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-calendar-alt"></i> Planning & Séances</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/coach-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/coach-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR (LES 13 PAGES DE L'ESPACE COACH) ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-clipboard-list"></i><h3>Menu Coach / Entraîneur</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Pilotage des Talents</div>
+        <a href="../dashboard/coach-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../talents/coach-talents.html">
+            <i class="fas fa-users"></i><span>Mes Talents (Sportifs & Artistes)</span>
+        </a>
+        <a href="../evaluations/coach-eval.html">
+            <i class="fas fa-star-half-alt"></i><span>Évaluations & Scouting</span>
+        </a>
+        <a href="coach-planning.html" class="active">
+            <i class="fas fa-calendar-alt"></i><span>Planning & Séances</span>
+        </a>
+        <a href="../analyse/coach-video.html">
+            <i class="fas fa-film"></i><span>Analyse Vidéo</span>
+        </a>
+        <a href="../triple-projet/coach-triple.html">
+            <i class="fas fa-seedling"></i><span>Suivi Triple Projet</span>
+        </a>
+        <a href="../recommandations/coach-recos.html">
+            <i class="fas fa-award"></i><span>Recommandations</span>
+        </a>
+        <a href="../statistiques/coach-stats.html">
+            <i class="fas fa-chart-line"></i><span>Statistiques du Groupe</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Ma Carrière</div>
+        <a href="../verification/coach-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../licences/coach-licences.html">
+            <i class="fas fa-certificate"></i><span>Licences & Certifs</span>
+        </a>
+        <a href="../cv/coach-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <a href="../opportunites/coach-offres.html">
+            <i class="fas fa-briefcase"></i><span>Opportunités & Offres</span>
+        </a>
+        <a href="../revenus/coach-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/coach-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="planning-main">
+<div class="planning-container">
+
+    <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Planning & Séances</h1>
+    <p class="page-subtitle">
+        Planifiez vos entraînements et répétitions avec des objectifs
+        <span class="tri corps">Corps</span> · <span class="tri ame">Âme</span> · <span class="tri esprit">Esprit</span>.
+        La prochaine séance s'affiche automatiquement sur votre tableau de bord.
+    </p>
+
+    <!-- ===== DEBUT STATS RAPIDES ===== -->
+    <div class="planning-stats-grid">
+        <div class="pstat-card">
+            <div class="pstat-icon avenir"><i class="fas fa-calendar-day"></i></div>
+            <div class="pstat-body">
+                <span class="pstat-value" id="statAVenir">0</span>
+                <span class="pstat-label">Séances à venir</span>
+            </div>
+        </div>
+        <div class="pstat-card">
+            <div class="pstat-icon mois"><i class="fas fa-calendar-week"></i></div>
+            <div class="pstat-body">
+                <span class="pstat-value" id="statCeMois">0</span>
+                <span class="pstat-label">Ce mois-ci</span>
+            </div>
+        </div>
+        <div class="pstat-card">
+            <div class="pstat-icon terminees"><i class="fas fa-check-double"></i></div>
+            <div class="pstat-body">
+                <span class="pstat-value" id="statTerminees">0</span>
+                <span class="pstat-label">Terminées</span>
+            </div>
+        </div>
+        <div class="pstat-card">
+            <div class="pstat-icon heures"><i class="fas fa-stopwatch"></i></div>
+            <div class="pstat-body">
+                <span class="pstat-value" id="statHeuresMois">0h</span>
+                <span class="pstat-label">Volume ce mois</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN STATS RAPIDES ===== -->
+
+    <!-- ===== DEBUT PROCHAINE SÉANCE (HERO) ===== -->
+    <div class="next-session glass-card" id="nextSessionCard" style="display:none;">
+        <div class="next-session-left">
+            <span class="next-label"><i class="fas fa-bullhorn"></i> Prochaine séance</span>
+            <h2 class="next-theme" id="nextTheme">—</h2>
+            <p class="next-when" id="nextWhen">—</p>
+            <p class="next-lieu" id="nextLieu" style="display:none;"><i class="fas fa-map-marker-alt"></i> <span></span></p>
+        </div>
+        <div class="next-session-right">
+            <div class="next-objectifs" id="nextObjectifs"></div>
+        </div>
+    </div>
+    <!-- ===== FIN PROCHAINE SÉANCE ===== -->
+
+    <!-- ===== DEBUT FORMULAIRE DE SÉANCE ===== -->
+    <div class="session-form-panel glass-card" id="sessionFormPanel">
+        <h3 class="section-title" id="formTitle"><i class="fas fa-plus-circle"></i> Planifier une séance</h3>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="sessionDate">Date & heure de la séance *</label>
+                <input type="datetime-local" id="sessionDate">
+            </div>
+            <div class="form-group">
+                <label for="sessionDuree">Durée (minutes)</label>
+                <input type="number" id="sessionDuree" min="15" max="480" step="5" value="90">
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="sessionTheme">Thème de la séance</label>
+                <input type="text" id="sessionTheme" placeholder="Ex : Finition devant le but · Chorégraphie acte II…">
+            </div>
+            <div class="form-group">
+                <label for="sessionLieu">Lieu</label>
+                <input type="text" id="sessionLieu" placeholder="Ex : Terrain de Kpotohou-Hêvié, Studio B…">
+            </div>
+        </div>
+
+        <!-- Objectifs Trinité -->
+        <label class="objectifs-label">Objectifs Trinité de la séance</label>
+        <div class="objectifs-grid">
+            <div class="form-group objectif corps">
+                <label for="objCorps"><i class="fas fa-dumbbell"></i> Corps — Physique</label>
+                <input type="text" id="objCorps" placeholder="Ex : Endurance, vitesse, souffle…">
+            </div>
+            <div class="form-group objectif ame">
+                <label for="objAme"><i class="fas fa-brain"></i> Âme — Mental</label>
+                <input type="text" id="objAme" placeholder="Ex : Concentration, cohésion, confiance…">
+            </div>
+            <div class="form-group objectif esprit">
+                <label for="objEsprit"><i class="fas fa-futbol"></i> Esprit — Technique</label>
+                <input type="text" id="objEsprit" placeholder="Ex : Passes courtes, justesse vocale…">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="sessionNotes">Notes complémentaires</label>
+            <textarea id="sessionNotes" rows="3" placeholder="Matériel à prévoir, talents concernés, consignes particulières…"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-secondary" id="btnResetForm"><i class="fas fa-eraser"></i> Réinitialiser</button>
+            <button class="btn-primary" id="btnSaveSession"><i class="fas fa-calendar-plus"></i> Enregistrer la séance</button>
+        </div>
+    </div>
+    <!-- ===== FIN FORMULAIRE DE SÉANCE ===== -->
+
+    <!-- ===== DEBUT SÉANCES À VENIR ===== -->
+    <div class="upcoming-sessions glass-card">
+        <h3 class="section-title"><i class="fas fa-calendar-day"></i> Séances à venir</h3>
+        <div id="upcomingList" class="sessions-list">
+            <p class="empty-state" id="upcomingEmpty">
+                <i class="fas fa-calendar-plus"></i> Aucune séance planifiée.
+                Créez votre première séance ci-dessus. 💪🏾
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN SÉANCES À VENIR ===== -->
+
+    <!-- ===== DEBUT HISTORIQUE ===== -->
+    <div class="history-sessions glass-card">
+        <h3 class="section-title"><i class="fas fa-history"></i> Historique des séances</h3>
+        <div class="filter-tabs" id="historyFilters">
+            <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> Toutes</button>
+            <button class="filter-btn" data-filter="terminee"><i class="fas fa-check"></i> Terminées</button>
+            <button class="filter-btn" data-filter="annulee"><i class="fas fa-ban"></i> Annulées</button>
+            <button class="filter-btn" data-filter="a_cloturer"><i class="fas fa-exclamation-circle"></i> À clôturer</button>
+        </div>
+        <div id="historyList" class="sessions-list">
+            <p class="empty-state" id="historyEmpty">
+                <i class="fas fa-folder-open"></i> Aucune séance passée pour l'instant.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN HISTORIQUE ===== -->
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-clipboard-list"></i> UEFA · CAF · FIFA</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="coach-planning.js"></script>
+</body>
+</html>

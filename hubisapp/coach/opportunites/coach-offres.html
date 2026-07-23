@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Opportunités & Offres · Espace Coach · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="coach-offres.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-briefcase"></i> Opportunités & Offres</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/coach-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/coach-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR (LES 13 PAGES DE L'ESPACE COACH) ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-clipboard-list"></i><h3>Menu Coach / Entraîneur</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Pilotage des Talents</div>
+        <a href="../dashboard/coach-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../talents/coach-talents.html">
+            <i class="fas fa-users"></i><span>Mes Talents (Sportifs & Artistes)</span>
+        </a>
+        <a href="../evaluations/coach-eval.html">
+            <i class="fas fa-star-half-alt"></i><span>Évaluations & Scouting</span>
+        </a>
+        <a href="../planning/coach-planning.html">
+            <i class="fas fa-calendar-alt"></i><span>Planning & Séances</span>
+        </a>
+        <a href="../analyse/coach-video.html">
+            <i class="fas fa-film"></i><span>Analyse Vidéo</span>
+        </a>
+        <a href="../triple-projet/coach-triple.html">
+            <i class="fas fa-seedling"></i><span>Suivi Triple Projet</span>
+        </a>
+        <a href="../recommandations/coach-recos.html">
+            <i class="fas fa-award"></i><span>Recommandations</span>
+        </a>
+        <a href="../statistiques/coach-stats.html">
+            <i class="fas fa-chart-line"></i><span>Statistiques du Groupe</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Ma Carrière</div>
+        <a href="../verification/coach-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../licences/coach-licences.html">
+            <i class="fas fa-certificate"></i><span>Licences & Certifs</span>
+        </a>
+        <a href="../cv/coach-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <a href="coach-offres.html" class="active">
+            <i class="fas fa-briefcase"></i><span>Opportunités & Offres</span>
+        </a>
+        <a href="../revenus/coach-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/coach-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="offres-main">
+<div class="offres-container">
+
+    <h1 class="page-title"><i class="fas fa-briefcase"></i> Opportunités & Offres</h1>
+    <p class="page-subtitle">
+        Le suivi de votre recherche professionnelle : les candidatures que vous envoyez aux
+        clubs et académies, et les propositions qu'ils vous adressent directement.
+    </p>
+
+    <!-- ===== DEBUT STATS RAPIDES ===== -->
+    <div class="offres-stats-grid">
+        <div class="ostat-card">
+            <div class="ostat-icon candidatures"><i class="fas fa-paper-plane"></i></div>
+            <div class="ostat-body">
+                <span class="ostat-value" id="statCandidatures">0</span>
+                <span class="ostat-label">Candidatures envoyées</span>
+            </div>
+        </div>
+        <div class="ostat-card">
+            <div class="ostat-icon recues"><i class="fas fa-inbox"></i></div>
+            <div class="ostat-body">
+                <span class="ostat-value" id="statRecues">0</span>
+                <span class="ostat-label">Offres reçues</span>
+            </div>
+        </div>
+        <div class="ostat-card">
+            <div class="ostat-icon discussion"><i class="fas fa-comments"></i></div>
+            <div class="ostat-body">
+                <span class="ostat-value" id="statDiscussion">0</span>
+                <span class="ostat-label">En discussion</span>
+            </div>
+        </div>
+        <div class="ostat-card">
+            <div class="ostat-icon acceptees"><i class="fas fa-handshake"></i></div>
+            <div class="ostat-body">
+                <span class="ostat-value" id="statAcceptees">0</span>
+                <span class="ostat-label">Acceptées</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN STATS RAPIDES ===== -->
+
+    <!-- ===== DEBUT FORMULAIRE D'AJOUT ===== -->
+    <div class="offre-form-panel glass-card" id="offreFormPanel">
+        <h3 class="section-title" id="formTitle"><i class="fas fa-plus-circle"></i> Ajouter une candidature ou une offre</h3>
+
+        <div class="form-group">
+            <label>Sens *</label>
+            <div class="direction-radio-row">
+                <label class="direction-radio">
+                    <input type="radio" name="offreDirection" value="candidature" checked>
+                    <span class="direction-chip candidature"><i class="fas fa-paper-plane"></i> J'ai postulé</span>
+                </label>
+                <label class="direction-radio">
+                    <input type="radio" name="offreDirection" value="recue">
+                    <span class="direction-chip recue"><i class="fas fa-inbox"></i> J'ai reçu une offre</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="offStructure">Structure (club / académie) *</label>
+                <input type="text" id="offStructure" placeholder="Ex : AS Tonnerre, Académie Génération Foot…">
+            </div>
+            <div class="form-group">
+                <label for="offPoste">Poste concerné</label>
+                <input type="text" id="offPoste" placeholder="Ex : Entraîneur principal U17">
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="offDate" id="offDateLabel">Date d'envoi *</label>
+                <input type="date" id="offDate">
+            </div>
+            <div class="form-group">
+                <label for="offContact">Contact <span class="label-note">(optionnel)</span></label>
+                <input type="text" id="offContact" placeholder="Ex : Nom, téléphone ou email">
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="offStatut">Statut</label>
+                <select id="offStatut">
+                    <option value="en_attente">En attente</option>
+                    <option value="en_discussion">En discussion</option>
+                    <option value="acceptee">Acceptée</option>
+                    <option value="refusee">Refusée</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="offDescription">Notes <span class="label-note">(optionnel)</span></label>
+            <textarea id="offDescription" rows="3" placeholder="Détails de l'échange, conditions évoquées, prochaine étape…"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-secondary" id="btnResetForm"><i class="fas fa-eraser"></i> Réinitialiser</button>
+            <button class="btn-primary" id="btnSaveOffre"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+    </div>
+    <!-- ===== FIN FORMULAIRE ===== -->
+
+    <!-- ===== DEBUT MES CANDIDATURES ===== -->
+    <div class="offres-list-panel glass-card">
+        <h3 class="section-title"><i class="fas fa-paper-plane"></i> Mes candidatures</h3>
+        <div id="candidaturesGrid" class="offres-grid">
+            <p class="empty-state" id="candidaturesEmpty">
+                <i class="fas fa-paper-plane"></i> Aucune candidature enregistrée pour l'instant.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN MES CANDIDATURES ===== -->
+
+    <!-- ===== DEBUT OFFRES REÇUES ===== -->
+    <div class="offres-list-panel glass-card">
+        <h3 class="section-title"><i class="fas fa-inbox"></i> Offres reçues</h3>
+        <div id="recuesGrid" class="offres-grid">
+            <p class="empty-state" id="recuesEmpty">
+                <i class="fas fa-inbox"></i> Aucune offre reçue pour l'instant.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN OFFRES REÇUES ===== -->
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-clipboard-list"></i> UEFA · CAF · FIFA</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="coach-offres.js"></script>
+</body>
+</html>

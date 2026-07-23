@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Licences & Certifs · Espace Coach · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="coach-licences.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-certificate"></i> Licences & Certifs</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/coach-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/coach-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR (LES 13 PAGES DE L'ESPACE COACH) ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-clipboard-list"></i><h3>Menu Coach / Entraîneur</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Pilotage des Talents</div>
+        <a href="../dashboard/coach-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../talents/coach-talents.html">
+            <i class="fas fa-users"></i><span>Mes Talents (Sportifs & Artistes)</span>
+        </a>
+        <a href="../evaluations/coach-eval.html">
+            <i class="fas fa-star-half-alt"></i><span>Évaluations & Scouting</span>
+        </a>
+        <a href="../planning/coach-planning.html">
+            <i class="fas fa-calendar-alt"></i><span>Planning & Séances</span>
+        </a>
+        <a href="../analyse/coach-video.html">
+            <i class="fas fa-film"></i><span>Analyse Vidéo</span>
+        </a>
+        <a href="../triple-projet/coach-triple.html">
+            <i class="fas fa-seedling"></i><span>Suivi Triple Projet</span>
+        </a>
+        <a href="../recommandations/coach-recos.html">
+            <i class="fas fa-award"></i><span>Recommandations</span>
+        </a>
+        <a href="../statistiques/coach-stats.html">
+            <i class="fas fa-chart-line"></i><span>Statistiques du Groupe</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Ma Carrière</div>
+        <a href="../verification/coach-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="coach-licences.html" class="active">
+            <i class="fas fa-certificate"></i><span>Licences & Certifs</span>
+        </a>
+        <a href="../cv/coach-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <a href="../opportunites/coach-offres.html">
+            <i class="fas fa-briefcase"></i><span>Opportunités & Offres</span>
+        </a>
+        <a href="../revenus/coach-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/coach-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="licences-main">
+<div class="licences-container">
+
+    <h1 class="page-title"><i class="fas fa-certificate"></i> Licences & Certifications</h1>
+    <p class="page-subtitle">
+        Le carnet de vos diplômes et certifications professionnelles — licences d'entraîneur,
+        secourisme, formations spécialisées. Distinct de votre carte de licence HubISoccer
+        (page Vérification), ceci est la preuve de votre expertise auprès des talents et des recruteurs.
+    </p>
+
+    <!-- ===== DEBUT STATS RAPIDES ===== -->
+    <div class="licences-stats-grid">
+        <div class="lcstat-card">
+            <div class="lcstat-icon total"><i class="fas fa-folder"></i></div>
+            <div class="lcstat-body">
+                <span class="lcstat-value" id="statTotal">0</span>
+                <span class="lcstat-label">Certifications</span>
+            </div>
+        </div>
+        <div class="lcstat-card">
+            <div class="lcstat-icon actives"><i class="fas fa-check-double"></i></div>
+            <div class="lcstat-body">
+                <span class="lcstat-value" id="statActives">0</span>
+                <span class="lcstat-label">Actives</span>
+            </div>
+        </div>
+        <div class="lcstat-card">
+            <div class="lcstat-icon renouveler"><i class="fas fa-hourglass-half"></i></div>
+            <div class="lcstat-body">
+                <span class="lcstat-value" id="statRenouveler">0</span>
+                <span class="lcstat-label">À renouveler (60j)</span>
+            </div>
+        </div>
+        <div class="lcstat-card">
+            <div class="lcstat-icon verifiees"><i class="fas fa-shield-alt"></i></div>
+            <div class="lcstat-body">
+                <span class="lcstat-value" id="statVerifiees">0</span>
+                <span class="lcstat-label">Vérifiées HubISoccer</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN STATS RAPIDES ===== -->
+
+    <!-- ===== DEBUT FORMULAIRE D'AJOUT ===== -->
+    <div class="licence-form-panel glass-card" id="licenceFormPanel">
+        <h3 class="section-title" id="formTitle"><i class="fas fa-plus-circle"></i> Ajouter une certification</h3>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="lcTitre">Titre de la certification *</label>
+                <input type="text" id="lcTitre" placeholder="Ex : Licence UEFA B">
+            </div>
+            <div class="form-group">
+                <label for="lcOrganisme">Organisme émetteur *</label>
+                <input type="text" id="lcOrganisme" list="organismesList" placeholder="Ex : UEFA, CAF, FBF, Croix-Rouge…">
+                <datalist id="organismesList">
+                    <option value="UEFA">
+                    <option value="CAF">
+                    <option value="FIFA">
+                    <option value="Fédération Béninoise de Football (FBF)">
+                    <option value="Ministère des Sports">
+                    <option value="Croix-Rouge">
+                    <option value="Institut National du Sport">
+                </datalist>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="lcCategorie">Catégorie</label>
+                <select id="lcCategorie">
+                    <option value="">— Sélectionnez —</option>
+                    <option value="Licence d'entraîneur">🎓 Licence d'entraîneur</option>
+                    <option value="Certification médicale / secourisme">⛑️ Certification médicale / secourisme</option>
+                    <option value="Formation spécialisée">📘 Formation spécialisée</option>
+                    <option value="Diplôme académique">🏛️ Diplôme académique</option>
+                    <option value="Autre">📄 Autre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="lcNumero">Numéro de certification <span class="label-note">(optionnel)</span></label>
+                <input type="text" id="lcNumero" placeholder="Ex : UEFA-B-2024-0451">
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="lcDateObtention">Date d'obtention *</label>
+                <input type="date" id="lcDateObtention">
+            </div>
+            <div class="form-group">
+                <label for="lcDateExpiration">Date d'expiration</label>
+                <input type="date" id="lcDateExpiration">
+                <label class="checkbox-inline">
+                    <input type="checkbox" id="lcSansExpiration">
+                    <span>Ne expire jamais (diplôme permanent)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Document justificatif <span class="label-note">(PDF, JPG ou PNG, optionnel)</span></label>
+            <div class="doc-upload-zone" id="docUploadZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span id="docUploadLabel">Cliquez pour joindre le scan de votre certification</span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-secondary" id="btnResetForm"><i class="fas fa-eraser"></i> Réinitialiser</button>
+            <button class="btn-primary" id="btnSaveLicence"><i class="fas fa-save"></i> Enregistrer la certification</button>
+        </div>
+    </div>
+    <!-- ===== FIN FORMULAIRE ===== -->
+
+    <!-- ===== DEBUT LISTE DES CERTIFICATIONS ===== -->
+    <div class="licences-list-panel glass-card">
+        <h3 class="section-title"><i class="fas fa-layer-group"></i> Mes certifications</h3>
+        <div class="filter-tabs" id="licenceFilters">
+            <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> Toutes</button>
+            <button class="filter-btn" data-filter="active"><i class="fas fa-check"></i> Actives</button>
+            <button class="filter-btn" data-filter="renouveler"><i class="fas fa-hourglass-half"></i> À renouveler</button>
+            <button class="filter-btn" data-filter="expiree"><i class="fas fa-times"></i> Expirées</button>
+        </div>
+        <div id="licencesGrid" class="licences-grid">
+            <p class="empty-state" id="licencesEmpty">
+                <i class="fas fa-certificate"></i> Aucune certification enregistrée pour l'instant.
+                Ajoutez votre première ci-dessus.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN LISTE ===== -->
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-clipboard-list"></i> UEFA · CAF · FIFA</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="coach-licences.js"></script>
+</body>
+</html>

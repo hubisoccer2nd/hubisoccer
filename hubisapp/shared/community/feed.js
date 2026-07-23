@@ -80,9 +80,9 @@ const ROLE_DASHBOARD_MAP = {
     'COACH': '../../coach/dashboard/coach-dash.html',
     'MEDIC': '../../staff_medical/dashboard/staff_medical-dash.html',
     'ARBIT': '../../corps_arbitral/dashboard/corps_arbitral-dash.html',
-    'ACAD': '../../academie_sportive/dashboard/academie_sportive-dash.html',
+    'ACAD': '../../academie/dashboard/academie-dash.html',
     'FORM': '../../formateur/dashboard/formateur-dash.html',
-    'TOURN': '../../gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html',
+    'TOURN': '../gestion-tournoi/acceuil.html',
     'ADMIN': '../../authprive/admin/admin-dashboard.html'
 };
 

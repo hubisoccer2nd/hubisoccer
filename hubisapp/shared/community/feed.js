@@ -558,14 +558,14 @@ function buildSidebarMenu(roleCode) {
         'ACAD': {
             title: 'Menu Académie sportive',
             items: [
-                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../academie_sportive/dashboard/academie_sportive-dash.html' },
+                { icon: 'fa-tachometer-alt', label: 'Tableau de bord', href: '../../academie/dashboard/academie-dash.html' },
                 { icon: 'fa-users', label: 'Ma Communauté', href: 'feed.html', active: true },
                 { icon: 'fa-shield-alt', label: 'Vérification', href: '../../academie_sportive/verification/academie_sportive-verif.html' },
                 { icon: 'fa-file-alt', label: 'Mon CV Pro', href: '../../academie_sportive/edit-cv/academie_sportive-cv.html' },
                 { icon: 'fa-certificate', label: 'Diplômes & Certifs', href: '../../academie_sportive/certifications/academie_sportive-certif.html' },
                 { icon: 'fa-trophy', label: 'Suivi Tournoi', href: '../../shared/suivi-tournoi/suivi-tournoi.html' },
                 { icon: 'fa-video', label: 'Mes Vidéos', href: '../../academie_sportive/videos/academie_sportive-videos.html' },
-                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../academie_sportive/revenus/academie_sportive-revenus.html' },
+                { icon: 'fa-coins', label: 'Mes Revenus', href: '../../academie/revenus/academie-revenus.html' },
                 { icon: 'fa-envelope', label: 'Messages', href: '../../shared/messagerie/conversation.html' },
                 { icon: 'fa-headset', label: 'Support', href: '../../academie_sportive/support/academie_sportive-supp.html' }
             ]

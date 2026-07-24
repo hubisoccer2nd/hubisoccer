@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Compétitions · Espace Académie · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="academie-compet.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-trophy"></i> Compétitions</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/academie-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/academie-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-school"></i><h3>Menu Académie Sportive</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Pilotage de l'Académie</div>
+        <a href="../dashboard/academie-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../athletes/academie-athletes.html">
+            <i class="fas fa-user-graduate"></i><span>Mes Athlètes</span>
+        </a>
+        <a href="../formateurs/academie-formateurs.html">
+            <i class="fas fa-chalkboard-teacher"></i><span>Mes Formateurs</span>
+        </a>
+        <a href="../programme/academie-prog.html">
+            <i class="fas fa-calendar"></i><span>Programmes</span>
+        </a>
+        <a href="academie-compet.html" class="active">
+            <i class="fas fa-trophy"></i><span>Compétitions</span>
+        </a>
+        <a href="../stats/academie-stats.html">
+            <i class="fas fa-chart-bar"></i><span>Statistiques</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Mon Institution</div>
+        <a href="../verification/academie-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../cv/academie-cv.html">
+            <i class="fas fa-file-alt"></i><span>CV / Présentation</span>
+        </a>
+        <a href="../opportunites/academie-recrutement.html">
+            <i class="fas fa-bullhorn"></i><span>Recrutement & Opportunités</span>
+        </a>
+        <a href="../revenus/academie-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/academie-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="compet-main">
+<div class="compet-container">
+
+    <h1 class="page-title"><i class="fas fa-trophy"></i> Compétitions</h1>
+    <p class="page-subtitle">
+        Tournois et compétitions auxquels votre académie participe — la prochaine échéance
+        apparaît automatiquement sur votre tableau de bord.
+    </p>
+
+    <!-- ===== DEBUT STATS RAPIDES ===== -->
+    <div class="compet-stats-grid">
+        <div class="cstat-card">
+            <div class="cstat-icon venir"><i class="fas fa-hourglass-half"></i></div>
+            <div class="cstat-body">
+                <span class="cstat-value" id="statVenir">0</span>
+                <span class="cstat-label">À venir</span>
+            </div>
+        </div>
+        <div class="cstat-card">
+            <div class="cstat-icon encours"><i class="fas fa-running"></i></div>
+            <div class="cstat-body">
+                <span class="cstat-value" id="statEnCours">0</span>
+                <span class="cstat-label">En cours</span>
+            </div>
+        </div>
+        <div class="cstat-card">
+            <div class="cstat-icon terminees"><i class="fas fa-flag-checkered"></i></div>
+            <div class="cstat-body">
+                <span class="cstat-value" id="statTerminees">0</span>
+                <span class="cstat-label">Terminées</span>
+            </div>
+        </div>
+        <div class="cstat-card">
+            <div class="cstat-icon total"><i class="fas fa-trophy"></i></div>
+            <div class="cstat-body">
+                <span class="cstat-value" id="statTotal">0</span>
+                <span class="cstat-label">Total compétitions</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN STATS RAPIDES ===== -->
+
+    <!-- ===== DEBUT FORMULAIRE ===== -->
+    <div class="compet-form-panel glass-card" id="competFormPanel">
+        <h3 class="section-title" id="formTitle"><i class="fas fa-plus-circle"></i> Ajouter une compétition</h3>
+
+        <div class="form-group">
+            <label for="competNom">Nom de la compétition *</label>
+            <input type="text" id="competNom" placeholder="Ex : Tournoi National U17, Coupe Régionale de Danse…">
+        </div>
+
+        <div class="form-group">
+            <label>Catégorie *</label>
+            <div class="cat-radio-row">
+                <label class="cat-radio">
+                    <input type="radio" name="competCategorie" value="sportif" checked>
+                    <span class="cat-chip sportif"><i class="fas fa-futbol"></i> Sportif</span>
+                </label>
+                <label class="cat-radio">
+                    <input type="radio" name="competCategorie" value="artiste">
+                    <span class="cat-chip artiste"><i class="fas fa-music"></i> Artistique</span>
+                </label>
+                <label class="cat-radio">
+                    <input type="radio" name="competCategorie" value="mixte">
+                    <span class="cat-chip mixte"><i class="fas fa-seedling"></i> Mixte</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="competNiveau">Niveau</label>
+                <select id="competNiveau">
+                    <option value="">— Sélectionnez —</option>
+                    <option value="Local">Local</option>
+                    <option value="Régional">Régional</option>
+                    <option value="National">National</option>
+                    <option value="Continental">Continental</option>
+                    <option value="International">International</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="competLieu">Lieu</label>
+                <input type="text" id="competLieu" placeholder="Ex : Stade de l'Amitié, Cotonou">
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="competDateDebut">Date de début *</label>
+                <input type="date" id="competDateDebut">
+            </div>
+            <div class="form-group">
+                <label for="competDateFin">Date de fin <span class="label-note">(optionnel si un seul jour)</span></label>
+                <input type="date" id="competDateFin">
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="competParticipants">Talents participants <span class="label-note">(optionnel)</span></label>
+                <input type="number" id="competParticipants" min="0" placeholder="Ex : 12">
+            </div>
+            <div class="form-group">
+                <label for="competResultat">Résultat <span class="label-note">(à remplir après)</span></label>
+                <input type="text" id="competResultat" placeholder="Ex : Champion régional, Demi-finale…">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="competDescription">Notes <span class="label-note">(optionnel)</span></label>
+            <textarea id="competDescription" rows="3" placeholder="Détails, objectifs, contexte…"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-secondary" id="btnResetForm"><i class="fas fa-eraser"></i> Réinitialiser</button>
+            <button class="btn-primary" id="btnSaveCompet"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+    </div>
+    <!-- ===== FIN FORMULAIRE ===== -->
+
+    <!-- ===== DEBUT LISTE DES COMPÉTITIONS ===== -->
+    <div class="compet-list-panel glass-card">
+        <h3 class="section-title"><i class="fas fa-layer-group"></i> Toutes les compétitions</h3>
+        <div class="filter-tabs" id="competFilters">
+            <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> Toutes</button>
+            <button class="filter-btn" data-filter="a_venir"><i class="fas fa-hourglass-half"></i> À venir</button>
+            <button class="filter-btn" data-filter="en_cours"><i class="fas fa-running"></i> En cours</button>
+            <button class="filter-btn" data-filter="terminee"><i class="fas fa-flag-checkered"></i> Terminées</button>
+        </div>
+        <div id="competGrid" class="compet-grid">
+            <p class="empty-state" id="competEmpty">
+                <i class="fas fa-trophy"></i> Aucune compétition enregistrée pour l'instant.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN LISTE ===== -->
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-school"></i> Ministère Sport · APDP Bénin</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="academie-compet.js"></script>
+</body>
+</html>

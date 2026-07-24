@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Mes Athlètes · Espace Académie · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="academie-athletes.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-user-graduate"></i> Mes Athlètes</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/academie-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/academie-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-school"></i><h3>Menu Académie Sportive</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Pilotage de l'Académie</div>
+        <a href="../dashboard/academie-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="academie-athletes.html" class="active">
+            <i class="fas fa-user-graduate"></i><span>Mes Athlètes</span>
+        </a>
+        <a href="../formateurs/academie-formateurs.html">
+            <i class="fas fa-chalkboard-teacher"></i><span>Mes Formateurs</span>
+        </a>
+        <a href="../programme/academie-prog.html">
+            <i class="fas fa-calendar"></i><span>Programmes</span>
+        </a>
+        <a href="../competitions/academie-compet.html">
+            <i class="fas fa-trophy"></i><span>Compétitions</span>
+        </a>
+        <a href="../stats/academie-stats.html">
+            <i class="fas fa-chart-bar"></i><span>Statistiques</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Mon Institution</div>
+        <a href="../verification/academie-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../cv/academie-cv.html">
+            <i class="fas fa-file-alt"></i><span>CV / Présentation</span>
+        </a>
+        <a href="../opportunites/academie-recrutement.html">
+            <i class="fas fa-bullhorn"></i><span>Recrutement & Opportunités</span>
+        </a>
+        <a href="../revenus/academie-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/academie-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="athletes-main">
+<div class="athletes-container">
+
+    <h1 class="page-title"><i class="fas fa-user-graduate"></i> Mes Athlètes — Sportifs & Artistes</h1>
+    <p class="page-subtitle">
+        Recrutez et gérez l'effectif de votre académie. Chaque liaison doit être confirmée
+        par le talent — c'est elle qui alimente votre vitrine et vos statistiques publiques.
+    </p>
+
+    <!-- ===== DEBUT STATS RAPIDES ===== -->
+    <div class="athletes-stats-grid">
+        <div class="astat-card quota-stat">
+            <div class="astat-icon total"><i class="fas fa-user-graduate"></i></div>
+            <div class="astat-body">
+                <span class="astat-value" id="statQuota">0 / 160</span>
+                <span class="astat-label">Effectif total</span>
+                <div class="quota-track-mini">
+                    <div class="quota-fill-mini" id="statQuotaFill" style="width:0%;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="astat-card">
+            <div class="astat-icon sportif"><i class="fas fa-futbol"></i></div>
+            <div class="astat-body">
+                <span class="astat-value" id="statSportifs">0</span>
+                <span class="astat-label">Sportifs</span>
+            </div>
+        </div>
+        <div class="astat-card">
+            <div class="astat-icon artiste"><i class="fas fa-music"></i></div>
+            <div class="astat-body">
+                <span class="astat-value" id="statArtistes">0</span>
+                <span class="astat-label">Artistes</span>
+            </div>
+        </div>
+        <div class="astat-card">
+            <div class="astat-icon attente"><i class="fas fa-hourglass-half"></i></div>
+            <div class="astat-body">
+                <span class="astat-value" id="statAttente">0</span>
+                <span class="astat-label">Demandes en attente</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN STATS RAPIDES ===== -->
+
+    <!-- ===== DEBUT PANNEAU RECRUTER UN TALENT ===== -->
+    <div class="link-panel glass-card">
+        <h3 class="section-title"><i class="fas fa-user-plus"></i> Recruter un talent</h3>
+        <p class="panel-hint">
+            Demandez au talent son <strong>ID HubISoccer</strong> (il peut le copier depuis son
+            tableau de bord), puis recherchez-le ci-dessous pour lui envoyer une invitation.
+        </p>
+        <div class="search-row">
+            <div class="search-input-wrap">
+                <i class="fas fa-id-card"></i>
+                <input type="text" id="searchTalentId" placeholder="Ex : 26HU94WIHBI2026SBJFOOT…" autocomplete="off">
+            </div>
+            <button class="btn-primary" id="btnSearchTalent">
+                <i class="fas fa-search"></i> Rechercher
+            </button>
+        </div>
+
+        <!-- Résultat de recherche (rempli par JS) -->
+        <div id="searchResult" class="search-result" style="display:none;">
+            <div class="found-talent">
+                <div class="found-avatar-wrap">
+                    <img src="" id="foundAvatar" alt="Avatar" style="display:none;">
+                    <div class="found-initials" id="foundInitials">?</div>
+                </div>
+                <div class="found-info">
+                    <h4 id="foundName">—</h4>
+                    <p id="foundId" class="found-id">ID : —</p>
+                    <p id="foundRole" class="found-role">—</p>
+                </div>
+            </div>
+            <div class="link-form">
+                <div class="form-group">
+                    <label>Type de talent *</label>
+                    <div class="type-radio-row">
+                        <label class="type-radio">
+                            <input type="radio" name="talentType" value="sportif" checked>
+                            <span class="type-chip sportif"><i class="fas fa-futbol"></i> Sportif</span>
+                        </label>
+                        <label class="type-radio">
+                            <input type="radio" name="talentType" value="artiste">
+                            <span class="type-chip artiste"><i class="fas fa-music"></i> Artiste</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="talentDiscipline">Discipline</label>
+                    <input type="text" id="talentDiscipline" placeholder="Ex : Footballeur, Danseur, Basketteur…">
+                </div>
+                <div class="form-group">
+                    <label for="linkMessage">Message joint à l'invitation (optionnel)</label>
+                    <textarea id="linkMessage" rows="2" placeholder="Ex : Nous serions ravis de vous accueillir dans notre académie…"></textarea>
+                </div>
+                <div class="link-actions">
+                    <button class="btn-secondary" id="btnCancelSearch"><i class="fas fa-times"></i> Annuler</button>
+                    <button class="btn-primary" id="btnSendRequest"><i class="fas fa-paper-plane"></i> Envoyer l'invitation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN PANNEAU RECRUTER ===== -->
+
+    <!-- ===== DEBUT DEMANDES REÇUES (candidatures de talents) ===== -->
+    <div class="requests-received glass-card">
+        <h3 class="section-title"><i class="fas fa-inbox"></i> Candidatures reçues</h3>
+        <div id="receivedList" class="requests-grid">
+            <p class="empty-state" id="receivedEmpty">
+                <i class="fas fa-inbox"></i> Aucune candidature reçue pour le moment.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN DEMANDES REÇUES ===== -->
+
+    <!-- ===== DEBUT INVITATIONS ENVOYÉES ===== -->
+    <div class="requests-sent glass-card">
+        <h3 class="section-title"><i class="fas fa-paper-plane"></i> Invitations envoyées (en attente)</h3>
+        <div id="sentList" class="requests-grid">
+            <p class="empty-state" id="sentEmpty">
+                <i class="fas fa-paper-plane"></i> Aucune invitation en attente de réponse.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN INVITATIONS ENVOYÉES ===== -->
+
+    <!-- ===== DEBUT MON EFFECTIF ===== -->
+    <div class="my-athletes glass-card">
+        <h3 class="section-title"><i class="fas fa-users"></i> Mon effectif</h3>
+        <div class="filter-tabs" id="filterTabs">
+            <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> Tous</button>
+            <button class="filter-btn" data-filter="sportif"><i class="fas fa-futbol"></i> Sportifs</button>
+            <button class="filter-btn" data-filter="artiste"><i class="fas fa-music"></i> Artistes</button>
+            <button class="filter-btn" data-filter="featured"><i class="fas fa-star"></i> Mis en avant</button>
+        </div>
+        <div id="athletesList" class="athletes-grid">
+            <p class="empty-state" id="athletesEmpty">
+                <i class="fas fa-user-friends"></i> Aucun athlète dans votre effectif pour l'instant.
+                Envoyez votre première invitation ci-dessus. 💪🏾
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN MON EFFECTIF ===== -->
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-school"></i> Ministère Sport · APDP Bénin</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="academie-athletes.js"></script>
+</body>
+</html>

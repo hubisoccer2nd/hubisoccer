@@ -496,13 +496,14 @@ async function loadPilotWidgets() {
         sub.textContent = restantes > 0 ? restantes + ' places disponibles' : 'Quota atteint';
     }
 
-    /* Formateurs actifs (table academie_formateurs) */
+    /* Formateurs actifs (table academie_formateurs) — statut 'accepte'
+       (même vocabulaire que academie_athletes : en_attente/accepte/refuse) */
     try {
         const { count, error } = await supabaseClient
             .from(FORMATEURS_TABLE)
             .select('id', { count: 'exact', head: true })
             .eq('academie_id', academieProfile.hubisoccer_id)
-            .eq('statut', 'actif');
+            .eq('statut', 'accepte');
         setText('pilotFormateurs', (!error && count !== null) ? count : 0);
     } catch (e) {
         setText('pilotFormateurs', 0);

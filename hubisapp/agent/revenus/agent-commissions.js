@@ -315,7 +315,7 @@ async function loadWallet() {
     hideLoader();
     if (!data || error) {
         showToast('Wallet non configuré. Redirection…', 'warning');
-        setTimeout(function() { window.location.href = 'agent-commissions-setup.html'; }, 1500);
+        setTimeout(function() { window.location.href = 'agent-revenus-setup.html'; }, 1500);
         return null;
     }
     if (data.status === 'suspended') {

@@ -675,7 +675,6 @@ function showTxSkeleton(show) { const sk = document.getElementById('txSkeleton')
 // ============================================================
 // EXPORT PDF
 // ============================================================
-
 // Début fonction exportTransactionsToPDF
 async function exportTransactionsToPDF() {
     if (!walletData) { showToast('Wallet non chargé', 'error'); return; }

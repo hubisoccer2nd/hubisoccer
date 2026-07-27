@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Licence FIFA · Espace Agent FIFA · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="agent-licences.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav no-print">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-certificate"></i> Licence FIFA</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/agent-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/agent-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar no-print" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-briefcase"></i><h3>Menu Agent FIFA</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="../dashboard/agent-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../verification/agent-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../talents/agent-talents.html">
+            <i class="fas fa-users"></i><span>Mes Talents</span>
+        </a>
+        <a href="../decouvrir/agent-decouvrir.html">
+            <i class="fas fa-binoculars"></i><span>Découvrez mes talents</span>
+        </a>
+        <a href="../contrats/agent-contrats.html">
+            <i class="fas fa-file-signature"></i><span>Mes Contrats</span>
+        </a>
+        <a href="../commissions/agent-commissions.html">
+            <i class="fas fa-hand-holding-usd"></i><span>Mes Commissions</span>
+        </a>
+        <a href="../revenus/agent-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <a href="agent-licences.html" class="active">
+            <i class="fas fa-certificate"></i><span>Licence FIFA</span>
+        </a>
+        <a href="../cv/agent-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/agent-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="licences-main">
+<div class="licences-container">
+
+    <h1 class="page-title no-print"><i class="fas fa-certificate"></i> Licence FIFA</h1>
+    <p class="page-subtitle no-print">
+        Votre certificat officiel, l'historique de vos renouvellements et le suivi de votre
+        formation continue — Corps, Âme et Esprit d'une licence bien tenue.
+    </p>
+
+    <!-- ===== DEBUT STATS RAPIDES ===== -->
+    <div class="licences-stats-grid no-print">
+        <div class="lstat-card">
+            <div class="lstat-icon statut"><i class="fas fa-shield-alt"></i></div>
+            <div class="lstat-body">
+                <span class="lstat-value" id="statStatut">—</span>
+                <span class="lstat-label">Statut actuel</span>
+            </div>
+        </div>
+        <div class="lstat-card">
+            <div class="lstat-icon jours"><i class="fas fa-hourglass-half"></i></div>
+            <div class="lstat-body">
+                <span class="lstat-value" id="statJours">—</span>
+                <span class="lstat-label">Jours restants</span>
+            </div>
+        </div>
+        <div class="lstat-card">
+            <div class="lstat-icon renouv"><i class="fas fa-history"></i></div>
+            <div class="lstat-body">
+                <span class="lstat-value" id="statRenouv">0</span>
+                <span class="lstat-label">Renouvellements</span>
+            </div>
+        </div>
+        <div class="lstat-card">
+            <div class="lstat-icon formation"><i class="fas fa-graduation-cap"></i></div>
+            <div class="lstat-body">
+                <span class="lstat-value" id="statFormation">0</span>
+                <span class="lstat-label">Heures de formation</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN STATS RAPIDES ===== -->
+
+    <!-- ===== DEBUT ALERTES ===== -->
+    <div class="alerts-section glass-card no-print">
+        <h3 class="section-title"><i class="fas fa-bell"></i> Alertes</h3>
+        <div id="alertsList" class="alerts-list">
+            <p class="empty-state" id="alertsEmpty">
+                <i class="fas fa-check-circle"></i> Tout est en ordre. Aucune alerte pour l'instant. 🌱
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN ALERTES ===== -->
+
+    <!-- ===== DEBUT CORPS — CERTIFICAT OFFICIEL ===== -->
+    <div class="glass-card certificat-panel">
+        <h3 class="section-title no-print"><i class="fas fa-scroll"></i> Corps — Certificat officiel</h3>
+
+        <div class="certificat" id="certificatPrintZone">
+            <div class="certificat-border">
+                <div class="certificat-seal"><i class="fas fa-futbol"></i></div>
+                <div class="certificat-brand">HubISoccer</div>
+                <div class="certificat-title">Certificat de Licence d'Agent FIFA</div>
+                <div class="certificat-name" id="certNom">—</div>
+                <div class="certificat-row"><span>N° de licence</span><span id="certNumero">—</span></div>
+                <div class="certificat-row"><span>Délivrée le</span><span id="certDate">—</span></div>
+                <div class="certificat-row"><span>Valide jusqu'au</span><span id="certExpiration">—</span></div>
+                <div class="certificat-row"><span>Cabinet / Structure</span><span id="certCabinet">—</span></div>
+                <div class="certificat-row"><span>Pays d'exercice</span><span id="certPays">—</span></div>
+                <div class="certificat-id">ID HubISoccer : <span id="certId">—</span></div>
+                <div class="certificat-footer">Vérifiez l'authenticité de ce certificat sur hubisoccer.site</div>
+            </div>
+        </div>
+
+        <div class="certificat-actions no-print">
+            <button class="btn-primary" id="btnPrint"><i class="fas fa-print"></i> Imprimer / Télécharger en PDF</button>
+        </div>
+    </div>
+    <!-- ===== FIN CORPS ===== -->
+
+    <!-- ===== DEBUT AME — HISTORIQUE DES RENOUVELLEMENTS ===== -->
+    <div class="glass-card no-print">
+        <h3 class="section-title" id="histFormTitle"><i class="fas fa-history"></i> Âme — Ajouter un renouvellement</h3>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="histNumero">Numéro de licence *</label>
+                <input type="text" id="histNumero" placeholder="Ex : FIFA-AG-2024-00451">
+            </div>
+            <div class="form-group">
+                <label for="histOrganisme">Organisme émetteur</label>
+                <input type="text" id="histOrganisme" placeholder="Ex : FIFA, Fédération Béninoise de Football">
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="histDateDebut">Date de début *</label>
+                <input type="date" id="histDateDebut">
+            </div>
+            <div class="form-group">
+                <label for="histDateFin">Date de fin</label>
+                <input type="date" id="histDateFin">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="histStatut">Statut</label>
+            <select id="histStatut">
+                <option value="actif">Actif</option>
+                <option value="expire">Expiré</option>
+                <option value="renouvele">Renouvelé</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="histNotes">Notes <span class="label-note">(optionnel)</span></label>
+            <textarea id="histNotes" rows="2" placeholder="Détails du renouvellement…"></textarea>
+        </div>
+        <div class="form-actions">
+            <button class="btn-secondary" id="btnResetHist"><i class="fas fa-eraser"></i> Réinitialiser</button>
+            <button class="btn-primary" id="btnSaveHist"><i class="fas fa-plus"></i> Ajouter</button>
+        </div>
+
+        <div class="timeline" id="historiqueTimeline">
+            <p class="empty-state" id="historiqueEmpty">
+                <i class="fas fa-history"></i> Aucun renouvellement enregistré pour l'instant.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN AME ===== -->
+
+    <!-- ===== DEBUT ESPRIT — FORMATION CONTINUE ===== -->
+    <div class="glass-card no-print">
+        <h3 class="section-title" id="formFormTitle"><i class="fas fa-graduation-cap"></i> Esprit — Ajouter une formation continue</h3>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="formIntitule">Intitulé de la formation *</label>
+                <input type="text" id="formIntitule" placeholder="Ex : Réglementation FIFA 2026">
+            </div>
+            <div class="form-group">
+                <label for="formOrganisme">Organisme</label>
+                <input type="text" id="formOrganisme" placeholder="Ex : FIFA Academy">
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="formDate">Date de la formation *</label>
+                <input type="date" id="formDate">
+            </div>
+            <div class="form-group">
+                <label for="formHeures">Heures suivies</label>
+                <input type="number" id="formHeures" min="0" step="0.5" placeholder="Ex : 8">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="formNotes">Notes <span class="label-note">(optionnel)</span></label>
+            <textarea id="formNotes" rows="2" placeholder="Contenu, certificat obtenu…"></textarea>
+        </div>
+        <div class="form-actions">
+            <button class="btn-secondary" id="btnResetForm"><i class="fas fa-eraser"></i> Réinitialiser</button>
+            <button class="btn-primary" id="btnSaveFormation"><i class="fas fa-plus"></i> Ajouter</button>
+        </div>
+
+        <div class="timeline" id="formationTimeline">
+            <p class="empty-state" id="formationEmpty">
+                <i class="fas fa-graduation-cap"></i> Aucune formation enregistrée pour l'instant.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN ESPRIT ===== -->
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container no-print"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer no-print">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-briefcase"></i> FIFA · FIFPro</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="agent-licences.js"></script>
+</body>
+</html>

@@ -10,12 +10,16 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
 <div id="globalLoader" class="global-loader" style="display:none;">
     <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
 </div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
 <nav class="dashboard-nav">
     <div class="nav-left">
-        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='/'">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
         <span class="dashboard-title"><i class="fas fa-hands-helping"></i> Espace Parrain</span>
     </div>
     <div class="nav-right">
@@ -63,6 +67,9 @@
         <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
     </div>
 </nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
 <div class="sidebar left-sidebar" id="leftSidebar">
     <div class="sidebar-header">
         <div class="sidebar-logo"><i class="fas fa-hands-helping"></i><h3>Menu Parrain</h3></div>
@@ -77,25 +84,19 @@
             <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
         </a>
         <a href="../proteges/parrain-proteges.html">
-            <i class="fas fa-user-friends"></i><span>Mes Protégés</span>
+            <i class="fas fa-child"></i><span>Mes Protégés</span>
         </a>
         <a href="../dons/parrain-dons.html">
-            <i class="fas fa-hand-holding-usd"></i><span>Mes Dons & Bourses</span>
-        </a>
-        <a href="../mentorat/parrain-mentorat.html">
-            <i class="fas fa-comments"></i><span>Sessions Mentorat</span>
-        </a>
-        <a href="../impact/parrain-impact.html">
-            <i class="fas fa-chart-line"></i><span>Mon Impact</span>
+            <i class="fas fa-hand-holding-heart"></i><span>Mes Dons</span>
         </a>
         <a href="../cv/parrain-cv.html">
-            <i class="fas fa-file-alt"></i><span>Mon Profil</span>
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
         </a>
         <div class="nav-divider"></div>
         <div class="nav-group-label">Plateforme</div>
         <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
         <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
-        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
         <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
         <div class="nav-divider"></div>
         <a href="../support/parrain-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
@@ -103,8 +104,13 @@
     </nav>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
 <main class="dashboard-main">
 <div class="dashboard-container">
+
+    <!-- ===== DEBUT CARTE PROFIL ===== -->
     <aside class="profile-card glass-card">
         <div class="avatar-upload" onclick="triggerUpload()">
             <div id="profileAvatarContainer" class="avatar-container">
@@ -149,7 +155,11 @@
             <i class="fas fa-file-pdf"></i> Télécharger mon CV PDF
         </a>
     </aside>
+    <!-- ===== FIN CARTE PROFIL ===== -->
+
     <div class="main-panel">
+
+        <!-- En-tête parrain -->
         <div class="parrain-header glass-card">
             <div class="parrain-header-left">
                 <h1 id="parrainFullName">—</h1>
@@ -164,97 +174,169 @@
                 </div>
             </div>
         </div>
+
+        <!-- ===== DEBUT WIDGETS DE PILOTAGE ===== -->
+        <div class="pilot-grid">
+            <button class="pilot-card" onclick="location.href='../proteges/parrain-proteges.html'">
+                <div class="pilot-icon esprit"><i class="fas fa-child"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotProteges">0</span>
+                    <span class="pilot-label">Protégés suivis</span>
+                    <span class="pilot-sub">Talents accompagnés</span>
+                </div>
+            </button>
+            <button class="pilot-card" onclick="location.href='../dons/parrain-dons.html'">
+                <div class="pilot-icon gold"><i class="fas fa-hand-holding-heart"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value pilot-value-sm" id="pilotDons">0 €</span>
+                    <span class="pilot-label">Dons totaux versés</span>
+                    <span class="pilot-sub">Depuis le début</span>
+                </div>
+            </button>
+            <button class="pilot-card" onclick="location.href='../dons/parrain-dons.html'">
+                <div class="pilot-icon corps"><i class="fas fa-graduation-cap"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotBourses">0</span>
+                    <span class="pilot-label">Bourses accordées</span>
+                    <span class="pilot-sub">Études financées</span>
+                </div>
+            </button>
+            <button class="pilot-card" onclick="location.href='../proteges/parrain-proteges.html'">
+                <div class="pilot-icon ame"><i class="fas fa-comments"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotSessions">0</span>
+                    <span class="pilot-label">Sessions de mentorat</span>
+                    <span class="pilot-sub">Accompagnement personnalisé</span>
+                </div>
+            </button>
+        </div>
+        <!-- ===== FIN WIDGETS DE PILOTAGE ===== -->
+
+        <!-- ===== DEBUT ALERTES ===== -->
+        <div class="alerts-section glass-card">
+            <h3 class="section-title"><i class="fas fa-bell"></i> Alertes</h3>
+            <div id="alertsList" class="alerts-list">
+                <p class="empty-state" id="alertsEmpty">
+                    <i class="fas fa-check-circle"></i> Tout est en ordre. Aucune alerte pour l'instant. 🌱
+                </p>
+            </div>
+        </div>
+        <!-- ===== FIN ALERTES ===== -->
+
+        <!-- Stats globales -->
         <div class="global-stats-grid">
             <div class="stat-card-global"><div class="stat-card-label">PROTÉGÉS SUIVIS</div><div class="stat-card-value" id="nbProteges">—</div></div>
             <div class="stat-card-global"><div class="stat-card-label">DONS TOTAUX VERSÉS</div><div class="stat-card-value" id="totalDons">—</div></div>
             <div class="stat-card-global"><div class="stat-card-label">BOURSES ACCORDÉES</div><div class="stat-card-value" id="nbBourses">—</div></div>
             <div class="stat-card-global"><div class="stat-card-label">ANNÉES D'ACTIVITÉ</div><div class="stat-card-value" id="anneesAct">—</div></div>
         </div>
-        <div class="info-contrat glass-card">
-            <h3 class="section-title"><i class="fas fa-file-contract"></i> Situation contractuelle</h3>
-            <div class="info-contrat-grid">
-                <div class="info-item"><span class="info-label"><i class="fas fa-coins"></i> Salaire / Honoraires</span><span class="info-value" id="salary">—</span></div>
-                <div class="info-item"><span class="info-label"><i class="fas fa-calendar-times"></i> Expire le</span><span class="info-value" id="contractExpiry">—</span></div>
-                <div class="info-item"><span class="info-label"><i class="fas fa-chart-line"></i> Évaluation / Cote</span><span class="info-value" id="marketValue">—</span></div>
-                <div class="info-item"><span class="info-label"><i class="fas fa-id-badge"></i> Statut professionnel</span><span class="info-value" id="statutPro">—</span></div>
-            </div>
-        </div>
+
+        <!-- Compétences principales -->
         <div class="main-skills glass-card">
             <h3 class="section-title"><i class="fas fa-chart-bar"></i> Compétences principales</h3>
             <div class="skills-grid">
-                    <div class="skill-item"><span class="skill-label">Accompagnement</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_acc" style="width:0%"></div></div><span class="skill-value" id="skill_acc_value">0</span></div>
-                    <div class="skill-item"><span class="skill-label">Financement</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_fin" style="width:0%"></div></div><span class="skill-value" id="skill_fin_value">0</span></div>
-                    <div class="skill-item"><span class="skill-label">Réseau institutionnel</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_res" style="width:0%"></div></div><span class="skill-value" id="skill_res_value">0</span></div>
-                    <div class="skill-item"><span class="skill-label">Mentorat</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_mentor" style="width:0%"></div></div><span class="skill-value" id="skill_mentor_value">0</span></div>
-                    <div class="skill-item"><span class="skill-label">Communication</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_comm" style="width:0%"></div></div><span class="skill-value" id="skill_comm_value">0</span></div>
-                    <div class="skill-item"><span class="skill-label">Suivi de parcours</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_suivi" style="width:0%"></div></div><span class="skill-value" id="skill_suivi_value">0</span></div>
-                    <div class="skill-item"><span class="skill-label">Éthique</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_eth" style="width:0%"></div></div><span class="skill-value" id="skill_eth_value">0</span></div>
-                    <div class="skill-item"><span class="skill-label">Impact communautaire</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_impact" style="width:0%"></div></div><span class="skill-value" id="skill_impact_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Accompagnement</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_acc" style="width:0%"></div></div><span class="skill-value" id="skill_acc_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Financement</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_fin" style="width:0%"></div></div><span class="skill-value" id="skill_fin_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Réseau institutionnel</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_res" style="width:0%"></div></div><span class="skill-value" id="skill_res_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Mentorat</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_mentor" style="width:0%"></div></div><span class="skill-value" id="skill_mentor_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Communication</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_comm" style="width:0%"></div></div><span class="skill-value" id="skill_comm_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Suivi de parcours</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_suivi" style="width:0%"></div></div><span class="skill-value" id="skill_suivi_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Éthique</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_eth" style="width:0%"></div></div><span class="skill-value" id="skill_eth_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Impact communautaire</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_impact" style="width:0%"></div></div><span class="skill-value" id="skill_impact_value">0</span></div>
             </div>
         </div>
+
+        <!-- Profil détaillé Trinité -->
         <div class="attributes-section glass-card">
             <h3 class="section-title"><i class="fas fa-list-ul"></i> Profil détaillé — Corps · Âme · Esprit</h3>
             <div class="attributes-tabs">
-                    <button class="attr-tab active" data-cat="competences"><i class="fas fa-hands-helping"></i> Esprit — Compétences Parrain</button>
-                    <button class="attr-tab" data-cat="activite"><i class="fas fa-chart-pie"></i> Âme — Activité & Impact</button>
-                    <button class="attr-tab" data-cat="contrat"><i class="fas fa-file-contract"></i> Corps — Engagement & Structure</button>
+                <button class="attr-tab active" data-cat="competences"><i class="fas fa-hands-helping"></i> Esprit — Compétences Parrain</button>
+                <button class="attr-tab" data-cat="activite"><i class="fas fa-chart-pie"></i> Âme — Activité & Impact</button>
+                <button class="attr-tab" data-cat="contrat"><i class="fas fa-file-contract"></i> Corps — Engagement & Structure</button>
             </div>
-                <div id="competences-attrs" class="attr-content active">
-                    <div class="attr-grid">
-                        <div class="attr-item"><span class="attr-name">Accompagnement humain</span><span class="attr-value" id="cp_acc">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Gestion de projet</span><span class="attr-value" id="cp_pro">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Financement / Bourses</span><span class="attr-value" id="cp_fin">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Réseau institutionnel</span><span class="attr-value" id="cp_res">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Mentorat personnalisé</span><span class="attr-value" id="cp_men">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Communication</span><span class="attr-value" id="cp_com">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Suivi de parcours</span><span class="attr-value" id="cp_sui">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Éthique sportive</span><span class="attr-value" id="cp_eth">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Orientation scolaire</span><span class="attr-value" id="cp_sco">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Orientation carrière</span><span class="attr-value" id="cp_car">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Impact communautaire</span><span class="attr-value" id="cp_imp">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Écoute active</span><span class="attr-value" id="cp_eco">0</span></div>
-                    </div>
+            <div id="competences-attrs" class="attr-content active">
+                <div class="attr-grid">
+                    <div class="attr-item"><span class="attr-name">Accompagnement humain</span><span class="attr-value" id="cp_acc">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Gestion de projet</span><span class="attr-value" id="cp_pro">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Financement / Bourses</span><span class="attr-value" id="cp_fin">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Réseau institutionnel</span><span class="attr-value" id="cp_res">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Mentorat personnalisé</span><span class="attr-value" id="cp_men">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Communication</span><span class="attr-value" id="cp_com">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Suivi de parcours</span><span class="attr-value" id="cp_sui">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Éthique sportive</span><span class="attr-value" id="cp_eth">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Orientation scolaire</span><span class="attr-value" id="cp_sco">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Orientation carrière</span><span class="attr-value" id="cp_car">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Impact communautaire</span><span class="attr-value" id="cp_imp">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Écoute active</span><span class="attr-value" id="cp_eco">0</span></div>
                 </div>
-                <div id="activite-attrs" class="attr-content">
-                    <div class="attr-grid">
-                        <div class="attr-item"><span class="attr-name">Protégés suivis (total)</span><span class="attr-value" id="ac_pro">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Dons financiers totaux</span><span class="attr-value" id="ac_don">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Bourses accordées</span><span class="attr-value" id="ac_bou">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Sessions de mentorat</span><span class="attr-value" id="ac_ses">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Réussites de protégés</span><span class="attr-value" id="ac_reu">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Études financées</span><span class="attr-value" id="ac_etu">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Années d'activité</span><span class="attr-value" id="ac_ann">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Score d'impact global</span><span class="attr-value" id="ac_sco">0</span></div>
-                    </div>
+            </div>
+            <div id="activite-attrs" class="attr-content">
+                <div class="attr-grid">
+                    <div class="attr-item"><span class="attr-name">Protégés suivis (total)</span><span class="attr-value" id="ac_pro">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Dons financiers totaux</span><span class="attr-value" id="ac_don">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Bourses accordées</span><span class="attr-value" id="ac_bou">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Sessions de mentorat</span><span class="attr-value" id="ac_ses">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Réussites de protégés</span><span class="attr-value" id="ac_reu">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Études financées</span><span class="attr-value" id="ac_etu">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Années d'activité</span><span class="attr-value" id="ac_ann">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Score d'impact global</span><span class="attr-value" id="ac_sco">0</span></div>
                 </div>
-                <div id="contrat-attrs" class="attr-content">
-                    <div class="attr-grid">
-                        <div class="attr-item"><span class="attr-name">Organisme / ONG</span><span class="attr-value" id="co_org">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Type d'engagement</span><span class="attr-value" id="co_typ">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Date début parrainage</span><span class="attr-value" id="co_deb">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Convention en cours</span><span class="attr-value" id="co_con">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Budget annuel alloué</span><span class="attr-value" id="co_bud">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Partenaires institutionnels</span><span class="attr-value" id="co_par">0</span></div>
-                        <div class="attr-item"><span class="attr-name">Note d'évaluation</span><span class="attr-value" id="co_not">0</span></div>
-                    </div>
+            </div>
+            <div id="contrat-attrs" class="attr-content">
+                <div class="attr-grid">
+                    <div class="attr-item"><span class="attr-name">Organisme / ONG</span><span class="attr-value" id="co_org">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Type d'engagement</span><span class="attr-value" id="co_typ">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Date début parrainage</span><span class="attr-value" id="co_deb">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Convention en cours</span><span class="attr-value" id="co_con">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Budget annuel alloué</span><span class="attr-value" id="co_bud">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Partenaires institutionnels</span><span class="attr-value" id="co_par">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Note d'évaluation</span><span class="attr-value" id="co_not">0</span></div>
                 </div>
+            </div>
         </div>
+
+        <!-- Notes & Évaluations -->
         <div class="reports-section glass-card">
             <h3 class="section-title"><i class="fas fa-file-signature"></i> Notes & Évaluations</h3>
             <div class="reports-body">
                 <p id="scoutingReports" class="reports-text">Aucune note pour le moment.</p>
             </div>
         </div>
+
+        <!-- ===== DEBUT ACTIONS RAPIDES ===== -->
+        <div class="quick-actions glass-card">
+            <h3 class="section-title"><i class="fas fa-bolt"></i> Actions rapides</h3>
+            <div class="quick-grid">
+                <a href="../proteges/parrain-proteges.html" class="quick-btn">
+                    <i class="fas fa-child"></i><span>Voir mes protégés</span>
+                </a>
+                <a href="../dons/parrain-dons.html" class="quick-btn">
+                    <i class="fas fa-hand-holding-heart"></i><span>Enregistrer un don</span>
+                </a>
+                <a href="../verification/parrain-verif.html" class="quick-btn">
+                    <i class="fas fa-shield-alt"></i><span>Vérifier mon statut</span>
+                </a>
+                <a href="../cv/parrain-cv.html" class="quick-btn">
+                    <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+                </a>
+            </div>
+        </div>
+        <!-- ===== FIN ACTIONS RAPIDES ===== -->
+
     </div>
 </div>
 </main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
 <div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
 <footer class="dashboard-footer">
     <div class="footer-content">
         <div class="compliance-badges">
             <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
             <span class="badge"><i class="fas fa-hands-helping"></i> HubISoccer · Triple Projet</span>
-            <span class="badge"><i class="fas fa-seedling"></i> Esprit</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Sport-Étude-Carrière</span>
         </div>
         <div class="contact-info">
             <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
@@ -267,6 +349,8 @@
         </div>
     </div>
 </footer>
+<!-- ===== FIN FOOTER ===== -->
+
 <script src="parrain-dash.js"></script>
 </body>
 </html>

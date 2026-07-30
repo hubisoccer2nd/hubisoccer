@@ -373,4 +373,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('langSelect')?.addEventListener('change', function(e) {
         showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
+
+    /* Pre-remplissage depuis Scouting (?nom=&prenom=&role=) */
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('nom') || params.get('prenom')) {
+        openAdd();
+        const elNom = document.getElementById('f_nom_protege');
+        const elPrenom = document.getElementById('f_prenom_protege');
+        const elRole = document.getElementById('f_role_protege');
+        if (elNom) { elNom.value = params.get('nom') || ''; }
+        if (elPrenom) { elPrenom.value = params.get('prenom') || ''; }
+        if (elRole) { elRole.value = params.get('role') || ''; }
+    }
 });

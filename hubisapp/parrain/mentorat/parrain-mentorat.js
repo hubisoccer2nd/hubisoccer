@@ -1,41 +1,44 @@
 /* ============================================================
-   HubISoccer — parrain-mentorat.js
-   Espace Parrain · Sessions de Mentorat
+   HubISoccer -- parrain-mentorat.js
+   Espace Parrain - Sessions de Mentorat
+   ------------------------------------------------------------
+   Corrections apportees a la version recue :
+   - Le 3e stat recopiait simplement le total (comme sur Mes
+     Proteges) -- ici il n'y a pas de statut a filtrer (c'est un
+     journal de sessions, pas un suivi de statut), donc relabellise
+     en "Objectifs atteints" et calcule sur objectifs_session='Oui',
+     plus pertinent pour un journal de mentorat.
+   - ID sidebar harmonise (closeLeftSidebar).
+   - Le reste (CRUD, recherche, filtre par mode) est conserve.
    ============================================================ */
 
 'use strict';
 
-/* DEBUT : CONFIGURATION SUPABASE */
+/* ---------- 1. CONFIGURATION SUPABASE ---------- */
 const SUPABASE_URL      = 'https://niewavngipvowwxxguqu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
 const supabaseClient    = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.__SUPABASE_CLIENT = supabaseClient;
-/* FIN : CONFIGURATION SUPABASE */
 
-/* DEBUT : ÉTAT GLOBAL */
+/* ---------- 2. ETAT GLOBAL ---------- */
 let currentUser  = null;
 let userProfile  = null;
 let allEntries   = [];
 let editingId    = null;
 const TABLE      = 'supabaseAuthPrive_parrain_mentorat';
 const FK         = 'parrain_id';
-/* FIN : ÉTAT GLOBAL */
 
-/* DEBUT : FONCTION SHOWLOADER */
+/* ---------- 3. LOADER ---------- */
 function showLoader() {
     var l = document.getElementById('globalLoader');
     if (l) l.style.display = 'flex';
 }
-/* FIN : FONCTION SHOWLOADER */
-
-/* DEBUT : FONCTION HIDELOADER */
 function hideLoader() {
     var l = document.getElementById('globalLoader');
     if (l) l.style.display = 'none';
 }
-/* FIN : FONCTION HIDELOADER */
 
-/* DEBUT : FONCTION SHOWTOAST */
+/* ---------- 4. TOAST (duree 30 secondes) ---------- */
 function showToast(msg, type, dur) {
     type = type || 'info';
     dur   = dur || 30000;
@@ -69,17 +72,15 @@ function showToast(msg, type, dur) {
         }
     }, dur);
 }
-/* FIN : FONCTION SHOWTOAST */
 
-/* DEBUT : FONCTION GETINITIALS */
+/* ---------- 5. UTILITAIRES ---------- */
 function getInitials(n) {
     if (!n) return '?';
     var p = n.trim().split(/\s+/);
     return (p.length >= 2 ? p[0][0] + p[p.length - 1][0] : n[0]).toUpperCase();
 }
-/* FIN : FONCTION GETINITIALS */
 
-/* DEBUT : FONCTION CHECKSESSION */
+/* ---------- 6. SESSION ---------- */
 async function checkSession() {
     showLoader();
     const { data: { user }, error } = await supabaseClient.auth.getUser();
@@ -91,9 +92,8 @@ async function checkSession() {
     currentUser = user;
     return currentUser;
 }
-/* FIN : FONCTION CHECKSESSION */
 
-/* DEBUT : FONCTION LOADPROFILE */
+/* ---------- 7. CHARGEMENT PROFIL ---------- */
 async function loadProfile() {
     const { data, error } = await supabaseClient
         .from('supabaseAuthPrive_profiles')
@@ -119,9 +119,8 @@ async function loadProfile() {
         if (ni) ni.style.display = 'none';
     }
 }
-/* FIN : FONCTION LOADPROFILE */
 
-/* DEBUT : FONCTION LOADENTRIES */
+/* ---------- 8. CHARGEMENT DES SESSIONS ---------- */
 async function loadEntries() {
     if (!userProfile) return;
     showLoader();
@@ -139,9 +138,8 @@ async function loadEntries() {
     renderAll();
     updateStats();
 }
-/* FIN : FONCTION LOADENTRIES */
 
-/* DEBUT : FONCTION UPDATESTATS */
+/* ---------- 9. STATS RAPIDES ---------- */
 function updateStats() {
     document.getElementById('statTotal').textContent = allEntries.length;
     var now = new Date(),
@@ -152,14 +150,16 @@ function updateStats() {
         var d = new Date(e.created_at);
         return d.getMonth() === m && d.getFullYear() === y;
     }).length;
-    document.getElementById('statMois').textContent   = mois;
-    document.getElementById('statActifs').textContent  = allEntries.length;
+    document.getElementById('statMois').textContent = mois;
+
+    var objectifsAtteints = allEntries.filter(function(e) { return e.objectifs_session === 'Oui'; }).length;
+    document.getElementById('statActifs').textContent = objectifsAtteints;
+
     var last = allEntries[0];
     document.getElementById('statLast').textContent = last ? (last.nom_protege_session || '—').substring(0, 14) : '—';
 }
-/* FIN : FONCTION UPDATESTATS */
 
-/* DEBUT : FONCTION RENDERALL */
+/* ---------- 10. RENDU DE LA LISTE ---------- */
 function renderAll() {
     var search = document.getElementById('searchInput').value.toLowerCase();
     var filter = document.getElementById('filterSelect').value;
@@ -181,8 +181,9 @@ function renderAll() {
         var dateStr   = item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : '';
         var badgeVal  = item.mode_session || '';
         var meta = '';
-        if (item.date_session) meta += '<span><i class="fas fa-info-circle"></i>' + item.date_session + '</span>';
-        if (dateStr) meta += '<span><i class="fas fa-calendar-alt"></i>' + dateStr + '</span>';
+        if (item.date_session) meta += '<span><i class="fas fa-calendar"></i>Session du ' + item.date_session + '</span>';
+        if (item.theme_session) meta += '<span><i class="fas fa-comment-dots"></i>' + item.theme_session + '</span>';
+        if (dateStr) meta += '<span><i class="fas fa-plus-circle"></i>Ajoutée le ' + dateStr + '</span>';
         card.innerHTML =
             '<div class="entry-card-header">' +
             '<span class="entry-card-title">' + (item.nom_protege_session || 'Sans titre') + '</span>' +
@@ -196,9 +197,8 @@ function renderAll() {
         grid.appendChild(card);
     });
 }
-/* FIN : FONCTION RENDERALL */
 
-/* DEBUT : FONCTION OPENADD */
+/* ---------- 11. AJOUTER ---------- */
 function openAdd() {
     editingId = null;
     document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Ajouter — Sessions de Mentorat';
@@ -206,9 +206,8 @@ function openAdd() {
     document.getElementById('f__id').value = '';
     document.getElementById('entryModal').classList.add('show');
 }
-/* FIN : FONCTION OPENADD */
 
-/* DEBUT : FONCTION OPENEDIT */
+/* ---------- 12. MODIFIER ---------- */
 function openEdit(id) {
     var item = allEntries.find(function(e) { return e.id === id; });
     if (!item) return;
@@ -226,9 +225,8 @@ function openEdit(id) {
     document.getElementById('entryModal').classList.add('show');
 }
 window.openEdit = openEdit;
-/* FIN : FONCTION OPENEDIT */
 
-/* DEBUT : FONCTION DELETEENTRY */
+/* ---------- 13. SUPPRIMER ---------- */
 async function deleteEntry(id) {
     if (!confirm('Supprimer cette entrée ?')) return;
     showLoader();
@@ -244,9 +242,8 @@ async function deleteEntry(id) {
     updateStats();
 }
 window.deleteEntry = deleteEntry;
-/* FIN : FONCTION DELETEENTRY */
 
-/* DEBUT : FONCTION SAVEENTRY */
+/* ---------- 14. ENREGISTRER (ajout ou modification) ---------- */
 async function saveEntry() {
     if (!userProfile) return;
     var data = {
@@ -279,9 +276,8 @@ async function saveEntry() {
     document.getElementById('entryModal').classList.remove('show');
     await loadEntries();
 }
-/* FIN : FONCTION SAVEENTRY */
 
-/* DEBUT : FONCTION INITUI */
+/* ---------- 15. INTERFACE ---------- */
 function initUI() {
     document.getElementById('btnAdd').addEventListener('click', openAdd);
     document.getElementById('modalClose').addEventListener('click', function() { document.getElementById('entryModal').classList.remove('show'); });
@@ -299,9 +295,8 @@ function initUI() {
     document.getElementById('searchInput').addEventListener('input', renderAll);
     document.getElementById('filterSelect').addEventListener('change', renderAll);
 }
-/* FIN : FONCTION INITUI */
 
-/* DEBUT : FONCTION INITUSERMENU */
+/* ---------- 16. MENU UTILISATEUR ---------- */
 function initUserMenu() {
     var m = document.getElementById('userMenu'),
         d = document.getElementById('userDropdown');
@@ -309,14 +304,13 @@ function initUserMenu() {
     m.addEventListener('click', function(e) { e.stopPropagation(); d.classList.toggle('show'); });
     document.addEventListener('click', function() { d.classList.remove('show'); });
 }
-/* FIN : FONCTION INITUSERMENU */
 
-/* DEBUT : FONCTION INITSIDEBAR */
+/* ---------- 17. SIDEBAR + SWIPE ---------- */
 function initSidebar() {
     var sb = document.getElementById('leftSidebar'),
         ov = document.getElementById('sidebarOverlay'),
         mb = document.getElementById('menuToggle'),
-        cb = document.getElementById('closeSidebar');
+        cb = document.getElementById('closeLeftSidebar');
     function open()  { if (sb) sb.classList.add('active'); if (ov) ov.classList.add('active'); document.body.style.overflow = 'hidden'; }
     function close() { if (sb) sb.classList.remove('active'); if (ov) ov.classList.remove('active'); document.body.style.overflow = ''; }
     if (mb) mb.addEventListener('click', open);
@@ -333,9 +327,8 @@ function initSidebar() {
         else if (dx < 0) close();
     }, { passive: false });
 }
-/* FIN : FONCTION INITSIDEBAR */
 
-/* DEBUT : FONCTION INITLOGOUT */
+/* ---------- 18. DECONNEXION ---------- */
 function initLogout() {
     document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(l) {
         l.addEventListener('click', async function(e) {
@@ -345,9 +338,8 @@ function initLogout() {
         });
     });
 }
-/* FIN : FONCTION INITLOGOUT */
 
-/* DEBUT : INITIALISATION */
+/* ---------- 19. INITIALISATION ---------- */
 document.addEventListener('DOMContentLoaded', async function() {
     var user = await checkSession();
     if (!user) return;
@@ -366,4 +358,3 @@ document.addEventListener('DOMContentLoaded', async function() {
         showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
 });
-/* FIN : INITIALISATION */

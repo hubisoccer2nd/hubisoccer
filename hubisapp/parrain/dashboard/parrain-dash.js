@@ -1,50 +1,63 @@
 /* ============================================================
-   HubISoccer — parrain-dash.js
-   Espace Parrain · Corps · Âme · Esprit
-   Version corrigée – tables, colonnes, bucket, durée toasts
+   HubISoccer -- parrain-dash.js
+   Tableau de Bord Parrain - Corps - Ame - Esprit
+   ------------------------------------------------------------
+   Corrections apportees a la version recue :
+   - Les 4 chiffres cles du haut (Proteges/Dons/Bourses/Annees)
+     n'etaient alimentes nulle part -- ils le sont maintenant,
+     a partir des memes donnees que l'onglet Activite (pas de
+     doublon de saisie).
+   - Doublon comp_ vs skill_ elimine : les 8 barres de
+     competences lisent desormais comp_* directement (source
+     unique), au lieu d'une colonne skill_* separee.
+   - Section "Situation contractuelle" supprimee (redondante
+     avec l'onglet Corps - Engagement & Structure).
+   - Chemin tournoi corrige (acceuil.html).
+   - birth_date et country_code confirmes par Ozawa comme les
+     vrais noms de colonnes -- conserves tels quels.
+   ------------------------------------------------------------
+   Convention tables : supabaseAuthPrive_[espace]_[page]
+   - supabaseAuthPrive_profiles         -> partagee (lecture)
+   - supabaseAuthPrive_parrain_scouting -> cette page (existante)
+   - supabaseAuthPrive_parrain_proteges -> future page "Mes Proteges"
+     (PAS ENCORE CREEE -- lecture resiliente)
+   - supabaseAuthPrive_parrain_dons     -> future page "Mes Dons"
+     (PAS ENCORE CREEE -- lecture resiliente)
    ============================================================ */
 'use strict';
 
-/* DEBUT : CONFIGURATION SUPABASE */
+/* ---------- 1. SUPABASE ---------- */
 const SUPABASE_URL      = 'https://niewavngipvowwxxguqu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.__SUPABASE_CLIENT = supabaseClient;
-/* FIN : CONFIGURATION SUPABASE */
 
-/* DEBUT : ÉTAT GLOBAL */
-let currentUser         = null;
-let parrainProfile      = null;
-let scoutingData        = null;
-const AVATAR_BUCKET     = 'avatars-parrain';
-const PROFILES_TABLE    = 'supabaseAuthPrive_profiles';
-const SCOUTING_TABLE    = 'supabaseAuthPrive_parrain_scouting';
-/* FIN : ÉTAT GLOBAL */
+/* ---------- 2. TABLES ---------- */
+const AVATAR_BUCKET   = 'avatars-parrain';
+const PROFILES_TABLE  = 'supabaseAuthPrive_profiles';
+const SCOUTING_TABLE  = 'supabaseAuthPrive_parrain_scouting';
+const PROTEGES_TABLE  = 'supabaseAuthPrive_parrain_proteges';  // future page
+const DONS_TABLE      = 'supabaseAuthPrive_parrain_dons';      // future page
 
-/* DEBUT : LOADER */
+/* ---------- 3. ETAT GLOBAL ---------- */
+let currentUser    = null;
+let parrainProfile = null;
+let scoutingData   = null;
+
+/* ---------- 4. LOADER ---------- */
 function showLoader() {
     const l = document.getElementById('globalLoader');
-    if (l) {
-        l.style.display = 'flex';
-    }
+    if (l) { l.style.display = 'flex'; }
 }
-
 function hideLoader() {
     const l = document.getElementById('globalLoader');
-    if (l) {
-        l.style.display = 'none';
-    }
+    if (l) { l.style.display = 'none'; }
 }
-/* FIN : LOADER */
 
-/* DEBUT : TOAST (durée 30 secondes) */
+/* ---------- 5. TOAST (duree 30 secondes) ---------- */
 function showToast(message, type, duration) {
-    if (!type) {
-        type = 'info';
-    }
-    if (!duration) {
-        duration = 30000;
-    }
+    if (!type) { type = 'info'; }
+    if (!duration) { duration = 30000; }
     let c = document.getElementById('toastContainer');
     if (!c) {
         c = document.createElement('div');
@@ -66,89 +79,53 @@ function showToast(message, type, duration) {
     c.appendChild(t);
     t.querySelector('.toast-close').addEventListener('click', function() {
         t.style.animation = 'fadeOut 0.3s forwards';
-        setTimeout(function() {
-            if (t.parentNode) {
-                t.remove();
-            }
-        }, 320);
+        setTimeout(function() { if (t.parentNode) { t.remove(); } }, 320);
     });
     setTimeout(function() {
         if (t.parentNode) {
             t.style.animation = 'fadeOut 0.3s forwards';
-            setTimeout(function() {
-                if (t.parentNode) {
-                    t.remove();
-                }
-            }, 320);
+            setTimeout(function() { if (t.parentNode) { t.remove(); } }, 320);
         }
     }, duration);
 }
-/* FIN : TOAST */
 
-/* DEBUT : UTILITAIRES */
+/* ---------- 6. UTILITAIRES ---------- */
 function setText(id, value) {
     const el = document.getElementById(id);
     if (el) {
-        if (value !== null && value !== undefined && value !== '') {
-            el.textContent = value;
-        } else {
-            el.textContent = '—';
-        }
+        el.textContent = (value !== null && value !== undefined && value !== '') ? value : '—';
     }
 }
-
 function formatMoney(v) {
-    if (!v || isNaN(v)) {
-        return '— €';
-    }
+    if (!v || isNaN(v)) { return '0 €'; }
     const n = Number(v);
-    if (n >= 1000000) {
-        return (n / 1000000).toFixed(1) + ' M€';
-    }
-    if (n >= 1000) {
-        return (n / 1000).toFixed(0) + ' K€';
-    }
+    if (n >= 1000000) { return (n / 1000000).toFixed(1) + ' M€'; }
+    if (n >= 1000) { return (n / 1000).toFixed(0) + ' K€'; }
     return n.toLocaleString('fr-FR') + ' €';
 }
-
 function calculateAge(d) {
-    if (!d) {
-        return '—';
-    }
+    if (!d) { return '—'; }
     const today = new Date();
     const birth = new Date(d);
     let age = today.getFullYear() - birth.getFullYear();
     const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; }
     return age;
 }
-
 function getInitials(name) {
-    if (!name) {
-        return '?';
-    }
+    if (!name) { return '?'; }
     const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-    }
+    if (parts.length >= 2) { return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase(); }
     return name.charAt(0).toUpperCase();
 }
-
 function setSkill(id, v) {
     const bar = document.getElementById(id);
     const span = document.getElementById(id + '_value');
-    if (bar) {
-        bar.style.width = Math.min(v, 100) + '%';
-    }
-    if (span) {
-        span.textContent = v;
-    }
+    if (bar) { bar.style.width = Math.min(v, 100) + '%'; }
+    if (span) { span.textContent = v; }
 }
-/* FIN : UTILITAIRES */
 
-/* DEBUT : DRAPEAUX (250+ pays) */
+/* ---------- 7. DRAPEAUX (250+ pays) ---------- */
 const flagMap = {
     'DZ':'🇩🇿','AO':'🇦🇴','BJ':'🇧🇯','BW':'🇧🇼','BF':'🇧🇫','BI':'🇧🇮','CM':'🇨🇲','CV':'🇨🇻',
     'CF':'🇨🇫','KM':'🇰🇲','CG':'🇨🇬','CD':'🇨🇩','CI':'🇨🇮','DJ':'🇩🇯','EG':'🇪🇬','GQ':'🇬🇶',
@@ -178,9 +155,8 @@ const flagMap = {
     'AU':'🇦🇺','FJ':'🇫🇯','KI':'🇰🇮','MH':'🇲🇭','FM':'🇫🇲','NR':'🇳🇷','NZ':'🇳🇿','PW':'🇵🇼',
     'PG':'🇵🇬','WS':'🇼🇸','SB':'🇸🇧','TO':'🇹🇴','TV':'🇹🇻','VU':'🇻🇺',
 };
-/* FIN : DRAPEAUX */
 
-/* DEBUT : SESSION (via getUser) */
+/* ---------- 8. SESSION (via getUser) ---------- */
 async function checkSession() {
     showLoader();
     const { data: { user }, error } = await supabaseClient.auth.getUser();
@@ -192,9 +168,8 @@ async function checkSession() {
     currentUser = user;
     return currentUser;
 }
-/* FIN : SESSION */
 
-/* DEBUT : CHARGEMENT PROFIL */
+/* ---------- 9. CHARGEMENT PROFIL ---------- */
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
@@ -211,13 +186,10 @@ async function loadProfile() {
     document.getElementById('userName').textContent = parrainProfile.full_name || 'Parrain';
     return parrainProfile;
 }
-/* FIN : CHARGEMENT PROFIL */
 
-/* DEBUT : CHARGEMENT DONNÉES PARRAIN */
+/* ---------- 10. CHARGEMENT DONNEES PARRAIN ---------- */
 async function loadScoutingData() {
-    if (!parrainProfile) {
-        return;
-    }
+    if (!parrainProfile) { return; }
     showLoader();
     const { data, error } = await supabaseClient
         .from(SCOUTING_TABLE)
@@ -246,27 +218,23 @@ async function loadScoutingData() {
     updateProfileUI();
     updateDataUI();
 }
-/* FIN : CHARGEMENT DONNÉES PARRAIN */
 
-/* DEBUT : UI PROFIL */
+/* ---------- 11. UI PROFIL ---------- */
 function updateProfileUI() {
-    if (!parrainProfile) {
-        return;
-    }
+    if (!parrainProfile) { return; }
     const pro = parrainProfile;
-    setText('dashboardName',         pro.full_name);
-    setText('parrainFullName',       pro.full_name);
-    setText('parrainPseudo',         pro.pseudo);
-    setText('parrainPhone',          pro.phone);
-    setText('parrainEmail',          pro.email);
-    setText('parrainNationality',    pro.nationality);
-    // type_engagement déplacé dans updateDataUI
-    setText('parrainClub',           pro.club || (scoutingData && scoutingData.organisme) || '');
-    setText('parrainAge',            calculateAge(pro.birth_date));
-    setText('parrainID',             'ID : ' + (pro.hubisoccer_id || ''));
-    setText('profileCompletion',     pro.profile_completion || 0);
-    setText('scoutingViews',         pro.scouting_views || 0);
-    setText('recruiterFavs',         pro.recruiter_favs || 0);
+    setText('dashboardName',      pro.full_name);
+    setText('parrainFullName',    pro.full_name);
+    setText('parrainPseudo',      pro.pseudo);
+    setText('parrainPhone',       pro.phone);
+    setText('parrainEmail',       pro.email);
+    setText('parrainNationality', pro.nationality);
+    setText('parrainClub',        pro.club || (scoutingData && scoutingData.organisme) || '');
+    setText('parrainAge',         calculateAge(pro.birth_date));
+    setText('parrainID',          'ID : ' + (pro.hubisoccer_id || ''));
+    setText('profileCompletion',  pro.profile_completion || 0);
+    setText('scoutingViews',      pro.scouting_views || 0);
+    setText('recruiterFavs',      pro.recruiter_favs || 0);
     const countryCode = pro.country_code || '';
     const flag = flagMap[countryCode] || '🌍';
     setText('parrainCountryFlag', flag);
@@ -274,50 +242,53 @@ function updateProfileUI() {
     updateAvatarDisplay();
     updateProfileCompletion();
 }
-/* FIN : UI PROFIL */
 
-/* DEBUT : UI DONNÉES PARRAIN */
+/* ---------- 12. UI DONNEES PARRAIN ---------- */
 function updateDataUI() {
-    if (!scoutingData) {
-        return;
-    }
+    if (!scoutingData) { return; }
     const d = scoutingData;
 
-    // Situation contractuelle
-    setText('salary',         d.salaire ? formatMoney(d.salaire) : (d.honoraires ? formatMoney(d.honoraires) : '—'));
-    setText('contractExpiry', d.expire_le ? new Date(d.expire_le).toLocaleDateString('fr-FR') : '—');
-    setText('marketValue',    d.valeur_marche ? formatMoney(d.valeur_marche) : (d.chiffre_affaires ? formatMoney(d.chiffre_affaires) : '—'));
-    setText('statutPro',      d.statut_professionnel);
-
-    // Type d'engagement (spécialité du parrain)
+    /* Type d'engagement (specialite affichee dans l'en-tete) */
     setText('parrainSpecialite', d.type_engagement || 'Non renseigné');
     setText('parrainPosition',   d.type_engagement || 'Type d\'engagement non renseigné');
 
-    // Compétences (valeurs numériques)
-    setText('cp_acc', d.comp_accompagnement != null ? d.comp_accompagnement : 0);
-    setText('cp_pro', d.comp_gestion_projet != null ? d.comp_gestion_projet : 0);
-    setText('cp_fin', d.comp_financement != null ? d.comp_financement : 0);
-    setText('cp_res', d.comp_reseau != null ? d.comp_reseau : 0);
-    setText('cp_men', d.comp_mentorat != null ? d.comp_mentorat : 0);
-    setText('cp_com', d.comp_communication != null ? d.comp_communication : 0);
-    setText('cp_sui', d.comp_suivi_parcours != null ? d.comp_suivi_parcours : 0);
-    setText('cp_eth', d.comp_ethique != null ? d.comp_ethique : 0);
-    setText('cp_sco', d.comp_orientation_scolaire != null ? d.comp_orientation_scolaire : 0);
-    setText('cp_car', d.comp_orientation_carriere != null ? d.comp_orientation_carriere : 0);
-    setText('cp_imp', d.comp_impact != null ? d.comp_impact : 0);
-    setText('cp_eco', d.comp_ecoute != null ? d.comp_ecoute : 0);
+    /* Competences (comp_ = SOURCE UNIQUE, utilisee a la fois pour
+       les barres "Competences principales" et l'onglet Esprit --
+       le doublon comp_ vs skill_ d'origine est elimine ici,
+       mapping propre 8/8, aucune colonne manquante) */
+    setText('cp_acc', d.comp_accompagnement ?? 0);
+    setText('cp_pro', d.comp_gestion_projet ?? 0);
+    setText('cp_fin', d.comp_financement ?? 0);
+    setText('cp_res', d.comp_reseau ?? 0);
+    setText('cp_men', d.comp_mentorat ?? 0);
+    setText('cp_com', d.comp_communication ?? 0);
+    setText('cp_sui', d.comp_suivi_parcours ?? 0);
+    setText('cp_eth', d.comp_ethique ?? 0);
+    setText('cp_sco', d.comp_orientation_scolaire ?? 0);
+    setText('cp_car', d.comp_orientation_carriere ?? 0);
+    setText('cp_imp', d.comp_impact ?? 0);
+    setText('cp_eco', d.comp_ecoute ?? 0);
 
-    // Activité & Impact
-    setText('ac_pro', d.total_proteges != null ? d.total_proteges : 0);
-    setText('ac_don', d.total_dons_financiers != null ? formatMoney(d.total_dons_financiers) : '—');
-    setText('ac_bou', d.nb_bourses_accordees != null ? d.nb_bourses_accordees : 0);
-    setText('ac_ses', d.nb_sessions_mentorat != null ? d.nb_sessions_mentorat : 0);
-    setText('ac_reu', d.nb_reussites != null ? d.nb_reussites : 0);
-    setText('ac_etu', d.nb_etudes_financees != null ? d.nb_etudes_financees : 0);
-    setText('ac_ann', d.annees_activite != null ? d.annees_activite : 0);
-    setText('ac_sco', d.score_impact != null ? d.score_impact : 0);
+    setSkill('skill_acc',    d.comp_accompagnement ?? 0);
+    setSkill('skill_fin',    d.comp_financement ?? 0);
+    setSkill('skill_res',    d.comp_reseau ?? 0);
+    setSkill('skill_mentor', d.comp_mentorat ?? 0);
+    setSkill('skill_comm',   d.comp_communication ?? 0);
+    setSkill('skill_suivi',  d.comp_suivi_parcours ?? 0);
+    setSkill('skill_eth',    d.comp_ethique ?? 0);
+    setSkill('skill_impact', d.comp_impact ?? 0);
 
-    // Corps – Engagement & Structure
+    /* Activite & Impact */
+    setText('ac_pro', d.total_proteges ?? 0);
+    setText('ac_don', d.total_dons_financiers ? formatMoney(d.total_dons_financiers) : '—');
+    setText('ac_bou', d.nb_bourses_accordees ?? 0);
+    setText('ac_ses', d.nb_sessions_mentorat ?? 0);
+    setText('ac_reu', d.nb_reussites ?? 0);
+    setText('ac_etu', d.nb_etudes_financees ?? 0);
+    setText('ac_ann', d.annees_activite ?? 0);
+    setText('ac_sco', d.score_impact ?? 0);
+
+    /* Corps -- Engagement & Structure */
     setText('co_org', d.organisme || '—');
     setText('co_typ', d.type_engagement || '—');
     setText('co_deb', d.date_debut_parrainage ? new Date(d.date_debut_parrainage).toLocaleDateString('fr-FR') : '—');
@@ -326,19 +297,51 @@ function updateDataUI() {
     setText('co_par', d.partenaires || '—');
     setText('co_not', d.note_evaluation || 'Aucun rapport.');
 
-    // Barres de compétences principales
-    setSkill('skill_acc',    d.skill_acc    || 0);
-    setSkill('skill_fin',    d.skill_fin    || 0);
-    setSkill('skill_res',    d.skill_res    || 0);
-    setSkill('skill_mentor', d.skill_mentor || 0);
-    setSkill('skill_comm',   d.skill_comm   || 0);
-    setSkill('skill_suivi',  d.skill_suivi  || 0);
-    setSkill('skill_eth',    d.skill_eth    || 0);
-    setSkill('skill_impact', d.skill_impact || 0);
-}
-/* FIN : UI DONNÉES PARRAIN */
+    /* Stats globales du haut -- REELLEMENT alimentees desormais
+       (aucune des 4 n'etait renseignee dans la version recue) */
+    setText('nbProteges', d.total_proteges ?? 0);
+    setText('totalDons',  d.total_dons_financiers ? formatMoney(d.total_dons_financiers) : '0 €');
+    setText('nbBourses',  d.nb_bourses_accordees ?? 0);
+    setText('anneesAct',  d.annees_activite ?? 0);
 
-/* DEBUT : AVATAR */
+    /* Widgets de pilotage (memes donnees, deja chargees) */
+    setText('pilotProteges', d.total_proteges ?? 0);
+    setText('pilotDons',     d.total_dons_financiers ? formatMoney(d.total_dons_financiers) : '0 €');
+    setText('pilotBourses',  d.nb_bourses_accordees ?? 0);
+    setText('pilotSessions', d.nb_sessions_mentorat ?? 0);
+
+    renderAlerts();
+}
+
+/* ---------- 13. ALERTES ---------- */
+function renderAlerts() {
+    const list  = document.getElementById('alertsList');
+    const empty = document.getElementById('alertsEmpty');
+    if (!list) { return; }
+
+    list.querySelectorAll('.alert-item').forEach(function(a) { a.remove(); });
+    const alerts = [];
+
+    const pct = parrainProfile ? (parrainProfile.profile_completion || 0) : 0;
+    if (pct < 100) {
+        alerts.push({ level: 'warning', icon: 'fa-user-edit', text: 'Votre profil est complété à ' + pct + '%. Complétez-le pour inspirer davantage confiance.' });
+    }
+
+    if (alerts.length === 0) {
+        if (empty) { empty.style.display = 'flex'; }
+        return;
+    }
+    if (empty) { empty.style.display = 'none'; }
+
+    alerts.forEach(function(a) {
+        const el = document.createElement('div');
+        el.className = 'alert-item ' + a.level;
+        el.innerHTML = '<i class="fas ' + a.icon + '"></i><span>' + a.text + '</span>';
+        list.appendChild(el);
+    });
+}
+
+/* ---------- 14. AVATAR ---------- */
 function updateAvatarDisplay() {
     const pi = document.getElementById('profileDisplay');
     const pr = document.getElementById('profileDisplayInitials');
@@ -363,58 +366,32 @@ function updateAvatarDisplay() {
 }
 
 async function updateProfileCompletion() {
-    if (!parrainProfile) {
-        return;
-    }
+    if (!parrainProfile) { return; }
     const fields = ['full_name', 'pseudo', 'phone', 'country_code', 'birth_date'];
     let filled = 0;
     for (let i = 0; i < fields.length; i++) {
-        if (parrainProfile[fields[i]] && parrainProfile[fields[i]] !== '') {
-            filled++;
-        }
+        if (parrainProfile[fields[i]] && parrainProfile[fields[i]] !== '') { filled++; }
     }
     const pct = Math.round((filled / fields.length) * 100);
     if (parrainProfile.profile_completion !== pct) {
-        await supabaseClient
-            .from(PROFILES_TABLE)
-            .update({ profile_completion: pct })
-            .eq('hubisoccer_id', parrainProfile.hubisoccer_id);
+        await supabaseClient.from(PROFILES_TABLE).update({ profile_completion: pct }).eq('hubisoccer_id', parrainProfile.hubisoccer_id);
         parrainProfile.profile_completion = pct;
         setText('profileCompletion', pct);
     }
 }
 
 async function uploadAvatar(file) {
-    if (!currentUser || !parrainProfile) {
-        return;
-    }
-    if (file.size > 3 * 1024 * 1024) {
-        showToast('Max 3 Mo', 'warning');
-        return;
-    }
+    if (!currentUser || !parrainProfile) { return; }
+    if (file.size > 3 * 1024 * 1024) { showToast('Max 3 Mo', 'warning'); return; }
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowed.includes(file.type)) {
-        showToast('Format accepté : JPG, PNG, WEBP, GIF', 'warning');
-        return;
-    }
+    if (!allowed.includes(file.type)) { showToast('Format accepté : JPG, PNG, WEBP, GIF', 'warning'); return; }
     showLoader();
     const ext = file.name.split('.').pop().toLowerCase();
     const fn = 'parrain_' + currentUser.id + '_' + Date.now() + '.' + ext;
-    const { error: ue } = await supabaseClient.storage
-        .from(AVATAR_BUCKET)
-        .upload(fn, file, { upsert: true });
-    if (ue) {
-        hideLoader();
-        showToast('Erreur upload: ' + ue.message, 'error');
-        return;
-    }
-    const { data: ud } = supabaseClient.storage
-        .from(AVATAR_BUCKET)
-        .getPublicUrl(fn);
-    await supabaseClient
-        .from(PROFILES_TABLE)
-        .update({ avatar_url: ud.publicUrl })
-        .eq('hubisoccer_id', parrainProfile.hubisoccer_id);
+    const { error: ue } = await supabaseClient.storage.from(AVATAR_BUCKET).upload(fn, file, { upsert: true });
+    if (ue) { hideLoader(); showToast('Erreur upload: ' + ue.message, 'error'); return; }
+    const { data: ud } = supabaseClient.storage.from(AVATAR_BUCKET).getPublicUrl(fn);
+    await supabaseClient.from(PROFILES_TABLE).update({ avatar_url: ud.publicUrl }).eq('hubisoccer_id', parrainProfile.hubisoccer_id);
     hideLoader();
     parrainProfile.avatar_url = ud.publicUrl;
     updateAvatarDisplay();
@@ -422,82 +399,58 @@ async function uploadAvatar(file) {
 }
 
 async function deleteAvatar() {
-    if (!parrainProfile || !confirm('Supprimer la photo de profil ?')) {
-        return;
-    }
+    if (!parrainProfile || !confirm('Supprimer la photo de profil ?')) { return; }
     showLoader();
-    await supabaseClient
-        .from(PROFILES_TABLE)
-        .update({ avatar_url: '' })
-        .eq('hubisoccer_id', parrainProfile.hubisoccer_id);
+    await supabaseClient.from(PROFILES_TABLE).update({ avatar_url: '' }).eq('hubisoccer_id', parrainProfile.hubisoccer_id);
     hideLoader();
     parrainProfile.avatar_url = '';
     updateAvatarDisplay();
     showToast('Photo supprimée', 'info');
 }
-/* FIN : AVATAR */
 
-/* DEBUT : COPIER ID */
+/* ---------- 15. COPIER ID ---------- */
 async function copyID() {
     const id = parrainProfile?.hubisoccer_id;
-    if (!id) {
-        return;
-    }
+    if (!id) { return; }
     try {
         await navigator.clipboard.writeText(id);
         const span = document.getElementById('parrainID');
         if (span) {
             const old = span.innerText;
             span.innerText = 'Copié ! ✅';
-            setTimeout(function() {
-                span.innerText = old;
-            }, 2200);
+            setTimeout(function() { span.innerText = old; }, 2200);
         }
     } catch (e) {
         showToast('Erreur copie', 'error');
     }
 }
-/* FIN : COPIER ID */
 
-/* DEBUT : ONGLETS */
+/* ---------- 16. ONGLETS ---------- */
 function initAttrTabs() {
     document.querySelectorAll('.attr-tab').forEach(function(tab) {
         tab.addEventListener('click', function() {
-            document.querySelectorAll('.attr-tab').forEach(function(t) {
-                t.classList.remove('active');
-            });
-            document.querySelectorAll('.attr-content').forEach(function(c) {
-                c.classList.remove('active');
-            });
+            document.querySelectorAll('.attr-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.attr-content').forEach(function(c) { c.classList.remove('active'); });
             tab.classList.add('active');
-            const cat = tab.dataset.cat;
-            const container = document.getElementById(cat + '-attrs');
-            if (container) {
-                container.classList.add('active');
-            }
+            const container = document.getElementById(tab.dataset.cat + '-attrs');
+            if (container) { container.classList.add('active'); }
         });
     });
 }
-/* FIN : ONGLETS */
 
-/* DEBUT : MENU UTILISATEUR */
+/* ---------- 17. MENU UTILISATEUR ---------- */
 function initUserMenu() {
     const menu = document.getElementById('userMenu');
     const dropdown = document.getElementById('userDropdown');
-    if (!menu || !dropdown) {
-        return;
-    }
+    if (!menu || !dropdown) { return; }
     menu.addEventListener('click', function(e) {
         e.stopPropagation();
         dropdown.classList.toggle('show');
     });
-    document.addEventListener('click', function() {
-        dropdown.classList.remove('show');
-    });
+    document.addEventListener('click', function() { dropdown.classList.remove('show'); });
 }
-/* FIN : MENU UTILISATEUR */
 
-/* DEBUT : SIDEBAR + SWIPE */
+/* ---------- 18. SIDEBAR + SWIPE ---------- */
 function initSidebar() {
     const sb = document.getElementById('leftSidebar');
     const ov = document.getElementById('sidebarOverlay');
@@ -528,48 +481,33 @@ function initSidebar() {
     document.addEventListener('touchend', function(e) {
         const dx = e.changedTouches[0].screenX - sx;
         const dy = e.changedTouches[0].screenY - sy;
-        if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) {
-            return;
-        }
-        if (e.cancelable) {
-            e.preventDefault();
-        }
-        if (dx > 0 && sx < 40) {
-            open();
-        } else if (dx < 0) {
-            close();
-        }
+        if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) { return; }
+        if (e.cancelable) { e.preventDefault(); }
+        if (dx > 0 && sx < 40) { open(); } else if (dx < 0) { close(); }
     }, { passive: false });
 }
-/* FIN : SIDEBAR + SWIPE */
 
-/* DEBUT : DÉCONNEXION */
+/* ---------- 19. DECONNEXION ---------- */
 async function logout() {
     showLoader();
     await supabaseClient.auth.signOut();
     hideLoader();
     window.location.href = '../../authprive/users/login.html?role=PARRAIN';
 }
-/* FIN : DÉCONNEXION */
 
 function triggerUpload() {
     const input = document.getElementById('fileInput');
-    if (input) {
-        input.click();
-    }
+    if (input) { input.click(); }
 }
 
-/* DEBUT : INITIALISATION */
+/* ---------- 20. INIT ---------- */
 document.addEventListener('DOMContentLoaded', async function() {
     const user = await checkSession();
-    if (!user) {
-        return;
-    }
+    if (!user) { return; }
     await loadProfile();
-    if (!parrainProfile) {
-        return;
-    }
+    if (!parrainProfile) { return; }
     await loadScoutingData();
+
     initUserMenu();
     initSidebar();
     initAttrTabs();
@@ -578,16 +516,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (fileInput) {
         fileInput.addEventListener('change', function(e) {
             const f = e.target.files?.[0];
-            if (f) {
-                uploadAvatar(f);
-            }
+            if (f) { uploadAvatar(f); }
         });
     }
 
     const deleteBtn = document.getElementById('deleteAvatarBtn');
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', deleteAvatar);
-    }
+    if (deleteBtn) { deleteBtn.addEventListener('click', deleteAvatar); }
 
     document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(l) {
         l.addEventListener('click', function(e) {
@@ -608,4 +542,3 @@ document.addEventListener('DOMContentLoaded', async function() {
     window.copyID = copyID;
     window.showToast = showToast;
 });
-/* FIN : INITIALISATION */

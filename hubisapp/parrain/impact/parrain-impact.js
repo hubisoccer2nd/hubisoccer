@@ -1,41 +1,43 @@
 /* ============================================================
-   HubISoccer — parrain-impact.js
-   Espace Parrain · Mon Impact
+   HubISoccer -- parrain-impact.js
+   Espace Parrain - Mon Impact
+   ------------------------------------------------------------
+   Corrections apportees a la version recue :
+   - Le 3e stat recopiait simplement le total -- relabellise en
+     "Score moyen /10", calcule a partir de score_impact (le champ
+     existait deja dans le formulaire mais n'etait jamais agrege
+     nulle part). Plus pertinent pour une page de rapports d'impact.
+   - ID sidebar harmonise (closeLeftSidebar).
+   - Le reste (CRUD, recherche, filtre par domaine) est conserve.
    ============================================================ */
 
 'use strict';
 
-/* DEBUT : CONFIGURATION SUPABASE */
+/* ---------- 1. CONFIGURATION SUPABASE ---------- */
 const SUPABASE_URL      = 'https://niewavngipvowwxxguqu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
 const supabaseClient    = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.__SUPABASE_CLIENT = supabaseClient;
-/* FIN : CONFIGURATION SUPABASE */
 
-/* DEBUT : ÉTAT GLOBAL */
+/* ---------- 2. ETAT GLOBAL ---------- */
 let currentUser  = null;
 let userProfile  = null;
 let allEntries   = [];
 let editingId    = null;
 const TABLE      = 'supabaseAuthPrive_parrain_impact';
 const FK         = 'parrain_id';
-/* FIN : ÉTAT GLOBAL */
 
-/* DEBUT : FONCTION SHOWLOADER */
+/* ---------- 3. LOADER ---------- */
 function showLoader() {
     var l = document.getElementById('globalLoader');
     if (l) l.style.display = 'flex';
 }
-/* FIN : FONCTION SHOWLOADER */
-
-/* DEBUT : FONCTION HIDELOADER */
 function hideLoader() {
     var l = document.getElementById('globalLoader');
     if (l) l.style.display = 'none';
 }
-/* FIN : FONCTION HIDELOADER */
 
-/* DEBUT : FONCTION SHOWTOAST */
+/* ---------- 4. TOAST (duree 30 secondes) ---------- */
 function showToast(msg, type, dur) {
     type = type || 'info';
     dur   = dur || 30000;
@@ -69,17 +71,15 @@ function showToast(msg, type, dur) {
         }
     }, dur);
 }
-/* FIN : FONCTION SHOWTOAST */
 
-/* DEBUT : FONCTION GETINITIALS */
+/* ---------- 5. UTILITAIRES ---------- */
 function getInitials(n) {
     if (!n) return '?';
     var p = n.trim().split(/\s+/);
     return (p.length >= 2 ? p[0][0] + p[p.length - 1][0] : n[0]).toUpperCase();
 }
-/* FIN : FONCTION GETINITIALS */
 
-/* DEBUT : FONCTION CHECKSESSION */
+/* ---------- 6. SESSION ---------- */
 async function checkSession() {
     showLoader();
     const { data: { user }, error } = await supabaseClient.auth.getUser();
@@ -91,9 +91,8 @@ async function checkSession() {
     currentUser = user;
     return currentUser;
 }
-/* FIN : FONCTION CHECKSESSION */
 
-/* DEBUT : FONCTION LOADPROFILE */
+/* ---------- 7. CHARGEMENT PROFIL ---------- */
 async function loadProfile() {
     const { data, error } = await supabaseClient
         .from('supabaseAuthPrive_profiles')
@@ -119,9 +118,8 @@ async function loadProfile() {
         if (ni) ni.style.display = 'none';
     }
 }
-/* FIN : FONCTION LOADPROFILE */
 
-/* DEBUT : FONCTION LOADENTRIES */
+/* ---------- 8. CHARGEMENT DES RAPPORTS ---------- */
 async function loadEntries() {
     if (!userProfile) return;
     showLoader();
@@ -139,9 +137,8 @@ async function loadEntries() {
     renderAll();
     updateStats();
 }
-/* FIN : FONCTION LOADENTRIES */
 
-/* DEBUT : FONCTION UPDATESTATS */
+/* ---------- 9. STATS RAPIDES ---------- */
 function updateStats() {
     document.getElementById('statTotal').textContent = allEntries.length;
     var now = new Date(),
@@ -152,14 +149,19 @@ function updateStats() {
         var d = new Date(e.created_at);
         return d.getMonth() === m && d.getFullYear() === y;
     }).length;
-    document.getElementById('statMois').textContent   = mois;
-    document.getElementById('statActifs').textContent  = allEntries.length;
+    document.getElementById('statMois').textContent = mois;
+
+    var scores = allEntries
+        .map(function(e) { return parseFloat(e.score_impact); })
+        .filter(function(v) { return !isNaN(v); });
+    var moyenne = scores.length ? (scores.reduce(function(s, v) { return s + v; }, 0) / scores.length) : 0;
+    document.getElementById('statActifs').textContent = scores.length ? moyenne.toFixed(1) : '—';
+
     var last = allEntries[0];
     document.getElementById('statLast').textContent = last ? (last.periode_impact || '—').substring(0, 14) : '—';
 }
-/* FIN : FONCTION UPDATESTATS */
 
-/* DEBUT : FONCTION RENDERALL */
+/* ---------- 10. RENDU DE LA LISTE ---------- */
 function renderAll() {
     var search = document.getElementById('searchInput').value.toLowerCase();
     var filter = document.getElementById('filterSelect').value;
@@ -172,7 +174,7 @@ function renderAll() {
     var grid = document.getElementById('entriesGrid');
     grid.innerHTML = '';
     if (!filtered.length) {
-        grid.innerHTML = '<div class="empty-state"><i class="fas fa-chart-pie"></i><p>Aucun résultat.</p></div>';
+        grid.innerHTML = '<div class="empty-state"><i class="fas fa-chart-line"></i><p>Aucun résultat.</p></div>';
         return;
     }
     filtered.forEach(function(item) {
@@ -181,8 +183,9 @@ function renderAll() {
         var dateStr   = item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : '';
         var badgeVal  = item.domaines_impact || '';
         var meta = '';
-        if (item.nb_proteges_impact) meta += '<span><i class="fas fa-info-circle"></i>' + item.nb_proteges_impact + '</span>';
-        if (dateStr) meta += '<span><i class="fas fa-calendar-alt"></i>' + dateStr + '</span>';
+        if (item.nb_proteges_impact) meta += '<span><i class="fas fa-user-friends"></i>' + item.nb_proteges_impact + ' protégé(s) suivi(s)</span>';
+        if (item.score_impact) meta += '<span><i class="fas fa-tachometer-alt"></i>Score : ' + item.score_impact + '/10</span>';
+        if (dateStr) meta += '<span><i class="fas fa-calendar-alt"></i>Ajouté le ' + dateStr + '</span>';
         card.innerHTML =
             '<div class="entry-card-header">' +
             '<span class="entry-card-title">' + (item.periode_impact || 'Sans titre') + '</span>' +
@@ -196,9 +199,8 @@ function renderAll() {
         grid.appendChild(card);
     });
 }
-/* FIN : FONCTION RENDERALL */
 
-/* DEBUT : FONCTION OPENADD */
+/* ---------- 11. AJOUTER ---------- */
 function openAdd() {
     editingId = null;
     document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus"></i> Ajouter — Mon Impact';
@@ -206,9 +208,8 @@ function openAdd() {
     document.getElementById('f__id').value = '';
     document.getElementById('entryModal').classList.add('show');
 }
-/* FIN : FONCTION OPENADD */
 
-/* DEBUT : FONCTION OPENEDIT */
+/* ---------- 12. MODIFIER ---------- */
 function openEdit(id) {
     var item = allEntries.find(function(e) { return e.id === id; });
     if (!item) return;
@@ -227,9 +228,8 @@ function openEdit(id) {
     document.getElementById('entryModal').classList.add('show');
 }
 window.openEdit = openEdit;
-/* FIN : FONCTION OPENEDIT */
 
-/* DEBUT : FONCTION DELETEENTRY */
+/* ---------- 13. SUPPRIMER ---------- */
 async function deleteEntry(id) {
     if (!confirm('Supprimer cette entrée ?')) return;
     showLoader();
@@ -245,9 +245,8 @@ async function deleteEntry(id) {
     updateStats();
 }
 window.deleteEntry = deleteEntry;
-/* FIN : FONCTION DELETEENTRY */
 
-/* DEBUT : FONCTION SAVEENTRY */
+/* ---------- 14. ENREGISTRER (ajout ou modification) ---------- */
 async function saveEntry() {
     if (!userProfile) return;
     var data = {
@@ -281,9 +280,8 @@ async function saveEntry() {
     document.getElementById('entryModal').classList.remove('show');
     await loadEntries();
 }
-/* FIN : FONCTION SAVEENTRY */
 
-/* DEBUT : FONCTION INITUI */
+/* ---------- 15. INTERFACE ---------- */
 function initUI() {
     document.getElementById('btnAdd').addEventListener('click', openAdd);
     document.getElementById('modalClose').addEventListener('click', function() { document.getElementById('entryModal').classList.remove('show'); });
@@ -301,9 +299,8 @@ function initUI() {
     document.getElementById('searchInput').addEventListener('input', renderAll);
     document.getElementById('filterSelect').addEventListener('change', renderAll);
 }
-/* FIN : FONCTION INITUI */
 
-/* DEBUT : FONCTION INITUSERMENU */
+/* ---------- 16. MENU UTILISATEUR ---------- */
 function initUserMenu() {
     var m = document.getElementById('userMenu'),
         d = document.getElementById('userDropdown');
@@ -311,14 +308,13 @@ function initUserMenu() {
     m.addEventListener('click', function(e) { e.stopPropagation(); d.classList.toggle('show'); });
     document.addEventListener('click', function() { d.classList.remove('show'); });
 }
-/* FIN : FONCTION INITUSERMENU */
 
-/* DEBUT : FONCTION INITSIDEBAR */
+/* ---------- 17. SIDEBAR + SWIPE ---------- */
 function initSidebar() {
     var sb = document.getElementById('leftSidebar'),
         ov = document.getElementById('sidebarOverlay'),
         mb = document.getElementById('menuToggle'),
-        cb = document.getElementById('closeSidebar');
+        cb = document.getElementById('closeLeftSidebar');
     function open()  { if (sb) sb.classList.add('active'); if (ov) ov.classList.add('active'); document.body.style.overflow = 'hidden'; }
     function close() { if (sb) sb.classList.remove('active'); if (ov) ov.classList.remove('active'); document.body.style.overflow = ''; }
     if (mb) mb.addEventListener('click', open);
@@ -335,9 +331,8 @@ function initSidebar() {
         else if (dx < 0) close();
     }, { passive: false });
 }
-/* FIN : FONCTION INITSIDEBAR */
 
-/* DEBUT : FONCTION INITLOGOUT */
+/* ---------- 18. DECONNEXION ---------- */
 function initLogout() {
     document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(l) {
         l.addEventListener('click', async function(e) {
@@ -347,9 +342,8 @@ function initLogout() {
         });
     });
 }
-/* FIN : FONCTION INITLOGOUT */
 
-/* DEBUT : INITIALISATION */
+/* ---------- 19. INITIALISATION ---------- */
 document.addEventListener('DOMContentLoaded', async function() {
     var user = await checkSession();
     if (!user) return;
@@ -368,4 +362,3 @@ document.addEventListener('DOMContentLoaded', async function() {
         showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
 });
-/* FIN : INITIALISATION */

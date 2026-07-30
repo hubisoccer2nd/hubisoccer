@@ -1,17 +1,17 @@
 <!-- ============================================================
-   HubISoccer — parrain-proteges.html
-   Espace Parrain · Mes Protégés
+   HubISoccer — parrain-mentorat.html
+   Espace Parrain · Sessions de Mentorat
    ============================================================ -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Mes Protégés — Parrain | HubISoccer</title>
+    <title>Sessions de Mentorat — Parrain | HubISoccer</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="parrain-proteges.css">
+    <link rel="stylesheet" href="parrain-mentorat.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -26,7 +26,7 @@
 <nav class="dashboard-nav">
     <div class="nav-left">
         <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
-        <span class="dashboard-title"><i class="fas fa-user-friends"></i> Mes Protégés</span>
+        <span class="dashboard-title"><i class="fas fa-comments"></i> Sessions de Mentorat</span>
     </div>
     <div class="nav-right">
         <select class="lang-picker" id="langSelect">
@@ -92,10 +92,10 @@
         <a href="../scouting/parrain-scouting.html">
             <i class="fas fa-binoculars"></i><span>Scouting</span>
         </a>
-        <a href="parrain-proteges.html" class="active">
+        <a href="../proteges/parrain-proteges.html">
             <i class="fas fa-user-friends"></i><span>Mes Protégés</span>
         </a>
-        <a href="../mentorat/parrain-mentorat.html">
+        <a href="parrain-mentorat.html" class="active">
             <i class="fas fa-comments"></i><span>Sessions de Mentorat</span>
         </a>
         <a href="../dons/parrain-dons.html">
@@ -127,34 +127,24 @@
 <!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
 <main class="page-main">
 <div class="page-container">
-    <h1 class="page-title"><i class="fas fa-user-friends"></i> Mes Protégés</h1>
-    <p class="page-subtitle">Les jeunes talents que vous accompagnez — Corps · Âme · Esprit.</p>
+    <h1 class="page-title"><i class="fas fa-comments"></i> Sessions de Mentorat</h1>
+    <p class="page-subtitle">Journal de vos échanges avec vos protégés — Corps · Âme · Esprit.</p>
 
-    <!-- Stats rapides -->
     <div class="stats-row">
-        <div class="stat-box"><i class="fas fa-user-friends"></i><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0</div></div>
+        <div class="stat-box"><i class="fas fa-comments"></i><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0</div></div>
         <div class="stat-box"><i class="fas fa-calendar-alt"></i><div class="stat-label">Ce mois</div><div class="stat-value" id="statMois">0</div></div>
-        <div class="stat-box"><i class="fas fa-check-circle"></i><div class="stat-label">Actifs</div><div class="stat-value" id="statActifs">0</div></div>
-        <div class="stat-box"><i class="fas fa-star"></i><div class="stat-label">Dernier ajouté</div><div class="stat-value" id="statVedette">—</div></div>
+        <div class="stat-box"><i class="fas fa-bullseye"></i><div class="stat-label">Objectifs atteints</div><div class="stat-value" id="statActifs">0</div></div>
+        <div class="stat-box"><i class="fas fa-star"></i><div class="stat-label">Dernier ajout</div><div class="stat-value" id="statLast" style="font-size:.8rem;">—</div></div>
     </div>
 
-    <!-- Barre d'outils -->
     <div class="toolbar">
-        <button class="btn-add" id="btnAdd">
-            <i class="fas fa-plus"></i> Ajouter
-        </button>
+        <button class="btn-add" id="btnAdd"><i class="fas fa-plus"></i> Ajouter</button>
         <input class="search-box" id="searchInput" placeholder="Rechercher…" type="text">
-        <select class="filter-select" id="filterSelect">
-            <option value="">Tous</option>
-        </select>
+        <select class="filter-select" id="filterSelect"><option value="">Tous les modes</option></select>
     </div>
 
-    <!-- Grille des entrées -->
     <div class="entries-grid" id="entriesGrid">
-        <div class="empty-state">
-            <i class="fas fa-user-friends"></i>
-            <p>Aucun protégé pour le moment.<br>Cliquez sur <strong>Ajouter</strong> pour commencer.</p>
-        </div>
+        <div class="empty-state"><i class="fas fa-comments"></i><p>Aucune session pour le moment.<br>Cliquez sur <strong>Ajouter</strong> pour commencer.</p></div>
     </div>
 </div>
 </main>
@@ -170,16 +160,14 @@
         <div class="modal-body">
             <form id="entryForm">
                 <input type="hidden" id="f__id">
-                <div class="form-group"><label>Nom du protégé</label><input type="text" id="f_nom_protege" placeholder="Nom du protégé…"></div>
-                <div class="form-group"><label>Prénom</label><input type="text" id="f_prenom_protege" placeholder="Prénom…"></div>
-                <div class="form-group"><label>Rôle / Discipline</label><input type="text" id="f_role_protege" placeholder="Rôle / Discipline…"></div>
-                <div class="form-group"><label>Date début parrainage</label><input type="date" id="f_debut_parrainage"></div>
-                <div class="form-group"><label>Club / Académie</label><input type="text" id="f_club_protege" placeholder="Club / Académie…"></div>
-                <div class="form-group"><label>Statut</label><select id="f_statut_protege"><option value="">Sélectionnez…</option><option value="En cours">En cours</option><option value="Diplômé">Diplômé</option><option value="Pro">Pro</option><option value="Abandonné">Abandonné</option></select></div>
-                <div class="form-group"><label>Montant bourse (€)</label><input type="number" id="f_montant_bourse" placeholder="Montant bourse (€)…"></div>
-                <div class="form-group"><label>Niveau scolaire</label><input type="text" id="f_niveau_scolaire" placeholder="Niveau scolaire…"></div>
-                <div class="form-group"><label>Résultats / Réussites</label><textarea id="f_resultats_protege" placeholder="Résultats / Réussites…"></textarea></div>
-                <div class="form-group"><label>Notes</label><textarea id="f_notes_protege" placeholder="Notes…"></textarea></div>
+                <div class="form-group"><label>Protégé</label><input type="text" id="f_nom_protege_session" placeholder="Nom du protégé…"></div>
+                <div class="form-group"><label>Date</label><input type="date" id="f_date_session"></div>
+                <div class="form-group"><label>Durée (min)</label><input type="number" id="f_duree_session" placeholder="Ex : 45"></div>
+                <div class="form-group"><label>Mode</label><select id="f_mode_session"><option value="">Sélectionnez…</option><option value="Présentiel">Présentiel</option><option value="Visio">Visio</option><option value="Téléphone">Téléphone</option><option value="Sur le terrain">Sur le terrain</option></select></div>
+                <div class="form-group"><label>Thème abordé</label><select id="f_theme_session"><option value="">Sélectionnez…</option><option value="Orientation scolaire">Orientation scolaire</option><option value="Orientation carrière">Orientation carrière</option><option value="Gestion stress">Gestion stress</option><option value="Finances">Finances</option><option value="Vie sportive">Vie sportive</option><option value="Vie personnelle">Vie personnelle</option><option value="Autre">Autre</option></select></div>
+                <div class="form-group"><label>Objectifs atteints</label><select id="f_objectifs_session"><option value="">Sélectionnez…</option><option value="Oui">Oui</option><option value="Partiellement">Partiellement</option><option value="Non">Non</option></select></div>
+                <div class="form-group"><label>Prochaine session</label><input type="date" id="f_prochaine_session"></div>
+                <div class="form-group"><label>Résumé / Notes</label><textarea id="f_resume_session" placeholder="Résumé / Notes…"></textarea></div>
             </form>
         </div>
         <div class="modal-footer">
@@ -213,6 +201,6 @@
 </footer>
 <!-- ===== FIN FOOTER ===== -->
 
-<script src="parrain-proteges.js"></script>
+<script src="parrain-mentorat.js"></script>
 </body>
 </html>

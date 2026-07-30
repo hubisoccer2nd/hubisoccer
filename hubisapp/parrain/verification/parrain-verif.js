@@ -1,19 +1,30 @@
 /* ============================================================
-   HubISoccer — parrain-verif.js
-   Espace Parrain · Vérification & Licence
-   Corps - Âme - Esprit
+   HubISoccer -- parrain-verif.js
+   Espace Parrain - Verification & Licence
+   Corps - Ame - Esprit
+   ------------------------------------------------------------
+   Corrections apportees a la version recue :
+   - Taille/poids retires du formulaire et de la carte (aucun
+     sens pour un parrain -- champs herites d'un gabarit athlete)
+   - Document "Certificat medical" remplace par "Justificatif de
+     capacite financiere ou d'engagement" (pertinent pour un
+     sponsor, individuel ou institutionnel)
+   - IDs sidebar harmonises avec le reste de la plateforme
+     (closeLeftSidebar, userAvatarContainer)
+   - Le reste (signature verrouillable, carte recto-verso,
+     televersement documents, suivi de statut a 3 etats) est
+     conserve tel quel -- c'etait deja du bon travail.
    ============================================================ */
 
 'use strict';
 
-/* DEBUT : CONFIGURATION SUPABASE */
+/* ---------- 1. CONFIGURATION SUPABASE ---------- */
 const SUPABASE_URL      = 'https://niewavngipvowwxxguqu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
 const supabaseClient    = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.__SUPABASE_CLIENT = supabaseClient;
-/* FIN : CONFIGURATION SUPABASE */
 
-/* DEBUT : ÉTAT GLOBAL */
+/* ---------- 2. ETAT GLOBAL ---------- */
 let currentUser       = null;
 let userProfile       = null;
 let scoutingData      = null;
@@ -27,10 +38,8 @@ const ROLE_NAME      = 'Parrain';
 const ROLE_PREFIX    = 'parrain';
 const SCOUTING_TABLE = 'supabaseAuthPrive_parrain_scouting';
 const ROLE_FIELD     = 'type_engagement';
-const ROLE_FIELD_LBL = 'Type d\'engagement';
-/* FIN : ÉTAT GLOBAL */
 
-/* DEBUT : FONCTION SHOWTOAST */
+/* ---------- 3. TOAST (duree 30 secondes) ---------- */
 function showToast(message, type, duration) {
     type     = type || 'info';
     duration = duration || 30000;
@@ -64,17 +73,14 @@ function showToast(message, type, duration) {
         }
     }, duration);
 }
-/* FIN : FONCTION SHOWTOAST */
 
-/* DEBUT : FONCTION GETINITIALS */
+/* ---------- 4. UTILITAIRES ---------- */
 function getInitials(name) {
     if (!name) return '?';
     var p = name.trim().split(/\s+/);
     return (p.length >= 2 ? p[0][0] + p[p.length - 1][0] : name[0]).toUpperCase();
 }
-/* FIN : FONCTION GETINITIALS */
 
-/* DEBUT : FONCTION UPDATEAVATARUI */
 function updateAvatarUI() {
     var ni = document.getElementById('userAvatar');
     var nn = document.getElementById('userAvatarInitials');
@@ -88,9 +94,8 @@ function updateAvatarUI() {
         if (ni) ni.style.display = 'none';
     }
 }
-/* FIN : FONCTION UPDATEAVATARUI */
 
-/* DEBUT : FONCTION CHECKSESSION */
+/* ---------- 5. SESSION ---------- */
 async function checkSession() {
     const { data: { user }, error } = await supabaseClient.auth.getUser();
     if (error || !user) {
@@ -100,14 +105,13 @@ async function checkSession() {
     currentUser = user;
     return currentUser;
 }
-/* FIN : FONCTION CHECKSESSION */
 
-/* DEBUT : FONCTION LOADPROFILE */
+/* ---------- 6. CHARGEMENT PROFIL ---------- */
 async function loadProfile() {
     if (!currentUser || !currentUser.id) return;
     const { data, error } = await supabaseClient
         .from('supabaseAuthPrive_profiles')
-        .select('hubisoccer_id, full_name, email, phone, birth_date, country_code, avatar_url, height, weight')
+        .select('hubisoccer_id, full_name, email, phone, birth_date, country_code, avatar_url')
         .eq('auth_uuid', currentUser.id)
         .single();
     if (error) {
@@ -127,9 +131,8 @@ async function loadProfile() {
     updateAvatarUI();
     populateFormFromProfile();
 }
-/* FIN : FONCTION LOADPROFILE */
 
-/* DEBUT : FONCTION POPULATEFORMFROMPROFILE */
+/* ---------- 7. PRE-REMPLISSAGE DU FORMULAIRE ---------- */
 function populateFormFromProfile() {
     if (!userProfile) return;
     var nameParts = (userProfile.full_name || '').split(' ');
@@ -141,22 +144,19 @@ function populateFormFromProfile() {
     set('dateNaissance', userProfile.birth_date);
     set('nationalite', userProfile.country_code);
     set('telephone', userProfile.phone);
-    set('taille', userProfile.height);
-    set('poids', userProfile.weight);
     if (scoutingData && scoutingData[ROLE_FIELD]) set(ROLE_FIELD, scoutingData[ROLE_FIELD]);
     set('structure', scoutingData.organisme || scoutingData.structure || scoutingData.club || '');
     updateCardPreview();
 }
-/* FIN : FONCTION POPULATEFORMFROMPROFILE */
 
-/* DEBUT : FONCTION LOADDOCUMENTS */
+/* ---------- 8. DOCUMENTS REQUIS ---------- */
 async function loadDocuments() {
     var requiredDocs = [
-        { id: 'id_card',              name: "Pièce d'identité (CNI / Passeport)",       type: 'identity' },
-        { id: 'photo',                name: "Photo d'identité (récente)",                type: 'photo' },
-        { id: 'certificat_medical',   name: "Certificat médical (moins de 3 mois)",      type: 'medical' },
-        { id: 'diplome',              name: "Diplôme / Certificat (si applicable)",       type: 'diploma' },
-        { id: 'justificatif_domicile',name: "Justificatif de domicile",                  type: 'address' }
+        { id: 'id_card',              name: "Pièce d'identité (CNI / Passeport)",                       type: 'identity' },
+        { id: 'photo',                name: "Photo d'identité (récente)",                                type: 'photo' },
+        { id: 'justif_financier',     name: "Justificatif de capacité financière ou d'engagement",       type: 'financial' },
+        { id: 'diplome',              name: "Diplôme / Certificat (si applicable)",                       type: 'diploma' },
+        { id: 'justificatif_domicile',name: "Justificatif de domicile",                                  type: 'address' }
     ];
     if (userProfile && userProfile.hubisoccer_id) {
         const { data, error } = await supabaseClient
@@ -186,9 +186,8 @@ async function loadDocuments() {
     });
     renderDocuments();
 }
-/* FIN : FONCTION LOADDOCUMENTS */
 
-/* DEBUT : FONCTION RENDERDOCUMENTS */
+/* ---------- 9. RENDU DES DOCUMENTS ---------- */
 function renderDocuments() {
     var grid = document.getElementById('documentsGrid');
     if (!grid) return;
@@ -214,9 +213,8 @@ function renderDocuments() {
         btn.addEventListener('click', function(e) { uploadDocument(e.currentTarget.dataset.docId); });
     });
 }
-/* FIN : FONCTION RENDERDOCUMENTS */
 
-/* DEBUT : FONCTION UPLOADDOCUMENT */
+/* ---------- 10. TELEVERSEMENT D'UN DOCUMENT ---------- */
 async function uploadDocument(docId) {
     if (!currentUser || !userProfile) { showToast('Utilisateur non connecté', 'error'); return; }
     var input = document.createElement('input');
@@ -260,9 +258,8 @@ async function uploadDocument(docId) {
     };
     input.click();
 }
-/* FIN : FONCTION UPLOADDOCUMENT */
 
-/* DEBUT : FONCTIONS SIGNATURE */
+/* ---------- 11. SIGNATURE ---------- */
 function openSignatureModal() {
     var modal = document.getElementById('signatureModal');
     modal.style.display = 'flex';
@@ -309,9 +306,8 @@ function openSignatureModal() {
 function closeSignatureModal() { document.getElementById('signatureModal').style.display = 'none'; }
 window.openSignatureModal  = openSignatureModal;
 window.closeSignatureModal = closeSignatureModal;
-/* FIN : FONCTIONS SIGNATURE */
 
-/* DEBUT : FONCTION SUBMITLICENSE */
+/* ---------- 12. SOUMISSION DE LA DEMANDE ---------- */
 async function submitLicense(e) {
     e.preventDefault();
     if (!signatureDataURL) { showToast('Veuillez signer avant de soumettre.', 'warning'); return; }
@@ -330,8 +326,6 @@ async function submitLicense(e) {
             pays:           document.getElementById('pays').value,
             langue:         document.getElementById('langue').value || null,
             telephone:      document.getElementById('telephone').value,
-            taille:         parseInt(document.getElementById('taille').value) || null,
-            poids:          parseInt(document.getElementById('poids').value) || null,
             structure:      document.getElementById('structure').value || null
         };
         formData[ROLE_FIELD] = document.getElementById(ROLE_FIELD).value || null;
@@ -376,9 +370,8 @@ async function submitLicense(e) {
         btn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma demande';
     }
 }
-/* FIN : FONCTION SUBMITLICENSE */
 
-/* DEBUT : FONCTION CHECKLICENSESTATUS */
+/* ---------- 13. STATUT DE LA DEMANDE ---------- */
 async function checkLicenseStatus() {
     if (!userProfile || !userProfile.hubisoccer_id) return;
     const { data, error } = await supabaseClient
@@ -419,13 +412,12 @@ async function checkLicenseStatus() {
             '<p class="status-id">Référence : ' + data.id + '</p></div>';
     }
 }
-/* FIN : FONCTION CHECKLICENSESTATUS */
 
-/* DEBUT : FONCTION UPDATECARDPREVIEW */
+/* ---------- 14. APERCU CARTE ---------- */
 function updateCardPreview() {
     function get(id) { return (document.getElementById(id) && document.getElementById(id).value) || '-'; }
     var nom = get('nom'), prenom = get('prenom'), dateN = get('dateNaissance'), natl = get('nationalite');
-    var taille = get('taille'), roleVal = get(ROLE_FIELD), structure = get('structure'), adresse = get('adresse'), pays = get('pays');
+    var roleVal = get(ROLE_FIELD), structure = get('structure'), adresse = get('adresse'), pays = get('pays');
     var dateF = (dateN && dateN !== '-') ? new Date(dateN).toLocaleDateString('fr-FR') : '-';
     var fi = document.getElementById('cardFrontInfo');
     if (fi) fi.innerHTML =
@@ -433,7 +425,6 @@ function updateCardPreview() {
         '<p><span class="label">Prénom :</span> <span class="value">' + prenom + '</span></p>' +
         '<p><span class="label">Né(e) le :</span> <span class="value">' + dateF + '</span></p>' +
         '<p><span class="label">Nationalité :</span> <span class="value">' + natl + '</span></p>' +
-        '<p><span class="label">Taille :</span> <span class="value">' + taille + ' cm</span></p>' +
         '<p><span class="label">Type d\'engagement :</span> <span class="value">' + roleVal + '</span></p>';
     var ff = document.getElementById('cardFrontFooter');
     if (ff) ff.innerHTML =
@@ -451,17 +442,15 @@ function updateCardPreview() {
         '<p><span class="label">Pays :</span> <span class="value">' + pays + '</span></p>' +
         '<p><span class="label">Référence :</span> <span class="value">' + (licenseRequest && licenseRequest.id ? licenseRequest.id : '-') + '</span></p>';
 }
-/* FIN : FONCTION UPDATECARDPREVIEW */
 
-/* DEBUT : FONCTION INITCARDFLIP */
+/* ---------- 15. CARTE : FLIP ---------- */
 function initCardFlip() {
     var c = document.querySelector('.card-flip-container'),
         b = document.getElementById('flipCardBtn');
     if (c && b) b.addEventListener('click', function() { c.classList.toggle('flipped'); });
 }
-/* FIN : FONCTION INITCARDFLIP */
 
-/* DEBUT : FONCTION INITUSERMENU */
+/* ---------- 16. MENU UTILISATEUR ---------- */
 function initUserMenu() {
     var m = document.getElementById('userMenu'),
         d = document.getElementById('userDropdown');
@@ -469,14 +458,13 @@ function initUserMenu() {
     m.addEventListener('click', function(e) { e.stopPropagation(); d.classList.toggle('show'); });
     document.addEventListener('click', function() { d.classList.remove('show'); });
 }
-/* FIN : FONCTION INITUSERMENU */
 
-/* DEBUT : FONCTION INITSIDEBAR */
+/* ---------- 17. SIDEBAR + SWIPE ---------- */
 function initSidebar() {
     var sb = document.getElementById('leftSidebar'),
         ov = document.getElementById('sidebarOverlay'),
         mb = document.getElementById('menuToggle'),
-        cb = document.getElementById('closeSidebar');
+        cb = document.getElementById('closeLeftSidebar');
     function open()  { if (sb) sb.classList.add('active'); if (ov) ov.classList.add('active'); document.body.style.overflow = 'hidden'; }
     function close() { if (sb) sb.classList.remove('active'); if (ov) ov.classList.remove('active'); document.body.style.overflow = ''; }
     if (mb) mb.addEventListener('click', open);
@@ -493,9 +481,8 @@ function initSidebar() {
         else if (dx < 0) close();
     }, { passive: false });
 }
-/* FIN : FONCTION INITSIDEBAR */
 
-/* DEBUT : FONCTION INITLOGOUT */
+/* ---------- 18. DECONNEXION ---------- */
 function initLogout() {
     document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(link) {
         link.addEventListener('click', async function(e) {
@@ -505,9 +492,8 @@ function initLogout() {
         });
     });
 }
-/* FIN : FONCTION INITLOGOUT */
 
-/* DEBUT : FONCTION SAVEFORMTOSESSION */
+/* ---------- 19. PERSISTANCE DU FORMULAIRE (session) ---------- */
 function saveFormToSession() {
     var data = {};
     document.querySelectorAll('#licenseForm input, #licenseForm select').forEach(function(el) {
@@ -515,9 +501,7 @@ function saveFormToSession() {
     });
     sessionStorage.setItem('licenseFormData_parrain', JSON.stringify(data));
 }
-/* FIN : FONCTION SAVEFORMTOSESSION */
 
-/* DEBUT : FONCTION RESTOREFORMFROMSESSION */
 function restoreFormFromSession() {
     var saved = sessionStorage.getItem('licenseFormData_parrain');
     if (!saved) return;
@@ -529,9 +513,8 @@ function restoreFormFromSession() {
         }
     } catch (e) { console.warn('Session restore error', e); }
 }
-/* FIN : FONCTION RESTOREFORMFROMSESSION */
 
-/* DEBUT : INITIALISATION */
+/* ---------- 20. INITIALISATION ---------- */
 document.addEventListener('DOMContentLoaded', async function() {
     var user = await checkSession();
     if (!user) return;
@@ -555,4 +538,3 @@ document.addEventListener('DOMContentLoaded', async function() {
         showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
 });
-/* FIN : INITIALISATIONINITIALISATION */

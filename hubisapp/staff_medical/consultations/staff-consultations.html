@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Consultations · Espace Staff Médical · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="staff-consultations.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-notes-medical"></i> Consultations</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/staff-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/staff-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-briefcase-medical"></i><h3>Menu Staff Médical</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="../dashboard/staff-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../verification/staff-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../scouting/staff-scouting.html">
+            <i class="fas fa-binoculars"></i><span>Scouting</span>
+        </a>
+        <a href="../athletes/staff-athletes.html">
+            <i class="fas fa-user-injured"></i><span>Mes Athlètes Suivis</span>
+        </a>
+        <a href="../traumatologie/staff-trauma.html">
+            <i class="fas fa-bone"></i><span>Traumatologie & Suivi RTP</span>
+        </a>
+        <a href="../biometrie/staff-biometrie.html">
+            <i class="fas fa-weight"></i><span>Biométrie & Nutrition</span>
+        </a>
+        <a href="../soins/staff-soins.html">
+            <i class="fas fa-hand-holding-medical"></i><span>Soins & Physiothérapie</span>
+        </a>
+        <a href="../wellness/staff-wellness.html">
+            <i class="fas fa-heart"></i><span>Wellness Quotidien</span>
+        </a>
+        <a href="../mental/staff-mental.html">
+            <i class="fas fa-brain"></i><span>Préparation Mentale</span>
+        </a>
+        <a href="../sommeil/staff-sommeil.html">
+            <i class="fas fa-moon"></i><span>Neuro-Récupération & Sommeil</span>
+        </a>
+        <a href="staff-consultations.html" class="active">
+            <i class="fas fa-notes-medical"></i><span>Consultations</span>
+        </a>
+        <a href="../honoraires/staff-honoraires.html">
+            <i class="fas fa-file-invoice-dollar"></i><span>Mes Honoraires</span>
+        </a>
+        <a href="../revenus/staff-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <a href="../certifications/staff-certif.html">
+            <i class="fas fa-certificate"></i><span>Diplômes & Certificats</span>
+        </a>
+        <a href="../cv/staff-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/staff-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="page-main">
+<div class="page-container">
+    <h1 class="page-title"><i class="fas fa-notes-medical"></i> Consultations</h1>
+    <p class="page-subtitle">Journal logistique des consultations — date, type, statut d'aptitude, tarif — Corps · Âme · Esprit.</p>
+
+    <div class="info-note">
+        <i class="fas fa-info-circle"></i>
+        <span>Cette page reste volontairement logistique — jamais de diagnostic ni de détail clinique. Le tarif alimente automatiquement Mes Honoraires.</span>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-box"><i class="fas fa-notes-medical"></i><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0</div></div>
+        <div class="stat-box"><i class="fas fa-calendar-alt"></i><div class="stat-label">Ce mois</div><div class="stat-value" id="statMois">0</div></div>
+        <div class="stat-box"><i class="fas fa-coins"></i><div class="stat-label">Honoraires ce mois</div><div class="stat-value" id="statHonorairesMois">0 €</div></div>
+        <div class="stat-box"><i class="fas fa-users"></i><div class="stat-label">Athlètes suivis</div><div class="stat-value" id="statAthletes">0</div></div>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn-add" id="btnAdd"><i class="fas fa-plus"></i> Nouvelle consultation</button>
+        <input class="search-box" id="searchInput" placeholder="Rechercher un athlète…" type="text">
+        <select class="filter-select" id="filterSelect"><option value="">Tous les statuts</option></select>
+    </div>
+
+    <div class="entries-grid" id="entriesGrid">
+        <div class="empty-state"><i class="fas fa-notes-medical"></i><p>Aucune consultation enregistrée.<br>Cliquez sur <strong>Nouvelle consultation</strong> pour commencer.</p></div>
+    </div>
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== DEBUT MODALE AJOUT / MODIFICATION ===== -->
+<div id="entryModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modalTitle"><i class="fas fa-plus"></i> Nouvelle consultation</h3>
+            <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="entryForm">
+                <input type="hidden" id="f__id">
+                <div class="form-group">
+                    <label>Athlète *</label>
+                    <select id="f_athlete_id" required><option value="">— Sélectionnez un athlète de votre roster —</option></select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Type de consultation *</label>
+                        <select id="f_type_consultation" required>
+                            <option value="">Sélectionnez…</option>
+                            <option value="Contrôle de routine">Contrôle de routine</option>
+                            <option value="Suivi blessure">Suivi blessure</option>
+                            <option value="Bilan pré-saison">Bilan pré-saison</option>
+                            <option value="Certificat d'aptitude">Certificat d'aptitude</option>
+                            <option value="Urgence">Urgence</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Date *</label><input type="date" id="f_date_consultation" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Statut d'aptitude *</label>
+                        <select id="f_statut_aptitude" required>
+                            <option value="En attente d'examen">En attente d'examen</option>
+                            <option value="Apte">Apte</option>
+                            <option value="Apte sous réserve">Apte sous réserve</option>
+                            <option value="Non apte">Non apte</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Tarif (€)</label><input type="number" step="0.01" id="f_tarif" placeholder="Ex : 45"></div>
+                </div>
+                <div class="form-group"><label>Notes <span class="label-note">(logistique — jamais de détail clinique)</span></label><textarea id="f_notes" placeholder="Ex : RAS, contrôle satisfaisant…"></textarea></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="modalCancel"><i class="fas fa-times"></i> Annuler</button>
+            <button class="btn-primary" id="modalSave"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+    </div>
+</div>
+<!-- ===== FIN MODALE ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-briefcase-medical"></i> HubISoccer · Triple Projet</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="staff-consultations.js"></script>
+</body>
+</html>

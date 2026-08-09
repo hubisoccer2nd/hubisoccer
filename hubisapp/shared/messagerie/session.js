@@ -1,7 +1,7 @@
 // ============================================================
-//  HUBISOCCER — MESSAGERIE / SESSION.JS (LOCAL & AUTONOME)
+//  HUBISOCCER — MESSAGERIE / SESSION.JS (CORRIGÉ)
 //  Gère la session Supabase et le profil courant
-//  Chemins corrigés pour la structure réelle du projet
+//  Correction : chargement par auth_uuid + attente robuste
 // ============================================================
 
 'use strict';
@@ -15,6 +15,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ========== DEBUT : VARIABLES GLOBALES DE SESSION ==========
 let currentUser = null;
 let currentProfile = null;
+let profileReady = false;
 // ========== FIN : VARIABLES GLOBALES DE SESSION ==========
 
 // ========== DEBUT : FONCTIONS D'AUTHENTIFICATION ==========
@@ -22,7 +23,6 @@ async function requireAuth() {
     const { data: { user }, error } = await sb.auth.getUser();
     if (error || !user) {
         console.warn('Utilisateur non connecté, redirection...');
-        // 🔥 Chemin corrigé : depuis messagerie/, index.html est deux niveaux au-dessus
         window.location.href = '../../index.html';
         return null;
     }
@@ -32,16 +32,18 @@ async function requireAuth() {
 
 async function fetchCurrentProfile() {
     if (!currentUser) return null;
+    // Correction : chargement par auth_uuid et non par email
     const { data, error } = await sb
         .from('supabaseAuthPrive_profiles')
         .select('*')
-        .eq('email', currentUser.email)
+        .eq('auth_uuid', currentUser.id)
         .single();
     if (error || !data) {
         console.error('Profil introuvable :', error);
         return null;
     }
     currentProfile = data;
+    profileReady = true;
     return data;
 }
 
@@ -50,13 +52,11 @@ async function initSession() {
     if (!user) return false;
     const profile = await fetchCurrentProfile();
     if (!profile) {
-        // toast n'est peut-être pas encore défini, on utilise alert en fallback
         if (typeof toast === 'function') {
             toast('Profil introuvable. Veuillez créer votre communauté.', 'error');
         } else {
             alert('Profil introuvable. Veuillez créer votre communauté.');
         }
-        // 🔥 Chemin corrigé : on remonte d'un niveau puis on entre dans community/
         window.location.href = '../community/feed-setup.html';
         return false;
     }
@@ -69,10 +69,11 @@ async function initSession() {
 })();
 // ========== FIN : FONCTIONS D'AUTHENTIFICATION ==========
 
-// ========== DEBUT : EXPOSITION GLOBALE (POUR LES AUTRES SCRIPTS) ==========
+// ========== DEBUT : EXPOSITION GLOBALE ==========
 window.sb = sb;
 window.currentUser = currentUser;
 window.currentProfile = currentProfile;
+window.profileReady = profileReady;
 window.requireAuth = requireAuth;
 window.initSession = initSession;
 // ========== FIN : EXPOSITION GLOBALE ==========

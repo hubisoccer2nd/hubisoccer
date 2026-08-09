@@ -1,8 +1,7 @@
 // ============================================================
-//  HUBISOCCER — CONVERSATION.JS (VERSION FINALE COMPLÈTE)
+//  HUBISOCCER — CONVERSATION.JS (CORRIGÉE – SESSION ROBUSTE)
 //  Liste des conversations — Tous rôles
-//  Inclut : sidebar 28 rôles, liste d'abonnés, nouvelle conv complète,
-//  renommage de groupe, sélecteur 24 langues, présence, etc.
+//  Correction : boucle d'attente du profil plus longue
 // ============================================================
 
 'use strict';
@@ -551,26 +550,26 @@ async function initSessionAndProfile() {
     try {
         const auth = await requireAuth();
         if (!auth) return false;
-        
-        // 🔥 Attendre que currentProfile soit chargé par session.js
+
+        // 🔥 Attendre que currentProfile soit chargé par session.js (30 tentatives × 200 ms)
         let attempts = 0;
-        while ((!currentProfile || !currentProfile.hubisoccer_id) && attempts < 20) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+        while ((!currentProfile || !currentProfile.hubisoccer_id) && attempts < 30) {
+            await new Promise(resolve => setTimeout(resolve, 200));
             attempts++;
         }
-        
+
         if (!currentProfile || !currentProfile.hubisoccer_id) {
             toast('Profil non chargé. Redirection...', 'error');
             window.location.href = '../community/feed-setup.html';
             return false;
         }
-        
+
         document.getElementById('userName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
         updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'userAvatar', 'userAvatarInitials');
-        
+
         // Construction du menu latéral avec le rôle de l'utilisateur
         buildSidebarMenu(currentProfile.role_code || 'FOOT');
-        
+
         return true;
     } catch (err) {
         toast('Erreur de session : ' + err.message, 'error');
@@ -588,10 +587,10 @@ function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
         img.style.display = 'block';
         initials.style.display = 'none';
     } else {
-    img.style.display = 'none';
-    initials.style.display = 'flex';
-    initials.textContent = text;
-}
+        img.style.display = 'none';
+        initials.style.display = 'flex';
+        initials.textContent = text;
+    }
 }
 // ========== FIN : SESSION & PROFIL ==========
 
@@ -604,35 +603,35 @@ async function loadConversations() {
             .select('conversation_id, last_read_at')
             .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
         if (pErr) throw pErr;
-        
+
         if (!participations || participations.length === 0) {
             conversations = [];
             renderConversations();
             return;
         }
-        
+
         const allConvIds = participations.map(p => p.conversation_id);
         const readMap = Object.fromEntries(participations.map(p => [p.conversation_id, p.last_read_at]));
-        
+
         let convIds = allConvIds;
         const { data: archived } = await sb
             .from('supabaseAuthPrive_archived_conversations')
             .select('conversation_id')
             .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
         const archivedIds = new Set((archived || []).map(a => a.conversation_id));
-        
+
         if (showArchives) {
             convIds = allConvIds.filter(id => archivedIds.has(id));
         } else {
             convIds = allConvIds.filter(id => !archivedIds.has(id));
         }
-        
+
         if (convIds.length === 0) {
             conversations = [];
             renderConversations();
             return;
         }
-        
+
         const { data: convData, error: cErr } = await sb
             .from('supabaseAuthPrive_conversations')
             .select(`
@@ -645,20 +644,20 @@ async function loadConversations() {
             .in('id', convIds)
             .order('updated_at', { ascending: false });
         if (cErr) throw cErr;
-        
-        // ✅ Récupération de TOUS les messages sans filtre deleted_for
+
+        // Récupération de TOUS les messages sans filtre deleted_for
         const { data: allMsgs } = await sb
             .from('supabaseAuthPrive_messages')
             .select('id, conversation_id, content, media_type, created_at, user_hubisoccer_id, deleted_for')
             .in('conversation_id', convIds)
             .order('created_at', { ascending: false });
-        
+
         // Filtrage JavaScript : exclure les messages supprimés pour l'utilisateur courant
         const visibleMsgs = (allMsgs || []).filter(msg => {
             const deleted = msg.deleted_for || [];
             return !deleted.includes(currentProfile.hubisoccer_id);
         });
-        
+
         // Construction de lastMsgMap (dernier message visible par conversation)
         const lastMsgMap = {};
         for (const msg of visibleMsgs) {
@@ -666,7 +665,7 @@ async function loadConversations() {
                 lastMsgMap[msg.conversation_id] = msg;
             }
         }
-        
+
         // Compteurs de messages non lus (filtrage idem)
         const unreadCounts = {};
         for (const cid of convIds) {
@@ -680,11 +679,11 @@ async function loadConversations() {
             }
             unreadCounts[cid] = unread;
         }
-        
+
         conversations = (convData || []).map(conv => {
             const participants = conv.participants || [];
             let name, avatarUrl, otherUserId = null;
-            
+
             if (conv.is_group) {
                 name = conv.group_name || 'Groupe';
                 avatarUrl = conv.group_avatar || null;
@@ -695,7 +694,7 @@ async function loadConversations() {
                 avatarUrl = prof.avatar_url || null;
                 otherUserId = other?.user_hubisoccer_id || null;
             }
-            
+
             const lastMsg = lastMsgMap[conv.id];
             return {
                 id: conv.id,
@@ -711,7 +710,7 @@ async function loadConversations() {
                 archived: archivedIds.has(conv.id)
             };
         });
-        
+
         renderConversations();
     } catch (err) {
         console.error('Erreur chargement conversations:', err);
@@ -726,10 +725,10 @@ function renderConversations() {
     const skeleton = document.getElementById('skeletonList');
     const emptyEl = document.getElementById('emptyState');
     const totalBadge = document.getElementById('totalConvBadge');
-    
+
     skeleton.style.display = 'none';
     list.style.display = 'flex';
-    
+
     let filtered = conversations.filter(conv => {
         if (searchQuery && !conv.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
         if (activeFilter === 'unread' && conv.unreadCount === 0) return false;
@@ -737,10 +736,10 @@ function renderConversations() {
         if (activeFilter === 'direct' && conv.is_group) return false;
         return true;
     });
-    
+
     const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
     totalBadge.textContent = `${filtered.length} conversation${filtered.length !== 1 ? 's' : ''}`;
-    
+
     const notifBadge = document.getElementById('notifBadge');
     if (totalUnread > 0) {
         notifBadge.textContent = totalUnread > 99 ? '99+' : totalUnread;
@@ -750,7 +749,7 @@ function renderConversations() {
         notifBadge.style.display = 'none';
         document.title = 'Messages | HubISoccer';
     }
-    
+
     if (filtered.length === 0) {
         list.style.display = 'none';
         emptyEl.style.display = 'block';
@@ -758,10 +757,10 @@ function renderConversations() {
         document.getElementById('emptyDesc').textContent = showArchives ? 'Vous n\'avez pas encore archivé de conversations.' : 'Sélectionnez un abonné ci‑dessus ou créez un groupe !';
         return;
     }
-    
+
     emptyEl.style.display = 'none';
     list.style.display = 'flex';
-    
+
     list.innerHTML = filtered.map(conv => {
         const isOnline = conv.otherUserId && onlineUsers.has(conv.otherUserId);
         const lastMsgText = getLastMsgPreview(conv.lastMsg);
@@ -769,7 +768,7 @@ function renderConversations() {
         const hasUnread = conv.unreadCount > 0;
         const initials = getInitials(conv.name);
         const avatarUrl = conv.avatarUrl;
-        
+
         return `
         <div class="conv-item ${hasUnread ? 'unread' : ''}" data-conv-id="${conv.id}">
             <div class="conv-avatar-wrap">

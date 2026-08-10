@@ -1,6 +1,13 @@
 /* ============================================================
-   HubISoccer — acceuil.js
-   Gestion des tournois – Page d'accueil
+   HubISoccer -- acceuil.js
+   Gestion des tournois -- Page d'accueil (refonte)
+   ------------------------------------------------------------
+   Corrige : profil/parametres fixes sur footballeur (maintenant
+   routes dynamiquement selon le role), aucune notion de niveau
+   d'acces (maintenant les elements data-tier="gestionnaire" sont
+   masques aux non-organisateurs), tables renommees vers la
+   convention supabaseAuthPrive_gestion_tournoi_*, et n'affiche
+   que les tournois publies (jamais les brouillons d'un autre).
    ============================================================ */
 'use strict';
 
@@ -13,27 +20,58 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 window.__SUPABASE_CLIENT = supabaseClient;
 
 // ═══════════════════════════════════════════════════════════
-// 2. ÉTAT GLOBAL
+// 2. TABLES (convention supabaseAuthPrive_gestion_tournoi_*)
+// ═══════════════════════════════════════════════════════════
+const TBL_TOURNAMENTS = 'supabaseAuthPrive_gestion_tournoi_tournaments';
+const TBL_TYPES        = 'supabaseAuthPrive_gestion_tournoi_types';
+const TBL_SPORTS        = 'supabaseAuthPrive_gestion_tournoi_sports';
+const TBL_PARTICIPANTS   = 'supabaseAuthPrive_gestion_tournoi_participants';
+
+// ═══════════════════════════════════════════════════════════
+// 3. TABLE DE ROUTAGE PROFIL / PARAMETRES PAR ROLE
+// ------------------------------------------------------------
+// Seuls les roles dont l'espace personnel est deja construit
+// figurent ici. Un role absent de cette table verra "Mon profil"
+// et "Parametres" masques plutot que rediriges vers un lien
+// casse -- a completer au fur et a mesure que d'autres espaces
+// sont livres (les 9 autres sportifs, les 10 artistes, Formateur,
+// et Gestionnaire de Tournoi lui-meme des que son propre espace
+// personnel existera).
+// ═══════════════════════════════════════════════════════════
+const ROLE_PROFILE_ROUTES = {
+    FOOT:   { profile: '../../footballeur/profile-edit/foot-profile.html',       settings: '../../footballeur/settings/foot-settings.html' },
+    COACH:  { profile: '../../coach/profile-edit/coach-profile.html',            settings: '../../coach/settings/coach-settings.html' },
+    ACAD:   { profile: '../../academie/profile-edit/academie-profile.html',      settings: '../../academie/settings/academie-settings.html' },
+    AGENT:  { profile: '../../agent/profile-edit/agent-profile.html',            settings: '../../agent/settings/agent-settings.html' },
+    PARRAIN:{ profile: '../../parrain/profile-edit/parrain-profile.html',        settings: '../../parrain/settings/parrain-settings.html' },
+    MEDIC:  { profile: '../../staff_medical/profile-edit/staff-profile.html',    settings: '../../staff_medical/settings/staff-settings.html' },
+    ARBIT:  { profile: '../../corps_arbitral/profile-edit/arbitre-profile.html', settings: '../../corps_arbitral/settings/arbitre-settings.html' }
+};
+
+// Roles autorises a voir les elements marques data-tier="gestionnaire"
+const GESTIONNAIRE_ROLE_CODES = ['GESTION', 'TOURN', 'ADMIN'];
+
+// ═══════════════════════════════════════════════════════════
+// 4. ETAT GLOBAL
 // ═══════════════════════════════════════════════════════════
 let currentUser = null;
 let userProfile = null;
 let allTournaments = [];
 
 // ═══════════════════════════════════════════════════════════
-// 3. LOADER
+// 5. LOADER
 // ═══════════════════════════════════════════════════════════
 function showLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'flex';
 }
-
 function hideLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'none';
 }
 
 // ═══════════════════════════════════════════════════════════
-// 4. TOAST (30 secondes)
+// 6. TOAST (30 secondes)
 // ═══════════════════════════════════════════════════════════
 function showToast(message, type, duration) {
     if (!type) type = 'info';
@@ -70,7 +108,7 @@ function showToast(message, type, duration) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 5. UTILITAIRES
+// 7. UTILITAIRES
 // ═══════════════════════════════════════════════════════════
 function escapeHtml(str) {
     if (!str) return '';
@@ -86,16 +124,36 @@ function getInitials(name) {
     return name[0].toUpperCase();
 }
 
+function formatMoney(n) {
+    if (!n) return '0';
+    return Number(n).toLocaleString('fr-FR');
+}
+
+function formatDateShort(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+}
+
+// Statut temporel reel d'un tournoi, calcule a partir des dates
+// (distinct du champ "status" en base qui indique brouillon/publie/annule)
+function computeTimeState(t) {
+    const now = new Date();
+    const start = new Date(t.start_date);
+    const end = new Date(t.end_date);
+    if (start > now) return 'upcoming';
+    if (end < now) return 'past';
+    return 'ongoing';
+}
+
 // ═══════════════════════════════════════════════════════════
-// 6. SESSION
+// 8. SESSION
 // ═══════════════════════════════════════════════════════════
 async function checkSession() {
     showLoader();
     const { data } = await supabaseClient.auth.getSession();
     const session = data.session;
-    const error = !session;
     hideLoader();
-    if (error || !session) {
+    if (!session) {
         window.location.href = '../../authprive/users/login.html';
         return null;
     }
@@ -104,7 +162,7 @@ async function checkSession() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 7. CHARGEMENT DU PROFIL
+// 9. CHARGEMENT DU PROFIL + APPLICATION DU NIVEAU D'ACCES
 // ═══════════════════════════════════════════════════════════
 async function loadProfile() {
     showLoader();
@@ -120,11 +178,41 @@ async function loadProfile() {
     }
     userProfile = data;
     updateNavbarUI();
+    applyRoleTier();
     return userProfile;
 }
 
+// Masque les elements data-tier="gestionnaire" pour tout le monde
+// sauf le role Gestionnaire de Tournoi lui-meme
+function applyRoleTier() {
+    const isGestionnaire = GESTIONNAIRE_ROLE_CODES.indexOf(userProfile.role_code) !== -1;
+    if (!isGestionnaire) {
+        document.querySelectorAll('[data-tier="gestionnaire"]').forEach(function(el) {
+            el.style.display = 'none';
+        });
+    }
+}
+
+// Route "Mon profil" / "Parametres" vers l'espace du role connecte
+// plutot que vers une page fixe (l'ancien bug pointait toujours
+// vers le footballeur, quel que soit le role reellement connecte)
+function applyProfileRouting() {
+    const routes = ROLE_PROFILE_ROUTES[userProfile.role_code];
+    const profileLink = document.getElementById('profileLink');
+    const settingsLink = document.getElementById('settingsLink');
+    if (routes) {
+        if (profileLink) profileLink.href = routes.profile;
+        if (settingsLink) settingsLink.href = routes.settings;
+    } else {
+        // Espace personnel pas encore construit pour ce role :
+        // on masque plutot que de pointer vers un lien casse
+        if (profileLink) profileLink.style.display = 'none';
+        if (settingsLink) settingsLink.style.display = 'none';
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
-// 8. MISE À JOUR DE LA NAVBAR
+// 10. MISE A JOUR DE LA NAVBAR
 // ═══════════════════════════════════════════════════════════
 function updateNavbarUI() {
     if (!userProfile) return;
@@ -138,7 +226,6 @@ function updateNavbarUI() {
     }
 
     const avatarUrl = userProfile.avatar_url;
-
     if (avatarUrl && avatarUrl !== '') {
         if (userAvatar) { userAvatar.src = avatarUrl; userAvatar.style.display = 'block'; }
         if (userInitials) userInitials.style.display = 'none';
@@ -147,16 +234,19 @@ function updateNavbarUI() {
         if (userInitials) { userInitials.textContent = initials; userInitials.style.display = 'flex'; }
         if (userAvatar) userAvatar.style.display = 'none';
     }
+
+    applyProfileRouting();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 9. CHARGEMENT DES TOURNOIS
+// 11. CHARGEMENT DES TOURNOIS (uniquement publies/termines --
+//     jamais un brouillon d'un autre organisateur)
 // ═══════════════════════════════════════════════════════════
 async function loadTournamentsList() {
     const { data, error } = await supabaseClient
-        .from('gestionnairetournoi_tournaments')
-        .select('id, name, description, start_date, end_date, location, registration_code, prize_pool, stream_url, requires_first_pas, has_agreed_to_rules, type_id, sport_id, gestionnairetournoi_types!inner(name, label), gestionnairetournoi_sports!inner(name)')
-        .eq('is_active', true)
+        .from(TBL_TOURNAMENTS)
+        .select('id, name, description, start_date, end_date, location, registration_code, prize_pool, stream_url, status, type_id, sport_id, ' + TBL_TYPES + '!inner(name, label), ' + TBL_SPORTS + '!inner(name)')
+        .in('status', ['published', 'completed'])
         .order('start_date', { ascending: true });
 
     if (error) {
@@ -175,43 +265,29 @@ async function loadTournamentsList() {
             registration_code: t.registration_code,
             prize_pool: t.prize_pool,
             stream_url: t.stream_url,
-            requires_first_pas: t.requires_first_pas,
-            has_agreed_to_rules: t.has_agreed_to_rules,
-            type: t.gestionnairetournoi_types ? t.gestionnairetournoi_types.name : '',
-            typeLabel: t.gestionnairetournoi_types ? t.gestionnairetournoi_types.label : '',
-            sport: t.gestionnairetournoi_sports ? t.gestionnairetournoi_sports.name : ''
+            status: t.status,
+            type: t[TBL_TYPES] ? t[TBL_TYPES].name : '',
+            typeLabel: t[TBL_TYPES] ? t[TBL_TYPES].label : '',
+            sport: t[TBL_SPORTS] ? t[TBL_SPORTS].name : ''
         };
     });
 }
 
 // ═══════════════════════════════════════════════════════════
-// 10. CHARGEMENT DES SPORTS
+// 12. CHARGEMENT DES SPORTS / TYPES (filtres)
 // ═══════════════════════════════════════════════════════════
 async function loadSportsList() {
-    const { data, error } = await supabaseClient
-        .from('gestionnairetournoi_sports')
-        .select('id, name')
-        .order('name');
-
+    const { data, error } = await supabaseClient.from(TBL_SPORTS).select('id, name').order('name');
     if (error) throw error;
     return data;
 }
 
-// ═══════════════════════════════════════════════════════════
-// 11. CHARGEMENT DES TYPES
-// ═══════════════════════════════════════════════════════════
 async function loadTournamentTypes() {
-    const { data, error } = await supabaseClient
-        .from('gestionnairetournoi_types')
-        .select('id, name, label');
-
+    const { data, error } = await supabaseClient.from(TBL_TYPES).select('id, name, label').order('label');
     if (error) throw error;
     return data;
 }
 
-// ═══════════════════════════════════════════════════════════
-// 12. CHARGEMENT DES FILTRES
-// ═══════════════════════════════════════════════════════════
 async function loadFilters() {
     try {
         const sports = await loadSportsList();
@@ -239,13 +315,15 @@ async function loadFilters() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 13. CHARGEMENT ET AFFICHAGE
+// 13. CHARGEMENT + AFFICHAGE GENERAL
 // ═══════════════════════════════════════════════════════════
 async function loadAndDisplayTournaments() {
     try {
         showLoader();
         const tournaments = await loadTournamentsList();
         allTournaments = tournaments;
+        renderHeroStats();
+        renderLiveStrip();
         applyFilters();
         hideLoader();
     } catch (err) {
@@ -256,22 +334,73 @@ async function loadAndDisplayTournaments() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 14. APPLICATION DES FILTRES
+// 14. STATS RAPIDES (bandeau hero)
+// ═══════════════════════════════════════════════════════════
+async function renderHeroStats() {
+    const ongoing = allTournaments.filter(function(t) { return computeTimeState(t) === 'ongoing'; });
+    const upcoming = allTournaments.filter(function(t) { return computeTimeState(t) === 'upcoming'; });
+    const cagnotte = allTournaments.reduce(function(sum, t) { return sum + (Number(t.prize_pool) || 0); }, 0);
+
+    document.getElementById('statActifs').textContent = ongoing.length;
+    document.getElementById('statAVenir').textContent = upcoming.length;
+    document.getElementById('statCagnotte').textContent = formatMoney(cagnotte) + ' FCFA';
+
+    // Participants approuves, tous tournois publies confondus
+    const ids = allTournaments.map(function(t) { return t.id; });
+    if (!ids.length) {
+        document.getElementById('statParticipants').textContent = '0';
+        return;
+    }
+    const { count, error } = await supabaseClient
+        .from(TBL_PARTICIPANTS)
+        .select('id', { count: 'exact', head: true })
+        .in('tournament_id', ids)
+        .eq('status', 'approved');
+    document.getElementById('statParticipants').textContent = error ? '—' : (count || 0);
+}
+
+// ═══════════════════════════════════════════════════════════
+// 15. BANDEAU EN DIRECT (element signature)
+// ═══════════════════════════════════════════════════════════
+function renderLiveStrip() {
+    const track = document.getElementById('liveStripTrack');
+    const empty = document.getElementById('liveStripEmpty');
+    const live = allTournaments.filter(function(t) { return computeTimeState(t) === 'ongoing'; });
+
+    if (!live.length) {
+        if (empty) empty.style.display = 'flex';
+        return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    track.innerHTML = live.map(function(t) {
+        return '<a class="live-pill" href="tournament-details.html?id=' + t.id + '">' +
+               '<span class="live-dot small"></span>' +
+               '<span class="live-pill-name">' + escapeHtml(t.name) + '</span>' +
+               '<span class="live-pill-sport">' + escapeHtml(t.sport) + '</span>' +
+               '</a>';
+    }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// 16. APPLICATION DES FILTRES
 // ═══════════════════════════════════════════════════════════
 function applyFilters() {
     const sport = document.getElementById('sportFilter').value;
     const period = document.getElementById('periodFilter').value;
     const type = document.getElementById('typeFilter').value;
-    const now = new Date();
+    const search = document.getElementById('searchInput').value.trim().toLowerCase();
 
     let filtered = allTournaments.filter(function(t) {
         if (sport !== 'all' && t.sport !== sport) return false;
         if (type !== 'all' && t.type !== type) return false;
-        const start = new Date(t.start_date);
-        const end = new Date(t.end_date);
-        if (period === 'upcoming') return start > now;
-        if (period === 'ongoing') return start <= now && end >= now;
-        if (period === 'past') return end < now;
+        if (search && t.name.toLowerCase().indexOf(search) === -1) return false;
+
+        const state = computeTimeState(t);
+        if (period === 'live' && state !== 'ongoing') return false;
+        if (period === 'upcoming' && state !== 'upcoming') return false;
+        if (period === 'ongoing' && state !== 'ongoing') return false;
+        if (period === 'past' && state !== 'past') return false;
         return true;
     });
 
@@ -279,7 +408,7 @@ function applyFilters() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 15. RENDU DES CARTES TOURNOI
+// 17. RENDU DES CARTES TOURNOI (design redesigne)
 // ═══════════════════════════════════════════════════════════
 function renderTournaments(tournaments) {
     const grid = document.getElementById('tournamentsGrid');
@@ -292,23 +421,35 @@ function renderTournaments(tournaments) {
 
     tournaments.forEach(function(t) {
         const card = document.createElement('div');
-        card.className = 'tournament-card';
-        const start = new Date(t.start_date).toLocaleDateString('fr-FR');
-        const end = new Date(t.end_date).toLocaleDateString('fr-FR');
+        const state = computeTimeState(t);
+        card.className = 'tournament-card state-' + state;
+
+        const start = formatDateShort(t.start_date);
+        const end = formatDateShort(t.end_date);
+
         let badgeClass = '';
         if (t.type === 'public_show') badgeClass = 'badge-show';
         else if (t.type === 'public_detection') badgeClass = 'badge-detection';
         else if (t.type === 'private_hubisoccer') badgeClass = 'badge-private';
         else if (t.type === 'private_simple') badgeClass = 'badge-simple';
 
+        const stateLabel = state === 'ongoing' ? '<span class="state-pill ongoing"><span class="live-dot small"></span> En cours</span>'
+                          : state === 'upcoming' ? '<span class="state-pill upcoming"><i class="fas fa-clock"></i> À venir</span>'
+                          : '<span class="state-pill past"><i class="fas fa-flag-checkered"></i> Terminé</span>';
+
         card.innerHTML =
+            '<div class="card-top-row">' +
             '<div class="card-badge ' + badgeClass + '">' + escapeHtml(t.typeLabel) + '</div>' +
+            stateLabel +
+            '</div>' +
             '<div class="card-sport"><i class="fas fa-futbol"></i> ' + escapeHtml(t.sport) + '</div>' +
             '<h3 class="card-title">' + escapeHtml(t.name) + '</h3>' +
-            '<div class="card-date"><i class="fas fa-calendar-alt"></i> ' + start + ' - ' + end + '</div>' +
-            '<div class="card-location"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(t.location) + '</div>' +
-            (t.prize_pool ? '<div class="card-prize"><i class="fas fa-trophy"></i> ' + t.prize_pool.toLocaleString() + ' FCFA</div>' : '') +
-            '<button class="btn-details" data-id="' + t.id + '">Voir les détails</button>';
+            '<div class="card-meta-row">' +
+            '<span class="card-date"><i class="fas fa-calendar-alt"></i> ' + start + ' → ' + end + '</span>' +
+            '<span class="card-location"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(t.location || 'Non précisé') + '</span>' +
+            '</div>' +
+            (t.prize_pool ? '<div class="card-prize"><i class="fas fa-coins"></i> <span class="tabular">' + formatMoney(t.prize_pool) + '</span> FCFA</div>' : '') +
+            '<button class="btn-details" data-id="' + t.id + '">Voir les détails <i class="fas fa-arrow-right"></i></button>';
 
         grid.appendChild(card);
     });
@@ -321,7 +462,7 @@ function renderTournaments(tournaments) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 16. UI : SIDEBAR, MENU, DÉCONNEXION
+// 18. UI : SIDEBAR, MENU, DECONNEXION
 // ═══════════════════════════════════════════════════════════
 function initUserMenu() {
     const userMenu = document.getElementById('userMenu');
@@ -384,7 +525,7 @@ function initLogout() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 17. INITIALISATION
+// 19. INITIALISATION
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function() {
     const user = await checkSession();
@@ -411,4 +552,5 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('sportFilter')?.addEventListener('change', applyFilters);
     document.getElementById('periodFilter')?.addEventListener('change', applyFilters);
     document.getElementById('typeFilter')?.addEventListener('change', applyFilters);
+    document.getElementById('searchInput')?.addEventListener('input', applyFilters);
 });

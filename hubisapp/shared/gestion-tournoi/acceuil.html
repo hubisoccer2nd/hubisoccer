@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Gestion des tournois · HubISoccer</title>
     <!-- Polices & Icônes -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- CSS local -->
     <link rel="stylesheet" href="acceuil.css">
@@ -27,7 +27,7 @@
 <nav class="dashboard-nav">
     <div class="nav-left">
         <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
-        <span class="dashboard-title"><i class="fas fa-tasks"></i> Gestion des tournois</span>
+        <span class="dashboard-title"><i class="fas fa-trophy"></i> Gestion des tournois</span>
     </div>
     <div class="nav-right">
         <select class="lang-picker" id="langSelect">
@@ -68,8 +68,8 @@
             <span class="user-name" id="userName">Chargement…</span>
             <i class="fas fa-chevron-down fa-xs"></i>
             <div class="user-dropdown" id="userDropdown">
-                <a href="../../footballeur/profile-edit/foot-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
-                <a href="../../footballeur/settings/foot-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <a href="#" id="profileLink"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="#" id="settingsLink"><i class="fas fa-cog"></i> Paramètres</a>
                 <hr class="dropdown-divider">
                 <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
             </div>
@@ -82,22 +82,31 @@
 <!-- ===== DEBUT SIDEBAR ===== -->
 <div class="sidebar left-sidebar" id="leftSidebar">
     <div class="sidebar-header">
-        <div class="sidebar-logo"><i class="fas fa-tasks"></i><h3>Menu Tournois</h3></div>
+        <div class="sidebar-logo"><i class="fas fa-trophy"></i><h3>Gestion Tournois</h3></div>
         <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
     </div>
     <nav class="sidebar-nav">
-        <div class="nav-group-label">Gestion Tournois</div>
+        <div class="nav-group-label">Tournois</div>
         <a href="acceuil.html" class="active"><i class="fas fa-home"></i><span>Accueil</span></a>
-        <a href="create-tournament.html"><i class="fas fa-plus-circle"></i><span>Créer un tournoi</span></a>
-        <a href="my-tournaments.html"><i class="fas fa-list"></i><span>Mes tournois</span></a>
         <a href="my-registrations.html"><i class="fas fa-calendar-check"></i><span>Mes inscriptions</span></a>
         <a href="rankings.html"><i class="fas fa-chart-line"></i><span>Classements</span></a>
+        <a href="stats-compare.html"><i class="fas fa-chart-bar"></i><span>Comparer les stats</span></a>
+        <a href="player-stats.html"><i class="fas fa-user-chart"></i><span>Mes statistiques</span></a>
+        <a href="mon-equipe.html"><i class="fas fa-users"></i><span>Mon équipe</span></a>
+        <a href="demande-carte.html"><i class="fas fa-id-card"></i><span>Ma carte de tournoi</span></a>
         <a href="tournament-rules.html"><i class="fas fa-gavel"></i><span>Règlement</span></a>
+
+        <div class="nav-divider" data-tier="gestionnaire"></div>
+        <div class="nav-group-label" data-tier="gestionnaire">Organisation</div>
+        <a href="create-tournament.html" data-tier="gestionnaire"><i class="fas fa-plus-circle"></i><span>Créer un tournoi</span></a>
+        <a href="my-tournaments.html" data-tier="gestionnaire"><i class="fas fa-clipboard-list"></i><span>Mes tournois gérés</span></a>
+        <a href="invite-participants.html" data-tier="gestionnaire"><i class="fas fa-user-plus"></i><span>Inviter des participants</span></a>
+
         <div class="nav-divider"></div>
         <div class="nav-group-label">Plateforme</div>
-        <a href="../community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../community/feed.html"><i class="fas fa-comments"></i><span>Communauté</span></a>
         <a href="../messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
-        <a href="../suivi-tournoi/suivi-tournoi.html"><i class="fas fa-trophy"></i><span>Suivi Tournoi</span></a>
+        <a href="../suivi-tournoi/suivi-tournoi.html"><i class="fas fa-satellite-dish"></i><span>Suivi Tournoi (live)</span></a>
         <div class="nav-divider"></div>
         <a href="help-tournament.html"><i class="fas fa-question-circle"></i><span>Aide</span></a>
         <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
@@ -110,24 +119,66 @@
 <main class="dashboard-main">
     <div class="tournoi-container">
 
-        <header class="tournoi-header">
-            <div class="header-content">
-                <h1><i class="fas fa-trophy"></i> Gestion des tournois</h1>
-                <button id="createTournamentBtn" class="btn-primary"><i class="fas fa-plus"></i> Créer un tournoi</button>
+        <!-- ===== DEBUT BANDEAU EN DIRECT ===== -->
+        <!-- Élément signature : ticker horizontal des tournois/matchs en cours, pastille pulsante -->
+        <section class="live-strip" id="liveStrip">
+            <div class="live-strip-label">
+                <span class="live-dot"></span>
+                <span>EN DIRECT</span>
             </div>
-            <p class="subtitle">Participez, organisez et suivez vos compétitions sportives</p>
-        </header>
+            <div class="live-strip-track" id="liveStripTrack">
+                <div class="live-strip-empty" id="liveStripEmpty">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span>Rien en direct pour l'instant</span>
+                </div>
+            </div>
+        </section>
+        <!-- ===== FIN BANDEAU EN DIRECT ===== -->
 
-        <!-- Filtres -->
+        <!-- ===== DEBUT EN-TETE + STATS RAPIDES ===== -->
+        <header class="tournoi-header">
+            <div class="header-top">
+                <div class="header-titles">
+                    <h1><i class="fas fa-trophy"></i> Gestion des tournois</h1>
+                    <p class="subtitle">Participez, organisez et suivez vos compétitions — Corps · Âme · Esprit</p>
+                </div>
+                <button id="createTournamentBtn" class="btn-primary" data-tier="gestionnaire">
+                    <i class="fas fa-plus"></i> Créer un tournoi
+                </button>
+            </div>
+
+            <div class="hero-stats-bar">
+                <div class="hero-stat">
+                    <span class="hero-stat-value" id="statActifs">—</span>
+                    <span class="hero-stat-label"><i class="fas fa-trophy"></i> Tournois actifs</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value" id="statAVenir">—</span>
+                    <span class="hero-stat-label"><i class="fas fa-calendar-alt"></i> À venir</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value" id="statParticipants">—</span>
+                    <span class="hero-stat-label"><i class="fas fa-users"></i> Participants inscrits</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-value" id="statCagnotte">—</span>
+                    <span class="hero-stat-label"><i class="fas fa-coins"></i> Cagnotte cumulée</span>
+                </div>
+            </div>
+        </header>
+        <!-- ===== FIN EN-TETE ===== -->
+
+        <!-- ===== DEBUT FILTRES ===== -->
         <div class="filters-bar">
             <div class="filter-group">
-                <label><i class="fas fa-filter"></i> Sport</label>
+                <label><i class="fas fa-futbol"></i> Sport</label>
                 <select id="sportFilter"><option value="all">Tous les sports</option></select>
             </div>
             <div class="filter-group">
                 <label><i class="fas fa-calendar-alt"></i> Période</label>
                 <select id="periodFilter">
                     <option value="all">Tous</option>
+                    <option value="live">En direct</option>
                     <option value="upcoming">À venir</option>
                     <option value="ongoing">En cours</option>
                     <option value="past">Terminés</option>
@@ -137,12 +188,18 @@
                 <label><i class="fas fa-tag"></i> Type</label>
                 <select id="typeFilter"><option value="all">Tous</option></select>
             </div>
+            <div class="filter-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Rechercher un tournoi…">
+            </div>
         </div>
+        <!-- ===== FIN FILTRES ===== -->
 
-        <!-- Grille des tournois -->
+        <!-- ===== DEBUT GRILLE DES TOURNOIS ===== -->
         <div class="tournaments-grid" id="tournamentsGrid">
             <div class="loader" id="loader"><i class="fas fa-spinner fa-pulse"></i> Chargement...</div>
         </div>
+        <!-- ===== FIN GRILLE ===== -->
 
     </div>
 </main>
@@ -168,6 +225,9 @@
     </div>
 </footer>
 <!-- ===== FIN FOOTER ===== -->
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
 
 <!-- ===== SCRIPT ===== -->
 <script src="acceuil.js"></script>

@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="discuss.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- PeerJS : appels audio et vidéo -->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
 
@@ -77,6 +79,9 @@
             <button class="option-item" id="optBlockUser">
                 <i class="fas fa-ban"></i> Bloquer
             </button>
+            <button class="option-item" id="optBackground">
+                <i class="fas fa-image"></i> Arrière-plan du chat
+            </button>
             <button class="option-item" id="optToggleDarkMode">
                 <i class="fas fa-moon"></i> Mode sombre
             </button>
@@ -109,6 +114,17 @@
     <i class="fas fa-thumbtack"></i>
     <span id="pinnedBannerText">Message épinglé</span>
     <button id="viewPinnedBtn">Voir</button>
+</div>
+
+<!-- ===== BARRE DE SÉLECTION MULTIPLE DE MESSAGES ===== -->
+<div class="msg-selection-bar" id="msgSelectionBar" style="display:none">
+    <button id="msgSelCancelBtn" title="Annuler"><i class="fas fa-times"></i></button>
+    <span id="msgSelectionCount">0 message</span>
+    <div class="msg-sel-actions">
+        <button id="msgSelCopyBtn" title="Copier"><i class="fas fa-copy"></i></button>
+        <button id="msgSelForwardBtn" title="Transférer"><i class="fas fa-share"></i></button>
+        <button id="msgSelDeleteBtn" class="danger" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+    </div>
 </div>
 
 <!-- ===== ZONE DES MESSAGES ===== -->
@@ -200,6 +216,9 @@
         <button data-format="list" title="Liste à puces"><i class="fas fa-list-ul"></i></button>
         <button data-format="code" title="Code"><i class="fas fa-code"></i></button>
     </div>
+
+    <!-- Boîte d'autocomplétion des mentions @ (groupes) -->
+    <div class="mention-box" id="mentionBox" style="display:none"></div>
 
     <!-- Barre de saisie principale -->
     <div class="input-row">
@@ -296,6 +315,8 @@
     <button class="ctx-item" id="ctxPin"><i class="fas fa-thumbtack"></i> Épingler</button>
     <button class="ctx-item" id="ctxForward"><i class="fas fa-share"></i> Transférer</button>
     <button class="ctx-item" id="ctxTranslate"><i class="fas fa-language"></i> Traduire</button>
+    <button class="ctx-item" id="ctxSelect"><i class="fas fa-check-square"></i> Sélectionner</button>
+    <button class="ctx-item" id="ctxReadInfo" style="display:none"><i class="fas fa-eye"></i> Qui a lu ?</button>
     <hr>
     <button class="ctx-item danger" id="ctxDeleteMe"><i class="fas fa-user-slash"></i> Supprimer pour moi</button>
     <button class="ctx-item danger" id="ctxDeleteAll" style="display:none"><i class="fas fa-trash-alt"></i> Supprimer pour tous</button>
@@ -387,6 +408,87 @@
             <button class="btn-cancel" onclick="closeModal('modalMessagePreview')">Modifier</button>
             <button class="btn-confirm" id="confirmPreviewBtn">Envoyer</button>
         </div>
+    </div>
+</div>
+
+<!-- ===== MODAL : APPEL AUDIO / VIDÉO ===== -->
+<div id="modalCall" class="call-modal">
+    <div class="call-box">
+        <!-- Zone vidéo (appels vidéo uniquement) -->
+        <div class="call-video-zone" id="callVideoZone" style="display:none">
+            <video id="callRemoteVideo" autoplay playsinline class="call-remote-video" style="display:none"></video>
+            <video id="callLocalVideo" autoplay playsinline muted class="call-local-video" style="display:none"></video>
+        </div>
+
+        <!-- Bloc identité (appels audio ou avant connexion) -->
+        <div class="call-identity">
+            <div class="call-avatar-wrap">
+                <div class="call-avatar-initials" id="callAvatarInitials"></div>
+                <img id="callAvatar" alt="" class="call-avatar" style="display:none;">
+                <span class="call-pulse"></span>
+            </div>
+            <h2 id="callPartnerName">Contact</h2>
+            <p class="call-status">
+                <i id="callTypeIcon" class="fas fa-phone"></i>
+                <span id="callStatusText">Appel en cours…</span>
+            </p>
+            <p class="call-duration" id="callDuration" style="display:none">0:00</p>
+        </div>
+
+        <!-- Contrôles -->
+        <div class="call-controls">
+            <button class="call-btn call-secondary" id="callMicBtn" title="Micro" style="display:none">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="call-btn call-secondary" id="callCamBtn" title="Caméra" style="display:none">
+                <i class="fas fa-video"></i>
+            </button>
+            <button class="call-btn call-secondary" id="callFlipBtn" title="Changer de caméra" style="display:none">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <button class="call-btn call-accept" id="callAcceptBtn" title="Répondre" style="display:none">
+                <i class="fas fa-phone"></i>
+            </button>
+            <button class="call-btn call-reject" id="callRejectBtn" title="Refuser" style="display:none">
+                <i class="fas fa-phone-slash"></i>
+            </button>
+            <button class="call-btn call-reject" id="callHangupBtn" title="Raccrocher" style="display:none">
+                <i class="fas fa-phone-slash"></i>
+            </button>
+        </div>
+
+        <audio id="callRemoteAudio" autoplay></audio>
+    </div>
+</div>
+
+<!-- ===== MODAL : ARRIÈRE-PLAN DU CHAT ===== -->
+<div id="modalBackground" class="modal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h2><i class="fas fa-image"></i> Arrière-plan du chat</h2>
+            <button class="modal-close" onclick="closeModal('modalBackground')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="bg-grid" id="bgGrid"></div>
+            <button class="bg-upload-btn" id="bgUploadBtn">
+                <i class="fas fa-upload"></i> Choisir ma propre image
+            </button>
+            <input type="file" id="bgFileInput" accept="image/*" style="display:none">
+        </div>
+        <div class="modal-foot">
+            <button class="btn-cancel" onclick="closeModal('modalBackground')">Fermer</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL : QUI A LU ? ===== -->
+<div id="modalReadReceipts" class="modal">
+    <div class="modal-box modal-box-sm">
+        <div class="modal-head">
+            <h2><i class="fas fa-eye"></i> Qui a lu ?</h2>
+            <button class="modal-close" onclick="closeModal('modalReadReceipts')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="readReceiptsBody"></div>
     </div>
 </div>
 

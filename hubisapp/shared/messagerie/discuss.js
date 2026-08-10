@@ -2324,13 +2324,13 @@ async function init() {
 
     // ----- Boutons du menu enfin branchés (sourdine / archiver / supprimer) -----
     const optMuteConv = document.getElementById('optMuteConv');
-    if (optMuteConv) optMuteConv.addEventListener('click', muteThisConversation);
+    if (optMuteConv) optMuteConv.addEventListener('click', toggleMuteConversation);
 
     const optArchiveConv = document.getElementById('optArchiveConv');
-    if (optArchiveConv) optArchiveConv.addEventListener('click', archiveThisConversation);
+    if (optArchiveConv) optArchiveConv.addEventListener('click', archiveCurrentConversation);
 
     const optDeleteConv = document.getElementById('optDeleteConv');
-    if (optDeleteConv) optDeleteConv.addEventListener('click', deleteThisConversation);
+    if (optDeleteConv) optDeleteConv.addEventListener('click', deleteCurrentConversation);
 
     // ----- Messages épinglés (icône du header + bouton « Voir » du bandeau) -----
     const pinnedMsgBtn = document.getElementById('pinnedMsgBtn');

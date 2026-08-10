@@ -49,7 +49,7 @@ const ROLE_PROFILE_ROUTES = {
 };
 
 // Roles autorises a voir les elements marques data-tier="gestionnaire"
-const GESTIONNAIRE_ROLE_CODES = ['GESTION', 'TOURN', 'ADMIN'];
+const GESTIONNAIRE_ROLE_CODES = ['TOURN']; // confirme depuis login.html ligne 423
 
 // ═══════════════════════════════════════════════════════════
 // 4. ETAT GLOBAL

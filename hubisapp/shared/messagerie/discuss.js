@@ -572,6 +572,7 @@ async function sendMessage() {
         input.value = '';
         autoResizeInput();
         stopTyping();
+        deleteDraft();
     } catch (err) {
         toast('Erreur envoi : ' + err.message, 'error');
     } finally {
@@ -1352,10 +1353,51 @@ window.openMediaZoom = openMediaZoom;
 
 async function markAsRead() {
     await sb.from('supabaseAuthPrive_conversation_participants')
-        .update({ last_read_at: new Date().toISOString() })
+        .update({ last_read_at: new Date().toISOString(), manually_unread: false })
         .eq('conversation_id', currentConvId)
         .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
 }
+
+// ========== DEBUT : BROUILLONS (lus par conversation.html) ==========
+let draftSaveTimer = null;
+
+async function loadDraft() {
+    const { data } = await sb.from('supabaseAuthPrive_msg_drafts')
+        .select('content')
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
+        .eq('conversation_id', String(currentConvId))
+        .maybeSingle();
+    const input = document.getElementById('msgInput');
+    if (data?.content && input && !input.value) {
+        input.value = data.content;
+        autoResizeInput();
+    }
+}
+
+function saveDraftDebounced() {
+    clearTimeout(draftSaveTimer);
+    draftSaveTimer = setTimeout(async () => {
+        const content = document.getElementById('msgInput')?.value || '';
+        if (content.trim() === '') {
+            await deleteDraft();
+            return;
+        }
+        await sb.from('supabaseAuthPrive_msg_drafts').upsert({
+            user_hubisoccer_id: currentProfile.hubisoccer_id,
+            conversation_id: String(currentConvId),
+            content,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'user_hubisoccer_id, conversation_id' });
+    }, 800);
+}
+
+async function deleteDraft() {
+    clearTimeout(draftSaveTimer);
+    await sb.from('supabaseAuthPrive_msg_drafts').delete()
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
+        .eq('conversation_id', String(currentConvId));
+}
+// ========== FIN : BROUILLONS ==========
 // ========== FIN : MODALES & NAVIGATION ==========
 
 
@@ -1377,6 +1419,13 @@ async function init() {
     if (typeof initSearchBar === 'function') initSearchBar();
     applyTheme();
     requestNotificationPermission();
+    loadDraft();
+
+    // Saut direct vers un message (arrivée depuis la recherche globale de conversation.html)
+    const targetMsgId = params.get('msg');
+    if (targetMsgId) {
+        setTimeout(() => scrollToMessage(targetMsgId), 600);
+    }
 
     // 🔥 Écouteurs avec vérification d'existence (anti‑null)
     const backBtn = document.getElementById('backBtn');
@@ -1384,7 +1433,7 @@ async function init() {
 
     const msgInput = document.getElementById('msgInput');
     if (msgInput) {
-        msgInput.addEventListener('input', () => { autoResizeInput(); startTyping(); });
+        msgInput.addEventListener('input', () => { autoResizeInput(); startTyping(); saveDraftDebounced(); });
         msgInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
         });

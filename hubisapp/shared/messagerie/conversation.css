@@ -1650,3 +1650,291 @@ textarea {
         min-height: 44px;
     }
 }
+
+/* ===================================================
+   AJOUTS — Épingles, sourdine, brouillons, dossiers,
+   sélection multiple, recherche messages, menu contextuel
+   =================================================== */
+
+/* Icônes épingle & sourdine dans la ligne de conversation */
+.conv-pin-icon {
+    font-size: 0.7rem;
+    color: var(--gold-dark, #e6b800);
+    margin-right: 2px;
+}
+
+.conv-mute-icon {
+    font-size: 0.7rem;
+    color: var(--gray);
+}
+
+.muted-conv .conv-name {
+    color: var(--gray);
+}
+
+/* Aperçu : brouillon, frappe, coches */
+.draft-label {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+.typing-preview {
+    color: var(--online) !important;
+    font-style: italic;
+    font-weight: 600;
+}
+
+.msg-check {
+    font-size: 0.7rem;
+    color: var(--gray);
+}
+
+.msg-check.seen {
+    color: var(--primary);
+}
+
+/* Badge non-lu en sourdine (gris) + point "non lu manuel" */
+.unread-count.muted-badge {
+    background: var(--gray);
+}
+
+.unread-count.manual-dot {
+    min-width: 12px;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+/* Avatar Messages enregistrés */
+.saved-avatar {
+    background: linear-gradient(135deg, var(--primary), var(--gold)) !important;
+    font-size: 1.1rem !important;
+}
+
+/* Menu contextuel des conversations */
+.conv-ctx-menu {
+    position: fixed;
+    background: white;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-light);
+    min-width: 220px;
+    padding: 4px 0;
+    z-index: 1500;
+    animation: fadeIn 0.15s ease;
+}
+
+.conv-ctx-menu .ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    color: var(--dark);
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.conv-ctx-menu .ctx-item:hover {
+    background: var(--primary-xlight);
+    color: var(--primary);
+}
+
+.conv-ctx-menu .ctx-item.danger {
+    color: var(--danger);
+}
+
+.conv-ctx-menu .ctx-item.danger:hover {
+    background: rgba(220, 53, 69, 0.08);
+}
+
+.conv-ctx-menu .ctx-item i {
+    width: 18px;
+    text-align: center;
+}
+
+.conv-ctx-menu hr {
+    border: none;
+    border-top: 1px solid var(--gray-light);
+    margin: 4px 0;
+}
+
+/* Barre de sélection multiple */
+.selection-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--primary);
+    color: white;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: calc(var(--nav-height) + 8px);
+    z-index: 150;
+    animation: fadeIn 0.2s;
+}
+
+.selection-bar span {
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.selection-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.selection-actions button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.selection-actions button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.selection-actions button.danger:hover {
+    background: var(--danger);
+}
+
+/* Coche de sélection sur les items */
+.select-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: transparent;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.select-check.checked {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.conv-item.selected-conv {
+    border-color: var(--primary);
+    background: var(--primary-xlight);
+}
+
+/* Onglets de dossiers */
+.folder-tab i {
+    margin-right: 4px;
+    font-size: 0.75rem;
+}
+
+.folder-add-tab {
+    padding: 7px 12px;
+}
+
+/* Modale de choix de dossier */
+.folder-choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.folder-choice-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 0.88rem;
+}
+
+.folder-choice-item:hover {
+    background: var(--primary-xlight);
+}
+
+.folder-choice-item i:first-child {
+    color: var(--gold-dark, #e6b800);
+}
+
+.folder-choice-item span {
+    flex: 1;
+}
+
+.folder-choice-item.in-folder {
+    background: var(--gold-light);
+}
+
+.folder-choice-item .fa-check {
+    color: var(--primary);
+}
+
+.empty-text-sm {
+    text-align: center;
+    color: var(--gray);
+    font-size: 0.85rem;
+    padding: 16px;
+}
+
+/* Résultats de recherche dans les messages */
+.msg-search-results {
+    margin-top: 20px;
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.msg-search-item {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid var(--gray-xlight);
+}
+
+.msg-search-item:last-child {
+    border-bottom: none;
+}
+
+.msg-search-item:hover {
+    background: var(--primary-xlight);
+}
+
+.msg-search-conv {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 3px;
+}
+
+.msg-search-conv i {
+    margin-right: 4px;
+}
+
+.msg-search-time {
+    font-weight: 400;
+    color: var(--gray);
+    font-size: 0.7rem;
+    margin-left: 6px;
+}
+
+.msg-search-text {
+    font-size: 0.82rem;
+    color: var(--dark);
+}

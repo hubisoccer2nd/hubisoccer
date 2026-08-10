@@ -545,13 +545,34 @@ function buildSidebarMenu(roleCode) {
 }
 // ========== FIN : MENU LATERAL ==========
 
+// ========== DEBUT : VARIABLES D'ÉTAT AVANCÉ (épingles, sourdine, brouillons, dossiers, sélection) ==========
+let pinnedSet = new Set();          // conversation_id épinglées
+let mutedMap = new Map();           // conversation_id -> muted_until (null = toujours)
+let draftsMap = new Map();          // conversation_id -> texte du brouillon
+let manualUnreadSet = new Set();    // conversation_id marquées non lues manuellement
+let folders = [];                   // dossiers personnalisés [{id, name}]
+let folderItems = new Map();        // folder_id -> Set(conversation_id)
+let activeFolderId = null;          // dossier actif (onglet)
+let typingTimers = new Map();       // conversation_id -> timeout "écrit..."
+let typingChannels = [];            // canaux broadcast typing:{convId}
+let listMsgChannel = null;          // canal postgres_changes global de la liste
+let contactsCache = [];             // contacts (abonnements + abonnés fusionnés)
+let directModalContacts = [];       // cache de la modale "Nouvelle discussion"
+let selectionMode = false;          // mode sélection multiple
+let selectedConvs = new Set();
+let creatingDirectConv = false;     // anti double-clic création de conversation
+let notifSoundEnabled = true;       // depuis supabaseAuthPrive_user_msg_settings
+let presenceDebounceTimer = null;
+let ctxConvId = null;               // conversation ciblée par le menu contextuel
+let msgSearchTimer = null;
+// ========== FIN : VARIABLES D'ÉTAT AVANCÉ ==========
+
 // ========== DEBUT : INITIALISATION SESSION & PROFIL ==========
 async function initSessionAndProfile() {
     try {
         const auth = await requireAuth();
         if (!auth) return false;
 
-        // 🔥 Attendre que currentProfile soit chargé par session.js (30 tentatives × 200 ms)
         let attempts = 0;
         while ((!currentProfile || !currentProfile.hubisoccer_id) && attempts < 30) {
             await new Promise(resolve => setTimeout(resolve, 200));
@@ -566,10 +587,7 @@ async function initSessionAndProfile() {
 
         document.getElementById('userName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
         updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'userAvatar', 'userAvatarInitials');
-
-        // Construction du menu latéral avec le rôle de l'utilisateur
         buildSidebarMenu(currentProfile.role_code || 'FOOT');
-
         return true;
     } catch (err) {
         toast('Erreur de session : ' + err.message, 'error');
@@ -594,13 +612,63 @@ function updateAvatarDisplay(avatarUrl, fullName, imgId, initialsId) {
 }
 // ========== FIN : SESSION & PROFIL ==========
 
+// ========== DEBUT : PRÉFÉRENCES (épingles, sourdine, brouillons, dossiers, son) ==========
+async function loadUserPrefs() {
+    const uid = currentProfile.hubisoccer_id;
+    const [pinnedRes, mutedRes, draftsRes, foldersRes, settingsRes] = await Promise.all([
+        sb.from('supabaseAuthPrive_pinned_conversations').select('conversation_id').eq('user_hubisoccer_id', uid),
+        sb.from('supabaseAuthPrive_muted_conversations').select('conversation_id, muted_until').eq('user_hubisoccer_id', uid),
+        sb.from('supabaseAuthPrive_msg_drafts').select('conversation_id, content').eq('user_hubisoccer_id', uid),
+        sb.from('supabaseAuthPrive_msg_folders').select('id, name').eq('user_hubisoccer_id', uid).order('created_at'),
+        sb.from('supabaseAuthPrive_user_msg_settings').select('settings').eq('user_hubisoccer_id', uid).maybeSingle()
+    ]);
+
+    pinnedSet = new Set((pinnedRes.data || []).map(p => String(p.conversation_id)));
+
+    mutedMap = new Map();
+    const now = Date.now();
+    for (const m of (mutedRes.data || [])) {
+        // Sourdine expirée -> on l'ignore (et on nettoie en arrière-plan)
+        if (m.muted_until && new Date(m.muted_until).getTime() < now) {
+            sb.from('supabaseAuthPrive_muted_conversations').delete()
+                .eq('user_hubisoccer_id', uid).eq('conversation_id', m.conversation_id).then(() => {});
+            continue;
+        }
+        mutedMap.set(String(m.conversation_id), m.muted_until);
+    }
+
+    draftsMap = new Map((draftsRes.data || [])
+        .filter(d => d.content && d.content.trim() !== '')
+        .map(d => [String(d.conversation_id), d.content]));
+
+    folders = foldersRes.data || [];
+    folderItems = new Map();
+    if (folders.length > 0) {
+        const { data: items } = await sb.from('supabaseAuthPrive_msg_folder_items')
+            .select('folder_id, conversation_id')
+            .in('folder_id', folders.map(f => f.id));
+        for (const it of (items || [])) {
+            if (!folderItems.has(it.folder_id)) folderItems.set(it.folder_id, new Set());
+            folderItems.get(it.folder_id).add(String(it.conversation_id));
+        }
+    }
+
+    notifSoundEnabled = settingsRes.data?.settings?.notificationSound !== false;
+    renderFolderTabs();
+}
+
+function isMuted(convId) {
+    return mutedMap.has(String(convId));
+}
+// ========== FIN : PRÉFÉRENCES ==========
+
 // ========== DEBUT : CHARGEMENT DES CONVERSATIONS ==========
 async function loadConversations() {
     showSkeleton(true);
     try {
         const { data: participations, error: pErr } = await sb
             .from('supabaseAuthPrive_conversation_participants')
-            .select('conversation_id, last_read_at')
+            .select('conversation_id, last_read_at, manually_unread')
             .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
         if (pErr) throw pErr;
 
@@ -612,6 +680,7 @@ async function loadConversations() {
 
         const allConvIds = participations.map(p => p.conversation_id);
         const readMap = Object.fromEntries(participations.map(p => [p.conversation_id, p.last_read_at]));
+        manualUnreadSet = new Set(participations.filter(p => p.manually_unread).map(p => String(p.conversation_id)));
 
         let convIds = allConvIds;
         const { data: archived } = await sb
@@ -638,35 +707,31 @@ async function loadConversations() {
                 id, is_group, group_name, group_avatar, created_at, updated_at,
                 participants:supabaseAuthPrive_conversation_participants (
                     user_hubisoccer_id,
-                    profile:supabaseAuthPrive_profiles!user_hubisoccer_id ( hubisoccer_id, full_name, display_name, avatar_url )
+                    profile:supabaseAuthPrive_profiles!user_hubisoccer_id ( hubisoccer_id, full_name, display_name, avatar_url, last_seen )
                 )
             `)
             .in('id', convIds)
             .order('updated_at', { ascending: false });
         if (cErr) throw cErr;
 
-        // Récupération de TOUS les messages sans filtre deleted_for
+        // Derniers messages : limités (1500 max) au lieu de TOUT télécharger
         const { data: allMsgs } = await sb
             .from('supabaseAuthPrive_messages')
-            .select('id, conversation_id, content, media_type, created_at, user_hubisoccer_id, deleted_for')
+            .select('id, conversation_id, content, media_type, created_at, user_hubisoccer_id, deleted_for, read_by')
             .in('conversation_id', convIds)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(1500);
 
-        // Filtrage JavaScript : exclure les messages supprimés pour l'utilisateur courant
         const visibleMsgs = (allMsgs || []).filter(msg => {
             const deleted = msg.deleted_for || [];
             return !deleted.includes(currentProfile.hubisoccer_id);
         });
 
-        // Construction de lastMsgMap (dernier message visible par conversation)
         const lastMsgMap = {};
         for (const msg of visibleMsgs) {
-            if (!lastMsgMap[msg.conversation_id]) {
-                lastMsgMap[msg.conversation_id] = msg;
-            }
+            if (!lastMsgMap[msg.conversation_id]) lastMsgMap[msg.conversation_id] = msg;
         }
 
-        // Compteurs de messages non lus (filtrage idem)
         const unreadCounts = {};
         for (const cid of convIds) {
             const lastRead = readMap[cid];
@@ -682,27 +747,37 @@ async function loadConversations() {
 
         conversations = (convData || []).map(conv => {
             const participants = conv.participants || [];
-            let name, avatarUrl, otherUserId = null;
+            let name, avatarUrl, otherUserId = null, lastSeen = null, isSaved = false;
+
+            const others = participants.filter(p => p.user_hubisoccer_id !== currentProfile.hubisoccer_id);
 
             if (conv.is_group) {
                 name = conv.group_name || 'Groupe';
                 avatarUrl = conv.group_avatar || null;
+            } else if (others.length === 0) {
+                // Conversation avec soi-même = Messages enregistrés (façon Telegram)
+                isSaved = true;
+                name = 'Messages enregistrés';
+                avatarUrl = null;
             } else {
-                const other = participants.find(p => p.user_hubisoccer_id !== currentProfile.hubisoccer_id);
+                const other = others[0];
                 const prof = other?.profile || {};
                 name = prof.full_name || prof.display_name || 'Utilisateur';
                 avatarUrl = prof.avatar_url || null;
                 otherUserId = other?.user_hubisoccer_id || null;
+                lastSeen = prof.last_seen || null;
             }
 
             const lastMsg = lastMsgMap[conv.id];
             return {
                 id: conv.id,
                 is_group: conv.is_group,
+                is_saved: isSaved,
                 group_name: conv.group_name,
                 name,
                 avatarUrl,
                 otherUserId,
+                lastSeen,
                 participants,
                 lastMsg,
                 lastMsgTime: lastMsg?.created_at || conv.updated_at,
@@ -711,13 +786,24 @@ async function loadConversations() {
             };
         });
 
+        sortConversations();
         renderConversations();
+        subscribeTypingForConversations();
     } catch (err) {
         console.error('Erreur chargement conversations:', err);
         toast('Erreur lors du chargement des conversations', 'error');
     } finally {
         showSkeleton(false);
     }
+}
+
+function sortConversations() {
+    conversations.sort((a, b) => {
+        const pa = pinnedSet.has(String(a.id)) ? 1 : 0;
+        const pb = pinnedSet.has(String(b.id)) ? 1 : 0;
+        if (pa !== pb) return pb - pa;
+        return new Date(b.lastMsgTime || 0) - new Date(a.lastMsgTime || 0);
+    });
 }
 
 function renderConversations() {
@@ -731,14 +817,20 @@ function renderConversations() {
 
     let filtered = conversations.filter(conv => {
         if (searchQuery && !conv.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-        if (activeFilter === 'unread' && conv.unreadCount === 0) return false;
+        if (activeFolderId) {
+            const set = folderItems.get(activeFolderId);
+            if (!set || !set.has(String(conv.id))) return false;
+            return true;
+        }
+        if (activeFilter === 'unread' && conv.unreadCount === 0 && !manualUnreadSet.has(String(conv.id))) return false;
         if (activeFilter === 'groups' && !conv.is_group) return false;
-        if (activeFilter === 'direct' && conv.is_group) return false;
+        if (activeFilter === 'direct' && (conv.is_group || conv.is_saved)) return false;
         return true;
     });
 
-    const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
-    totalBadge.textContent = `${filtered.length} conversation${filtered.length !== 1 ? 's' : ''}`;
+    // Total réel de conversations (pas le nombre filtré) + total non lus hors sourdine
+    const totalUnread = conversations.reduce((sum, c) => sum + (isMuted(c.id) ? 0 : c.unreadCount), 0);
+    totalBadge.textContent = `${conversations.length} conversation${conversations.length !== 1 ? 's' : ''}`;
 
     const notifBadge = document.getElementById('notifBadge');
     if (totalUnread > 0) {
@@ -754,52 +846,98 @@ function renderConversations() {
         list.style.display = 'none';
         emptyEl.style.display = 'block';
         document.getElementById('emptyTitle').textContent = showArchives ? 'Aucune conversation archivée' : 'Aucune conversation';
-        document.getElementById('emptyDesc').textContent = showArchives ? 'Vous n\'avez pas encore archivé de conversations.' : 'Sélectionnez un abonné ci‑dessus ou créez un groupe !';
+        document.getElementById('emptyDesc').textContent = showArchives ? 'Vous n\'avez pas encore archivé de conversations.' : 'Sélectionnez un contact ci‑dessus ou créez un groupe !';
         return;
     }
 
     emptyEl.style.display = 'none';
     list.style.display = 'flex';
 
-    list.innerHTML = filtered.map(conv => {
-        const isOnline = conv.otherUserId && onlineUsers.has(conv.otherUserId);
-        const lastMsgText = getLastMsgPreview(conv.lastMsg);
-        const timeText = conv.lastMsgTime ? timeSince(conv.lastMsgTime) : '';
-        const hasUnread = conv.unreadCount > 0;
-        const initials = getInitials(conv.name);
-        const avatarUrl = conv.avatarUrl;
+    list.innerHTML = filtered.map(conv => makeConvItemHtml(conv)).join('');
+}
 
-        return `
-        <div class="conv-item ${hasUnread ? 'unread' : ''}" data-conv-id="${conv.id}">
-            <div class="conv-avatar-wrap">
-                ${avatarUrl ? `<img class="conv-avatar" src="${avatarUrl}" alt="${conv.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
-                <div class="conv-avatar-initials" style="display:${avatarUrl ? 'none' : 'flex'};">${initials}</div>
-                ${conv.is_group
-                    ? `<div class="group-icon"><i class="fas fa-users"></i></div>`
-                    : `<div class="online-dot ${isOnline ? 'visible' : ''}"></div>`
-                }
+function makeConvItemHtml(conv) {
+    const cid = String(conv.id);
+    const isOnline = conv.otherUserId && onlineUsers.has(conv.otherUserId);
+    const isPinned = pinnedSet.has(cid);
+    const muted = isMuted(cid);
+    const draft = draftsMap.get(cid);
+    const isTypingNow = typingTimers.has(cid);
+    const hasUnread = conv.unreadCount > 0 || manualUnreadSet.has(cid);
+    const isSelected = selectedConvs.has(cid);
+    const initials = getInitials(conv.name);
+    const avatarUrl = conv.avatarUrl;
+    const safeName = escapeHtml(conv.name);
+    const timeText = conv.lastMsgTime ? timeSince(conv.lastMsgTime) : '';
+
+    // Aperçu : frappe > brouillon > dernier message
+    let lastRow;
+    if (isTypingNow) {
+        lastRow = `<span class="conv-last typing-preview"><i class="fas fa-pen"></i> écrit…</span>`;
+    } else if (draft && !showArchives) {
+        lastRow = `<span class="conv-last"><span class="draft-label">Brouillon :</span> ${escapeHtml(draft.substring(0, 50))}</span>`;
+    } else {
+        // Coches ✓ / ✓✓ sur MON dernier message
+        let checks = '';
+        if (conv.lastMsg && conv.lastMsg.user_hubisoccer_id === currentProfile.hubisoccer_id) {
+            const seen = conv.lastMsg.read_by && conv.lastMsg.read_by.length > 0;
+            checks = seen
+                ? `<i class="fas fa-check-double msg-check seen" title="Vu"></i> `
+                : `<i class="fas fa-check msg-check" title="Envoyé"></i> `;
+        }
+        lastRow = `<span class="conv-last">${checks}${getLastMsgPreview(conv.lastMsg)}</span>`;
+    }
+
+    // Pastille : statut en ligne + "vu il y a X" en info-bulle
+    let presenceDot = '';
+    if (conv.is_group) {
+        presenceDot = `<div class="group-icon"><i class="fas fa-users"></i></div>`;
+    } else if (conv.is_saved) {
+        presenceDot = '';
+    } else {
+        const seenTitle = isOnline ? 'En ligne' : (conv.lastSeen ? `Vu il y a ${timeSince(conv.lastSeen)}` : 'Hors ligne');
+        presenceDot = `<div class="online-dot ${isOnline ? 'visible' : ''}" title="${escapeHtml(seenTitle)}"></div>`;
+    }
+
+    const avatarBlock = conv.is_saved
+        ? `<div class="conv-avatar-initials saved-avatar"><i class="fas fa-bookmark"></i></div>`
+        : `${avatarUrl ? `<img class="conv-avatar" src="${escapeHtml(avatarUrl)}" alt="${safeName}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+           <div class="conv-avatar-initials" style="display:${avatarUrl ? 'none' : 'flex'};">${initials}</div>`;
+
+    let badge = '';
+    if (conv.unreadCount > 0) {
+        badge = `<span class="unread-count ${muted ? 'muted-badge' : ''}">${conv.unreadCount > 99 ? '99+' : conv.unreadCount}</span>`;
+    } else if (manualUnreadSet.has(cid)) {
+        badge = `<span class="unread-count manual-dot ${muted ? 'muted-badge' : ''}"></span>`;
+    }
+
+    return `
+    <div class="conv-item ${hasUnread ? 'unread' : ''} ${isSelected ? 'selected-conv' : ''} ${muted ? 'muted-conv' : ''}" data-conv-id="${cid}">
+        ${selectionMode ? `<div class="select-check ${isSelected ? 'checked' : ''}"><i class="fas fa-check"></i></div>` : ''}
+        <div class="conv-avatar-wrap">
+            ${avatarBlock}
+            ${presenceDot}
+        </div>
+        <div class="conv-info">
+            <div class="conv-name-row">
+                <span class="conv-name">${isPinned ? '<i class="fas fa-thumbtack conv-pin-icon" title="Épinglée"></i> ' : ''}${safeName}${muted ? ' <i class="fas fa-bell-slash conv-mute-icon" title="En sourdine"></i>' : ''}</span>
+                <span class="conv-time">${timeText}</span>
             </div>
-            <div class="conv-info">
-                <div class="conv-name-row">
-                    <span class="conv-name">${escapeHtml(conv.name)}</span>
-                    <span class="conv-time">${timeText}</span>
-                </div>
-                <div class="conv-last-row">
-                    <span class="conv-last">${lastMsgText}</span>
-                    ${hasUnread ? `<span class="unread-count">${conv.unreadCount > 99 ? '99+' : conv.unreadCount}</span>` : ''}
-                </div>
-            </div>
-            <div class="conv-actions">
-                <button class="conv-action-btn archive-btn" data-conv-id="${conv.id}" title="${showArchives ? 'Désarchiver' : 'Archiver'}">
-                    <i class="fas ${showArchives ? 'fa-undo' : 'fa-archive'}"></i>
-                </button>
-                <button class="conv-action-btn danger delete-btn" data-conv-id="${conv.id}" title="Supprimer">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
+            <div class="conv-last-row">
+                ${lastRow}
+                ${badge}
             </div>
         </div>
-        `;
-    }).join('');
+        <div class="conv-actions">
+            <button class="conv-action-btn more-btn" data-conv-id="${cid}" title="Options">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <button class="conv-action-btn archive-btn" data-conv-id="${cid}" title="${showArchives ? 'Désarchiver' : 'Archiver'}">
+                <i class="fas ${showArchives ? 'fa-undo' : 'fa-archive'}"></i>
+            </button>
+        </div>
+    </div>
+    `;
 }
 
 function getLastMsgPreview(msg) {
@@ -818,69 +956,504 @@ function showSkeleton(show) {
 }
 // ========== FIN : CHARGEMENT DES CONVERSATIONS ==========
 
-// ========== DEBUT : GESTION DES ABONNÉS ==========
-async function loadFollowers() {
-    try {
-        const { data: follows, error } = await sb
-            .from('supabaseAuthPrive_follows')
-            .select('following_hubisoccer_id, profile:supabaseAuthPrive_profiles!following_hubisoccer_id(full_name, display_name, avatar_url)')
-            .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id)
-            .limit(20);
+// ========== DEBUT : ONGLETS DE DOSSIERS (façon Telegram) ==========
+function renderFolderTabs() {
+    const tabsWrap = document.querySelector('.filter-tabs');
+    if (!tabsWrap) return;
 
-        if (error) throw error;
+    // Supprimer les anciens onglets de dossiers
+    tabsWrap.querySelectorAll('.folder-tab, .folder-add-tab').forEach(el => el.remove());
 
-        const followers = (follows || []).map(f => ({
-            id: f.following_hubisoccer_id,
-            name: f.profile?.full_name || f.profile?.display_name || 'Utilisateur',
-            avatar: f.profile?.avatar_url || null
-        }));
+    for (const f of folders) {
+        const btn = document.createElement('button');
+        btn.className = `filter-tab folder-tab ${activeFolderId === f.id ? 'active' : ''}`;
+        btn.dataset.folderId = f.id;
+        btn.innerHTML = `<i class="fas fa-folder"></i> ${escapeHtml(f.name)}`;
+        btn.addEventListener('click', () => {
+            if (activeFolderId === f.id) {
+                activeFolderId = null;
+                btn.classList.remove('active');
+                tabsWrap.querySelector('[data-filter="all"]')?.classList.add('active');
+            } else {
+                activeFolderId = f.id;
+                tabsWrap.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+            }
+            renderConversations();
+        });
+        btn.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (confirm(`Supprimer le dossier "${f.name}" ? (les conversations ne seront pas supprimées)`)) {
+                deleteFolder(f.id);
+            }
+        });
+        tabsWrap.appendChild(btn);
+    }
 
-        renderFollowers(followers);
-        document.getElementById('followersCount').textContent = followers.length;
-    } catch (err) {
-        console.error('Erreur chargement abonnés:', err);
+    const addBtn = document.createElement('button');
+    addBtn.className = 'filter-tab folder-add-tab';
+    addBtn.title = 'Créer un dossier';
+    addBtn.innerHTML = '<i class="fas fa-folder-plus"></i>';
+    addBtn.addEventListener('click', createFolderPrompt);
+    tabsWrap.appendChild(addBtn);
+}
+
+async function createFolderPrompt() {
+    const name = prompt('Nom du nouveau dossier (ex: Équipe, Agents, Famille...) :');
+    if (!name || !name.trim()) return;
+    const { data, error } = await sb.from('supabaseAuthPrive_msg_folders')
+        .insert({ user_hubisoccer_id: currentProfile.hubisoccer_id, name: name.trim() })
+        .select().single();
+    if (error) { toast('Erreur création dossier', 'error'); return; }
+    folders.push(data);
+    renderFolderTabs();
+    toast(`Dossier "${name.trim()}" créé`, 'success');
+}
+
+async function deleteFolder(folderId) {
+    await sb.from('supabaseAuthPrive_msg_folder_items').delete().eq('folder_id', folderId);
+    await sb.from('supabaseAuthPrive_msg_folders').delete().eq('id', folderId);
+    folders = folders.filter(f => f.id !== folderId);
+    folderItems.delete(folderId);
+    if (activeFolderId === folderId) activeFolderId = null;
+    renderFolderTabs();
+    renderConversations();
+    toast('Dossier supprimé', 'success');
+}
+
+function openFolderModal(convIds) {
+    const listEl = document.getElementById('folderChoiceList');
+    if (folders.length === 0) {
+        listEl.innerHTML = '<p class="empty-text-sm">Aucun dossier. Créez-en un ci-dessous.</p>';
+    } else {
+        listEl.innerHTML = folders.map(f => {
+            const inFolder = convIds.length === 1 && folderItems.get(f.id)?.has(String(convIds[0]));
+            return `
+            <div class="folder-choice-item ${inFolder ? 'in-folder' : ''}" data-folder-id="${f.id}">
+                <i class="fas fa-folder"></i>
+                <span>${escapeHtml(f.name)}</span>
+                ${inFolder ? '<i class="fas fa-check"></i>' : ''}
+            </div>`;
+        }).join('');
+
+        listEl.querySelectorAll('.folder-choice-item').forEach(el => {
+            el.addEventListener('click', async () => {
+                const fid = el.dataset.folderId;
+                const set = folderItems.get(fid) || new Set();
+                for (const cid of convIds) {
+                    if (convIds.length === 1 && set.has(String(cid))) {
+                        // Retirer du dossier si déjà dedans (toggle)
+                        await sb.from('supabaseAuthPrive_msg_folder_items').delete()
+                            .eq('folder_id', fid).eq('conversation_id', cid);
+                        set.delete(String(cid));
+                        toast('Retirée du dossier', 'info');
+                    } else if (!set.has(String(cid))) {
+                        await sb.from('supabaseAuthPrive_msg_folder_items')
+                            .insert({ folder_id: fid, conversation_id: String(cid) });
+                        set.add(String(cid));
+                    }
+                }
+                folderItems.set(fid, set);
+                if (convIds.length > 1) toast('Ajoutées au dossier', 'success');
+                closeModal('modalFolder');
+                exitSelectionMode();
+                renderConversations();
+            });
+        });
+    }
+    openModal('modalFolder');
+
+    const createBtn = document.getElementById('folderModalCreateBtn');
+    createBtn.onclick = async () => {
+        await createFolderPrompt();
+        openFolderModal(convIds);
+    };
+}
+// ========== FIN : ONGLETS DE DOSSIERS ==========
+
+// ========== DEBUT : ACTIONS PAR CONVERSATION (épingler, sourdine, lu/non lu, menu) ==========
+async function togglePin(convId) {
+    const cid = String(convId);
+    if (pinnedSet.has(cid)) {
+        await sb.from('supabaseAuthPrive_pinned_conversations').delete()
+            .eq('user_hubisoccer_id', currentProfile.hubisoccer_id).eq('conversation_id', cid);
+        pinnedSet.delete(cid);
+        toast('Conversation désépinglée', 'info');
+    } else {
+        await sb.from('supabaseAuthPrive_pinned_conversations')
+            .insert({ user_hubisoccer_id: currentProfile.hubisoccer_id, conversation_id: cid });
+        pinnedSet.add(cid);
+        toast('Conversation épinglée 📌', 'success');
+    }
+    sortConversations();
+    renderConversations();
+}
+
+async function muteConversation(convId, hours) {
+    const cid = String(convId);
+    const mutedUntil = hours ? new Date(Date.now() + hours * 3600 * 1000).toISOString() : null;
+    await sb.from('supabaseAuthPrive_muted_conversations')
+        .upsert({ user_hubisoccer_id: currentProfile.hubisoccer_id, conversation_id: cid, muted_until: mutedUntil },
+                { onConflict: 'user_hubisoccer_id, conversation_id' });
+    mutedMap.set(cid, mutedUntil);
+    toast(hours ? `Sourdine activée pour ${hours >= 168 ? '1 semaine' : hours + ' h'} 🔕` : 'Sourdine activée pour toujours 🔕', 'success');
+    renderConversations();
+}
+
+async function unmuteConversation(convId) {
+    const cid = String(convId);
+    await sb.from('supabaseAuthPrive_muted_conversations').delete()
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id).eq('conversation_id', cid);
+    mutedMap.delete(cid);
+    toast('Notifications réactivées 🔔', 'success');
+    renderConversations();
+}
+
+async function markConvRead(convId) {
+    const cid = String(convId);
+    await sb.from('supabaseAuthPrive_conversation_participants')
+        .update({ last_read_at: new Date().toISOString(), manually_unread: false })
+        .eq('conversation_id', cid)
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
+    manualUnreadSet.delete(cid);
+    const conv = conversations.find(c => String(c.id) === cid);
+    if (conv) conv.unreadCount = 0;
+    renderConversations();
+}
+
+async function markConvUnread(convId) {
+    const cid = String(convId);
+    await sb.from('supabaseAuthPrive_conversation_participants')
+        .update({ manually_unread: true })
+        .eq('conversation_id', cid)
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
+    manualUnreadSet.add(cid);
+    renderConversations();
+}
+
+function openConvContextMenu(convId, x, y) {
+    ctxConvId = String(convId);
+    const conv = conversations.find(c => String(c.id) === ctxConvId);
+    if (!conv) return;
+
+    const menu = document.getElementById('convContextMenu');
+    const isPinned = pinnedSet.has(ctxConvId);
+    const muted = isMuted(ctxConvId);
+    const hasUnread = conv.unreadCount > 0 || manualUnreadSet.has(ctxConvId);
+
+    menu.innerHTML = `
+        <button class="ctx-item" data-action="pin"><i class="fas fa-thumbtack"></i> ${isPinned ? 'Désépingler' : 'Épingler'}</button>
+        ${muted
+            ? `<button class="ctx-item" data-action="unmute"><i class="fas fa-bell"></i> Réactiver les notifications</button>`
+            : `<button class="ctx-item" data-action="mute8"><i class="fas fa-bell-slash"></i> Sourdine 8 h</button>
+               <button class="ctx-item" data-action="mute168"><i class="fas fa-bell-slash"></i> Sourdine 1 semaine</button>
+               <button class="ctx-item" data-action="muteForever"><i class="fas fa-bell-slash"></i> Sourdine toujours</button>`}
+        <button class="ctx-item" data-action="${hasUnread ? 'read' : 'unread'}"><i class="fas ${hasUnread ? 'fa-envelope-open' : 'fa-envelope'}"></i> Marquer ${hasUnread ? 'comme lu' : 'comme non lu'}</button>
+        <button class="ctx-item" data-action="folder"><i class="fas fa-folder"></i> Ajouter à un dossier</button>
+        ${conv.is_group ? `<button class="ctx-item" data-action="rename"><i class="fas fa-pen"></i> Renommer le groupe</button>` : ''}
+        <button class="ctx-item" data-action="select"><i class="fas fa-check-square"></i> Sélectionner</button>
+        <hr>
+        <button class="ctx-item" data-action="archive"><i class="fas ${conv.archived ? 'fa-undo' : 'fa-archive'}"></i> ${conv.archived ? 'Désarchiver' : 'Archiver'}</button>
+        <button class="ctx-item danger" data-action="delete"><i class="fas fa-trash-alt"></i> Supprimer</button>
+    `;
+
+    menu.style.display = 'block';
+    const mw = 220, mh = menu.offsetHeight || 320;
+    menu.style.left = Math.min(x, window.innerWidth - mw - 10) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - mh - 10) + 'px';
+
+    menu.querySelectorAll('.ctx-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const action = btn.dataset.action;
+            hideConvContextMenu();
+            switch (action) {
+                case 'pin': togglePin(ctxConvId); break;
+                case 'unmute': unmuteConversation(ctxConvId); break;
+                case 'mute8': muteConversation(ctxConvId, 8); break;
+                case 'mute168': muteConversation(ctxConvId, 168); break;
+                case 'muteForever': muteConversation(ctxConvId, null); break;
+                case 'read': markConvRead(ctxConvId); break;
+                case 'unread': markConvUnread(ctxConvId); break;
+                case 'folder': openFolderModal([ctxConvId]); break;
+                case 'rename': renameGroup(ctxConvId); break;
+                case 'select': enterSelectionMode(ctxConvId); break;
+                case 'archive': toggleArchive(ctxConvId); break;
+                case 'delete': promptDeleteConv(ctxConvId); break;
+            }
+        });
+    });
+
+    setTimeout(() => {
+        document.addEventListener('click', hideConvContextMenu, { once: true });
+    }, 10);
+}
+
+function hideConvContextMenu() {
+    const menu = document.getElementById('convContextMenu');
+    menu.style.display = 'none';
+}
+// ========== FIN : ACTIONS PAR CONVERSATION ==========
+
+// ========== DEBUT : SÉLECTION MULTIPLE ==========
+function enterSelectionMode(firstConvId = null) {
+    selectionMode = true;
+    selectedConvs = new Set();
+    if (firstConvId) selectedConvs.add(String(firstConvId));
+    document.getElementById('selectionBar').style.display = 'flex';
+    updateSelectionCount();
+    renderConversations();
+}
+
+function exitSelectionMode() {
+    selectionMode = false;
+    selectedConvs = new Set();
+    document.getElementById('selectionBar').style.display = 'none';
+    renderConversations();
+}
+
+function toggleConvSelection(convId) {
+    const cid = String(convId);
+    if (selectedConvs.has(cid)) selectedConvs.delete(cid);
+    else selectedConvs.add(cid);
+    if (selectedConvs.size === 0) { exitSelectionMode(); return; }
+    updateSelectionCount();
+    renderConversations();
+}
+
+function updateSelectionCount() {
+    document.getElementById('selectionCount').textContent = `${selectedConvs.size} sélectionnée${selectedConvs.size > 1 ? 's' : ''}`;
+}
+
+async function selectionMarkRead() {
+    for (const cid of selectedConvs) await markConvRead(cid);
+    exitSelectionMode();
+    toast('Conversations marquées comme lues', 'success');
+}
+
+async function selectionArchive() {
+    for (const cid of selectedConvs) {
+        const conv = conversations.find(c => String(c.id) === cid);
+        if (conv && !conv.archived) {
+            await sb.from('supabaseAuthPrive_archived_conversations')
+                .insert({ user_hubisoccer_id: currentProfile.hubisoccer_id, conversation_id: cid });
+        }
+    }
+    exitSelectionMode();
+    toast('Conversations archivées', 'success');
+    await loadConversations();
+}
+
+async function selectionDelete() {
+    if (!confirm(`Supprimer ${selectedConvs.size} conversation(s) ?`)) return;
+    for (const cid of selectedConvs) await deleteConversation(cid, true);
+    exitSelectionMode();
+    toast('Conversations supprimées', 'success');
+    await loadConversations();
+}
+// ========== FIN : SÉLECTION MULTIPLE ==========
+
+// ========== DEBUT : TEMPS RÉEL (nouveaux messages + frappe + son) ==========
+function subscribeListRealtime() {
+    if (listMsgChannel) listMsgChannel.unsubscribe();
+    listMsgChannel = sb.channel('conv-list-messages')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'supabaseAuthPrive_messages' },
+            (payload) => handleIncomingListMessage(payload.new))
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'supabaseAuthPrive_messages' },
+            (payload) => handleUpdatedListMessage(payload.new))
+        .subscribe();
+}
+
+function handleIncomingListMessage(msg) {
+    const conv = conversations.find(c => String(c.id) === String(msg.conversation_id));
+    if (!conv) {
+        // Nouvelle conversation (quelqu'un vient de nous écrire pour la première fois)
+        loadConversations();
+        return;
+    }
+    if ((msg.deleted_for || []).includes(currentProfile.hubisoccer_id)) return;
+
+    conv.lastMsg = msg;
+    conv.lastMsgTime = msg.created_at;
+    typingTimers.delete(String(conv.id));
+
+    if (msg.user_hubisoccer_id !== currentProfile.hubisoccer_id) {
+        conv.unreadCount = (conv.unreadCount || 0) + 1;
+        if (!isMuted(conv.id)) playNotifSound();
+    }
+
+    sortConversations();
+    renderConversations();
+}
+
+function handleUpdatedListMessage(msg) {
+    const conv = conversations.find(c => String(c.id) === String(msg.conversation_id));
+    if (!conv || !conv.lastMsg || conv.lastMsg.id !== msg.id) return;
+    // Mise à jour du dernier message (read_by pour les coches, contenu édité, suppression)
+    conv.lastMsg = { ...conv.lastMsg, ...msg };
+    renderConversations();
+}
+
+function subscribeTypingForConversations() {
+    // Nettoyage des anciens canaux
+    typingChannels.forEach(ch => ch.unsubscribe());
+    typingChannels = [];
+
+    // On s'abonne à la frappe des 50 conversations les plus récentes
+    const targets = conversations.slice(0, 50);
+    for (const conv of targets) {
+        const cid = String(conv.id);
+        const ch = sb.channel(`typing:${cid}`)
+            .on('broadcast', { event: 'typing' }, (payload) => {
+                if (payload.payload.user_id === currentProfile.hubisoccer_id) return;
+                showTypingInList(cid);
+            })
+            .subscribe();
+        typingChannels.push(ch);
     }
 }
 
-function renderFollowers(followers) {
+function showTypingInList(convId) {
+    const cid = String(convId);
+    clearTimeout(typingTimers.get(cid));
+    const wasTyping = typingTimers.has(cid);
+    typingTimers.set(cid, setTimeout(() => {
+        typingTimers.delete(cid);
+        updateConvPreviewInDOM(cid);
+    }, 3000));
+    if (!wasTyping) updateConvPreviewInDOM(cid);
+}
+
+function updateConvPreviewInDOM(convId) {
+    // Met à jour uniquement l'aperçu d'une conversation, sans tout re-rendre
+    const item = document.querySelector(`.conv-item[data-conv-id="${convId}"]`);
+    if (!item) return;
+    const conv = conversations.find(c => String(c.id) === String(convId));
+    if (!conv) return;
+    const lastEl = item.querySelector('.conv-last');
+    if (!lastEl) return;
+    if (typingTimers.has(String(convId))) {
+        lastEl.className = 'conv-last typing-preview';
+        lastEl.innerHTML = '<i class="fas fa-pen"></i> écrit…';
+    } else {
+        lastEl.className = 'conv-last';
+        const draft = draftsMap.get(String(convId));
+        if (draft) {
+            lastEl.innerHTML = `<span class="draft-label">Brouillon :</span> ${escapeHtml(draft.substring(0, 50))}`;
+        } else {
+            lastEl.innerHTML = getLastMsgPreview(conv.lastMsg);
+        }
+    }
+}
+
+function playNotifSound() {
+    if (!notifSoundEnabled) return;
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+    } catch (e) { /* audio non disponible */ }
+}
+// ========== FIN : TEMPS RÉEL ==========
+
+// ========== DEBUT : CONTACTS (abonnements + abonnés fusionnés) ==========
+async function loadContacts() {
+    try {
+        const uid = currentProfile.hubisoccer_id;
+        const [followingRes, followersRes] = await Promise.all([
+            // Les gens que JE suis
+            sb.from('supabaseAuthPrive_follows')
+                .select('following_hubisoccer_id, profile:supabaseAuthPrive_profiles!following_hubisoccer_id(full_name, display_name, avatar_url)')
+                .eq('follower_hubisoccer_id', uid)
+                .limit(50),
+            // Les gens qui ME suivent
+            sb.from('supabaseAuthPrive_follows')
+                .select('follower_hubisoccer_id, profile:supabaseAuthPrive_profiles!follower_hubisoccer_id(full_name, display_name, avatar_url)')
+                .eq('following_hubisoccer_id', uid)
+                .limit(50)
+        ]);
+
+        const map = new Map();
+        for (const f of (followingRes.data || [])) {
+            map.set(f.following_hubisoccer_id, {
+                id: f.following_hubisoccer_id,
+                name: f.profile?.full_name || f.profile?.display_name || 'Utilisateur',
+                avatar: f.profile?.avatar_url || null
+            });
+        }
+        for (const f of (followersRes.data || [])) {
+            if (!map.has(f.follower_hubisoccer_id)) {
+                map.set(f.follower_hubisoccer_id, {
+                    id: f.follower_hubisoccer_id,
+                    name: f.profile?.full_name || f.profile?.display_name || 'Utilisateur',
+                    avatar: f.profile?.avatar_url || null
+                });
+            }
+        }
+        map.delete(uid);
+
+        contactsCache = Array.from(map.values());
+        renderContacts();
+        document.getElementById('followersCount').textContent = contactsCache.length;
+    } catch (err) {
+        console.error('Erreur chargement contacts:', err);
+    }
+}
+
+function renderContacts() {
     const container = document.getElementById('followersList');
     if (!container) return;
 
-    if (followers.length === 0) {
-        container.innerHTML = '<div class="followers-empty">Aucun abonné pour le moment</div>';
+    if (contactsCache.length === 0) {
+        container.innerHTML = '<div class="followers-empty">Aucun contact pour le moment</div>';
         return;
     }
 
-    container.innerHTML = followers.map(f => {
+    container.innerHTML = contactsCache.map(f => {
         const initials = getInitials(f.name);
+        const safeName = escapeHtml(f.name);
         return `
-            <div class="follower-item" data-follower-id="${f.id}">
+            <div class="follower-item" data-follower-id="${escapeHtml(f.id)}">
                 <div class="follower-avatar-wrap">
-                    ${f.avatar ? `<img src="${f.avatar}" alt="${f.name}" class="follower-avatar">` : ''}
+                    ${f.avatar ? `<img src="${escapeHtml(f.avatar)}" alt="${safeName}" class="follower-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
                     <div class="follower-avatar-initials" style="display:${f.avatar ? 'none' : 'flex'};">${initials}</div>
                     <div class="follower-online-dot ${onlineUsers.has(f.id) ? 'online' : ''}"></div>
                 </div>
-                <span class="follower-name">${escapeHtml(f.name)}</span>
+                <span class="follower-name">${safeName}</span>
             </div>
         `;
     }).join('');
 
     container.querySelectorAll('.follower-item').forEach(el => {
         el.addEventListener('click', () => {
-            const followerId = el.dataset.followerId;
-            openDirectFromFollower(followerId);
+            openOrCreateDirectConversation(el.dataset.followerId);
         });
     });
 }
 
-async function openDirectFromFollower(followerId) {
-    await openOrCreateDirectConversation(followerId);
+function updatePresenceDots() {
+    // Met à jour uniquement les pastilles en ligne, sans re-fetch ni re-render complet
+    document.querySelectorAll('.follower-item').forEach(el => {
+        const dot = el.querySelector('.follower-online-dot');
+        if (dot) dot.classList.toggle('online', onlineUsers.has(el.dataset.followerId));
+    });
+    conversations.forEach(conv => {
+        if (!conv.otherUserId) return;
+        const item = document.querySelector(`.conv-item[data-conv-id="${conv.id}"] .online-dot`);
+        if (item) item.classList.toggle('visible', onlineUsers.has(conv.otherUserId));
+    });
 }
-// ========== FIN : GESTION DES ABONNÉS ==========
+// ========== FIN : CONTACTS ==========
 
-// ========== DEBUT : ACTIONS SUR CONVERSATIONS ==========
+// ========== DEBUT : ACTIONS SUR CONVERSATIONS (archives, suppression, renommage) ==========
 async function toggleArchive(convId) {
-    const conv = conversations.find(c => c.id === convId);
+    const conv = conversations.find(c => String(c.id) === String(convId));
     if (!conv) return;
 
     if (conv.archived) {
@@ -898,14 +1471,14 @@ async function toggleArchive(convId) {
 }
 
 function promptDeleteConv(convId) {
-    const conv = conversations.find(c => c.id === convId);
+    const conv = conversations.find(c => String(c.id) === String(convId));
     if (!conv) return;
 
     if (!confirm(`Supprimer la conversation avec ${conv.name} ?`)) return;
-    deleteConversation(convId);
+    deleteConversation(convId).then(() => loadConversations());
 }
 
-async function deleteConversation(convId) {
+async function deleteConversation(convId, skipReload = false) {
     await sb.from('supabaseAuthPrive_conversation_participants')
         .delete()
         .eq('conversation_id', convId)
@@ -918,8 +1491,20 @@ async function deleteConversation(convId) {
         await sb.from('supabaseAuthPrive_messages').delete().eq('conversation_id', convId);
         await sb.from('supabaseAuthPrive_conversations').delete().eq('id', convId);
     }
-    toast('Conversation supprimée', 'success');
-    await loadConversations();
+
+    // Nettoyage des préférences liées
+    const cid = String(convId);
+    pinnedSet.delete(cid);
+    mutedMap.delete(cid);
+    draftsMap.delete(cid);
+    sb.from('supabaseAuthPrive_pinned_conversations').delete()
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id).eq('conversation_id', cid).then(() => {});
+    sb.from('supabaseAuthPrive_muted_conversations').delete()
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id).eq('conversation_id', cid).then(() => {});
+    sb.from('supabaseAuthPrive_msg_drafts').delete()
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id).eq('conversation_id', cid).then(() => {});
+
+    if (!skipReload) toast('Conversation supprimée', 'success');
 }
 
 function openConversation(convId) {
@@ -927,7 +1512,7 @@ function openConversation(convId) {
 }
 
 async function renameGroup(convId) {
-    const conv = conversations.find(c => c.id === convId);
+    const conv = conversations.find(c => String(c.id) === String(convId));
     if (!conv || !conv.is_group) return;
 
     const newName = prompt('Entrez le nouveau nom du groupe :', conv.group_name);
@@ -948,60 +1533,85 @@ async function renameGroup(convId) {
 }
 // ========== FIN : ACTIONS SUR CONVERSATIONS ==========
 
-// ========== DEBUT : CRÉATION DE CONVERSATIONS ==========
+// ========== DEBUT : CRÉATION DE CONVERSATIONS (anti-doublon, requêtes optimisées) ==========
 async function openOrCreateDirectConversation(targetId) {
-    const targetHubisoccerId = targetId;
+    if (creatingDirectConv) return;
+    creatingDirectConv = true;
 
-    const { data: myParts } = await sb.from('supabaseAuthPrive_conversation_participants')
-        .select('conversation_id').eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
-    const myIds = (myParts || []).map(p => p.conversation_id);
+    try {
+        const uid = currentProfile.hubisoccer_id;
 
-    for (const cid of myIds) {
-        const { data: parts } = await sb.from('supabaseAuthPrive_conversation_participants')
-            .select('user_hubisoccer_id').eq('conversation_id', cid);
-        if (parts?.length === 2 && parts.some(p => p.user_hubisoccer_id === targetHubisoccerId)) {
-            window.location.href = `discuss.html?conv=${cid}`;
-            return;
+        // 1) Mes conversations
+        const { data: myParts } = await sb.from('supabaseAuthPrive_conversation_participants')
+            .select('conversation_id').eq('user_hubisoccer_id', uid);
+        const myIds = (myParts || []).map(p => p.conversation_id);
+
+        if (myIds.length > 0) {
+            // 2) Parmi elles, celles où la cible participe aussi (1 seule requête, plus de N+1)
+            const { data: shared } = await sb.from('supabaseAuthPrive_conversation_participants')
+                .select('conversation_id')
+                .eq('user_hubisoccer_id', targetId)
+                .in('conversation_id', myIds);
+            const sharedIds = (shared || []).map(p => p.conversation_id);
+
+            if (sharedIds.length > 0) {
+                // 3) Garder une conversation directe (pas un groupe)
+                const { data: directConvs } = await sb.from('supabaseAuthPrive_conversations')
+                    .select('id')
+                    .in('id', sharedIds)
+                    .eq('is_group', false)
+                    .limit(1);
+                if (directConvs && directConvs.length > 0) {
+                    window.location.href = `discuss.html?conv=${directConvs[0].id}`;
+                    return;
+                }
+            }
         }
+
+        // Création
+        const { data: newConv } = await sb.from('supabaseAuthPrive_conversations')
+            .insert({ is_group: false }).select().single();
+        if (!newConv) return;
+
+        const rows = [{ conversation_id: newConv.id, user_hubisoccer_id: uid }];
+        if (targetId !== uid) rows.push({ conversation_id: newConv.id, user_hubisoccer_id: targetId });
+        await sb.from('supabaseAuthPrive_conversation_participants').insert(rows);
+
+        window.location.href = `discuss.html?conv=${newConv.id}`;
+    } finally {
+        creatingDirectConv = false;
     }
+}
 
-    const { data: newConv } = await sb.from('supabaseAuthPrive_conversations')
-        .insert({ is_group: false }).select().single();
-    if (!newConv) return;
-
-    await sb.from('supabaseAuthPrive_conversation_participants').insert([
-        { conversation_id: newConv.id, user_hubisoccer_id: currentProfile.hubisoccer_id },
-        { conversation_id: newConv.id, user_hubisoccer_id: targetHubisoccerId }
-    ]);
-
-    window.location.href = `discuss.html?conv=${newConv.id}`;
+// Messages enregistrés (conversation avec soi-même, façon Telegram)
+async function openSavedMessages() {
+    const existing = conversations.find(c => c.is_saved);
+    if (existing) {
+        window.location.href = `discuss.html?conv=${existing.id}`;
+        return;
+    }
+    await openOrCreateDirectConversation(currentProfile.hubisoccer_id);
 }
 
 function openNewConversationFull() {
     openModal('modalNewDirect');
-    loadFollowersForDirectModal();
+    loadContactsForDirectModal();
 }
 
-async function loadFollowersForDirectModal() {
-    const { data: follows } = await sb
-        .from('supabaseAuthPrive_follows')
-        .select('following_hubisoccer_id, profile:supabaseAuthPrive_profiles!following_hubisoccer_id(full_name, display_name, avatar_url)')
-        .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
-
-    const followers = (follows || []).map(f => ({
-        id: f.following_hubisoccer_id,
-        name: f.profile?.full_name || f.profile?.display_name || 'Utilisateur',
-        avatar: f.profile?.avatar_url || null
-    }));
-
-    renderDirectModalList(followers);
+async function loadContactsForDirectModal() {
+    // Réutilise le cache des contacts (fusion abonnements + abonnés)
+    if (contactsCache.length === 0) await loadContacts();
+    directModalContacts = contactsCache;
+    renderDirectModalList(document.getElementById('directSearch').value.trim());
 }
 
-function renderDirectModalList(followers, query = '') {
+function renderDirectModalList(query = '') {
     const container = document.getElementById('directList');
     if (!container) return;
 
-    const filtered = query ? followers.filter(f => f.name.toLowerCase().includes(query.toLowerCase())) : followers;
+    const filtered = query
+        ? directModalContacts.filter(f => f.name.toLowerCase().includes(query.toLowerCase()))
+        : directModalContacts;
 
     if (filtered.length === 0) {
         container.innerHTML = '<div class="members-loading">Aucun résultat</div>';
@@ -1011,8 +1621,8 @@ function renderDirectModalList(followers, query = '') {
     container.innerHTML = filtered.map(f => {
         const initials = getInitials(f.name);
         return `
-            <div class="direct-item" data-follower-id="${f.id}">
-                ${f.avatar ? `<img src="${f.avatar}" alt="">` : `<div class="member-avatar-initials">${initials}</div>`}
+            <div class="direct-item" data-follower-id="${escapeHtml(f.id)}">
+                ${f.avatar ? `<img src="${escapeHtml(f.avatar)}" alt="">` : `<div class="member-avatar-initials">${initials}</div>`}
                 <span class="direct-name">${escapeHtml(f.name)}</span>
             </div>
         `;
@@ -1020,42 +1630,31 @@ function renderDirectModalList(followers, query = '') {
 
     container.querySelectorAll('.direct-item').forEach(el => {
         el.addEventListener('click', () => {
-            const followerId = el.dataset.followerId;
             closeModal('modalNewDirect');
-            openDirectFromFollower(followerId);
+            openOrCreateDirectConversation(el.dataset.followerId);
         });
     });
 }
 // ========== FIN : CRÉATION DE CONVERSATIONS ==========
 
 // ========== DEBUT : CRÉATION DE GROUPE ==========
-async function loadFollowersForGroup() {
-    const { data: follows } = await sb
-        .from('supabaseAuthPrive_follows')
-        .select('following_hubisoccer_id, profile:supabaseAuthPrive_profiles!following_hubisoccer_id(full_name, display_name, avatar_url)')
-        .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
-
+async function loadContactsForGroup() {
+    if (contactsCache.length === 0) await loadContacts();
     const listEl = document.getElementById('membersList');
-    if (!follows || follows.length === 0) {
-        listEl.innerHTML = `<div class="members-loading">Aucun abonné trouvé</div>`;
+
+    if (contactsCache.length === 0) {
+        listEl.innerHTML = `<div class="members-loading">Aucun contact trouvé</div>`;
         return;
     }
 
-    const followers = follows.map(f => ({
-        id: f.following_hubisoccer_id,
-        name: f.profile?.full_name || f.profile?.display_name || 'Utilisateur',
-        avatar: f.profile?.avatar_url || null
-    }));
-
-    renderMembersList(followers, '');
-    document.getElementById('memberSearch').addEventListener('input', (e) => {
-        const q = e.target.value.toLowerCase();
-        renderMembersList(followers, q);
-    });
+    renderMembersList(contactsCache, '');
+    document.getElementById('memberSearch').oninput = (e) => {
+        renderMembersList(contactsCache, e.target.value.toLowerCase());
+    };
 }
 
-function renderMembersList(followers, query) {
-    const filtered = query ? followers.filter(f => f.name.toLowerCase().includes(query)) : followers;
+function renderMembersList(contactsList, query) {
+    const filtered = query ? contactsList.filter(f => f.name.toLowerCase().includes(query)) : contactsList;
     const listEl = document.getElementById('membersList');
     if (filtered.length === 0) {
         listEl.innerHTML = `<div class="members-loading">Aucun résultat</div>`;
@@ -1065,8 +1664,8 @@ function renderMembersList(followers, query) {
         const initials = getInitials(f.name);
         const isSelected = selectedGroupMembers.some(m => m.id === f.id);
         return `
-        <div class="member-item ${isSelected ? 'selected' : ''}" data-uid="${f.id}">
-            ${f.avatar ? `<img src="${f.avatar}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+        <div class="member-item ${isSelected ? 'selected' : ''}" data-uid="${escapeHtml(f.id)}">
+            ${f.avatar ? `<img src="${escapeHtml(f.avatar)}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
             <div class="member-avatar-initials" style="display:${f.avatar ? 'none' : 'flex'};">${initials}</div>
             <span class="member-name">${escapeHtml(f.name)}</span>
             <i class="fas fa-check member-check"></i>
@@ -1099,8 +1698,8 @@ function renderSelectedChips() {
     container.innerHTML = selectedGroupMembers.map(m => {
         const initials = getInitials(m.name);
         return `
-        <div class="selected-chip" data-uid="${m.id}">
-            ${m.avatar ? `<img src="${m.avatar}" alt="">` : `<div class="chip-initials">${initials}</div>`}
+        <div class="selected-chip" data-uid="${escapeHtml(m.id)}">
+            ${m.avatar ? `<img src="${escapeHtml(m.avatar)}" alt="">` : `<div class="chip-initials">${initials}</div>`}
             <span>${escapeHtml(m.name)}</span>
             <i class="fas fa-times chip-remove"></i>
         </div>
@@ -1155,6 +1754,54 @@ async function createGroup() {
 }
 // ========== FIN : CRÉATION DE GROUPE ==========
 
+// ========== DEBUT : RECHERCHE GLOBALE (noms + contenu des messages) ==========
+async function searchInMessages(query) {
+    const resultsWrap = document.getElementById('msgSearchResults');
+    const resultsList = document.getElementById('msgSearchList');
+    if (!query || query.length < 3) {
+        resultsWrap.style.display = 'none';
+        return;
+    }
+
+    const convIds = conversations.map(c => c.id);
+    if (convIds.length === 0) { resultsWrap.style.display = 'none'; return; }
+
+    const { data } = await sb
+        .from('supabaseAuthPrive_messages')
+        .select('id, conversation_id, content, created_at, user_hubisoccer_id, deleted_for')
+        .in('conversation_id', convIds)
+        .ilike('content', `%${query.replace(/[%_]/g, '')}%`)
+        .order('created_at', { ascending: false })
+        .limit(15);
+
+    const visible = (data || []).filter(m => !(m.deleted_for || []).includes(currentProfile.hubisoccer_id));
+
+    if (visible.length === 0) {
+        resultsWrap.style.display = 'none';
+        return;
+    }
+
+    resultsList.innerHTML = visible.map(m => {
+        const conv = conversations.find(c => String(c.id) === String(m.conversation_id));
+        const convName = conv ? conv.name : 'Conversation';
+        const isMine = m.user_hubisoccer_id === currentProfile.hubisoccer_id;
+        return `
+        <div class="msg-search-item" data-conv-id="${m.conversation_id}" data-msg-id="${m.id}">
+            <div class="msg-search-conv"><i class="fas fa-comment"></i> ${escapeHtml(convName)} <span class="msg-search-time">${timeSince(m.created_at)}</span></div>
+            <div class="msg-search-text">${isMine ? '<strong>Vous :</strong> ' : ''}${escapeHtml((m.content || '').substring(0, 90))}</div>
+        </div>`;
+    }).join('');
+
+    resultsList.querySelectorAll('.msg-search-item').forEach(el => {
+        el.addEventListener('click', () => {
+            window.location.href = `discuss.html?conv=${el.dataset.convId}&msg=${el.dataset.msgId}`;
+        });
+    });
+
+    resultsWrap.style.display = 'block';
+}
+// ========== FIN : RECHERCHE GLOBALE ==========
+
 // ========== DEBUT : UTILISATEURS BLOQUÉS ==========
 async function loadBlockedUsers() {
     const { data } = await sb
@@ -1174,9 +1821,9 @@ async function loadBlockedUsers() {
         const avatar = p.avatar_url;
         return `
         <div class="blocked-item">
-            ${avatar ? `<img src="${avatar}" alt="">` : `<div class="blocked-avatar-initials">${initials}</div>`}
+            ${avatar ? `<img src="${escapeHtml(avatar)}" alt="">` : `<div class="blocked-avatar-initials">${initials}</div>`}
             <span class="blocked-name">${escapeHtml(name)}</span>
-            <button class="btn-unblock" data-uid="${b.blocked_hubisoccer_id}">Débloquer</button>
+            <button class="btn-unblock" data-uid="${escapeHtml(b.blocked_hubisoccer_id)}">Débloquer</button>
         </div>
     `}).join('');
 
@@ -1193,15 +1840,16 @@ async function loadBlockedUsers() {
 }
 // ========== FIN : UTILISATEURS BLOQUÉS ==========
 
-// ========== DEBUT : PRÉSENCE ==========
+// ========== DEBUT : PRÉSENCE (avec anti-tempête) ==========
 function initPresence() {
     presenceChannel = sb.channel('hubisoccer_presence');
     presenceChannel
         .on('presence', { event: 'sync' }, () => {
             const state = presenceChannel.presenceState();
             onlineUsers = new Set(Object.values(state).flat().map(p => p.user_id));
-            renderConversations();
-            loadFollowers(); // Recharge les abonnés pour mettre à jour le statut en ligne
+            // Anti-tempête : mise à jour légère des pastilles, sans re-fetch réseau
+            clearTimeout(presenceDebounceTimer);
+            presenceDebounceTimer = setTimeout(updatePresenceDots, 400);
         })
         .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
@@ -1211,7 +1859,7 @@ function initPresence() {
 }
 // ========== FIN : PRÉSENCE ==========
 
-// ========== DEBUT : GESTION DES LANGUES ==========
+// ========== DEBUT : GESTION DES LANGUES (sélecteur volontairement inactif — système de traduction à venir) ==========
 function initLanguageSelector() {
     const dropdown = document.getElementById('langDropdown');
     const currentBtn = document.getElementById('langCurrentBtn');
@@ -1263,53 +1911,113 @@ async function init() {
         return;
     }
 
+    await loadUserPrefs();
     await loadConversations();
-    await loadFollowers();
+    await loadContacts();
     initPresence();
     initLanguageSelector();
+    subscribeListRealtime();
     setLoader(false);
 
-    // Écouteurs
-    document.getElementById('conversationsList').addEventListener('click', (e) => {
+    // ----- Clic / appui long sur les conversations -----
+    const listEl = document.getElementById('conversationsList');
+    let longPressTimer = null;
+    let longPressFired = false;
+
+    listEl.addEventListener('click', (e) => {
+        const moreBtn = e.target.closest('.more-btn');
+        if (moreBtn) {
+            e.stopPropagation();
+            const rect = moreBtn.getBoundingClientRect();
+            openConvContextMenu(moreBtn.dataset.convId, rect.left - 180, rect.bottom + 4);
+            return;
+        }
         const archiveBtn = e.target.closest('.archive-btn');
         if (archiveBtn) {
             e.stopPropagation();
             toggleArchive(archiveBtn.dataset.convId);
             return;
         }
-        const deleteBtn = e.target.closest('.delete-btn');
-        if (deleteBtn) {
-            e.stopPropagation();
-            promptDeleteConv(deleteBtn.dataset.convId);
-            return;
-        }
         const item = e.target.closest('.conv-item');
         if (item) {
-            openConversation(item.dataset.convId);
+            if (longPressFired) { longPressFired = false; return; }
+            if (selectionMode) {
+                toggleConvSelection(item.dataset.convId);
+            } else {
+                openConversation(item.dataset.convId);
+            }
         }
     });
 
+    // Menu contextuel au clic droit
+    listEl.addEventListener('contextmenu', (e) => {
+        const item = e.target.closest('.conv-item');
+        if (item) {
+            e.preventDefault();
+            openConvContextMenu(item.dataset.convId, e.clientX, e.clientY);
+        }
+    });
+
+    // Appui long (tactile) = mode sélection
+    listEl.addEventListener('touchstart', (e) => {
+        const item = e.target.closest('.conv-item');
+        if (!item) return;
+        longPressFired = false;
+        longPressTimer = setTimeout(() => {
+            longPressFired = true;
+            if (!selectionMode) enterSelectionMode(item.dataset.convId);
+            else toggleConvSelection(item.dataset.convId);
+            if (navigator.vibrate) navigator.vibrate(30);
+        }, 550);
+    }, { passive: true });
+    listEl.addEventListener('touchend', () => clearTimeout(longPressTimer));
+    listEl.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
+    // ----- Barre de sélection multiple -----
+    document.getElementById('selReadBtn').addEventListener('click', selectionMarkRead);
+    document.getElementById('selArchiveBtn').addEventListener('click', selectionArchive);
+    document.getElementById('selFolderBtn').addEventListener('click', () => openFolderModal(Array.from(selectedConvs)));
+    document.getElementById('selDeleteBtn').addEventListener('click', selectionDelete);
+    document.getElementById('selCancelBtn').addEventListener('click', exitSelectionMode);
+
+    // ----- Recherche (noms + contenu des messages, avec debounce) -----
     document.getElementById('searchInput').addEventListener('input', (e) => {
         searchQuery = e.target.value;
         document.getElementById('clearSearch').style.display = searchQuery ? 'block' : 'none';
         renderConversations();
+        clearTimeout(msgSearchTimer);
+        msgSearchTimer = setTimeout(() => searchInMessages(searchQuery.trim()), 350);
     });
     document.getElementById('clearSearch').addEventListener('click', () => {
         document.getElementById('searchInput').value = '';
         searchQuery = '';
         document.getElementById('clearSearch').style.display = 'none';
+        document.getElementById('msgSearchResults').style.display = 'none';
         renderConversations();
     });
 
-    document.querySelectorAll('.filter-tab').forEach(tab => {
+    // ----- Filtres -----
+    document.querySelectorAll('.filter-tab[data-filter]').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             activeFilter = tab.dataset.filter;
+            activeFolderId = null;
             renderConversations();
         });
     });
 
+    // ----- Cloche de notifications : bascule sur le filtre "Non lus" -----
+    document.getElementById('notifBtn').addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        document.querySelector('.filter-tab[data-filter="unread"]')?.classList.add('active');
+        activeFilter = 'unread';
+        activeFolderId = null;
+        renderConversations();
+        document.getElementById('conversationsWrapper').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // ----- Archives -----
     document.getElementById('archiveToggleBtn').addEventListener('click', async () => {
         showArchives = !showArchives;
         document.getElementById('archiveToggleText').textContent = showArchives ? 'Conversations' : 'Archives';
@@ -1317,30 +2025,28 @@ async function init() {
         await loadConversations();
     });
 
-    document.getElementById('newGroupBtn').addEventListener('click', () => {
+    // ----- Messages enregistrés -----
+    document.getElementById('savedMsgBtn').addEventListener('click', openSavedMessages);
+
+    // ----- Nouveau groupe -----
+    const openGroupModal = () => {
         selectedGroupMembers = [];
         document.getElementById('groupName').value = '';
         document.getElementById('selectedMembers').innerHTML = '';
         openModal('modalGroup');
-        loadFollowersForGroup();
-    });
-
-    document.getElementById('emptyNewGroupBtn').addEventListener('click', () => {
-        selectedGroupMembers = [];
-        document.getElementById('groupName').value = '';
-        document.getElementById('selectedMembers').innerHTML = '';
-        openModal('modalGroup');
-        loadFollowersForGroup();
-    });
-
+        loadContactsForGroup();
+    };
+    document.getElementById('newGroupBtn').addEventListener('click', openGroupModal);
+    document.getElementById('emptyNewGroupBtn').addEventListener('click', openGroupModal);
     document.getElementById('createGroupBtn').addEventListener('click', createGroup);
 
+    // ----- Bloqués -----
     document.getElementById('blockedBtn').addEventListener('click', () => {
         loadBlockedUsers();
         openModal('modalBlocked');
     });
 
-    // Nouveau bouton "Nouvelle discussion"
+    // ----- Nouvelle discussion -----
     const newConvBtn = document.createElement('button');
     newConvBtn.className = 'btn-action btn-secondary';
     newConvBtn.id = 'newConversationBtn';
@@ -1349,17 +2055,14 @@ async function init() {
     if (pageHeaderActions) {
         pageHeaderActions.insertBefore(newConvBtn, document.getElementById('newGroupBtn'));
     }
-    document.getElementById('newConversationBtn').addEventListener('click', openNewConversationFull);
+    newConvBtn.addEventListener('click', openNewConversationFull);
 
-    // Recherche dans la modale de discussion directe
+    // Recherche de la modale "Nouvelle discussion" : filtre LOCAL (corrigé)
     document.getElementById('directSearch').addEventListener('input', (e) => {
-        const query = e.target.value;
-        loadFollowersForDirectModal().then(() => {
-            // La fonction de rendu est déjà appelée dans loadFollowersForDirectModal
-        });
+        renderDirectModalList(e.target.value.trim());
     });
 
-    // Dropdown utilisateur
+    // ----- Dropdown utilisateur -----
     document.getElementById('userMenu').addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('userDropdown').classList.toggle('show');
@@ -1385,7 +2088,7 @@ async function init() {
         logout();
     });
 
-    // Sidebar toggle
+    // ----- Sidebar -----
     document.getElementById('menuToggle').addEventListener('click', () => {
         document.getElementById('sidebar').classList.add('open');
         document.getElementById('sidebarOverlay').classList.add('show');
@@ -1403,7 +2106,7 @@ async function init() {
         m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id); });
     });
 
-    // Paramètre ?to=msgId
+    // ----- Deep link ?to=<userId> -----
     const params = new URLSearchParams(window.location.search);
     const toMsgId = params.get('to');
     if (toMsgId) {
@@ -1414,4 +2117,3 @@ async function init() {
 
 // ========== DEBUT : DÉMARRAGE ==========
 document.addEventListener('DOMContentLoaded', init);
-// ========== FIN : DÉMARRAGE ==========

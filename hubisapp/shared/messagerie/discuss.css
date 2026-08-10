@@ -2580,3 +2580,446 @@ body.dark-mode .system-msg span {
     font-size: 0.85rem;
     padding: 20px;
 }
+
+/* ===================================================
+   VAGUE 2 — Appels, arrière-plans, sélection multiple,
+   mentions, accusés de lecture, glisser-pour-répondre
+   =================================================== */
+
+/* ----- APPELS AUDIO / VIDÉO ----- */
+.call-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    background: linear-gradient(160deg, #2a1245, #12121c);
+    align-items: center;
+    justify-content: center;
+}
+
+.call-modal.show {
+    display: flex;
+    animation: fadeIn 0.25s ease;
+}
+
+.call-box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.call-video-zone {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    overflow: hidden;
+}
+
+.call-remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.call-local-video {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 110px;
+    height: 150px;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    object-fit: cover;
+    z-index: 10;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+.call-identity {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    color: white;
+}
+
+.call-avatar-wrap {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    margin: 0 auto 22px;
+}
+
+.call-avatar,
+.call-avatar-initials {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid rgba(255, 204, 0, 0.85);
+}
+
+.call-avatar-initials {
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.call-pulse {
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 204, 0, 0.5);
+    animation: callPulse 1.8s ease-out infinite;
+}
+
+@keyframes callPulse {
+    0%   { transform: scale(1);    opacity: 0.8; }
+    100% { transform: scale(1.35); opacity: 0; }
+}
+
+.call-identity h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.call-status {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.call-duration {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-top: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.call-controls {
+    position: absolute;
+    bottom: 48px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    z-index: 20;
+}
+
+.call-btn {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: white;
+    transition: var(--transition);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.call-btn:hover {
+    transform: scale(1.08);
+}
+
+.call-secondary {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    width: 52px;
+    height: 52px;
+    font-size: 1.05rem;
+}
+
+.call-secondary.off {
+    background: rgba(220, 53, 69, 0.75);
+}
+
+.call-accept {
+    background: #22c55e;
+    animation: callBtnPulse 1.5s infinite;
+}
+
+.call-reject {
+    background: var(--danger);
+}
+
+@keyframes callBtnPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+    50%      { box-shadow: 0 0 0 16px rgba(34, 197, 94, 0); }
+}
+
+@media (max-width: 480px) {
+    .call-avatar,
+    .call-avatar-initials { width: 106px; height: 106px; font-size: 2.4rem; }
+    .call-avatar-wrap { width: 106px; height: 106px; }
+    .call-btn { width: 56px; height: 56px; }
+    .call-secondary { width: 48px; height: 48px; }
+    .call-controls { gap: 12px; bottom: 34px; }
+    .call-local-video { width: 86px; height: 118px; top: 14px; right: 14px; }
+}
+
+/* ----- ARRIÈRE-PLANS ----- */
+.bg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 12px;
+}
+
+.bg-choice {
+    cursor: pointer;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.bg-preview {
+    height: 76px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--gray-light);
+    margin-bottom: 6px;
+    transition: var(--transition);
+}
+
+.bg-choice:hover .bg-preview {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.bg-choice.active .bg-preview {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-xlight);
+}
+
+.bg-choice span {
+    font-size: 0.72rem;
+    color: var(--gray);
+}
+
+.bg-choice.active span {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.bg-upload-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    margin-top: 18px;
+    border-radius: var(--radius-sm);
+    border: 1.5px dashed var(--primary);
+    background: var(--primary-xlight);
+    color: var(--primary);
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.bg-upload-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* ----- SÉLECTION MULTIPLE DE MESSAGES ----- */
+.msg-selection-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    background: var(--primary);
+    color: white;
+    flex-shrink: 0;
+    animation: fadeIn 0.2s;
+}
+
+.msg-selection-bar > span {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.msg-selection-bar button {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    font-size: 0.95rem;
+    transition: var(--transition);
+}
+
+.msg-selection-bar button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.msg-selection-bar button.danger:hover {
+    background: var(--danger);
+}
+
+.msg-sel-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.msg-row.msg-selected .msg-bubble {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+}
+
+body.msg-selecting .msg-bubble {
+    cursor: pointer;
+}
+
+/* ----- GLISSER POUR RÉPONDRE ----- */
+.msg-bubble.swipe-ready {
+    box-shadow: -4px 0 0 0 var(--gold), var(--shadow-sm);
+}
+
+/* ----- MENTIONS @ ----- */
+.mention-box {
+    position: absolute;
+    bottom: calc(var(--input-h) + 8px);
+    left: 12px;
+    right: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 400;
+    padding: 6px;
+}
+
+.mention-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.mention-item:hover {
+    background: var(--primary-xlight);
+}
+
+.mention-item img,
+.mention-initials {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mention-initials {
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.mention-item span {
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+
+.msg-bubble .mention-tag {
+    color: var(--primary);
+    font-weight: 700;
+    background: var(--primary-xlight);
+    padding: 1px 5px;
+    border-radius: 5px;
+}
+
+.msg-row.outgoing .msg-bubble .mention-tag {
+    color: var(--gold);
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* ----- QUI A LU ? ----- */
+.rr-section {
+    margin-bottom: 18px;
+}
+
+.rr-section h4 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--gray-light);
+}
+
+.rr-section h4 span {
+    margin-left: auto;
+    color: var(--gray);
+    font-weight: 600;
+}
+
+.rr-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+}
+
+.rr-item img,
+.rr-initials {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.rr-initials {
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.rr-item span {
+    font-size: 0.88rem;
+}
+
+/* ----- FORME DES BULLES (réglage settings-msg) ----- */
+body.bubbles-square .msg-bubble {
+    border-radius: 3px !important;
+}
+
+body.bubbles-slightly .msg-bubble {
+    border-radius: 8px !important;
+}

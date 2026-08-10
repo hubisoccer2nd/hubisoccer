@@ -6,7 +6,7 @@
    routes dynamiquement selon le role), aucune notion de niveau
    d'acces (maintenant les elements data-tier="gestionnaire" sont
    masques aux non-organisateurs), tables renommees vers la
-   convention supabaseAuthPrive_gestion_tournoi_*, et n'affiche
+   convention supabaseAuthPrive_gt_*, et n'affiche
    que les tournois publies (jamais les brouillons d'un autre).
    ============================================================ */
 'use strict';
@@ -20,12 +20,12 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 window.__SUPABASE_CLIENT = supabaseClient;
 
 // ═══════════════════════════════════════════════════════════
-// 2. TABLES (convention supabaseAuthPrive_gestion_tournoi_*)
+// 2. TABLES (convention supabaseAuthPrive_gt_*)
 // ═══════════════════════════════════════════════════════════
-const TBL_TOURNAMENTS = 'supabaseAuthPrive_gestion_tournoi_tournaments';
-const TBL_TYPES        = 'supabaseAuthPrive_gestion_tournoi_types';
-const TBL_SPORTS        = 'supabaseAuthPrive_gestion_tournoi_sports';
-const TBL_PARTICIPANTS   = 'supabaseAuthPrive_gestion_tournoi_participants';
+const TBL_TOURNAMENTS = 'supabaseAuthPrive_gt_tournaments';
+const TBL_TYPES        = 'supabaseAuthPrive_gt_types';
+const TBL_SPORTS        = 'supabaseAuthPrive_gt_sports';
+const TBL_PARTICIPANTS   = 'supabaseAuthPrive_gt_participants';
 
 // ═══════════════════════════════════════════════════════════
 // 3. TABLE DE ROUTAGE PROFIL / PARAMETRES PAR ROLE

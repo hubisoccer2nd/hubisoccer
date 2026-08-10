@@ -343,15 +343,65 @@ function makeMessageRow(msg, hideAvatar = false) {
     bubble.className = 'msg-bubble';
     bubble.dataset.msgId = msg.id;
     bubble.addEventListener('contextmenu', (e) => { e.preventDefault(); showContextMenu(e, msg); });
-    // Appui long pour réactions rapides
-    let pressTimer;
-    bubble.addEventListener('touchstart', (e) => {
-        pressTimer = setTimeout(() => {
-            showReactionPicker(e, msg.id);
-        }, 500);
+
+    // Clic simple : sélection quand le mode multiple est actif
+    bubble.addEventListener('click', (e) => {
+        if (msgSelectionMode) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMsgSelection(msg.id);
+        }
     });
-    bubble.addEventListener('touchend', () => clearTimeout(pressTimer));
-    bubble.addEventListener('touchmove', () => clearTimeout(pressTimer));
+
+    // Tactile : appui long = sélection multiple, glisser vers la droite = répondre
+    let pressTimer = null;
+    let touchStartX = 0, touchStartY = 0, swiping = false, longPressFired = false;
+
+    bubble.addEventListener('touchstart', (e) => {
+        const t = e.touches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        swiping = false;
+        longPressFired = false;
+        pressTimer = setTimeout(() => {
+            longPressFired = true;
+            if (!msgSelectionMode) enterMsgSelection(msg.id);
+            else toggleMsgSelection(msg.id);
+            if (navigator.vibrate) navigator.vibrate(30);
+        }, 500);
+    }, { passive: true });
+
+    bubble.addEventListener('touchmove', (e) => {
+        const t = e.touches[0];
+        const dx = t.clientX - touchStartX;
+        const dy = Math.abs(t.clientY - touchStartY);
+        if (Math.abs(dx) > 8 || dy > 8) clearTimeout(pressTimer);
+        // Glissement horizontal vers la droite pour répondre
+        if (!msgSelectionMode && dx > 12 && dy < 40) {
+            swiping = true;
+            const shift = Math.min(dx - 12, 70);
+            bubble.style.transform = `translateX(${shift}px)`;
+            bubble.style.transition = 'none';
+            bubble.classList.toggle('swipe-ready', shift >= 55);
+        }
+    }, { passive: true });
+
+    const endTouch = () => {
+        clearTimeout(pressTimer);
+        if (swiping) {
+            const ready = bubble.classList.contains('swipe-ready');
+            bubble.style.transition = 'transform 0.2s ease';
+            bubble.style.transform = '';
+            bubble.classList.remove('swipe-ready');
+            if (ready) {
+                startReply(msg);
+                if (navigator.vibrate) navigator.vibrate(20);
+            }
+            swiping = false;
+        }
+    };
+    bubble.addEventListener('touchend', endTouch);
+    bubble.addEventListener('touchcancel', endTouch);
 
     if (msg.reply_to_id) {
         const replyEl = makeReplyQuote(msg.reply_to_id);
@@ -664,6 +714,7 @@ function formatMsgText(text) {
         .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
         .replace(/`(.*?)`/g, '<code>$1</code>')
         .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
+        .replace(/@([\wÀ-ſ]+(?:\s+[A-ZÀ-Ý][\wÀ-ſ]*)?)/g, '<span class="mention-tag">@$1</span>')
         .replace(/\n/g, '<br>');
 }
 
@@ -1227,13 +1278,422 @@ async function translateMessage(msgId, targetLang = 'en') {
 }
 // ========== FIN : TRADUCTION ==========
 
-// ========== DEBUT : APPELS AUDIO/VIDÉO ==========
-function startCall(type = 'audio') {
-    // Rediriger vers une page d'appel ou utiliser WebRTC
-    toast(`Démarrage d'un appel ${type}... (fonctionnalité en cours d'intégration)`, 'info');
-    // Ici on pourrait ouvrir une modale ou lancer WebRTC
+// ========== DEBUT : APPELS AUDIO/VIDÉO (WebRTC via PeerJS) ==========
+let callPeer = null;             // instance PeerJS
+let callConnection = null;       // appel média en cours
+let callLocalStream = null;
+let callChannel = null;          // canal Supabase de signalisation
+let callState = 'idle';          // idle | outgoing | incoming | active
+let callType = 'audio';          // audio | video
+let callPartnerId = null;
+let callPartnerName = '';
+let callStartTime = null;
+let callTimerInterval = null;
+let ringInterval = null;
+let ringCtx = null;
+let incomingCallData = null;
+let callMicEnabled = true;
+let callCamEnabled = true;
+let callFacingMode = 'user';
+
+// Identifiant PeerJS unique et déterministe par utilisateur et conversation
+function peerIdFor(userId) {
+    return `hubis-${String(userId).replace(/[^a-zA-Z0-9]/g, '')}-${String(currentConvId).replace(/[^a-zA-Z0-9]/g, '')}`;
 }
-// ========== FIN : APPELS ==========
+
+// ----- Sonnerie (générée sans fichier externe) -----
+function startRingtone(incoming = true) {
+    stopRingtone();
+    try {
+        ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const beep = () => {
+            if (!ringCtx) return;
+            const osc = ringCtx.createOscillator();
+            const gain = ringCtx.createGain();
+            osc.connect(gain);
+            gain.connect(ringCtx.destination);
+            osc.frequency.value = incoming ? 880 : 440;
+            gain.gain.setValueAtTime(0.0001, ringCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(incoming ? 0.15 : 0.07, ringCtx.currentTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ringCtx.currentTime + 0.7);
+            osc.start();
+            osc.stop(ringCtx.currentTime + 0.75);
+        };
+        beep();
+        ringInterval = setInterval(beep, incoming ? 1400 : 2500);
+    } catch (e) { /* audio indisponible */ }
+}
+
+function stopRingtone() {
+    clearInterval(ringInterval);
+    ringInterval = null;
+    if (ringCtx) { try { ringCtx.close(); } catch (e) {} ringCtx = null; }
+}
+
+// ----- Signalisation : écoute des appels entrants -----
+function subscribeCalls() {
+    if (!currentConvId || !currentProfile?.hubisoccer_id) return;
+    callChannel = sb.channel(`calls:${currentConvId}`)
+        .on('broadcast', { event: 'call_offer' }, (payload) => {
+            const d = payload.payload || {};
+            if (d.to !== currentProfile.hubisoccer_id) return;
+            if (callState !== 'idle') {
+                // Déjà en ligne : on renvoie occupé
+                callChannel?.send({ type: 'broadcast', event: 'call_busy', payload: { to: d.from } });
+                return;
+            }
+            showIncomingCall(d);
+        })
+        .on('broadcast', { event: 'call_cancel' }, (payload) => {
+            const d = payload.payload || {};
+            if (d.to !== currentProfile.hubisoccer_id) return;
+            if (callState === 'incoming') {
+                closeCallUI();
+                toast('Appel manqué', 'info');
+            }
+        })
+        .on('broadcast', { event: 'call_reject' }, (payload) => {
+            const d = payload.payload || {};
+            if (d.to !== currentProfile.hubisoccer_id) return;
+            if (callState === 'outgoing') {
+                endCall(false, 'Appel refusé');
+            }
+        })
+        .on('broadcast', { event: 'call_busy' }, (payload) => {
+            const d = payload.payload || {};
+            if (d.to !== currentProfile.hubisoccer_id) return;
+            if (callState === 'outgoing') endCall(false, 'Correspondant occupé');
+        })
+        .on('broadcast', { event: 'call_end' }, (payload) => {
+            const d = payload.payload || {};
+            if (d.to !== currentProfile.hubisoccer_id) return;
+            if (callState !== 'idle') endCall(false, 'Appel terminé');
+        })
+        .subscribe();
+}
+
+// ----- Démarrer un appel -----
+async function startCall(type = 'audio') {
+    if (!currentConv) return;
+    if (currentConv.is_group) {
+        toast('Les appels de groupe arrivent bientôt — appels 1 à 1 disponibles', 'info');
+        return;
+    }
+    if (conversationBlocked) { toast('Appel impossible : conversation bloquée', 'warning'); return; }
+    if (callState !== 'idle') { toast('Un appel est déjà en cours', 'warning'); return; }
+    if (typeof Peer === 'undefined') { toast('Module d\'appel non chargé, rechargez la page', 'error'); return; }
+
+    const other = currentConv.participants?.find(p => p.user_hubisoccer_id !== currentProfile.hubisoccer_id);
+    if (!other) { toast('Correspondant introuvable', 'error'); return; }
+
+    callType = type;
+    callPartnerId = other.user_hubisoccer_id;
+    callPartnerName = other.profile?.full_name || other.profile?.display_name || 'Utilisateur';
+    callState = 'outgoing';
+    callMicEnabled = true;
+    callCamEnabled = true;
+
+    openCallUI('outgoing');
+
+    try {
+        callLocalStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: type === 'video' ? { facingMode: callFacingMode } : false
+        });
+    } catch (err) {
+        toast(err.name === 'NotAllowedError'
+            ? 'Autorisez l\'accès au micro / à la caméra'
+            : 'Micro ou caméra indisponible', 'warning');
+        closeCallUI();
+        return;
+    }
+
+    if (type === 'video') {
+        const localVid = document.getElementById('callLocalVideo');
+        localVid.srcObject = callLocalStream;
+        localVid.style.display = 'block';
+    }
+
+    // Création du pair local
+    callPeer = new Peer(peerIdFor(currentProfile.hubisoccer_id), { host: '0.peerjs.com', port: 443, secure: true });
+
+    callPeer.on('open', () => {
+        // Signale l'appel au correspondant
+        callChannel?.send({
+            type: 'broadcast', event: 'call_offer',
+            payload: {
+                from: currentProfile.hubisoccer_id,
+                to: callPartnerId,
+                fromName: currentProfile.full_name || currentProfile.display_name || 'Utilisateur',
+                fromAvatar: currentProfile.avatar_url || null,
+                callType: type,
+                peerId: peerIdFor(currentProfile.hubisoccer_id)
+            }
+        });
+        startRingtone(false);
+    });
+
+    // L'appelé nous rappelle : on répond avec notre flux
+    callPeer.on('call', (incoming) => {
+        incoming.answer(callLocalStream);
+        callConnection = incoming;
+        incoming.on('stream', (remoteStream) => attachRemoteStream(remoteStream));
+        incoming.on('close', () => endCall(false, 'Appel terminé'));
+    });
+
+    callPeer.on('error', (err) => {
+        console.warn('Erreur PeerJS :', err.type);
+        if (callState === 'outgoing') endCall(false, 'Connexion impossible');
+    });
+
+    // Expiration si personne ne répond (45 s)
+    setTimeout(() => {
+        if (callState === 'outgoing') {
+            callChannel?.send({ type: 'broadcast', event: 'call_cancel', payload: { from: currentProfile.hubisoccer_id, to: callPartnerId } });
+            endCall(true, 'Pas de réponse');
+        }
+    }, 45000);
+}
+
+// ----- Appel entrant -----
+function showIncomingCall(data) {
+    incomingCallData = data;
+    callState = 'incoming';
+    callType = data.callType || 'audio';
+    callPartnerId = data.from;
+    callPartnerName = data.fromName || 'Utilisateur';
+
+    document.getElementById('callPartnerName').textContent = callPartnerName;
+    document.getElementById('callStatusText').textContent = callType === 'video' ? 'Appel vidéo entrant…' : 'Appel audio entrant…';
+
+    const av = document.getElementById('callAvatar');
+    const ini = document.getElementById('callAvatarInitials');
+    if (data.fromAvatar) {
+        av.src = data.fromAvatar; av.style.display = 'block'; ini.style.display = 'none';
+    } else {
+        av.style.display = 'none'; ini.style.display = 'flex'; ini.textContent = getInitials(callPartnerName);
+    }
+
+    openCallUI('incoming');
+    startRingtone(true);
+}
+
+async function acceptCall() {
+    if (callState !== 'incoming' || !incomingCallData) return;
+    stopRingtone();
+
+    try {
+        callLocalStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: callType === 'video' ? { facingMode: callFacingMode } : false
+        });
+    } catch (err) {
+        toast('Micro ou caméra indisponible', 'warning');
+        rejectCall();
+        return;
+    }
+
+    if (callType === 'video') {
+        const localVid = document.getElementById('callLocalVideo');
+        localVid.srcObject = callLocalStream;
+        localVid.style.display = 'block';
+    }
+
+    callPeer = new Peer(peerIdFor(currentProfile.hubisoccer_id), { host: '0.peerjs.com', port: 443, secure: true });
+    callPeer.on('open', () => {
+        // On appelle l'émetteur avec notre flux
+        const conn = callPeer.call(incomingCallData.peerId, callLocalStream);
+        callConnection = conn;
+        conn.on('stream', (remoteStream) => attachRemoteStream(remoteStream));
+        conn.on('close', () => endCall(false, 'Appel terminé'));
+    });
+    callPeer.on('error', () => endCall(false, 'Connexion impossible'));
+
+    setCallActive();
+}
+
+function rejectCall() {
+    stopRingtone();
+    callChannel?.send({
+        type: 'broadcast', event: 'call_reject',
+        payload: { from: currentProfile.hubisoccer_id, to: callPartnerId }
+    });
+    logCall('missed');
+    closeCallUI();
+    toast('Appel refusé', 'info');
+}
+
+function attachRemoteStream(remoteStream) {
+    const remoteVid = document.getElementById('callRemoteVideo');
+    const remoteAud = document.getElementById('callRemoteAudio');
+    if (callType === 'video') {
+        remoteVid.srcObject = remoteStream;
+        remoteVid.style.display = 'block';
+    } else {
+        remoteAud.srcObject = remoteStream;
+    }
+    setCallActive();
+}
+
+function setCallActive() {
+    if (callState === 'active') return;
+    stopRingtone();
+    callState = 'active';
+    callStartTime = Date.now();
+    document.getElementById('callStatusText').textContent = 'En communication';
+    document.getElementById('callAcceptBtn').style.display = 'none';
+    document.getElementById('callRejectBtn').style.display = 'none';
+    document.getElementById('callHangupBtn').style.display = 'flex';
+    document.getElementById('callMicBtn').style.display = 'flex';
+    document.getElementById('callCamBtn').style.display = callType === 'video' ? 'flex' : 'none';
+    document.getElementById('callFlipBtn').style.display = callType === 'video' ? 'flex' : 'none';
+    document.getElementById('callDuration').style.display = 'block';
+
+    clearInterval(callTimerInterval);
+    callTimerInterval = setInterval(() => {
+        const s = Math.floor((Date.now() - callStartTime) / 1000);
+        document.getElementById('callDuration').textContent =
+            `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+function hangUpCall() {
+    callChannel?.send({
+        type: 'broadcast', event: 'call_end',
+        payload: { from: currentProfile.hubisoccer_id, to: callPartnerId }
+    });
+    endCall(true, 'Appel terminé');
+}
+
+function endCall(iEnded, reason) {
+    const wasActive = callState === 'active';
+    const duration = wasActive && callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
+
+    if (callState === 'outgoing' && !wasActive) {
+        callChannel?.send({ type: 'broadcast', event: 'call_cancel', payload: { from: currentProfile.hubisoccer_id, to: callPartnerId } });
+    }
+
+    if (wasActive) logCall('done', duration);
+    else if (iEnded) logCall('cancelled');
+
+    closeCallUI();
+    if (reason) toast(reason, 'info');
+}
+
+function closeCallUI() {
+    stopRingtone();
+    clearInterval(callTimerInterval);
+    callTimerInterval = null;
+    try { callConnection?.close(); } catch (e) {}
+    try { callPeer?.destroy(); } catch (e) {}
+    callLocalStream?.getTracks().forEach(t => t.stop());
+    callConnection = null;
+    callPeer = null;
+    callLocalStream = null;
+    callState = 'idle';
+    callStartTime = null;
+    incomingCallData = null;
+
+    const modal = document.getElementById('modalCall');
+    if (modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
+    ['callLocalVideo', 'callRemoteVideo'].forEach(id => {
+        const v = document.getElementById(id);
+        if (v) { v.srcObject = null; v.style.display = 'none'; }
+    });
+    const ra = document.getElementById('callRemoteAudio');
+    if (ra) ra.srcObject = null;
+    const dur = document.getElementById('callDuration');
+    if (dur) { dur.style.display = 'none'; dur.textContent = '0:00'; }
+}
+
+function openCallUI(mode) {
+    const modal = document.getElementById('modalCall');
+    if (!modal) return;
+
+    document.getElementById('callPartnerName').textContent = callPartnerName;
+    document.getElementById('callTypeIcon').className = callType === 'video' ? 'fas fa-video' : 'fas fa-phone';
+
+    if (mode === 'outgoing') {
+        document.getElementById('callStatusText').textContent = 'Appel en cours…';
+        const other = currentConv?.participants?.find(p => p.user_hubisoccer_id === callPartnerId);
+        const avatarUrl = other?.profile?.avatar_url;
+        const av = document.getElementById('callAvatar');
+        const ini = document.getElementById('callAvatarInitials');
+        if (avatarUrl) { av.src = avatarUrl; av.style.display = 'block'; ini.style.display = 'none'; }
+        else { av.style.display = 'none'; ini.style.display = 'flex'; ini.textContent = getInitials(callPartnerName); }
+    }
+
+    document.getElementById('callAcceptBtn').style.display = mode === 'incoming' ? 'flex' : 'none';
+    document.getElementById('callRejectBtn').style.display = mode === 'incoming' ? 'flex' : 'none';
+    document.getElementById('callHangupBtn').style.display = mode === 'outgoing' ? 'flex' : 'none';
+    document.getElementById('callMicBtn').style.display = 'none';
+    document.getElementById('callCamBtn').style.display = 'none';
+    document.getElementById('callFlipBtn').style.display = 'none';
+    document.getElementById('callDuration').style.display = 'none';
+    document.getElementById('callVideoZone').style.display = callType === 'video' ? 'block' : 'none';
+
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function toggleCallMic() {
+    if (!callLocalStream) return;
+    callMicEnabled = !callMicEnabled;
+    callLocalStream.getAudioTracks().forEach(t => t.enabled = callMicEnabled);
+    const btn = document.getElementById('callMicBtn');
+    btn.classList.toggle('off', !callMicEnabled);
+    btn.innerHTML = callMicEnabled ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash"></i>';
+}
+
+function toggleCallCam() {
+    if (!callLocalStream) return;
+    callCamEnabled = !callCamEnabled;
+    callLocalStream.getVideoTracks().forEach(t => t.enabled = callCamEnabled);
+    const btn = document.getElementById('callCamBtn');
+    btn.classList.toggle('off', !callCamEnabled);
+    btn.innerHTML = callCamEnabled ? '<i class="fas fa-video"></i>' : '<i class="fas fa-video-slash"></i>';
+}
+
+async function flipCallCamera() {
+    if (!callLocalStream || callType !== 'video') return;
+    callFacingMode = callFacingMode === 'user' ? 'environment' : 'user';
+    try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: { facingMode: callFacingMode } });
+        const newTrack = newStream.getVideoTracks()[0];
+        const sender = callConnection?.peerConnection?.getSenders?.().find(s => s.track && s.track.kind === 'video');
+        if (sender && newTrack) await sender.replaceTrack(newTrack);
+        callLocalStream.getVideoTracks().forEach(t => t.stop());
+        callLocalStream = newStream;
+        document.getElementById('callLocalVideo').srcObject = newStream;
+    } catch (err) {
+        toast('Impossible de changer de caméra', 'warning');
+    }
+}
+
+// Trace de l'appel dans la conversation
+async function logCall(status, duration = 0) {
+    let text;
+    if (status === 'done') {
+        const m = Math.floor(duration / 60), s = duration % 60;
+        text = `${callType === 'video' ? '📹 Appel vidéo' : '📞 Appel audio'} · ${m}:${s.toString().padStart(2, '0')}`;
+    } else if (status === 'missed') {
+        text = `${callType === 'video' ? '📹' : '📞'} Appel manqué`;
+    } else {
+        text = `${callType === 'video' ? '📹' : '📞'} Appel annulé`;
+    }
+    try {
+        const { data } = await sb.from('supabaseAuthPrive_messages').insert({
+            conversation_id: currentConvId,
+            user_hubisoccer_id: currentProfile.hubisoccer_id,
+            content: text,
+            media_type: 'system',
+            deleted_for: [], reactions: {}, edited: false, pinned: false,
+            read_by: [], delivered_to: [], listened_by: []
+        }).select().single();
+        if (data) appendMessage(data);
+    } catch (e) { /* trace facultative */ }
+}
+// ========== FIN : APPELS AUDIO/VIDÉO ==========
 
 // ========== DEBUT : MESSAGES ÉPHÉMÈRES — BALAYAGE ==========
 // Retire du fil (et purge en base) les messages éphémères arrivés à expiration
@@ -1671,6 +2131,9 @@ function showContextMenu(e, msg) {
     const isOwn = msg.user_hubisoccer_id === currentProfile.hubisoccer_id;
     document.getElementById('ctxEdit').style.display = isOwn && msg.content ? 'flex' : 'none';
     document.getElementById('ctxDeleteAll').style.display = isOwn ? 'flex' : 'none';
+    // « Qui a lu ? » : seulement sur mes messages, en groupe
+    const ctxInfo = document.getElementById('ctxReadInfo');
+    if (ctxInfo) ctxInfo.style.display = (isOwn && currentConv?.is_group) ? 'flex' : 'none';
     const x = Math.min(e.clientX, window.innerWidth - 200);
     const y = Math.min(e.clientY, window.innerHeight - 250);
     menu.style.left = `${x}px`;
@@ -2033,6 +2496,349 @@ if (localStorage.getItem('hubisoccer_dark_mode') === null) {
     darkMode = systemDark.matches;
 }
 // ========== FIN : MODE SOMBRE ==========
+
+// ========== DEBUT : THÈMES & ARRIÈRE-PLANS DE CONVERSATION ==========
+const CHAT_BACKGROUNDS = [
+    { id: 'default',   label: 'Par défaut',  css: '' },
+    { id: 'violet',    label: 'Violet doux', css: 'linear-gradient(160deg,#f0ebf8,#e4d9f5)' },
+    { id: 'or',        label: 'Or',          css: 'linear-gradient(160deg,#fdf7e3,#f7ecc9)' },
+    { id: 'menthe',    label: 'Menthe',      css: 'linear-gradient(160deg,#e8f7f0,#d5efe4)' },
+    { id: 'ciel',      label: 'Ciel',        css: 'linear-gradient(160deg,#e8f1fb,#d6e6f7)' },
+    { id: 'rose',      label: 'Rosé',        css: 'linear-gradient(160deg,#fbecf2,#f5dae6)' },
+    { id: 'sable',     label: 'Sable',       css: 'linear-gradient(160deg,#f7f2ea,#efe5d6)' },
+    { id: 'nuit',      label: 'Nuit',        css: 'linear-gradient(160deg,#1e1e2f,#12121c)' },
+    { id: 'stade',     label: 'Stade',       css: 'linear-gradient(160deg,#e9f5e9,#d7ecd7)' },
+    { id: 'terrain',   label: 'Terrain',     css: 'repeating-linear-gradient(90deg,#e8f3e8 0 40px,#dfeedf 40px 80px)' },
+    { id: 'pois',      label: 'Pois',        css: 'radial-gradient(circle at 12px 12px, rgba(85,27,140,0.09) 2px, transparent 3px) 0 0/24px 24px, #f4f0fa' },
+    { id: 'lignes',    label: 'Rayures',     css: 'repeating-linear-gradient(45deg, #f4f0fa 0 12px, #ece5f6 12px 24px)' }
+];
+
+let currentChatBackground = 'default';
+
+async function loadChatPrefs() {
+    // Fond propre à cette conversation
+    try {
+        const { data } = await sb.from('supabaseAuthPrive_chat_prefs')
+            .select('background')
+            .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
+            .eq('conversation_id', String(currentConvId))
+            .maybeSingle();
+        currentChatBackground = data?.background || 'default';
+    } catch (e) { currentChatBackground = 'default'; }
+    applyChatBackground(currentChatBackground);
+
+    // Réglages globaux venus de settings-msg (taille de police, forme des bulles)
+    try {
+        const { data } = await sb.from('supabaseAuthPrive_user_msg_settings')
+            .select('settings')
+            .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
+            .maybeSingle();
+        applyMessagingSettings(data?.settings || {});
+    } catch (e) { /* réglages facultatifs */ }
+}
+
+function applyChatBackground(bgId) {
+    currentChatBackground = bgId;
+    const area = document.getElementById('messagesArea');
+    if (!area) return;
+    if (!bgId || bgId === 'default') {
+        area.style.background = '';
+        return;
+    }
+    if (bgId.startsWith('http')) {
+        area.style.background = `url("${bgId}") center/cover fixed`;
+        return;
+    }
+    const bg = CHAT_BACKGROUNDS.find(b => b.id === bgId);
+    area.style.background = bg ? bg.css : '';
+}
+
+async function saveChatBackground(bgId) {
+    applyChatBackground(bgId);
+    await sb.from('supabaseAuthPrive_chat_prefs').upsert({
+        user_hubisoccer_id: currentProfile.hubisoccer_id,
+        conversation_id: String(currentConvId),
+        background: bgId,
+        updated_at: new Date().toISOString()
+    }, { onConflict: 'user_hubisoccer_id, conversation_id' });
+    toast('Arrière-plan mis à jour', 'success');
+}
+
+// Applique enfin les réglages de settings-msg (ils étaient sauvegardés mais ignorés)
+function applyMessagingSettings(s) {
+    const sizes = { small: '14px', medium: '16px', large: '18px' };
+    document.body.style.fontSize = sizes[s.fontSize] || '16px';
+
+    const radii = { rounded: '18px', slightly: '8px', square: '2px' };
+    document.documentElement.style.setProperty('--bubble-radius', radii[s.bubbleStyle] || '18px');
+    document.body.classList.toggle('bubbles-square', s.bubbleStyle === 'square');
+    document.body.classList.toggle('bubbles-slightly', s.bubbleStyle === 'slightly');
+
+    if (s.theme === 'dark') { darkMode = true; applyTheme(); }
+    else if (s.theme === 'light') { darkMode = false; applyTheme(); }
+}
+
+function openBackgroundModal() {
+    const grid = document.getElementById('bgGrid');
+    grid.innerHTML = CHAT_BACKGROUNDS.map(b => `
+        <div class="bg-choice ${currentChatBackground === b.id ? 'active' : ''}" data-bg="${b.id}">
+            <div class="bg-preview" style="background:${b.css || 'var(--bg-page)'}"></div>
+            <span>${b.label}</span>
+        </div>`).join('');
+
+    grid.querySelectorAll('.bg-choice').forEach(el => {
+        el.addEventListener('click', () => {
+            saveChatBackground(el.dataset.bg);
+            grid.querySelectorAll('.bg-choice').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        });
+    });
+    openModal('modalBackground');
+}
+
+async function uploadCustomBackground(file) {
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { toast('Image trop lourde (max 4 Mo)', 'warning'); return; }
+    setLoader(true, 'Envoi de l\'arrière-plan...');
+    try {
+        const ext = file.name.split('.').pop();
+        const fileName = `bg_${currentProfile.hubisoccer_id}_${Date.now()}.${ext}`;
+        const { error } = await sb.storage.from('message_attachments')
+            .upload(fileName, file, { contentType: file.type });
+        if (error) throw error;
+        const { data } = sb.storage.from('message_attachments').getPublicUrl(fileName);
+        await saveChatBackground(data.publicUrl);
+        closeModal('modalBackground');
+    } catch (err) {
+        toast('Erreur : ' + err.message, 'error');
+    } finally {
+        setLoader(false);
+    }
+}
+// ========== FIN : THÈMES & ARRIÈRE-PLANS ==========
+
+// ========== DEBUT : SÉLECTION MULTIPLE DE MESSAGES ==========
+let msgSelectionMode = false;
+let selectedMsgIds = new Set();
+
+function enterMsgSelection(firstId = null) {
+    msgSelectionMode = true;
+    selectedMsgIds = new Set();
+    if (firstId) selectedMsgIds.add(String(firstId));
+    document.getElementById('msgSelectionBar').style.display = 'flex';
+    document.body.classList.add('msg-selecting');
+    updateMsgSelectionUI();
+}
+
+function exitMsgSelection() {
+    msgSelectionMode = false;
+    selectedMsgIds = new Set();
+    document.getElementById('msgSelectionBar').style.display = 'none';
+    document.body.classList.remove('msg-selecting');
+    document.querySelectorAll('.msg-row.msg-selected').forEach(el => el.classList.remove('msg-selected'));
+}
+
+function toggleMsgSelection(msgId) {
+    const id = String(msgId);
+    if (selectedMsgIds.has(id)) selectedMsgIds.delete(id);
+    else selectedMsgIds.add(id);
+    if (selectedMsgIds.size === 0) { exitMsgSelection(); return; }
+    updateMsgSelectionUI();
+}
+
+function updateMsgSelectionUI() {
+    document.getElementById('msgSelectionCount').textContent =
+        `${selectedMsgIds.size} message${selectedMsgIds.size > 1 ? 's' : ''}`;
+    document.querySelectorAll('.msg-row').forEach(el => {
+        el.classList.toggle('msg-selected', selectedMsgIds.has(String(el.dataset.msgId)));
+    });
+}
+
+function copySelectedMessages() {
+    const texts = messages
+        .filter(m => selectedMsgIds.has(String(m.id)) && m.content)
+        .map(m => {
+            const a = m.author || {};
+            return `${a.full_name || a.display_name || 'Utilisateur'} : ${m.content}`;
+        });
+    if (texts.length === 0) { toast('Aucun texte à copier', 'warning'); return; }
+    navigator.clipboard.writeText(texts.join('\n'));
+    toast(`${texts.length} message(s) copié(s)`, 'success');
+    exitMsgSelection();
+}
+
+async function deleteSelectedMessages() {
+    if (!confirm(`Supprimer ${selectedMsgIds.size} message(s) pour vous ?`)) return;
+    for (const id of selectedMsgIds) {
+        const msg = messages.find(m => String(m.id) === id);
+        if (!msg) continue;
+        const newDeleted = [...(msg.deleted_for || []), currentProfile.hubisoccer_id];
+        await sb.from('supabaseAuthPrive_messages').update({ deleted_for: newDeleted }).eq('id', msg.id);
+        removeMessageFromDOM(msg.id);
+    }
+    exitMsgSelection();
+    toast('Messages supprimés', 'success');
+}
+
+async function forwardSelectedMessages() {
+    if (selectedMsgIds.size === 0) return;
+    // Réutilise la modale de transfert existante, en mode multiple
+    const { data: participations } = await sb
+        .from('supabaseAuthPrive_conversation_participants')
+        .select('conversation_id')
+        .eq('user_hubisoccer_id', currentProfile.hubisoccer_id);
+    const convIds = (participations || []).map(p => p.conversation_id).filter(id => id !== currentConvId);
+
+    const { data: convs } = await sb
+        .from('supabaseAuthPrive_conversations')
+        .select('id, is_group, group_name, participants:supabaseAuthPrive_conversation_participants(user_hubisoccer_id, profile:supabaseAuthPrive_profiles!user_hubisoccer_id(full_name, display_name))')
+        .in('id', convIds);
+
+    const list = document.getElementById('forwardList');
+    list.innerHTML = (convs || []).map(conv => {
+        let name;
+        if (conv.is_group) name = conv.group_name || 'Groupe';
+        else {
+            const other = conv.participants?.find(p => p.user_hubisoccer_id !== currentProfile.hubisoccer_id);
+            name = other?.profile?.full_name || other?.profile?.display_name || 'Utilisateur';
+        }
+        return `<div class="forward-item" data-conv-id="${conv.id}"><span>${escapeHtml(name)}</span></div>`;
+    }).join('');
+
+    list.querySelectorAll('.forward-item').forEach(el => {
+        el.addEventListener('click', async () => {
+            const targetId = el.dataset.convId;
+            const toSend = messages.filter(m => selectedMsgIds.has(String(m.id)));
+            for (const m of toSend) {
+                await sb.from('supabaseAuthPrive_messages').insert({
+                    conversation_id: targetId,
+                    user_hubisoccer_id: currentProfile.hubisoccer_id,
+                    content: m.content,
+                    media_url: m.media_url,
+                    media_type: m.media_type === 'system' ? null : m.media_type,
+                    duration_seconds: m.duration_seconds || null,
+                    deleted_for: [], reactions: {}, edited: false, pinned: false,
+                    read_by: [], delivered_to: [], listened_by: []
+                });
+            }
+            closeModal('modalForward');
+            exitMsgSelection();
+            toast(`${toSend.length} message(s) transféré(s)`, 'success');
+        });
+    });
+
+    openModal('modalForward');
+}
+// ========== FIN : SÉLECTION MULTIPLE DE MESSAGES ==========
+
+// ========== DEBUT : MENTIONS @ EN GROUPE ==========
+let mentionActive = false;
+let mentionStartPos = -1;
+
+function handleMentionInput() {
+    if (!currentConv?.is_group) return;
+    const input = document.getElementById('msgInput');
+    const pos = input.selectionStart;
+    const before = input.value.substring(0, pos);
+    const match = before.match(/@([\wÀ-ſ]*)$/);
+
+    if (!match) { hideMentionBox(); return; }
+
+    mentionActive = true;
+    mentionStartPos = pos - match[0].length;
+    const query = match[1].toLowerCase();
+
+    const candidates = (currentConv.participants || [])
+        .filter(p => p.user_hubisoccer_id !== currentProfile.hubisoccer_id)
+        .map(p => ({
+            id: p.user_hubisoccer_id,
+            name: p.profile?.full_name || p.profile?.display_name || 'Utilisateur',
+            avatar: p.profile?.avatar_url || null
+        }))
+        .filter(c => !query || c.name.toLowerCase().includes(query))
+        .slice(0, 6);
+
+    if (candidates.length === 0) { hideMentionBox(); return; }
+
+    const box = document.getElementById('mentionBox');
+    box.innerHTML = candidates.map(c => `
+        <div class="mention-item" data-name="${escapeHtml(c.name)}">
+            ${c.avatar
+                ? `<img src="${escapeHtml(c.avatar)}" alt="">`
+                : `<div class="mention-initials">${getInitials(c.name)}</div>`}
+            <span>${escapeHtml(c.name)}</span>
+        </div>`).join('');
+
+    box.querySelectorAll('.mention-item').forEach(el => {
+        el.addEventListener('click', () => insertMention(el.dataset.name));
+    });
+    box.style.display = 'block';
+}
+
+function insertMention(name) {
+    const input = document.getElementById('msgInput');
+    const pos = input.selectionStart;
+    const after = input.value.substring(pos);
+    const before = input.value.substring(0, mentionStartPos);
+    input.value = `${before}@${name} ${after}`;
+    const newPos = before.length + name.length + 2;
+    input.setSelectionRange(newPos, newPos);
+    input.focus();
+    hideMentionBox();
+    autoResizeInput();
+}
+
+function hideMentionBox() {
+    mentionActive = false;
+    const box = document.getElementById('mentionBox');
+    if (box) box.style.display = 'none';
+}
+// ========== FIN : MENTIONS ==========
+
+// ========== DEBUT : QUI A LU ? (groupes) ==========
+async function showReadReceipts(msgId) {
+    const msg = messages.find(m => String(m.id) === String(msgId));
+    if (!msg) return;
+    if (msg.user_hubisoccer_id !== currentProfile.hubisoccer_id) {
+        toast('Disponible uniquement sur vos propres messages', 'info');
+        return;
+    }
+
+    const readIds = (msg.read_by || []).filter(id => id !== currentProfile.hubisoccer_id);
+    const deliveredIds = (msg.delivered_to || []).filter(id => id !== currentProfile.hubisoccer_id && !readIds.includes(id));
+    const others = (currentConv?.participants || []).filter(p => p.user_hubisoccer_id !== currentProfile.hubisoccer_id);
+    const pending = others.filter(p => !readIds.includes(p.user_hubisoccer_id) && !deliveredIds.includes(p.user_hubisoccer_id));
+
+    const nameOf = (uid) => {
+        const p = others.find(o => o.user_hubisoccer_id === uid);
+        return p?.profile?.full_name || p?.profile?.display_name || 'Utilisateur';
+    };
+    const avatarOf = (uid) => others.find(o => o.user_hubisoccer_id === uid)?.profile?.avatar_url || null;
+
+    const section = (title, icon, ids) => {
+        if (ids.length === 0) return '';
+        return `
+        <div class="rr-section">
+            <h4><i class="fas ${icon}"></i> ${title} <span>${ids.length}</span></h4>
+            ${ids.map(uid => {
+                const n = nameOf(uid), a = avatarOf(uid);
+                return `<div class="rr-item">
+                    ${a ? `<img src="${escapeHtml(a)}" alt="">` : `<div class="rr-initials">${getInitials(n)}</div>`}
+                    <span>${escapeHtml(n)}</span>
+                </div>`;
+            }).join('')}
+        </div>`;
+    };
+
+    document.getElementById('readReceiptsBody').innerHTML =
+        section('Lu par', 'fa-check-double', readIds) +
+        section('Reçu par', 'fa-check', deliveredIds.filter(id => others.some(o => o.user_hubisoccer_id === id))) +
+        section('En attente', 'fa-clock', pending.map(p => p.user_hubisoccer_id))
+        || '<p class="empty-text-sm">Aucune information disponible</p>';
+
+    openModal('modalReadReceipts');
+}
+// ========== FIN : QUI A LU ? ==========
 
 // ========== DEBUT : NOTIFICATIONS PUSH ==========
 async function requestNotificationPermission() {
@@ -2477,6 +3283,62 @@ async function init() {
     }
 
     document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', (e) => { if (e.target === m) closeModal(m.id); }));
+
+    // ============================================================
+    //  VAGUE 2 — chaque bloc est isolé : si l'un échoue, les autres
+    //  et le chargement de la page continuent de fonctionner.
+    // ============================================================
+    const wire = (label, fn) => {
+        try { fn(); }
+        catch (err) { console.warn(`[HubISoccer] Bloc « ${label} » non initialisé :`, err); }
+    };
+
+    // ----- Appels audio / vidéo -----
+    wire('appels', () => {
+        subscribeCalls();
+        document.getElementById('callAcceptBtn')?.addEventListener('click', acceptCall);
+        document.getElementById('callRejectBtn')?.addEventListener('click', rejectCall);
+        document.getElementById('callHangupBtn')?.addEventListener('click', hangUpCall);
+        document.getElementById('callMicBtn')?.addEventListener('click', toggleCallMic);
+        document.getElementById('callCamBtn')?.addEventListener('click', toggleCallCam);
+        document.getElementById('callFlipBtn')?.addEventListener('click', flipCallCamera);
+        window.addEventListener('beforeunload', () => { if (callState !== 'idle') closeCallUI(); });
+    });
+
+    // ----- Arrière-plans & réglages d'affichage -----
+    wire('arrière-plans', () => {
+        loadChatPrefs();
+        document.getElementById('optBackground')?.addEventListener('click', openBackgroundModal);
+        document.getElementById('bgUploadBtn')?.addEventListener('click', () => document.getElementById('bgFileInput')?.click());
+        document.getElementById('bgFileInput')?.addEventListener('change', (e) => uploadCustomBackground(e.target.files[0]));
+    });
+
+    // ----- Sélection multiple de messages -----
+    wire('sélection multiple', () => {
+        document.getElementById('msgSelCancelBtn')?.addEventListener('click', exitMsgSelection);
+        document.getElementById('msgSelCopyBtn')?.addEventListener('click', copySelectedMessages);
+        document.getElementById('msgSelForwardBtn')?.addEventListener('click', forwardSelectedMessages);
+        document.getElementById('msgSelDeleteBtn')?.addEventListener('click', deleteSelectedMessages);
+        document.getElementById('ctxSelect')?.addEventListener('click', () => {
+            if (ctxMsgId) enterMsgSelection(ctxMsgId);
+        });
+    });
+
+    // ----- Mentions @ en groupe -----
+    wire('mentions', () => {
+        const input = document.getElementById('msgInput');
+        if (!input) return;
+        input.addEventListener('input', handleMentionInput);
+        input.addEventListener('blur', () => setTimeout(hideMentionBox, 200));
+        input.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideMentionBox(); });
+    });
+
+    // ----- Qui a lu ? -----
+    wire('accusés de lecture', () => {
+        document.getElementById('ctxReadInfo')?.addEventListener('click', () => {
+            if (ctxMsgId) showReadReceipts(ctxMsgId);
+        });
+    });
 
     setLoader(false);
 }

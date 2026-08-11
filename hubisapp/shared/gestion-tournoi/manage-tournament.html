@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Gérer un tournoi · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="manage-tournament.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT ÉCRAN ACCÈS REFUSÉ ===== -->
+<div id="accessDenied" class="access-denied" style="display:none;">
+    <i class="fas fa-lock"></i>
+    <h2>Accès refusé</h2>
+    <p>Vous ne pouvez gérer que les tournois que vous avez créés.</p>
+    <a href="acceuil.html" class="btn-primary"><i class="fas fa-home"></i> Retour à l'accueil</a>
+</div>
+<!-- ===== FIN ÉCRAN ACCÈS REFUSÉ ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-sliders-h"></i> Gérer un tournoi</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifBadge">0</span>
+        </div>
+        <div class="user-menu" id="userMenu">
+            <div class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="#" id="profileLink"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="#" id="settingsLink"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-trophy"></i><h3>Menu Tournois</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Gestion Tournois</div>
+        <a href="acceuil.html"><i class="fas fa-home"></i><span>Accueil</span></a>
+        <a href="create-tournament.html"><i class="fas fa-plus-circle"></i><span>Créer un tournoi</span></a>
+        <a href="my-tournaments.html"><i class="fas fa-list"></i><span>Mes tournois (liste)</span></a>
+        <a href="manage-tournament.html" class="active"><i class="fas fa-sliders-h"></i><span>Gérer un tournoi</span></a>
+        <a href="my-registrations.html"><i class="fas fa-calendar-check"></i><span>Mes inscriptions</span></a>
+        <a href="public-register.html"><i class="fas fa-edit"></i><span>S'inscrire à un tournoi</span></a>
+        <a href="invite-participants.html"><i class="fas fa-user-plus"></i><span>Inviter des participants</span></a>
+        <a href="tournament-details.html"><i class="fas fa-info-circle"></i><span>Détails d'un tournoi</span></a>
+        <a href="team-details.html"><i class="fas fa-users-cog"></i><span>Détails d'une équipe</span></a>
+        <a href="match-details.html"><i class="fas fa-futbol"></i><span>Détails d'un match</span></a>
+        <a href="match-report.html"><i class="fas fa-file-signature"></i><span>Rapport de match</span></a>
+        <a href="match-report-export.html"><i class="fas fa-file-export"></i><span>Export rapport de match</span></a>
+        <a href="rankings.html"><i class="fas fa-chart-bar"></i><span>Classements</span></a>
+        <a href="stats-compare.html"><i class="fas fa-balance-scale"></i><span>Comparer les stats</span></a>
+        <a href="player-stats.html"><i class="fas fa-user-chart"></i><span>Statistiques joueur</span></a>
+        <a href="tournament-rules.html"><i class="fas fa-gavel"></i><span>Règlement</span></a>
+        <a href="transfer-request.html"><i class="fas fa-exchange-alt"></i><span>Demande de transfert</span></a>
+        <a href="live-stream.html"><i class="fas fa-satellite-dish"></i><span>Diffusion en direct</span></a>
+        <a href="live-embed.html"><i class="fas fa-tv"></i><span>Direct intégré</span></a>
+        <a href="demande-carte.html"><i class="fas fa-id-card"></i><span>Ma carte de tournoi</span></a>
+        <a href="carte-de-tournoi-choix.html"><i class="fas fa-th"></i><span>Choix de la carte</span></a>
+        <a href="mon-equipe.html"><i class="fas fa-people-carry"></i><span>Mon équipe</span></a>
+        <a href="payment.html"><i class="fas fa-credit-card"></i><span>Paiement</span></a>
+        <a href="help-tournament.html"><i class="fas fa-question-circle"></i><span>Aide</span></a>
+
+        <div class="nav-divider" data-tier="gestionnaire"></div>
+        <div class="nav-group-label" data-tier="gestionnaire">Organisation</div>
+        <a href="../../gestionnaire_tournoi/dashboard/gt-dash.html" data-tier="gestionnaire"><i class="fas fa-th-large"></i><span>Tableau de bord</span></a>
+
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../community/feed.html"><i class="fas fa-comments"></i><span>Communauté</span></a>
+        <a href="../messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../suivi-tournoi/suivi-tournoi.html"><i class="fas fa-broadcast-tower"></i><span>Suivi Tournoi (live)</span></a>
+
+        <div class="nav-divider"></div>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="dashboard-main" id="mainContent">
+    <div class="manage-container">
+
+        <button class="btn-back" id="backBtn"><i class="fas fa-arrow-left"></i> Retour</button>
+        <h1 class="page-title" id="tournamentName"><i class="fas fa-sliders-h"></i> Gestion du tournoi</h1>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="info"><i class="fas fa-info-circle"></i> Informations</button>
+            <button class="tab-btn" data-tab="registrations"><i class="fas fa-calendar-check"></i> Inscriptions</button>
+            <button class="tab-btn" data-tab="teams"><i class="fas fa-users"></i> Équipes</button>
+            <button class="tab-btn" data-tab="matches"><i class="fas fa-futbol"></i> Matchs</button>
+            <button class="tab-btn" data-tab="reports"><i class="fas fa-file-alt"></i> Rapports</button>
+            <button class="tab-btn" data-tab="prizes"><i class="fas fa-trophy"></i> Primes</button>
+        </div>
+
+        <!-- Onglet Infos -->
+        <div id="infoTab" class="tab-content active">
+            <div class="glass-card">
+                <h2 class="section-title"><i class="fas fa-info-circle"></i> Informations générales</h2>
+                <div class="info-grid">
+                    <div class="info-row"><span class="info-label">Nom</span><span id="infoName">—</span></div>
+                    <div class="info-row"><span class="info-label">Dates</span><span id="infoDates">—</span></div>
+                    <div class="info-row"><span class="info-label">Lieu</span><span id="infoLocation">—</span></div>
+                    <div class="info-row"><span class="info-label">Sport</span><span id="infoSport">—</span></div>
+                    <div class="info-row"><span class="info-label">Type</span><span id="infoType">—</span></div>
+                    <div class="info-row"><span class="info-label">Statut</span><span id="infoStatus">—</span></div>
+                    <div class="info-row"><span class="info-label">Cagnotte</span><span id="infoPrize">—</span></div>
+                </div>
+                <div class="info-row-full"><span class="info-label">Description</span><p id="infoDescription">—</p></div>
+                <div class="info-actions">
+                    <button id="editTournamentBtn" class="btn-primary"><i class="fas fa-edit"></i> Modifier</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Inscriptions -->
+        <div id="registrationsTab" class="tab-content">
+            <div class="glass-card">
+                <h2 class="section-title"><i class="fas fa-clock"></i> Demandes en attente</h2>
+                <div id="pendingRegistrationsList" class="registrations-list"></div>
+            </div>
+            <div class="glass-card">
+                <h2 class="section-title"><i class="fas fa-check-circle"></i> Inscriptions validées</h2>
+                <div id="approvedRegistrationsList" class="registrations-list"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Équipes -->
+        <div id="teamsTab" class="tab-content">
+            <div class="glass-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-users"></i> Équipes participantes</h2>
+                    <button id="addTeamBtn" class="btn-primary"><i class="fas fa-plus"></i> Ajouter une équipe</button>
+                </div>
+                <div id="teamsList" class="teams-grid"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Matchs -->
+        <div id="matchesTab" class="tab-content">
+            <div class="glass-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-futbol"></i> Matchs</h2>
+                    <button id="addMatchBtn" class="btn-primary"><i class="fas fa-plus"></i> Ajouter un match</button>
+                </div>
+                <div id="matchesList" class="matches-list"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Rapports -->
+        <div id="reportsTab" class="tab-content">
+            <div class="glass-card">
+                <h2 class="section-title"><i class="fas fa-file-alt"></i> Rapports de match</h2>
+                <div id="reportsList" class="reports-list"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Primes -->
+        <div id="prizesTab" class="tab-content">
+            <div class="glass-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-trophy"></i> Récompenses</h2>
+                    <button id="addPrizeBtn" class="btn-primary"><i class="fas fa-plus"></i> Ajouter une prime</button>
+                </div>
+                <div id="prizesList" class="prizes-list"></div>
+            </div>
+        </div>
+
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== MODALES ===== -->
+
+<div id="editTournamentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Modifier le tournoi</h2>
+            <span class="close-modal" onclick="closeModal('editTournamentModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="editTournamentForm">
+                <div class="form-group"><label>Nom</label><input type="text" id="editName" required></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Date début</label><input type="datetime-local" id="editStartDate" required></div>
+                    <div class="form-group"><label>Date fin</label><input type="datetime-local" id="editEndDate" required></div>
+                </div>
+                <div class="form-group"><label>Lieu</label><input type="text" id="editLocation"></div>
+                <div class="form-group"><label>Description</label><textarea id="editDescription" rows="3"></textarea></div>
+                <div class="form-group"><label>Cagnotte (FCFA)</label><input type="number" id="editPrizePool" step="1000"></div>
+                <div class="form-group"><label>Code d'inscription (public)</label><input type="text" id="editRegistrationCode"></div>
+                <div class="form-group"><label>URL de streaming</label><input type="url" id="editStreamUrl"></div>
+                <div class="form-group">
+                    <label>Statut</label>
+                    <select id="editStatus">
+                        <option value="draft">Brouillon</option>
+                        <option value="published">Publié</option>
+                        <option value="completed">Terminé</option>
+                        <option value="cancelled">Annulé</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('editTournamentModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="addTeamModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2><i class="fas fa-plus"></i> Ajouter une équipe</h2><span class="close-modal" onclick="closeModal('addTeamModal')">&times;</span></div>
+        <div class="modal-body">
+            <form id="addTeamForm">
+                <div class="form-group"><label>Nom de l'équipe</label><input type="text" id="teamName" required></div>
+                <div class="form-group"><label>Catégorie d'âge (optionnel)</label><input type="text" id="teamAgeCategory" placeholder="Ex : U17, Senior"></div>
+                <div class="form-group"><label>Logo (URL)</label><input type="url" id="teamLogo"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('addTeamModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="addMatchModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2><i class="fas fa-plus"></i> Ajouter un match</h2><span class="close-modal" onclick="closeModal('addMatchModal')">&times;</span></div>
+        <div class="modal-body">
+            <form id="addMatchForm">
+                <div class="form-group"><label>Date et heure</label><input type="datetime-local" id="matchDate" required></div>
+                <div class="form-group"><label>Journée / Tour (optionnel)</label><input type="text" id="matchRound" placeholder="Ex : Journée 1, Quart de finale"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Équipe domicile</label><select id="matchHomeTeam" required></select></div>
+                    <div class="form-group"><label>Équipe extérieur</label><select id="matchAwayTeam" required></select></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('addMatchModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modale ENREGISTRER RÉSULTAT (nouvelle fonctionnalité) -->
+<div id="recordResultModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2><i class="fas fa-clipboard-check"></i> Enregistrer le résultat</h2><span class="close-modal" onclick="closeModal('recordResultModal')">&times;</span></div>
+        <div class="modal-body">
+            <form id="recordResultForm">
+                <input type="hidden" id="resultMatchId">
+                <div class="result-teams-preview" id="resultTeamsPreview"></div>
+                <div class="form-row score-row">
+                    <div class="form-group"><label id="resultTeamALabel">Équipe A</label><input type="number" id="resultScoreA" min="0" required></div>
+                    <div class="form-group"><label id="resultTeamBLabel">Équipe B</label><input type="number" id="resultScoreB" min="0" required></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('recordResultModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm"><i class="fas fa-check"></i> Valider le résultat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="addPrizeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2><i class="fas fa-plus"></i> Ajouter une prime</h2><span class="close-modal" onclick="closeModal('addPrizeModal')">&times;</span></div>
+        <div class="modal-body">
+            <form id="addPrizeForm">
+                <div class="form-group"><label>Bénéficiaire</label><select id="prizeRecipientType"><option value="team">Équipe</option><option value="player">Joueur</option></select></div>
+                <div class="form-group" id="prizeTeamGroup"><label>Équipe</label><select id="prizeTeamId"></select></div>
+                <div class="form-group" id="prizePlayerGroup" style="display:none;"><label>ID Joueur (HubISoccer ID)</label><input type="text" id="prizePlayerId" placeholder="Ex : HUB-000123"></div>
+                <div class="form-group"><label>Montant (FCFA)</label><input type="number" id="prizeAmount" required></div>
+                <div class="form-group"><label>Raison (optionnel)</label><input type="text" id="prizeReason"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('addPrizeModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="manage-tournament.js"></script>
+</body>
+</html>

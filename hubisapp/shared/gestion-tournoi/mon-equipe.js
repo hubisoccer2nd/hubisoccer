@@ -1,7 +1,27 @@
 /* ============================================================
    HubISoccer — mon-equipe.js
-   Gestion des tournois – Page "Mon équipe" ============================================================ */
+   Système Gestion Tournois — Mon équipe
+   ------------------------------------------------------------
+   Fichier construit entierement (aucun JS fourni pour cette
+   page). Points cles :
+   - team.creator_id est desormais REELLEMENT ecrit a la creation
+     ici -- jusqu'ici seule sa LECTURE existait (team-details.js,
+     avec repli sur l'organisateur du tournoi). Cette page est le
+     modele complementaire : un joueur cree et gere SA PROPRE
+     equipe, independamment de qui organise le tournoi.
+   - Vue terrain : joueurs groupes par position_category
+     (Gardien/Defenseur/Milieu/Attaquant), uniquement ceux avec
+     is_starting=true. Entraineur (is_coach=true) et remplacants
+     (is_starting=false) affiches dans des sections separees,
+     conformement aux captures fournies.
+   - Recherche de joueur + insertion dans team_players : meme
+     principe deja valide sur team-details.js (comptes reels,
+     requetes separees, jamais de jointure non verifiee).
+   - Logo d'equipe : vrai televersement (reprend gt-team-logos,
+     deja cree pour manage-tournament.js).
+   ============================================================ */
 'use strict';
+
 // ═══════════════════════════════════════════════════════════
 // 1. CONFIGURATION SUPABASE
 // ═══════════════════════════════════════════════════════════
@@ -11,29 +31,50 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 window.__SUPABASE_CLIENT = supabaseClient;
 
 // ═══════════════════════════════════════════════════════════
-// 2. ÉTAT GLOBAL
+// 2. TABLES (convention supabaseAuthPrive_gt_*)
+// ═══════════════════════════════════════════════════════════
+const TBL_TEAMS           = 'supabaseAuthPrive_gt_teams';
+const TBL_TEAM_PLAYERS       = 'supabaseAuthPrive_gt_team_players';
+const TBL_TOURNAMENTS           = 'supabaseAuthPrive_gt_tournaments';
+const TBL_SPORTS                   = 'supabaseAuthPrive_gt_sports';
+const TBL_PROFILES                    = 'supabaseAuthPrive_profiles';
+const LOGO_BUCKET                        = 'gt-team-logos';
+
+// ═══════════════════════════════════════════════════════════
+// 3. TABLE DE ROUTAGE PROFIL / PARAMETRES PAR ROLE
+// ═══════════════════════════════════════════════════════════
+const ROLE_PROFILE_ROUTES = {
+    FOOT:   { profile: '../../footballeur/profile-edit/foot-profile.html',       settings: '../../footballeur/settings/foot-settings.html' },
+    COACH:  { profile: '../../coach/profile-edit/coach-profile.html',            settings: '../../coach/settings/coach-settings.html' },
+    ACAD:   { profile: '../../academie/profile-edit/academie-profile.html',      settings: '../../academie/settings/academie-settings.html' },
+    AGENT:  { profile: '../../agent/profile-edit/agent-profile.html',            settings: '../../agent/settings/agent-settings.html' },
+    PARRAIN:{ profile: '../../parrain/profile-edit/parrain-profile.html',        settings: '../../parrain/settings/parrain-settings.html' },
+    MEDIC:  { profile: '../../staff_medical/profile-edit/staff-profile.html',    settings: '../../staff_medical/settings/staff-settings.html' },
+    ARBIT:  { profile: '../../corps_arbitral/profile-edit/arbitre-profile.html', settings: '../../corps_arbitral/settings/arbitre-settings.html' },
+    TOURN:  { profile: '../../gestionnaire_tournoi/profile-edit/gt-profile.html', settings: '../../gestionnaire_tournoi/settings/gt-settings.html' }
+};
+const GESTIONNAIRE_ROLE_CODES = ['TOURN'];
+const POSITION_ROWS = { 'Attaquant': 'rowAttaquants', 'Milieu': 'rowMilieux', 'Défenseur': 'rowDefenseurs', 'Gardien': 'rowGardien' };
+
+// ═══════════════════════════════════════════════════════════
+// 4. ÉTAT GLOBAL
 // ═══════════════════════════════════════════════════════════
 let currentUser = null;
 let userProfile = null;
-let userTeams = [];
-let selectedTeam = null;
-let selectedPlayerId = null; // pour l'ajout d'un joueur trouvé via recherche
+let myTeams = [];
+let currentTeam = null;
+let isTeamOwner = false;
+let selectedPlayerId = null;
+let selectedTeamLogoFile = null;
 
 // ═══════════════════════════════════════════════════════════
-// 3. LOADER
+// 5. LOADER
 // ═══════════════════════════════════════════════════════════
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
+function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
 
 // ═══════════════════════════════════════════════════════════
-// 4. TOAST (30 secondes)
+// 6. TOAST (30 secondes)
 // ═══════════════════════════════════════════════════════════
 function showToast(message, type, duration) {
     if (!type) type = 'info';
@@ -45,12 +86,7 @@ function showToast(message, type, duration) {
         container.className = 'toast-container';
         document.body.appendChild(container);
     }
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
     const toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.innerHTML = '<div class="toast-icon"><i class="fas ' + (icons[type] || icons.info) + '"></i></div>' +
@@ -70,15 +106,12 @@ function showToast(message, type, duration) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 5. UTILITAIRES
+// 7. UTILITAIRES
 // ═══════════════════════════════════════════════════════════
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m];
-    });
+    return String(str).replace(/[&<>]/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]; });
 }
-
 function getInitials(name) {
     if (!name) return '?';
     const parts = name.trim().split(/\s+/);
@@ -87,15 +120,14 @@ function getInitials(name) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 6. SESSION
+// 8. SESSION
 // ═══════════════════════════════════════════════════════════
 async function checkSession() {
     showLoader();
     const { data } = await supabaseClient.auth.getSession();
     const session = data.session;
-    const error = !session;
     hideLoader();
-    if (error || !session) {
+    if (!session) {
         window.location.href = '../../authprive/users/login.html';
         return null;
     }
@@ -104,12 +136,12 @@ async function checkSession() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 7. CHARGEMENT DU PROFIL
+// 9. CHARGEMENT DU PROFIL
 // ═══════════════════════════════════════════════════════════
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
-        .from('supabaseAuthPrive_profiles')
+        .from(TBL_PROFILES)
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
@@ -120,25 +152,40 @@ async function loadProfile() {
     }
     userProfile = data;
     updateNavbarUI();
+    applyRoleTier();
     return userProfile;
 }
 
+function applyRoleTier() {
+    const isGestionnaire = GESTIONNAIRE_ROLE_CODES.indexOf(userProfile.role_code) !== -1;
+    if (!isGestionnaire) {
+        document.querySelectorAll('[data-tier="gestionnaire"]').forEach(function(el) { el.style.display = 'none'; });
+    }
+}
+
+function applyProfileRouting() {
+    const routes = ROLE_PROFILE_ROUTES[userProfile.role_code];
+    const profileLink = document.getElementById('profileLink');
+    const settingsLink = document.getElementById('settingsLink');
+    if (routes) {
+        if (profileLink) profileLink.href = routes.profile;
+        if (settingsLink) settingsLink.href = routes.settings;
+    } else {
+        if (profileLink) profileLink.style.display = 'none';
+        if (settingsLink) settingsLink.style.display = 'none';
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
-// 8. MISE À JOUR DE LA NAVBAR
+// 10. MISE À JOUR DE LA NAVBAR
 // ═══════════════════════════════════════════════════════════
 function updateNavbarUI() {
     if (!userProfile) return;
-
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
     const userInitials = document.getElementById('userAvatarInitials');
-
-    if (userName) {
-        userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
-    }
-
+    if (userName) userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
     const avatarUrl = userProfile.avatar_url;
-
     if (avatarUrl && avatarUrl !== '') {
         if (userAvatar) { userAvatar.src = avatarUrl; userAvatar.style.display = 'block'; }
         if (userInitials) userInitials.style.display = 'none';
@@ -147,385 +194,358 @@ function updateNavbarUI() {
         if (userInitials) { userInitials.textContent = initials; userInitials.style.display = 'flex'; }
         if (userAvatar) userAvatar.style.display = 'none';
     }
+    applyProfileRouting();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 9. CHARGEMENT DES ÉQUIPES DE L'UTILISATEUR
+// 11. CHARGEMENT DE MES ÉQUIPES
 // ═══════════════════════════════════════════════════════════
-async function loadUserTeams() {
-    // Récupérer les équipes où l'utilisateur est membre (table team_players) ou créateur (via un champ creator_id dans gestionnairetournoi_teams)
-    // Pour l'instant, nous utilisons une colonne creator_id que nous allons ajouter à la table gestionnairetournoi_teams
+async function loadMyTeams() {
+    showLoader();
     const { data, error } = await supabaseClient
-        .from('gestionnairetournoi_teams')
+        .from(TBL_TEAMS)
         .select('*')
         .eq('creator_id', currentUser.id)
         .order('created_at', { ascending: false });
+    hideLoader();
 
     if (error) {
-        console.error('Erreur chargement équipes:', error);
-        showToast('Erreur lors du chargement de vos équipes', 'error');
+        console.error('Erreur chargement équipes:', error.message);
+        showToast('Erreur lors du chargement de vos équipes.', 'error');
         return;
     }
 
-    userTeams = data || [];
-    populateTeamSelect();
-    if (userTeams.length > 0) {
-        selectTeam(userTeams[0].id);
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-// 10. SÉLECTEUR D'ÉQUIPE
-// ═══════════════════════════════════════════════════════════
-function populateTeamSelect() {
+    myTeams = data || [];
     const select = document.getElementById('teamSelect');
-    select.innerHTML = '<option value="">-- Sélectionnez une équipe --</option>';
-    userTeams.forEach(function(team) {
-        const option = document.createElement('option');
-        option.value = team.id;
-        option.textContent = team.name;
-        select.appendChild(option);
-    });
 
-    if (userTeams.length === 0) {
-        select.innerHTML = '<option value="">Aucune équipe trouvée</option>';
-    }
-}
-
-async function selectTeam(teamId) {
-    selectedTeam = userTeams.find(function(t) { return t.id == teamId; });
-    if (!selectedTeam) {
+    if (!myTeams.length) {
+        select.innerHTML = '<option value="">Aucune équipe — créez-en une</option>';
         document.getElementById('teamInfo').style.display = 'none';
-        document.getElementById('addPlayerBtn').style.display = 'none';
-        document.getElementById('editTeamBtn').style.display = 'none';
-        document.getElementById('playersList').innerHTML = '<div class="loader"><i class="fas fa-spinner fa-pulse"></i> Chargement...</div>';
+        document.getElementById('pitchSection').style.display = 'none';
+        document.getElementById('coachSection').style.display = 'none';
+        document.getElementById('benchSection').style.display = 'none';
+        document.getElementById('rosterSection').style.display = 'none';
         return;
     }
 
-    document.getElementById('teamInfo').style.display = 'flex';
-    document.getElementById('addPlayerBtn').style.display = 'inline-flex';
-    document.getElementById('editTeamBtn').style.display = 'inline-flex';
+    select.innerHTML = myTeams.map(function(t) { return '<option value="' + t.id + '">' + escapeHtml(t.name) + '</option>'; }).join('');
+    await selectTeam(myTeams[0].id);
+}
 
-    document.getElementById('teamName').textContent = selectedTeam.name;
-    document.getElementById('teamCategory').textContent = selectedTeam.age_category || 'Non spécifiée';
-    document.getElementById('teamSport').textContent = selectedTeam.sport || 'Non spécifié';
-    document.getElementById('teamCreator').textContent = userProfile?.full_name || 'Vous';
-    document.getElementById('teamCreated').textContent = selectedTeam.created_at
-        ? new Date(selectedTeam.created_at).toLocaleDateString('fr-FR')
-        : '-';
+// ═══════════════════════════════════════════════════════════
+// 12. SÉLECTION D'UNE ÉQUIPE
+// ═══════════════════════════════════════════════════════════
+async function selectTeam(teamId) {
+    currentTeam = myTeams.find(function(t) { return String(t.id) === String(teamId); });
+    if (!currentTeam) return;
+
+    isTeamOwner = currentTeam.creator_id === currentUser.id;
+
+    document.getElementById('teamSelect').value = teamId;
+    document.getElementById('teamName').textContent = currentTeam.name;
+    document.getElementById('teamCategory').textContent = currentTeam.age_category || 'Catégorie non précisée';
+    document.getElementById('teamCreated').textContent = currentTeam.created_at ? new Date(currentTeam.created_at).toLocaleDateString('fr-FR') : '—';
 
     const logoDiv = document.getElementById('teamLogo');
-    if (selectedTeam.logo_url) {
-        logoDiv.innerHTML = '<img src="' + selectedTeam.logo_url + '" alt="Logo de l\'équipe">';
-    } else {
-        logoDiv.innerHTML = '<i class="fas fa-users"></i>';
+    logoDiv.innerHTML = currentTeam.logo_url ? '<img src="' + currentTeam.logo_url + '" alt="Logo">' : '<i class="fas fa-shield-alt"></i>';
+
+    // Tournoi + sport -- requetes separees
+    if (currentTeam.tournament_id) {
+        const { data: tournament } = await supabaseClient.from(TBL_TOURNAMENTS).select('name, sport_id').eq('id', currentTeam.tournament_id).maybeSingle();
+        document.getElementById('teamTournament').textContent = tournament ? tournament.name : 'Tournoi inconnu';
+        if (tournament && tournament.sport_id) {
+            const { data: sport } = await supabaseClient.from(TBL_SPORTS).select('name').eq('id', tournament.sport_id).maybeSingle();
+            document.getElementById('teamSport').textContent = sport ? sport.name : 'Non précisé';
+        }
     }
 
-    await loadTeamPlayers(teamId);
+    document.getElementById('teamInfo').style.display = 'block';
+    document.getElementById('editTeamBtn').style.display = isTeamOwner ? 'inline-flex' : 'none';
+    document.getElementById('addPlayerBtn').style.display = isTeamOwner ? 'inline-flex' : 'none';
+    document.getElementById('rosterSection').style.display = 'block';
+
+    await loadRoster();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 11. CHARGEMENT DES JOUEURS DE L'ÉQUIPE
+// 13. CHARGEMENT DE L'EFFECTIF (requetes separees)
 // ═══════════════════════════════════════════════════════════
-async function loadTeamPlayers(teamId) {
+async function loadRoster() {
+    if (!currentTeam) return;
+
     const { data: playersData, error } = await supabaseClient
-        .from('gestionnairetournoi_team_players')
-        .select('id, user_id, jersey_number, position, is_captain')
-        .eq('team_id', teamId);
+        .from(TBL_TEAM_PLAYERS)
+        .select('id, user_id, jersey_number, position, is_captain, is_starting, is_coach, position_category')
+        .eq('team_id', currentTeam.id);
 
     if (error) {
-        console.error('Erreur chargement joueurs:', error);
+        console.error('Erreur chargement effectif:', error.message);
+        document.getElementById('playersList').innerHTML = '<p class="empty-hint">Erreur de chargement de l\'effectif.</p>';
         return;
     }
 
     if (!playersData || playersData.length === 0) {
-        document.getElementById('playersList').innerHTML = '<p style="text-align:center;color:var(--gray);">Aucun joueur dans l\'effectif.</p>';
+        document.getElementById('playersList').innerHTML = '<p class="empty-hint">Aucun joueur dans l\'effectif.</p>';
+        document.getElementById('pitchSection').style.display = 'none';
+        document.getElementById('coachSection').style.display = 'none';
+        document.getElementById('benchSection').style.display = 'none';
         return;
     }
 
-    // Récupérer les profils des joueurs
     const userIds = playersData.map(function(p) { return p.user_id; });
-    const { data: profilesData } = await supabaseClient
-        .from('supabaseAuthPrive_profiles')
-        .select('auth_uuid, full_name, avatar_url, position')
-        .in('auth_uuid', userIds);
-
+    const { data: profilesData } = await supabaseClient.from(TBL_PROFILES).select('auth_uuid, full_name, avatar_url').in('auth_uuid', userIds);
     const profileMap = {};
-    if (profilesData) {
-        profilesData.forEach(function(profile) {
-            profileMap[profile.auth_uuid] = profile;
-        });
-    }
+    (profilesData || []).forEach(function(p) { profileMap[p.auth_uuid] = p; });
 
-    const playersListDiv = document.getElementById('playersList');
-    playersListDiv.innerHTML = '';
+    playersData.forEach(function(p) { p._profile = profileMap[p.user_id] || {}; });
 
-    playersData.forEach(function(player) {
-        const profile = profileMap[player.user_id] || {};
-        const playerDiv = document.createElement('div');
-        playerDiv.className = 'player-item';
-        playerDiv.innerHTML =
-            '<div class="player-avatar">' +
-                (profile.avatar_url
-                    ? '<img src="' + profile.avatar_url + '" alt="Avatar">'
-                    : '<div class="avatar-initials-small">' + getInitials(profile.full_name || 'J') + '</div>') +
-            '</div>' +
-            '<div class="player-info">' +
-                '<div class="player-name">' + (profile.full_name || 'Joueur inconnu') + '</div>' +
-                '<div class="player-details">' +
-                    (player.jersey_number ? '<span class="jersey">#' + player.jersey_number + '</span>' : '') +
-                    (player.position ? '<span class="position">' + player.position + '</span>' : '') +
-                '</div>' +
-            '</div>' +
-            '<button class="btn-remove-player" data-player-id="' + player.id + '">' +
-                '<i class="fas fa-trash"></i> Retirer' +
-            '</button>';
-        playersListDiv.appendChild(playerDiv);
-    });
-
-    // Attacher les événements de suppression
-    document.querySelectorAll('.btn-remove-player').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            removePlayerFromTeam(btn.dataset.playerId);
-        });
-    });
+    renderPitch(playersData.filter(function(p) { return !p.is_coach && p.is_starting; }));
+    renderCoach(playersData.filter(function(p) { return p.is_coach; }));
+    renderBench(playersData.filter(function(p) { return !p.is_coach && !p.is_starting; }));
+    renderFullRoster(playersData);
 }
 
 // ═══════════════════════════════════════════════════════════
-// 12. CRÉATION / ÉDITION D'ÉQUIPE
+// 14. VUE TERRAIN (groupee par poste)
 // ═══════════════════════════════════════════════════════════
-async function loadSportsListForSelect() {
-    const { data, error } = await supabaseClient
-        .from('gestionnairetournoi_sports')
-        .select('id, name')
-        .order('name');
+function playerCard(p, small) {
+    const profile = p._profile || {};
+    const avatar = profile.avatar_url
+        ? '<img src="' + profile.avatar_url + '" alt="Avatar">'
+        : '<div class="avatar-initials-small">' + getInitials(profile.full_name || 'J') + '</div>';
+    return '<div class="pitch-player' + (small ? ' small' : '') + '">' +
+           '<div class="pitch-player-avatar">' + avatar + '</div>' +
+           '<div class="pitch-player-info">' + (p.jersey_number ? '<span class="pitch-player-num tabular">' + escapeHtml(String(p.jersey_number)) + '.</span> ' : '') + escapeHtml(profile.full_name || 'Joueur') + (p.is_captain ? ' <i class="fas fa-star captain-star" title="Capitaine"></i>' : '') + '</div>' +
+           '</div>';
+}
 
-    if (error) {
-        console.error('Erreur chargement sports:', error);
-        return;
-    }
+function renderPitch(starters) {
+    const section = document.getElementById('pitchSection');
+    if (!starters.length) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
 
-    const select = document.getElementById('teamSportInput');
-    select.innerHTML = '<option value="">Sélectionnez un sport</option>';
-    data.forEach(function(sport) {
-        const option = document.createElement('option');
-        option.value = sport.name;
-        option.textContent = sport.name;
-        select.appendChild(option);
+    Object.values(POSITION_ROWS).forEach(function(rowId) { document.getElementById(rowId).innerHTML = ''; });
+
+    starters.forEach(function(p) {
+        const category = p.position_category || 'Milieu';
+        const rowId = POSITION_ROWS[category] || 'rowMilieux';
+        const row = document.getElementById(rowId);
+        if (row) row.insertAdjacentHTML('beforeend', playerCard(p, false));
     });
 }
 
-function openTeamModal(team = null) {
-    if (team) {
-        document.getElementById('teamModalTitle').textContent = 'Modifier l\'équipe';
-        document.getElementById('teamNameInput').value = team.name || '';
-        document.getElementById('teamAgeCategoryInput').value = team.age_category || '';
-        document.getElementById('teamLogoInput').value = team.logo_url || '';
-        document.getElementById('teamSportInput').value = team.sport || '';
-    } else {
-        document.getElementById('teamModalTitle').textContent = 'Créer une équipe';
-        document.getElementById('teamForm').reset();
-    }
-    document.getElementById('teamModal').style.display = 'flex';
+// ═══════════════════════════════════════════════════════════
+// 15. ENTRAÎNEUR & REMPLAÇANTS
+// ═══════════════════════════════════════════════════════════
+function renderCoach(coaches) {
+    const section = document.getElementById('coachSection');
+    const container = document.getElementById('coachList');
+    if (!coaches.length) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    container.innerHTML = coaches.map(function(c) {
+        const profile = c._profile || {};
+        const avatar = profile.avatar_url ? '<img src="' + profile.avatar_url + '" alt="Avatar">' : '<div class="avatar-initials-small">' + getInitials(profile.full_name || 'E') + '</div>';
+        return '<div class="player-item"><div class="player-avatar">' + avatar + '</div><div class="player-info"><div class="player-name">' + escapeHtml(profile.full_name || 'Entraîneur') + '</div></div>' +
+               (isTeamOwner ? '<button class="btn-remove-player" onclick="removePlayer(\'' + c.id + '\')"><i class="fas fa-trash"></i></button>' : '') + '</div>';
+    }).join('');
 }
 
-function closeTeamModal() {
-    document.getElementById('teamModal').style.display = 'none';
-}
-
-async function saveTeam(event) {
-    event.preventDefault();
-
-    const name = document.getElementById('teamNameInput').value.trim();
-    const ageCategory = document.getElementById('teamAgeCategoryInput').value.trim();
-    const logoUrl = document.getElementById('teamLogoInput').value.trim();
-    const sport = document.getElementById('teamSportInput').value;
-
-    if (!name) {
-        showToast('Le nom de l\'équipe est obligatoire', 'warning');
-        return;
-    }
-
-    const payload = {
-        name: name,
-        age_category: ageCategory || null,
-        logo_url: logoUrl || null,
-        sport: sport || null,
-        creator_id: currentUser.id,
-        updated_at: new Date().toISOString()
-    };
-
-    showLoader();
-    let error;
-    if (selectedTeam && document.getElementById('teamModalTitle').textContent.includes('Modifier')) {
-        // Mise à jour
-        const { error: updateError } = await supabaseClient
-            .from('gestionnairetournoi_teams')
-            .update(payload)
-            .eq('id', selectedTeam.id);
-        error = updateError;
-    } else {
-        // Création
-        payload.created_at = new Date().toISOString();
-        const { error: insertError } = await supabaseClient
-            .from('gestionnairetournoi_teams')
-            .insert([payload]);
-        error = insertError;
-    }
-    hideLoader();
-
-    if (error) {
-        showToast('Erreur lors de l\'enregistrement de l\'équipe', 'error');
-        console.error(error);
-        return;
-    }
-
-    showToast('Équipe enregistrée avec succès', 'success');
-    closeTeamModal();
-    await loadUserTeams();
+function renderBench(bench) {
+    const section = document.getElementById('benchSection');
+    const container = document.getElementById('benchList');
+    if (!bench.length) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    container.innerHTML = bench.map(function(p) {
+        const profile = p._profile || {};
+        const avatar = profile.avatar_url ? '<img src="' + profile.avatar_url + '" alt="Avatar">' : '<div class="avatar-initials-small">' + getInitials(profile.full_name || 'J') + '</div>';
+        return '<div class="player-item"><div class="player-avatar">' + avatar + '</div><div class="player-info"><div class="player-name">' + (p.jersey_number ? escapeHtml(String(p.jersey_number)) + '. ' : '') + escapeHtml(profile.full_name || 'Joueur') + '</div><div class="player-details">' + (p.position ? '<span>' + escapeHtml(p.position) + '</span>' : '') + '</div></div>' +
+               (isTeamOwner ? '<button class="btn-remove-player" onclick="removePlayer(\'' + p.id + '\')"><i class="fas fa-trash"></i></button>' : '') + '</div>';
+    }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
-// 13. AJOUT DE JOUEUR
+// 16. LISTE COMPLÈTE (gestion)
 // ═══════════════════════════════════════════════════════════
-function openAddPlayerModal() {
-    document.getElementById('addPlayerForm').reset();
-    document.getElementById('playerSearch').value = '';
-    document.getElementById('playerSearchResults').innerHTML = '';
-    selectedPlayerId = null;
-    document.getElementById('addPlayerModal').style.display = 'flex';
+function renderFullRoster(players) {
+    const container = document.getElementById('playersList');
+    container.innerHTML = players.map(function(p) {
+        const profile = p._profile || {};
+        const avatar = profile.avatar_url ? '<img src="' + profile.avatar_url + '" alt="Avatar">' : '<div class="avatar-initials-small">' + getInitials(profile.full_name || 'J') + '</div>';
+        const roleTag = p.is_coach ? 'Entraîneur' : (p.is_starting ? 'Titulaire' : 'Remplaçant');
+        return '<div class="player-item"><div class="player-avatar">' + avatar + '</div><div class="player-info"><div class="player-name">' + (p.jersey_number ? escapeHtml(String(p.jersey_number)) + '. ' : '') + escapeHtml(profile.full_name || 'Joueur') + '</div><div class="player-details"><span>' + roleTag + '</span>' + (p.position && !p.is_coach ? '<span>' + escapeHtml(p.position) + '</span>' : '') + (p.is_captain ? '<span class="captain"><i class="fas fa-star"></i> Capitaine</span>' : '') + '</div></div>' +
+               (isTeamOwner ? '<button class="btn-remove-player" onclick="removePlayer(\'' + p.id + '\')"><i class="fas fa-trash"></i></button>' : '') + '</div>';
+    }).join('');
 }
 
-function closeAddPlayerModal() {
-    document.getElementById('addPlayerModal').style.display = 'none';
-}
-
+// ═══════════════════════════════════════════════════════════
+// 17. RECHERCHE DE JOUEUR
+// ═══════════════════════════════════════════════════════════
 async function searchPlayers(query) {
-    if (!query || query.length < 2) {
-        document.getElementById('playerSearchResults').innerHTML = '';
-        return;
-    }
+    if (!query || query.length < 2) { document.getElementById('playerSearchResults').innerHTML = ''; return; }
 
     const { data, error } = await supabaseClient
-        .from('supabaseAuthPrive_profiles')
-        .select('auth_uuid, full_name, avatar_url, position')
+        .from(TBL_PROFILES)
+        .select('auth_uuid, full_name, avatar_url')
         .ilike('full_name', '%' + query + '%')
         .limit(10);
 
-    if (error) {
-        console.error('Erreur recherche joueurs:', error);
-        return;
-    }
+    if (error) { console.error('Erreur recherche:', error.message); return; }
 
     const resultsDiv = document.getElementById('playerSearchResults');
+    if (!data || !data.length) { resultsDiv.innerHTML = '<p class="empty-hint">Aucun joueur trouvé.</p>'; return; }
+
     resultsDiv.innerHTML = '';
-
-    if (!data || data.length === 0) {
-        resultsDiv.innerHTML = '<p>Aucun joueur trouvé.</p>';
-        return;
-    }
-
     data.forEach(function(profile) {
         const item = document.createElement('div');
         item.className = 'search-result-item';
-        item.innerHTML =
-            '<div class="player-avatar">' +
-                (profile.avatar_url
-                    ? '<img src="' + profile.avatar_url + '" alt="Avatar">'
-                    : '<div class="avatar-initials-small">' + getInitials(profile.full_name || 'J') + '</div>') +
-            '</div>' +
-            '<div class="player-name">' + (profile.full_name || 'Joueur inconnu') + '</div>' +
-            '<div class="player-position">' + (profile.position || '') + '</div>';
+        const avatar = profile.avatar_url ? '<img src="' + profile.avatar_url + '" alt="Avatar">' : '<div class="avatar-initials-small">' + getInitials(profile.full_name || 'J') + '</div>';
+        item.innerHTML = '<div class="player-avatar">' + avatar + '</div><span class="player-name">' + escapeHtml(profile.full_name || 'Joueur') + '</span>';
         item.addEventListener('click', function() {
             selectedPlayerId = profile.auth_uuid;
             document.getElementById('playerSearch').value = profile.full_name || '';
             resultsDiv.innerHTML = '';
-            showToast('Joueur sélectionné : ' + profile.full_name, 'success');
         });
         resultsDiv.appendChild(item);
     });
 }
 
-async function addPlayerToTeam(event) {
-    event.preventDefault();
+// ═══════════════════════════════════════════════════════════
+// 18. AJOUT / SUPPRESSION D'UN JOUEUR
+// ═══════════════════════════════════════════════════════════
+async function addPlayer(e) {
+    e.preventDefault();
+    if (!selectedPlayerId) { showToast('Veuillez rechercher et sélectionner un joueur.', 'warning'); return; }
+    if (!currentTeam) return;
 
-    if (!selectedPlayerId) {
-        showToast('Veuillez rechercher et sélectionner un joueur', 'warning');
-        return;
-    }
-
-    if (!selectedTeam) {
-        showToast('Veuillez d\'abord sélectionner une équipe', 'warning');
-        return;
-    }
-
-    const jersey = document.getElementById('playerJersey').value.trim();
-    const position = document.getElementById('playerPosition').value.trim();
-    const isCaptain = document.getElementById('playerIsCaptain').checked;
-
+    const isCoach = document.getElementById('playerIsCoach').checked;
     const payload = {
-        team_id: selectedTeam.id,
+        team_id: currentTeam.id,
         user_id: selectedPlayerId,
-        jersey_number: jersey || null,
-        position: position || null,
-        is_captain: isCaptain || false,
-        created_at: new Date().toISOString()
+        jersey_number: document.getElementById('playerJersey').value ? parseInt(document.getElementById('playerJersey').value, 10) : null,
+        position: isCoach ? null : document.getElementById('playerPosition').value,
+        position_category: isCoach ? null : document.getElementById('playerPosition').value,
+        is_captain: document.getElementById('playerIsCaptain').checked,
+        is_starting: document.getElementById('playerIsStarting').checked,
+        is_coach: isCoach
     };
 
     showLoader();
-    const { error } = await supabaseClient
-        .from('gestionnairetournoi_team_players')
-        .insert([payload]);
+    const { error } = await supabaseClient.from(TBL_TEAM_PLAYERS).insert([payload]);
     hideLoader();
 
     if (error) {
-        showToast('Erreur lors de l\'ajout du joueur (peut-être déjà dans l\'équipe)', 'error');
-        console.error(error);
+        showToast('Erreur lors de l\'ajout (peut-être déjà dans l\'équipe) : ' + error.message, 'error');
         return;
     }
 
-    showToast('Joueur ajouté avec succès', 'success');
-    closeAddPlayerModal();
-    await loadTeamPlayers(selectedTeam.id);
+    showToast('Ajouté avec succès', 'success');
+    closeModal('addPlayerModal');
+    document.getElementById('addPlayerForm').reset();
+    selectedPlayerId = null;
+    await loadRoster();
 }
 
+async function removePlayer(playerId) {
+    if (!confirm('Retirer cette personne de l\'équipe ?')) return;
+    showLoader();
+    const { error } = await supabaseClient.from(TBL_TEAM_PLAYERS).delete().eq('id', playerId);
+    hideLoader();
+    if (error) { showToast('Erreur lors de la suppression', 'error'); return; }
+    showToast('Retiré de l\'équipe', 'info');
+    await loadRoster();
+}
+window.removePlayer = removePlayer;
+
 // ═══════════════════════════════════════════════════════════
-// 14. SUPPRESSION D'UN JOUEUR DE L'ÉQUIPE
+// 19. CRÉATION / MODIFICATION D'ÉQUIPE
 // ═══════════════════════════════════════════════════════════
-async function removePlayerFromTeam(playerId) {
-    if (!confirm('Retirer ce joueur de l\'équipe ?')) return;
+async function loadTournamentOptions() {
+    const { data } = await supabaseClient.from(TBL_TOURNAMENTS).select('id, name').order('start_date', { ascending: false });
+    const select = document.getElementById('teamTournamentInput');
+    select.innerHTML = (data || []).map(function(t) { return '<option value="' + t.id + '">' + escapeHtml(t.name) + '</option>'; }).join('');
+}
+
+function openCreateTeamModal() {
+    document.getElementById('teamModalTitle').innerHTML = '<i class="fas fa-shield-alt"></i> Créer une équipe';
+    document.getElementById('teamForm').reset();
+    document.getElementById('teamLogoPreview').innerHTML = '';
+    selectedTeamLogoFile = null;
+    document.getElementById('teamForm').dataset.mode = 'create';
+    openModal('teamModal');
+}
+
+function openEditTeamModal() {
+    if (!currentTeam) return;
+    document.getElementById('teamModalTitle').innerHTML = '<i class="fas fa-edit"></i> Modifier l\'équipe';
+    document.getElementById('teamNameInput').value = currentTeam.name || '';
+    document.getElementById('teamAgeCategoryInput').value = currentTeam.age_category || '';
+    document.getElementById('teamTournamentInput').value = currentTeam.tournament_id || '';
+    document.getElementById('teamLogoPreview').innerHTML = currentTeam.logo_url ? '<img src="' + currentTeam.logo_url + '" alt="Aperçu">' : '';
+    selectedTeamLogoFile = null;
+    document.getElementById('teamForm').dataset.mode = 'edit';
+    openModal('teamModal');
+}
+
+async function uploadTeamLogo(file, teamRef) {
+    const ext = file.name.split('.').pop();
+    const path = teamRef + '/' + Date.now() + '.' + ext;
+    const { error } = await supabaseClient.storage.from(LOGO_BUCKET).upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data } = supabaseClient.storage.from(LOGO_BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+}
+
+async function saveTeam(e) {
+    e.preventDefault();
+    const mode = document.getElementById('teamForm').dataset.mode;
+    const name = document.getElementById('teamNameInput').value.trim();
+    const tournamentId = document.getElementById('teamTournamentInput').value;
+    const ageCategory = document.getElementById('teamAgeCategoryInput').value.trim() || null;
+
+    if (!name || !tournamentId) { showToast('Le nom et le tournoi sont requis.', 'warning'); return; }
 
     showLoader();
-    const { error } = await supabaseClient
-        .from('gestionnairetournoi_team_players')
-        .delete()
-        .eq('id', playerId);
-    hideLoader();
-
-    if (error) {
-        showToast('Erreur lors de la suppression du joueur', 'error');
-        console.error(error);
-        return;
+    let logoUrl = mode === 'edit' ? currentTeam.logo_url : null;
+    if (selectedTeamLogoFile) {
+        try { logoUrl = await uploadTeamLogo(selectedTeamLogoFile, 'mon-equipe-' + currentUser.id); }
+        catch (err) { hideLoader(); showToast('Erreur envoi logo : ' + err.message, 'error'); return; }
     }
 
-    showToast('Joueur retiré de l\'équipe', 'info');
-    await loadTeamPlayers(selectedTeam.id);
+    if (mode === 'create') {
+        const { error } = await supabaseClient.from(TBL_TEAMS).insert([{
+            tournament_id: tournamentId, name: name, age_category: ageCategory, logo_url: logoUrl, creator_id: currentUser.id
+        }]);
+        hideLoader();
+        if (error) { showToast('Erreur création : ' + error.message, 'error'); return; }
+        showToast('Équipe créée !', 'success');
+    } else {
+        const { error } = await supabaseClient.from(TBL_TEAMS).update({
+            name: name, age_category: ageCategory, logo_url: logoUrl, tournament_id: tournamentId
+        }).eq('id', currentTeam.id);
+        hideLoader();
+        if (error) { showToast('Erreur modification : ' + error.message, 'error'); return; }
+        showToast('Équipe modifiée', 'success');
+    }
+
+    closeModal('teamModal');
+    await loadMyTeams();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 15. UI : SIDEBAR, MENU, DÉCONNEXION
+// 20. MODALES GÉNÉRALES
+// ═══════════════════════════════════════════════════════════
+function openModal(id) { const m = document.getElementById(id); if (m) m.style.display = 'flex'; }
+function closeModal(id) { const m = document.getElementById(id); if (m) m.style.display = 'none'; }
+
+// ═══════════════════════════════════════════════════════════
+// 21. UI : SIDEBAR, MENU, DÉCONNEXION
 // ═══════════════════════════════════════════════════════════
 function initUserMenu() {
     const userMenu = document.getElementById('userMenu');
     const dropdown = document.getElementById('userDropdown');
     if (!userMenu || !dropdown) return;
-    userMenu.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdown.classList.toggle('show');
-    });
-    document.addEventListener('click', function() {
-        dropdown.classList.remove('show');
-    });
+    userMenu.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); });
+    document.addEventListener('click', function() { dropdown.classList.remove('show'); });
 }
 
 function initSidebar() {
@@ -533,34 +553,18 @@ function initSidebar() {
     const overlay = document.getElementById('sidebarOverlay');
     const menuBtn = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeLeftSidebar');
-
-    function openSidebar() {
-        if (sidebar) sidebar.classList.add('active');
-        if (overlay) overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
+    function openSidebar() { if (sidebar) sidebar.classList.add('active'); if (overlay) overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function closeSidebar() { if (sidebar) sidebar.classList.remove('active'); if (overlay) overlay.classList.remove('active'); document.body.style.overflow = ''; }
     if (menuBtn) menuBtn.addEventListener('click', openSidebar);
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
-
     let sx = 0, sy = 0;
-    document.addEventListener('touchstart', function(e) {
-        sx = e.changedTouches[0].screenX;
-        sy = e.changedTouches[0].screenY;
-    }, { passive: true });
+    document.addEventListener('touchstart', function(e) { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY; }, { passive: true });
     document.addEventListener('touchend', function(e) {
-        const dx = e.changedTouches[0].screenX - sx;
-        const dy = e.changedTouches[0].screenY - sy;
+        const dx = e.changedTouches[0].screenX - sx, dy = e.changedTouches[0].screenY - sy;
         if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) return;
         if (e.cancelable) e.preventDefault();
-        if (dx > 0 && sx < 40) openSidebar();
-        else if (dx < 0) closeSidebar();
+        if (dx > 0 && sx < 40) openSidebar(); else if (dx < 0) closeSidebar();
     }, { passive: false });
 }
 
@@ -568,15 +572,13 @@ function initLogout() {
     document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            supabaseClient.auth.signOut().then(function() {
-                window.location.href = '../../../index.html';
-            });
+            supabaseClient.auth.signOut().then(function() { window.location.href = '../../../index.html'; });
         });
     });
 }
 
 // ═══════════════════════════════════════════════════════════
-// 16. INITIALISATION
+// 22. INITIALISATION
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function() {
     const user = await checkSession();
@@ -588,43 +590,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     initLogout();
 
     document.getElementById('langSelect')?.addEventListener('change', function(e) {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        showToast('Langue : ' + selectedOption.text, 'info');
+        showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
+    document.getElementById('backBtn')?.addEventListener('click', function() { window.history.back(); });
 
-    document.getElementById('backBtn')?.addEventListener('click', function() {
-        window.history.back();
+    document.getElementById('teamSelect')?.addEventListener('change', function() { selectTeam(this.value); });
+
+    document.getElementById('createTeamBtn')?.addEventListener('click', async function() {
+        await loadTournamentOptions();
+        openCreateTeamModal();
     });
-
-    await loadSportsListForSelect();
-    await loadUserTeams();
-
-    // Événements
-    document.getElementById('teamSelect')?.addEventListener('change', function() {
-        selectTeam(this.value);
+    document.getElementById('editTeamBtn')?.addEventListener('click', async function() {
+        await loadTournamentOptions();
+        openEditTeamModal();
     });
-
-    document.getElementById('createTeamBtn')?.addEventListener('click', function() {
-        openTeamModal(null);
-    });
-
-    document.getElementById('editTeamBtn')?.addEventListener('click', function() {
-        openTeamModal(selectedTeam);
-    });
-
     document.getElementById('teamForm')?.addEventListener('submit', saveTeam);
 
-    document.querySelectorAll('#teamModal .close-modal, #teamModal .btn-cancel').forEach(function(el) {
-        el.addEventListener('click', closeTeamModal);
+    document.getElementById('addPlayerBtn')?.addEventListener('click', function() {
+        document.getElementById('addPlayerForm').reset();
+        document.getElementById('playerSearchResults').innerHTML = '';
+        selectedPlayerId = null;
+        openModal('addPlayerModal');
     });
-
-    document.getElementById('addPlayerBtn')?.addEventListener('click', openAddPlayerModal);
-
-    document.querySelectorAll('#addPlayerModal .close-modal, #addPlayerModal .btn-cancel').forEach(function(el) {
-        el.addEventListener('click', closeAddPlayerModal);
-    });
-
-    document.getElementById('addPlayerForm')?.addEventListener('submit', addPlayerToTeam);
+    document.getElementById('addPlayerForm')?.addEventListener('submit', addPlayer);
 
     const playerSearchInput = document.getElementById('playerSearch');
     if (playerSearchInput) {
@@ -632,9 +620,25 @@ document.addEventListener('DOMContentLoaded', async function() {
         playerSearchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
             const query = this.value.trim();
-            searchTimeout = setTimeout(function() {
-                searchPlayers(query);
-            }, 400);
+            searchTimeout = setTimeout(function() { searchPlayers(query); }, 400);
         });
     }
+
+    document.getElementById('teamLogoDropArea')?.addEventListener('click', function() { document.getElementById('teamLogoFile').click(); });
+    document.getElementById('teamLogoFile')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        selectedTeamLogoFile = file;
+        const reader = new FileReader();
+        reader.onload = function(ev) { document.getElementById('teamLogoPreview').innerHTML = '<img src="' + ev.target.result + '" alt="Aperçu">'; };
+        reader.readAsDataURL(file);
+    });
+
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        modal.querySelector('.close-modal')?.addEventListener('click', function() { modal.style.display = 'none'; });
+        modal.querySelector('.btn-cancel')?.addEventListener('click', function() { modal.style.display = 'none'; });
+        modal.addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
+    });
+
+    await loadMyTeams();
 });

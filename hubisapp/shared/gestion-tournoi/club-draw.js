@@ -61,18 +61,18 @@ const ALL_CLUBS = [
     { slug: 'barcelone',       name: 'FC Barcelone',     logo: 'img/barcelone.png' },
     { slug: 'atletico-madrid', name: 'Atlético Madrid',  logo: 'img/atletico-madrid.png' },
     { slug: 'man-city',        name: 'Man City',         logo: 'img/man-city.png' },
-    { slug: 'liverpool',       name: 'Liverpool',        logo: 'img/liverpool.jpg' },
+    { slug: 'liverpool',       name: 'Liverpool',        logo: 'img/liverpool.png' },
     { slug: 'arsenal',         name: 'Arsenal',          logo: 'img/arsenal.png' },
-    { slug: 'chelsea',         name: 'Chelsea',          logo: 'img/chelsea.jpg' },
+    { slug: 'chelsea',         name: 'Chelsea',          logo: 'img/chelsea.png' },
     { slug: 'man-united',      name: 'Man United',       logo: 'img/man-united.png' },
     { slug: 'psg',             name: 'PSG',              logo: 'img/psg.png' },
-    { slug: 'om',              name: 'OM',               logo: 'img/om.jpg' },
+    { slug: 'om',              name: 'OM',               logo: 'img/om.png' },
     { slug: 'juventus',        name: 'Juventus',         logo: 'img/juventus.png' },
     { slug: 'ac-milan',        name: 'AC Milan',         logo: 'img/ac-milan.png' },
     { slug: 'inter-milan',     name: 'Inter Milan',      logo: 'img/inter-milan.png' },
     { slug: 'bayern-munich',   name: 'Bayern Munich',    logo: 'img/bayern-munich.png' },
     { slug: 'dortmund',        name: 'Dortmund',         logo: 'img/dortmund.png' },
-    { slug: 'benfica',         name: 'Benfica',          logo: 'img/benfica.webp' }
+    { slug: 'benfica',         name: 'Benfica',          logo: 'img/benfica.png' }
 ];
 const SLICE_COLORS = ['#1c2541', '#ffb703', '#3a506b', '#fb8500'];
 

@@ -178,6 +178,17 @@ select { font-family: inherit; }
 .sanitized-content { font-size: .88rem; color: var(--gray-600); line-height: 1.7; }
 .description-text * { max-width: 100%; }
 
+.rules-cta-card { text-align: center; }
+.rules-cta-text { font-size: .87rem; color: var(--gray-600); line-height: 1.6; margin-bottom: 16px; }
+.btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--violet); color: var(--white);
+    padding: 11px 22px; border-radius: var(--radius-pill);
+    font-weight: 600; font-size: .87rem; box-shadow: var(--shadow-sm);
+    transition: transform .15s, box-shadow .15s, background .15s;
+}
+.btn-secondary:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); background: var(--violet-light); }
+
 .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
 .empty-state i { font-size: 2rem; margin-bottom: 10px; display: block; }
 .empty-hint { color: var(--gray-400); font-size: .84rem; }

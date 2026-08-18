@@ -234,10 +234,7 @@ async function loadTournamentDetails(tournamentId) {
     renderHero(data);
 
     sanitizeInto(data.description, document.getElementById('tournamentDescription'));
-    if (data.rules) {
-        document.getElementById('rulesSection').style.display = 'block';
-        sanitizeInto(data.rules, document.getElementById('tournamentRules'));
-    }
+    document.getElementById('rulesLink').href = 'tournament-rules.html?id=' + tournamentId;
 
     document.getElementById('statPrize').textContent = data.prize_pool ? formatMoney(data.prize_pool) + ' FCFA' : '—';
 

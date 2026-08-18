@@ -116,6 +116,29 @@ async function loadLives() {
     loadPastLives();
 }
 
+// ============================================================
+// Abonnement temps réel à la liste des lives -- CORRECTIF
+// ------------------------------------------------------------
+// loadLives() n'était appelee qu'une seule fois au chargement de
+// la page (plus au moment de quitter SA PROPRE room). Un live qui
+// demarre ou se termine PENDANT que quelqu'un a deja la page
+// ouverte n'etait donc jamais reflete chez lui -- la carte "EN
+// DIRECT" restait affichee bien apres la fin reelle du live, et
+// cliquer dessus tentait de se connecter a une camera qui
+// n'emettait plus rien (silence total, aucune reponse). Ce canal
+// recharge la liste des qu'un live demarre, se termine, ou change.
+// ============================================================
+let livesListChannel = null;
+function subscribeToLivesList() {
+    livesListChannel = sb.channel('lives_list_updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'supabaseAuthPrive_live_sessions' }, () => {
+            if (document.getElementById('livesListView').style.display !== 'none') {
+                loadLives();
+            }
+        })
+        .subscribe();
+}
+
 function makeLiveCard(l) {
     const host = l.host || {};
     const hostName = host.full_name || host.display_name || 'Hôte';
@@ -236,6 +259,23 @@ async function notifyFollowers(session) {
 
 async function joinLive(liveSession) {
     try {
+        // Re-verifie que le live est toujours actif MAINTENANT, plutot
+        // que de faire confiance a la carte cliquee qui peut dater
+        // d'avant la fin reelle du live (voir subscribeToLivesList).
+        const { data: freshSession } = await sb
+            .from('supabaseAuthPrive_live_sessions')
+            .select('*, host:supabaseAuthPrive_profiles!host_hubisoccer_id(full_name, display_name, avatar_url, role_code)')
+            .eq('id', liveSession.id)
+            .eq('is_active', true)
+            .maybeSingle();
+
+        if (!freshSession) {
+            toast('Ce live vient de se terminer.', 'warning');
+            loadLives();
+            return;
+        }
+        liveSession = freshSession;
+
         currentLiveId = liveSession.id;
         isHost = false;
 
@@ -568,6 +608,7 @@ async function init() {
     if (!sessionOk) return;
 
     await loadLives();
+    subscribeToLivesList();
     buildGiftsGrid();
     setLoader(false);
 
@@ -622,6 +663,7 @@ async function init() {
         }
         localStream?.getTracks().forEach(t => t.stop());
         peer?.destroy();
+        livesListChannel?.unsubscribe();
     });
 }
 

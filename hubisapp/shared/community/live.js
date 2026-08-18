@@ -22,6 +22,43 @@ let camEnabled = true;
 let facingMode = 'user';
 let strengthCount = 0;
 
+// ============================================================
+// Configuration ICE (STUN + TURN) -- CORRECTIF CRITIQUE
+// ------------------------------------------------------------
+// Le fichier source ne configurait AUCUN serveur ICE : PeerJS
+// utilisait alors son reglage par defaut (STUN google seul, SANS
+// relais TURN). Le STUN seul suffit uniquement quand les deux
+// appareils peuvent etablir un chemin reseau direct -- ce qui
+// echoue frequemment entre reseaux differents (operateurs mobiles
+// distincts, NAT restrictifs), exactement le cas normal entre un
+// organisateur et ses spectateurs. Sans relais TURN, ces echecs
+// sont SILENCIEUX -- et comme le chat/les interactions ne se
+// branchent qu'apres une connexion reussie, tout tombe avec elle.
+// Openrelay.metered.ca fournit un relais TURN gratuit sans
+// inscription, utilise ici comme filet de secours reel.
+// ============================================================
+const ICE_CONFIG = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' },
+        {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        }
+    ]
+};
+
 const GIFTS = [
     { id:'ball', emoji:'⚽', name:'Ballon', price:10 },
     { id:'trophy', emoji:'🏆', name:'Trophée', price:50 },
@@ -156,8 +193,8 @@ async function startLive() {
         currentLiveId = session.id;
         isHost = true;
 
-        // Utilisation du serveur cloud gratuit de PeerJS
-        peer = new Peer(currentLiveId, { host: '0.peerjs.com', port: 443, secure: true });
+        // Utilisation du serveur cloud gratuit de PeerJS, AVEC relais TURN
+        peer = new Peer(currentLiveId, { host: '0.peerjs.com', port: 443, secure: true, config: ICE_CONFIG });
         peer.on('open', (id) => {
             console.log('Peer ID:', id);
             closeModal('modalStartLive');
@@ -202,16 +239,34 @@ async function joinLive(liveSession) {
         currentLiveId = liveSession.id;
         isHost = false;
 
-        peer = new Peer({ host: '0.peerjs.com', port: 443, secure: true });
+        peer = new Peer({ host: '0.peerjs.com', port: 443, secure: true, config: ICE_CONFIG });
+
+        // Delai d'attente reel : si la connexion n'aboutit pas en 15
+        // secondes (meme avec le relais TURN), l'utilisateur doit le
+        // savoir au lieu de rester bloque devant un ecran qui ne
+        // reagit jamais.
+        const connectTimeout = setTimeout(() => {
+            if (currentCall) return; // deja connecte, rien a faire
+            toast('Connexion au live impossible pour le moment. Réessaie dans quelques instants.', 'error');
+            peer?.destroy();
+            currentLiveId = null;
+        }, 15000);
+
         peer.on('open', () => {
             const call = peer.call(liveSession.id, null);
             call.on('stream', (stream) => {
+                clearTimeout(connectTimeout);
                 currentCall = call;
                 enterLiveRoom(liveSession, stream, false);
             });
             call.on('close', () => { toast('Le live est terminé', 'info'); leaveLive(); });
+            call.on('error', () => { clearTimeout(connectTimeout); toast('Connexion au live interrompue.', 'error'); });
         });
-        peer.on('error', () => { toast('Impossible de rejoindre ce live', 'error'); });
+        peer.on('error', (err) => {
+            clearTimeout(connectTimeout);
+            console.error('Erreur PeerJS (spectateur):', err.type);
+            toast('Impossible de rejoindre ce live (' + err.type + ')', 'error');
+        });
 
         const newCount = (liveSession.viewers_count || 0) + 1;
         await sb.from('supabaseAuthPrive_live_sessions').update({

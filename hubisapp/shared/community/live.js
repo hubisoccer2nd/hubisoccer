@@ -201,6 +201,18 @@ async function startLive() {
             localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: true });
         }
 
+        // Identifiant PeerJS genuinement unique -- CORRECTIF CRITIQUE
+        // 0.peerjs.com est un serveur PUBLIC PARTAGE par n'importe
+        // quelle application dans le monde. Utiliser directement l'id
+        // (sequentiel, un petit entier) risquait une vraie collision
+        // avec un pair deja pris ailleurs sur ce meme serveur partage
+        // -- provoquant une erreur "unavailable-id" cote hote des le
+        // demarrage, jamais visible en console (geree proprement par
+        // peer.on('error'), donc pas une exception non attrapee).
+        // Un identifiant aleatoire propre a HubISoccer evite ce risque
+        // presque completement.
+        const uniquePeerId = 'hubisoccer-live-' + crypto.randomUUID();
+
         const { data: session, error } = await sb.from('supabaseAuthPrive_live_sessions').insert({
             host_hubisoccer_id: currentProfile.hubisoccer_id,
             title,
@@ -209,7 +221,8 @@ async function startLive() {
             is_active: true,
             viewers_count: 0,
             max_viewers: 0,
-            started_at: new Date().toISOString()
+            started_at: new Date().toISOString(),
+            peer_id: uniquePeerId
         }).select().single();
 
         if (error) throw error;
@@ -217,9 +230,9 @@ async function startLive() {
         isHost = true;
 
         // Utilisation du serveur cloud gratuit de PeerJS, AVEC relais TURN
-        peer = new Peer(currentLiveId, { host: '0.peerjs.com', port: 443, secure: true, config: ICE_CONFIG });
+        peer = new Peer(uniquePeerId, { host: '0.peerjs.com', port: 443, secure: true, config: ICE_CONFIG });
         peer.on('open', (id) => {
-            console.log('Peer ID:', id);
+            console.log('Peer ID (hôte) ouvert avec succès :', id);
             closeModal('modalStartLive');
             enterLiveRoom(session, localStream, true);
         });
@@ -229,7 +242,11 @@ async function startLive() {
                 document.getElementById('remoteVideo').srcObject = stream;
             });
         });
-        peer.on('error', (err) => { toast('Erreur PeerJS : ' + err.type, 'error'); });
+        peer.on('error', (err) => {
+            console.error('Erreur PeerJS (hôte) :', err.type, err);
+            toast('Erreur de connexion caméra (' + err.type + '). Réessaie de démarrer le live.', 'error');
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-circle"></i> Go Live !';
+        });
 
         await notifyFollowers(session);
     } catch (err) {
@@ -279,6 +296,11 @@ async function joinLive(liveSession) {
         currentLiveId = liveSession.id;
         isHost = false;
 
+        if (!liveSession.peer_id) {
+            toast('Ce live utilise un ancien format et ne peut plus être rejoint. Demande à l\'hôte de relancer son live.', 'error');
+            return;
+        }
+
         peer = new Peer({ host: '0.peerjs.com', port: 443, secure: true, config: ICE_CONFIG });
 
         // Delai d'attente reel : si la connexion n'aboutit pas en 15
@@ -287,20 +309,24 @@ async function joinLive(liveSession) {
         // reagit jamais.
         const connectTimeout = setTimeout(() => {
             if (currentCall) return; // deja connecte, rien a faire
+            console.error('Timeout de connexion au live (15s) -- aucune reponse du pair', liveSession.peer_id);
             toast('Connexion au live impossible pour le moment. Réessaie dans quelques instants.', 'error');
             peer?.destroy();
             currentLiveId = null;
         }, 15000);
 
         peer.on('open', () => {
-            const call = peer.call(liveSession.id, null);
+            // Appelle le vrai identifiant PeerJS unique de l'hote
+            // (peer_id), plus jamais l'id de ligne -- les deux doivent
+            // correspondre exactement, cote hote comme cote spectateur.
+            const call = peer.call(liveSession.peer_id, null);
             call.on('stream', (stream) => {
                 clearTimeout(connectTimeout);
                 currentCall = call;
                 enterLiveRoom(liveSession, stream, false);
             });
             call.on('close', () => { toast('Le live est terminé', 'info'); leaveLive(); });
-            call.on('error', () => { clearTimeout(connectTimeout); toast('Connexion au live interrompue.', 'error'); });
+            call.on('error', (err) => { clearTimeout(connectTimeout); console.error('Erreur appel PeerJS (spectateur) :', err); toast('Connexion au live interrompue.', 'error'); });
         });
         peer.on('error', (err) => {
             clearTimeout(connectTimeout);

@@ -178,14 +178,19 @@ async function loadProfile() {
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
-    hideLoader();
     if (error || !data) {
+        hideLoader();
         showToast('Erreur chargement du profil', 'error');
         return null;
     }
     userProfile = data;
-    updateNavbarUI();
+    // Le masquage des elements gestionnaire doit etre applique
+    // AVANT que le voile de chargement ne disparaisse -- sinon la
+    // page reelle (menu complet inclus) est visible un court
+    // instant avant que le role ne soit verifie.
     applyRoleTier();
+    updateNavbarUI();
+    hideLoader();
     return userProfile;
 }
 

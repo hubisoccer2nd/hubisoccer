@@ -246,6 +246,7 @@ async function loadTournament() {
     currentTournament = data;
     document.getElementById('tournamentName').innerHTML = '<i class="fas fa-sliders-h"></i> ' + escapeHtml(data.name || 'Gestion du tournoi');
     document.getElementById('inviteParticipantsLink').href = 'invite-participants.html?tournament_id=' + currentTournamentId;
+    fillFormatTab(data);
     fillInfoTab(data);
     loadRegistrations();
     loadTeams();
@@ -380,13 +381,76 @@ function renderTeams() {
         const logo = team.logo_url
             ? '<img src="' + team.logo_url + '" alt="logo" class="team-logo">'
             : '<div class="team-logo-placeholder"><i class="fas fa-shield-alt"></i></div>';
+        const groupOptions = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(function(g) {
+            const label = g === '' ? 'Sans groupe' : 'Groupe ' + g;
+            return '<option value="' + g + '"' + (team.group_name === g ? ' selected' : '') + '>' + label + '</option>';
+        }).join('');
         return '<div class="team-card">' + logo +
                '<div class="team-name">' + escapeHtml(team.name) + '</div>' +
                (team.age_category ? '<div class="team-age">' + escapeHtml(team.age_category) + '</div>' : '') +
+               '<select class="team-group-select" data-team-id="' + team.id + '">' + groupOptions + '</select>' +
                '<a class="btn-roster" href="team-details.html?id=' + team.id + '"><i class="fas fa-users"></i> Effectif</a>' +
                '<button class="btn-delete" onclick="deleteTeam(\'' + team.id + '\')"><i class="fas fa-trash"></i></button>' +
                '</div>';
     }).join('');
+
+    document.querySelectorAll('.team-group-select').forEach(function(select) {
+        select.addEventListener('change', function() { updateTeamGroup(this.dataset.teamId, this.value); });
+    });
+}
+
+async function updateTeamGroup(teamId, groupName) {
+    const { error } = await supabaseClient
+        .from(TBL_TEAMS)
+        .update({ group_name: groupName || null })
+        .eq('id', teamId);
+    if (error) { showToast('Erreur assignation du groupe : ' + error.message, 'error'); return; }
+    const team = allTeams.find(function(t) { return String(t.id) === String(teamId); });
+    if (team) team.group_name = groupName || null;
+    showToast('Groupe mis à jour', 'success', 3000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// FORMAT DE COMPÉTITION (championnat / groupes+élimination /
+// élimination directe) — reglable par l'organisateur, propre a
+// chaque tournoi, ne touche jamais aux equipes/joueurs existants.
+// ═══════════════════════════════════════════════════════════
+function fillFormatTab(tournament) {
+    const format = tournament.format_type || 'league';
+    document.querySelectorAll('input[name="formatType"]').forEach(function(radio) {
+        radio.checked = radio.value === format;
+    });
+    document.getElementById('qualifiersCountInput').value = tournament.qualifiers_count || '';
+    document.getElementById('qualifiersPerGroupInput').value = tournament.qualifiers_per_group || '';
+    document.getElementById('bestThirdCountInput').value = tournament.best_third_place_count || 0;
+    document.getElementById('qualificationExplainerInput').value = tournament.qualification_explainer || '';
+    updateFormatSettingsVisibility(format);
+}
+
+function updateFormatSettingsVisibility(format) {
+    document.getElementById('leagueSettings').style.display = format === 'league' ? 'block' : 'none';
+    document.getElementById('groupsSettings').style.display = format === 'groups_knockout' ? 'block' : 'none';
+}
+
+async function saveFormat() {
+    const selectedRadio = document.querySelector('input[name="formatType"]:checked');
+    const format = selectedRadio ? selectedRadio.value : 'league';
+
+    const payload = {
+        format_type: format,
+        qualifiers_count: document.getElementById('qualifiersCountInput').value ? parseInt(document.getElementById('qualifiersCountInput').value, 10) : null,
+        qualifiers_per_group: document.getElementById('qualifiersPerGroupInput').value ? parseInt(document.getElementById('qualifiersPerGroupInput').value, 10) : null,
+        best_third_place_count: document.getElementById('bestThirdCountInput').value ? parseInt(document.getElementById('bestThirdCountInput').value, 10) : 0,
+        qualification_explainer: document.getElementById('qualificationExplainerInput').value.trim() || null
+    };
+
+    showLoader();
+    const { error } = await supabaseClient.from(TBL_TOURNAMENTS).update(payload).eq('id', currentTournamentId);
+    hideLoader();
+
+    if (error) { showToast('Erreur enregistrement du format : ' + error.message, 'error'); return; }
+    currentTournament = Object.assign(currentTournament, payload);
+    showToast('Format de compétition enregistré', 'success');
 }
 
 let selectedTeamLogoFile = null;
@@ -1006,6 +1070,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     document.getElementById('addMatchForm')?.addEventListener('submit', addMatch);
     document.getElementById('recordResultForm')?.addEventListener('submit', saveMatchResult);
+
+    document.getElementById('saveFormatBtn')?.addEventListener('click', saveFormat);
+    document.querySelectorAll('input[name="formatType"]').forEach(function(radio) {
+        radio.addEventListener('change', function() { updateFormatSettingsVisibility(this.value); });
+    });
 
     document.getElementById('addPrizeBtn')?.addEventListener('click', async function() {
         await loadTeamOptions();

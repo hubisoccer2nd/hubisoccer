@@ -147,6 +147,7 @@
             <button class="tab-btn active" data-tab="info"><i class="fas fa-info-circle"></i> Informations</button>
             <button class="tab-btn" data-tab="registrations"><i class="fas fa-calendar-check"></i> Inscriptions</button>
             <button class="tab-btn" data-tab="teams"><i class="fas fa-users"></i> Équipes</button>
+            <button class="tab-btn" data-tab="format"><i class="fas fa-sitemap"></i> Format</button>
             <button class="tab-btn" data-tab="matches"><i class="fas fa-futbol"></i> Matchs</button>
             <button class="tab-btn" data-tab="reports"><i class="fas fa-file-alt"></i> Rapports</button>
             <button class="tab-btn" data-tab="prizes"><i class="fas fa-trophy"></i> Primes</button>
@@ -242,9 +243,59 @@
             </div>
         </div>
 
+        <div id="formatTab" class="tab-content">
+            <div class="glass-card">
+                <h2 class="section-title"><i class="fas fa-sitemap"></i> Format de compétition</h2>
+                <p class="section-hint">Choisis comment ton tournoi détermine ses qualifiés. Change à tout moment — ça n'affecte jamais les équipes déjà inscrites.</p>
+
+                <div class="format-choice-grid">
+                    <label class="format-choice">
+                        <input type="radio" name="formatType" value="league">
+                        <div class="format-choice-card"><i class="fas fa-list-ol"></i><strong>Championnat</strong><span>Un seul tableau, tout le monde s'affronte</span></div>
+                    </label>
+                    <label class="format-choice">
+                        <input type="radio" name="formatType" value="groups_knockout">
+                        <div class="format-choice-card"><i class="fas fa-th-large"></i><strong>Groupes + Élimination</strong><span>Poules séparées, puis phase finale</span></div>
+                    </label>
+                    <label class="format-choice">
+                        <input type="radio" name="formatType" value="knockout">
+                        <div class="format-choice-card"><i class="fas fa-random"></i><strong>Élimination directe</strong><span>Une défaite, c'est terminé</span></div>
+                    </label>
+                </div>
+
+                <div id="leagueSettings" class="format-settings" style="display:none;">
+                    <div class="form-group">
+                        <label>Nombre d'équipes qualifiées</label>
+                        <input type="number" id="qualifiersCountInput" min="1" placeholder="Ex : 2, 4, 8…">
+                    </div>
+                </div>
+
+                <div id="groupsSettings" class="format-settings" style="display:none;">
+                    <div class="form-group">
+                        <label>Nombre de qualifiés par groupe</label>
+                        <input type="number" id="qualifiersPerGroupInput" min="1" placeholder="Ex : 2">
+                    </div>
+                    <div class="form-group">
+                        <label>Meilleurs 3<sup>e</sup> également qualifiés <span class="hint">(optionnel)</span></label>
+                        <input type="number" id="bestThirdCountInput" min="0" placeholder="0 = aucun">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Explication de la qualification <span class="hint">(affichée aux visiteurs)</span></label>
+                    <textarea id="qualificationExplainerInput" rows="3" placeholder="Ex : Les 2 premiers de chaque groupe se qualifient pour les quarts de finale. Les 3es affrontent un barrage."></textarea>
+                </div>
+
+                <button id="saveFormatBtn" class="btn-primary"><i class="fas fa-check"></i> Enregistrer le format</button>
+                <p class="section-hint" style="margin-top:14px;"><i class="fas fa-arrow-right"></i> Pour répartir les équipes dans les groupes, utilise le menu déroulant "Groupe" directement sur chaque équipe dans l'onglet <strong>Équipes</strong>.</p>
+            </div>
+
+        </div>
+
     </div>
 </main>
 <!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
 
 <!-- ===== MODALES ===== -->
 

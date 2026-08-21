@@ -134,6 +134,115 @@ async function essai(titre, fn) {
     await essai('10. Table des commentaires', () =>
         sb.from('supabaseAuthPrive_comments').select('*', { count: 'exact', head: true }));
 
+    // ============================================================
+    //  PARTIE 2 — REJOUER CHAQUE BOUTON DE FILTRE DU FIL
+    // ------------------------------------------------------------
+    //  Le fil fonctionne pour certains filtres et echoue pour
+    //  d'autres, et pas de la meme facon selon l'utilisateur.
+    //  On rejoue donc chaque filtre EXACTEMENT comme feed.js le
+    //  construit, avec la session reellement connectee.
+    // ============================================================
+    const SELECT_FIL =
+        '*, author:supabaseAuthPrive_profiles!author_hubisoccer_id(hubisoccer_id, full_name, display_name, avatar_url, role_code, feed_id, certified), community:supabaseAuthPrive_communities!community_id(name, feed_id, avatar_url)';
+    const PAGE_SIZE = 20;
+
+    // --- Session reellement active dans ce navigateur ---
+    let monId = null;
+    try {
+        const { data: sess } = await sb.auth.getSession();
+        if (sess && sess.session && sess.session.user) {
+            bloc('11. Session connectee', true, 'uuid : ' + sess.session.user.id);
+            const { data: prof } = await sb.from('supabaseAuthPrive_profiles')
+                .select('hubisoccer_id, role_code')
+                .eq('auth_uuid', sess.session.user.id).maybeSingle();
+            if (prof) {
+                monId = prof.hubisoccer_id;
+                bloc('12. Mon profil', true, 'hubisoccer_id : ' + prof.hubisoccer_id +
+                     '\nrole_code : ' + (prof.role_code || '(vide)'));
+            } else {
+                bloc('12. Mon profil', false, 'aucun profil pour cet auth_uuid');
+            }
+        } else {
+            bloc('11. Session connectee', false,
+                 'AUCUNE session : les tests suivants s\'executent en anonyme. ' +
+                 'Connectez-vous sur le site puis rechargez cette page.');
+        }
+    } catch (e) { bloc('11. Session connectee', false, String(e)); }
+
+    // --- Filtre « Tout » : les 5 pages successives ---
+    for (let page = 0; page < 5; page++) {
+        const debut = page * PAGE_SIZE;
+        const fin   = debut + PAGE_SIZE - 1;
+        await essai('13.' + page + ' Filtre TOUT — page ' + (page + 1) +
+                    ' (range ' + debut + '-' + fin + ')', () =>
+            sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+              .eq('is_scheduled', false)
+              .order('created_at', { ascending: false })
+              .range(debut, fin));
+    }
+
+    // --- Filtre « Médias » ---
+    await essai('14. Filtre MEDIAS', () =>
+        sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+          .eq('is_scheduled', false).not('media_url', 'is', null)
+          .order('created_at', { ascending: false }).range(0, PAGE_SIZE - 1));
+
+    // --- Filtre « Sondages » ---
+    await essai('15. Filtre SONDAGES', () =>
+        sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+          .eq('is_scheduled', false).not('poll_data', 'is', null)
+          .order('created_at', { ascending: false }).range(0, PAGE_SIZE - 1));
+
+    // --- Filtre « Abonnements » : le point le plus suspect ---
+    if (monId) {
+        const { data: follows, error: errF } = await sb
+            .from('supabaseAuthPrive_follows')
+            .select('following_hubisoccer_id')
+            .eq('follower_hubisoccer_id', monId);
+
+        if (errF) {
+            bloc('16. Lire mes abonnements', false, decrire(errF));
+        } else {
+            const ids = (follows || []).map(f => f.following_hubisoccer_id);
+            const longueurUrl = ids.join(',').length;
+            bloc('16. Lire mes abonnements', true,
+                 'abonnements : ' + ids.length +
+                 '\nlongueur de la liste d\'identifiants : ' + longueurUrl + ' caracteres' +
+                 (longueurUrl > 2000
+                    ? '\nATTENTION : liste tres longue, l\'URL de la requete peut depasser la limite du serveur.'
+                    : ''));
+            if (ids.length) {
+                await essai('17. Filtre ABONNEMENTS (' + ids.length + ' identifiants)', () =>
+                    sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+                      .eq('is_scheduled', false)
+                      .in('author_hubisoccer_id', ids)
+                      .order('created_at', { ascending: false })
+                      .range(0, PAGE_SIZE - 1));
+            }
+        }
+    }
+
+    // --- Filtre par role (les pastilles sous les onglets) ---
+    await essai('18. Filtre par ROLE (author.role_code)', () =>
+        sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+          .eq('is_scheduled', false)
+          .eq('author.role_code', 'FOOT')
+          .order('created_at', { ascending: false }).range(0, PAGE_SIZE - 1));
+
+    // --- Recherche dans le fil ---
+    await essai('19. Recherche dans le contenu', () =>
+        sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+          .eq('is_scheduled', false)
+          .ilike('content', '%a%')
+          .order('created_at', { ascending: false }).range(0, PAGE_SIZE - 1));
+
+    // --- Filtre « Épinglés » (publications enregistrees) ---
+    if (monId) {
+        await essai('20. Mes publications enregistrees', () =>
+            sb.from('supabaseAuthPrive_saved_posts').select('post_id')
+              .eq('user_hubisoccer_id', monId));
+    }
+
     const echecs = lignes.filter(l => l.startsWith('[ECHEC')).length;
     const resume = document.getElementById('resume');
     if (echecs === 0) {

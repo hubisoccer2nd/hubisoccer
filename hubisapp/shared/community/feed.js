@@ -354,6 +354,96 @@ async function loadMyCommunity() {
 }
 // ========== FIN : CHARGEMENT DE LA COMMUNAUTE ==========
 
+// ========== DEBUT : LECTURE DE SECOURS SANS JOINTURE ==========
+//
+// Rejoue la lecture des publications en trois requetes simples,
+// sans aucune jointure PostgREST, puis reconstruit les champs
+// author et community exactement comme la requete jointe les
+// aurait fournis.
+//
+// Utilisee automatiquement quand les cles etrangeres de la base
+// empechent la jointure. Le fil reste ainsi consultable meme si
+// le schema de la base est en cours de correction.
+//
+async function loadPostsSansJointure() {
+    try {
+        // 1) Les publications, sans jointure
+        let q = sb.from('supabaseAuthPrive_posts')
+            .select('*')
+            .eq('is_scheduled', false)
+            .order('created_at', { ascending: false })
+            .range(postOffset, postOffset + PAGE_SIZE - 1);
+
+        if (activeFilter === 'media')  q = q.not('media_url', 'is', null);
+        if (activeFilter === 'polls')  q = q.not('poll_data', 'is', null);
+        if (searchQuery)               q = q.ilike('content', '%' + searchQuery + '%');
+
+        if (activeFilter === 'following') {
+            const { data: fw } = await sb.from('supabaseAuthPrive_follows')
+                .select('following_hubisoccer_id')
+                .eq('follower_hubisoccer_id', currentProfile.hubisoccer_id);
+            const ids = (fw || []).map(f => f.following_hubisoccer_id);
+            if (!ids.length) return { data: [], error: null };
+            q = q.in('author_hubisoccer_id', ids);
+        }
+
+        if (activeFilter === 'saved') {
+            const sv = Array.from(savedPosts);
+            if (!sv.length) return { data: [], error: null };
+            q = q.in('id', sv);
+        }
+
+        const { data: brut, error: errPosts } = await q;
+        if (errPosts) return { data: null, error: errPosts };
+        if (!brut || !brut.length) return { data: [], error: null };
+
+        // 2) Les auteurs concernes, en une seule requete
+        const idsAuteurs = [...new Set(
+            brut.map(p => p.author_hubisoccer_id).filter(Boolean)
+        )];
+
+        let auteurs = {};
+        if (idsAuteurs.length) {
+            const { data: profs } = await sb.from('supabaseAuthPrive_profiles')
+                .select('hubisoccer_id, full_name, display_name, avatar_url, role_code, feed_id, certified')
+                .in('hubisoccer_id', idsAuteurs);
+            (profs || []).forEach(pr => { auteurs[pr.hubisoccer_id] = pr; });
+        }
+
+        // 3) Les communautes concernees
+        const idsCommunautes = [...new Set(
+            brut.map(p => p.community_id).filter(Boolean)
+        )];
+
+        let communautes = {};
+        if (idsCommunautes.length) {
+            const { data: comms } = await sb.from('supabaseAuthPrive_communities')
+                .select('id, name, feed_id, avatar_url')
+                .in('id', idsCommunautes);
+            (comms || []).forEach(c => { communautes[c.id] = c; });
+        }
+
+        // 4) Rattachement, au format attendu par renderPosts()
+        const complet = brut.map(p => ({
+            ...p,
+            author:    auteurs[p.author_hubisoccer_id] || null,
+            community: communautes[p.community_id]     || null
+        }));
+
+        // Filtre par role : applique ici, la base ne pouvant plus
+        // le faire sans jointure.
+        const final = (activeRoleFilter && activeRoleFilter !== 'all')
+            ? complet.filter(p => p.author && p.author.role_code === activeRoleFilter)
+            : complet;
+
+        return { data: final, error: null };
+
+    } catch (err) {
+        return { data: null, error: err };
+    }
+}
+// ========== FIN : LECTURE DE SECOURS SANS JOINTURE ==========
+
 // ========== DEBUT : CHARGEMENT DES POSTS ==========
 async function loadPosts(reset = false) {
     if (loadingPosts) return;
@@ -424,7 +514,29 @@ async function loadPosts(reset = false) {
         if (activeRoleFilter !== 'all') query = query.eq('author.role_code', activeRoleFilter);
         if (searchQuery) query = query.ilike('content', '%' + searchQuery + '%');
 
-        const { data, error } = await query;
+        let { data, error } = await query;
+
+        // ============================================================
+        //  SECOURS AUTOMATIQUE — RELATION AMBIGUE OU ABSENTE
+        // ------------------------------------------------------------
+        //  PostgREST refuse la requete quand il trouve zero ou
+        //  plusieurs cles etrangeres entre posts et profiles :
+        //      PGRST201  more than one relationship was found
+        //      PGRST200  could not find a relationship
+        //
+        //  Le fil ne doit PAS dependre de l'etat des cles etrangeres
+        //  de la base. On refait donc la meme lecture SANS jointure,
+        //  puis on rattache les auteurs et les communautes en
+        //  JavaScript. Le resultat affiche est identique.
+        // ============================================================
+        if (error && (error.code === 'PGRST201' || error.code === 'PGRST200')) {
+            console.warn('[feed] jointure indisponible (' + error.code +
+                         ') — lecture sans jointure.');
+            const secours = await loadPostsSansJointure();
+            data  = secours.data;
+            error = secours.error;
+        }
+
         if (error) throw error;
 
         hasMorePosts = data.length === PAGE_SIZE;
@@ -437,8 +549,33 @@ async function loadPosts(reset = false) {
         const loadMoreWrapEl = document.getElementById('loadMoreWrap');
         if (loadMoreWrapEl) loadMoreWrapEl.style.display = hasMorePosts ? 'block' : 'none';
     } catch (err) {
+        // On affiche la CAUSE REELLE et non un message generique.
+        // Un fil vide accompagne de « Erreur chargement des posts »
+        // repete sept fois n'aidait ni vous ni moi a diagnostiquer.
         console.error('Erreur chargement posts:', err);
-        toast('Erreur chargement des posts', 'error');
+        const raison = (typeof describeDbError === 'function')
+            ? describeDbError(err)
+            : (err.message || 'cause inconnue');
+        toast('Publications non chargées — ' + raison, 'error');
+
+        // Message persistant dans le fil, pour ne pas dependre d'un
+        // toast qui disparait au bout de quelques secondes.
+        const feedEl = document.getElementById('postsFeed');
+        if (feedEl && !posts.length) {
+            const box = document.createElement('div');
+            box.className = 'c-empty';
+            const t = document.createElement('h3');
+            t.textContent = 'Impossible de charger les publications';
+            const p = document.createElement('p');
+            p.textContent = raison;
+            const small = document.createElement('p');
+            small.style.cssText = 'font-size:0.78rem;color:var(--gray);margin-top:6px';
+            small.textContent = 'Vos publications ne sont pas perdues : '
+                              + 'seule la requête d\'affichage a échoué.';
+            box.appendChild(t); box.appendChild(p); box.appendChild(small);
+            feedEl.innerHTML = '';
+            feedEl.appendChild(box);
+        }
     } finally {
         loadingPosts = false;
         const finalFeedSkeleton = document.getElementById('feedSkeleton');

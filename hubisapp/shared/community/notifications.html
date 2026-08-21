@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Notifications | HubISoccer</title>
+    <!-- Polices et icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CSS local -->
+    <link rel="stylesheet" href="notifications.css">
+    <!-- Feuille de style partagee de la navigation des roles -->
+    <link rel="stylesheet" href="role-nav.css">
+    <!-- SDK Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="c-loader" style="display:none;">
+    <div class="c-spinner"></div>
+    <div class="c-loader-bar-wrap">
+        <div class="c-loader-bar" id="loaderBar" style="width:0%"></div>
+    </div>
+    <span class="c-loader-text" id="loaderText">Chargement des notifications...</span>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="c-nav">
+    <div class="c-nav-left">
+        <button class="back-nav-btn" id="backBtn" title="Retour">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="c-nav-logo" id="navLogo">
+        <span class="c-nav-title">Notifications</span>
+    </div>
+    <div class="c-nav-right">
+        <div class="c-user-menu" id="userMenu">
+            <div class="c-user-avatar-wrap" id="userAvatarWrap">
+                <div class="c-user-avatar-initials" id="userAvatarInitials"></div>
+                <img class="c-user-avatar" id="userAvatar" alt="" style="display:none;">
+            </div>
+            <span class="c-user-name" id="userName">...</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="c-user-dropdown" id="userDropdown">
+                <a href="#" id="dropDashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                <a href="feed.html"><i class="fas fa-users"></i> Ma Communauté</a>
+                <hr>
+                <button id="dropLogout" class="c-logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+            </div>
+        </div>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="notifications-main">
+    <div class="notifications-container">
+
+        <!-- En-tête avec filtres et actions -->
+        <div class="notifications-header">
+            <h1><i class="fas fa-bell"></i> Notifications</h1>
+            <div class="notifications-actions">
+                <button class="btn-ghost" id="markAllReadBtn">
+                    <i class="fas fa-check-double"></i> Tout marquer comme lu
+                </button>
+                <button class="btn-ghost" id="clearAllBtn">
+                    <i class="fas fa-trash-alt"></i> Effacer tout
+                </button>
+            </div>
+        </div>
+
+        <!-- Filtres rapides -->
+        <div class="notifications-filters">
+            <button class="filter-chip active" data-filter="all">Toutes</button>
+            <button class="filter-chip" data-filter="unread">Non lues</button>
+            <button class="filter-chip" data-filter="like">J'aime</button>
+            <button class="filter-chip" data-filter="comment">Commentaires</button>
+            <button class="filter-chip" data-filter="follow">Abonnements</button>
+            <button class="filter-chip" data-filter="live">Lives</button>
+            <button class="filter-chip" data-filter="system">Système</button>
+        </div>
+
+        <!-- Liste des notifications -->
+        <div class="notifications-list" id="notificationsList">
+            <!-- Squelettes de chargement -->
+            <div class="notification-skeleton"></div>
+            <div class="notification-skeleton"></div>
+            <div class="notification-skeleton"></div>
+        </div>
+
+        <!-- État vide -->
+        <div class="notifications-empty" id="notificationsEmpty" style="display:none;">
+            <div class="empty-icon"><i class="fas fa-bell-slash"></i></div>
+            <h3>Aucune notification</h3>
+            <p>Vous êtes à jour ! Revenez plus tard.</p>
+        </div>
+
+        <!-- Bouton charger plus -->
+        <div id="loadMoreWrap" style="text-align:center; padding:20px; display:none;">
+            <button class="btn-ghost" id="loadMoreBtn">
+                <i class="fas fa-arrow-down"></i> Charger plus
+            </button>
+        </div>
+
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<!-- ===== DEBUT TOAST CONTAINER ===== -->
+<div id="toastContainer" class="c-toast-container"></div>
+<!-- ===== FIN TOAST CONTAINER ===== -->
+
+<!-- ===== DEBUT SCRIPTS ===== -->
+<script src="utils.js"></script>
+<script src="session.js"></script>
+<!-- Source unique des liens vers les espaces prives : AVANT le script de la page -->
+<script src="role-nav.js"></script>
+<script src="notifications.js"></script>
+<!-- ===== FIN SCRIPTS ===== -->
+
+<!-- ===== DEBUT GARDE-FOU DE CHARGEMENT =====
+     Verifie que les fichiers partages ont bien ete servis par le
+     serveur. Si l'un d'eux renvoie 404, la page restait auparavant
+     figee indefiniment sur « Verification de votre session... »
+     sans le moindre message : impossible de comprendre pourquoi.
+     Ce bloc affiche desormais la liste exacte des fichiers manquants.
+     Il est volontairement ECRIT EN CLAIR dans la page (et non dans un
+     fichier externe) pour rester actif meme si tous les .js manquent. -->
+<script>
+(function () {
+    var attendus = [
+        { nom: 'utils.js',    test: function () { return typeof window.escapeHtml === 'function'; } },
+        { nom: 'session.js',  test: function () { return typeof window.requireAuth === 'function'; } },
+        { nom: 'role-nav.js', test: function () { return typeof window.getRoleHome === 'function'; } }
+    ];
+
+    var manquants = [];
+    for (var i = 0; i < attendus.length; i++) {
+        try { if (!attendus[i].test()) manquants.push(attendus[i].nom); }
+        catch (e) { manquants.push(attendus[i].nom); }
+    }
+
+    if (!manquants.length) return;
+
+    // On coupe le chargeur pour ne pas laisser tourner l'animation.
+    var loader = document.getElementById('globalLoader');
+    if (loader) loader.style.display = 'none';
+
+    var chemin = window.location.pathname.replace(/[^/]*$/, '');
+
+    var boite = document.createElement('div');
+    boite.setAttribute('role', 'alert');
+    boite.style.cssText =
+        'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;' +
+        'justify-content:center;padding:24px;background:rgba(26,26,46,.94);' +
+        'font-family:Poppins,system-ui,sans-serif;';
+
+    var carte = document.createElement('div');
+    carte.style.cssText =
+        'max-width:520px;width:100%;background:#fff;border-radius:16px;padding:28px;' +
+        'box-shadow:0 20px 60px rgba(0,0,0,.35);color:#1a1a2e;line-height:1.6;';
+
+    var titre = document.createElement('h2');
+    titre.textContent = 'Fichier manquant sur le serveur';
+    titre.style.cssText = 'margin:0 0 12px;font-size:1.15rem;color:#551B8C;';
+
+    var texte = document.createElement('p');
+    texte.style.cssText = 'margin:0 0 14px;font-size:0.92rem;';
+    texte.textContent =
+        manquants.length + ' fichier(s) necessaire(s) a cette page n\'ont pas ete ' +
+        'trouves. La page ne peut pas demarrer tant qu\'ils ne sont pas deposes.';
+
+    var liste = document.createElement('ul');
+    liste.style.cssText =
+        'margin:0 0 16px;padding:12px 12px 12px 28px;background:#f4f1f9;' +
+        'border-radius:10px;font-size:0.88rem;';
+    for (var j = 0; j < manquants.length; j++) {
+        var li = document.createElement('li');
+        li.style.cssText = 'font-family:ui-monospace,Menlo,Consolas,monospace;';
+        li.textContent = manquants[j];
+        liste.appendChild(li);
+    }
+
+    var ou = document.createElement('p');
+    ou.style.cssText = 'margin:0 0 18px;font-size:0.84rem;color:#6c757d;';
+    ou.textContent = 'A deposer dans : ' + chemin;
+
+    var lien = document.createElement('a');
+    lien.href = window.location.href;
+    lien.textContent = 'Reessayer';
+    lien.style.cssText =
+        'display:inline-block;padding:10px 22px;border-radius:999px;background:#551B8C;' +
+        'color:#fff;text-decoration:none;font-weight:600;font-size:0.9rem;';
+
+    carte.appendChild(titre);
+    carte.appendChild(texte);
+    carte.appendChild(liste);
+    carte.appendChild(ou);
+    carte.appendChild(lien);
+    boite.appendChild(carte);
+
+    if (document.body) document.body.appendChild(boite);
+    else document.addEventListener('DOMContentLoaded', function () {
+        document.body.appendChild(boite);
+    });
+
+    console.error('[HubISoccer] Fichiers absents du serveur : ' + manquants.join(', ') +
+                  ' — attendus dans ' + chemin);
+})();
+</script>
+<!-- ===== FIN GARDE-FOU DE CHARGEMENT ===== -->
+</body>
+</html>

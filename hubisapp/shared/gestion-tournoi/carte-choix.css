@@ -1,0 +1,90 @@
+/* ============================================================
+   HubISoccer — carte-choix.css
+   Styles de la page de choix du type de carte de tournoi
+   ============================================================ */
+
+/* ===== DEBUT CONTENU PRINCIPAL ===== */
+.dashboard-main {
+    padding: 40px 24px 60px;
+    min-height: calc(100vh - 66px - 28px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carte-choix-container {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.carte-choix-container h1 {
+    font-size: 2rem;
+    color: #551B8C;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.subtitle {
+    color: #7c7c9e;
+    font-size: 0.95rem;
+    margin-bottom: 40px;
+}
+
+.categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+}
+
+.card-category {
+    background: white;
+    border-radius: 24px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #e8e4f0;
+    box-shadow: 0 6px 24px rgba(85, 27, 140, 0.08);
+}
+
+.card-category:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 36px rgba(85, 27, 140, 0.15);
+    border-color: #551B8C;
+}
+
+.card-category i {
+    font-size: 3rem;
+    color: #FFCC00;
+    margin-bottom: 15px;
+}
+
+.card-category h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: #1a1a2e;
+}
+
+.card-category p {
+    color: #7c7c9e;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .dashboard-main {
+        padding: 24px 16px 40px;
+    }
+    .carte-choix-container h1 {
+        font-size: 1.5rem;
+    }
+    .categories {
+        grid-template-columns: 1fr;
+    }
+}

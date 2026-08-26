@@ -1,0 +1,101 @@
+/* ============================================================
+   HubISoccer — NAV-GT.CSS
+   Menu partagé du module « Gestion des tournois »
+   ------------------------------------------------------------
+   Accompagne nav-gt.js. Toutes les classes sont préfixées
+   « nav-gt- » : aucun risque de collision avec les styles
+   existants des 25 pages.
+   ============================================================ */
+
+:root {
+    --ngt-primary:      #551B8C;
+    --ngt-primary-soft: rgba(85, 27, 140, 0.08);
+    --ngt-gold:         #FFCC00;
+    --ngt-text:         #1a1a2e;
+    --ngt-muted:        #6c757d;
+    --ngt-border:       #e8e4f0;
+    --ngt-danger:       #d63d3d;
+    --ngt-radius:       12px;
+}
+
+/* ---------- Section ---------- */
+.nav-gt-section { margin-bottom: 20px; }
+
+.nav-gt-section + .nav-gt-section {
+    padding-top: 16px;
+    border-top: 1px solid var(--ngt-border);
+}
+
+.nav-gt-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ngt-muted);
+    margin: 0 0 8px 12px;
+}
+
+/* ---------- Lien ---------- */
+.nav-gt-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-bottom: 2px;
+    border-radius: var(--ngt-radius);
+    color: var(--ngt-text);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+
+.nav-gt-link i {
+    width: 20px;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 0.98rem;
+    color: var(--ngt-muted);
+    transition: color .18s ease;
+}
+
+.nav-gt-link span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-gt-link:hover {
+    background: var(--ngt-primary-soft);
+    color: var(--ngt-primary);
+    transform: translateX(2px);
+}
+.nav-gt-link:hover i { color: var(--ngt-primary); }
+
+.nav-gt-link.active {
+    background: var(--ngt-primary);
+    color: #fff;
+    font-weight: 600;
+}
+.nav-gt-link.active i { color: var(--ngt-gold); }
+
+.nav-gt-link:focus-visible {
+    outline: 2px solid var(--ngt-primary);
+    outline-offset: 2px;
+}
+
+/* ---------- Déconnexion ---------- */
+.nav-gt-logout,
+.nav-gt-logout i { color: var(--ngt-danger); }
+
+.nav-gt-logout:hover {
+    background: rgba(214, 61, 61, 0.08);
+    color: var(--ngt-danger);
+}
+.nav-gt-logout:hover i { color: var(--ngt-danger); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+    .nav-gt-section { margin-bottom: 14px; }
+    .nav-gt-link { padding: 12px 14px; font-size: 0.94rem; }
+}

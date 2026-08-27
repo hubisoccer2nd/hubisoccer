@@ -214,8 +214,26 @@ async function loadTournaments() {
 
 // ═══════════════════════════════════════════════════════════
 // 12. CLASSEMENT ÉQUIPES (requête séparée, pas de jointure imbriquée)
+// ------------------------------------------------------------
+// Sensible au format du tournoi : un seul tableau si 'league' ou
+// 'knockout', un tableau SEPARE par groupe si 'groups_knockout' --
+// avec une ligne de qualification visible apres la position
+// configuree par l'organisateur (qualifiers_per_group), plus la
+// mention des "meilleurs troisiemes" si cette regle est activee.
 // ═══════════════════════════════════════════════════════════
 async function loadTeamsRanking() {
+    const { data: tournament } = await supabaseClient
+        .from(TBL_TOURNAMENTS)
+        .select('format_type, qualifiers_per_group, best_third_place_count, qualification_explainer')
+        .eq('id', currentTournamentId)
+        .maybeSingle();
+
+    const formatType = (tournament && tournament.format_type) || 'league';
+    const qualifiersPerGroup = (tournament && tournament.qualifiers_per_group) || 2;
+    const bestThirdPlaces = (tournament && tournament.best_third_place_count) || 0;
+
+    renderFormatExplanation(tournament, formatType, qualifiersPerGroup, bestThirdPlaces);
+
     const { data: standings, error } = await supabaseClient
         .from(TBL_STANDINGS)
         .select('team_id, played, wins, draws, losses, goals_for, goals_against, points')
@@ -230,14 +248,46 @@ async function loadTeamsRanking() {
     }
 
     const teamIds = standings.map(function(s) { return s.team_id; });
-    const { data: teams } = await supabaseClient.from(TBL_TEAMS).select('id, name, logo_url').in('id', teamIds);
+    const { data: teams } = await supabaseClient.from(TBL_TEAMS).select('id, name, logo_url, group_name').in('id', teamIds);
     const teamMap = {};
     (teams || []).forEach(function(t) { teamMap[t.id] = t; });
 
+    if (formatType !== 'groups_knockout') {
+        container.innerHTML = renderStandingsTable(standings, teamMap, null, 0);
+        return;
+    }
+
+    // Format groupes+elimination : un tableau separe par group_name.
+    // Les equipes sans groupe assigne (group_name NULL) vont dans
+    // "Sans groupe assigné" -- visible plutot que silencieusement
+    // absentes, le temps que l'organisateur les repartisse.
+    const byGroup = {};
+    standings.forEach(function(s) {
+        const groupName = (teamMap[s.team_id] && teamMap[s.team_id].group_name) || 'Sans groupe assigné';
+        if (!byGroup[groupName]) byGroup[groupName] = [];
+        byGroup[groupName].push(s);
+    });
+
+    const groupNames = Object.keys(byGroup).sort();
+    let allHtml = '';
+    groupNames.forEach(function(groupName) {
+        const groupStandings = byGroup[groupName].slice().sort(function(a, b) { return b.points - a.points; });
+        allHtml += '<div class="group-block"><h3 class="group-title"><i class="fas fa-layer-group"></i> Groupe ' + escapeHtml(groupName) + '</h3>' +
+                   renderStandingsTable(groupStandings, teamMap, groupName, qualifiersPerGroup) + '</div>';
+    });
+    container.innerHTML = allHtml;
+
+    if (bestThirdPlaces > 0) {
+        renderBestThirdPlaces(byGroup, teamMap, qualifiersPerGroup, bestThirdPlaces);
+    }
+}
+
+function renderStandingsTable(standings, teamMap, groupName, qualifiersLine) {
     let html = '<table class="ranking-table"><thead><tr><th>#</th><th>Équipe</th><th>J</th><th>V</th><th>N</th><th>D</th><th>BP</th><th>BC</th><th>Pts</th></tr></thead><tbody>';
     standings.forEach(function(s, index) {
         const team = teamMap[s.team_id] || {};
-        html += '<tr>' +
+        const isQualified = qualifiersLine > 0 && (index + 1) <= qualifiersLine;
+        html += '<tr class="' + (isQualified ? 'qualified-row' : '') + '">' +
                 '<td class="tabular">' + (index + 1) + '</td>' +
                 '<td class="team-cell">' + (team.logo_url ? '<img src="' + team.logo_url + '" alt="">' : '') + escapeHtml(team.name || 'Équipe inconnue') + '</td>' +
                 '<td class="tabular">' + s.played + '</td>' +
@@ -248,9 +298,68 @@ async function loadTeamsRanking() {
                 '<td class="tabular">' + s.goals_against + '</td>' +
                 '<td class="tabular points-col">' + s.points + '</td>' +
                 '</tr>';
+        if (isQualified && (index + 1) === qualifiersLine && (index + 1) < standings.length) {
+            html += '<tr class="qualif-line-row"><td colspan="9"><i class="fas fa-arrow-up"></i> Qualifié(s) pour la suite</td></tr>';
+        }
     });
     html += '</tbody></table>';
-    container.innerHTML = html;
+    return html;
+}
+
+// Meilleurs troisiemes tous groupes confondus (regle Coupe du
+// Monde / Euro) -- affiches en plus des qualifies directs de
+// chaque groupe.
+function renderBestThirdPlaces(byGroup, teamMap, qualifiersPerGroup, bestThirdPlaces) {
+    const thirdPlaceRank = qualifiersPerGroup + 1;
+    const thirds = [];
+    Object.keys(byGroup).forEach(function(groupName) {
+        const sorted = byGroup[groupName].slice().sort(function(a, b) { return b.points - a.points; });
+        if (sorted[thirdPlaceRank - 1]) thirds.push({ standing: sorted[thirdPlaceRank - 1], groupName: groupName });
+    });
+    thirds.sort(function(a, b) { return b.standing.points - a.standing.points; });
+    const bestThirds = thirds.slice(0, bestThirdPlaces);
+
+    if (!bestThirds.length) return;
+
+    let html = '<div class="best-thirds-block"><h3 class="group-title"><i class="fas fa-medal"></i> Meilleurs ' + bestThirdPlaces + ' troisièmes (qualifiés en plus)</h3>' +
+               '<table class="ranking-table"><thead><tr><th>#</th><th>Équipe</th><th>Groupe</th><th>Pts</th></tr></thead><tbody>';
+    bestThirds.forEach(function(entry, index) {
+        const team = teamMap[entry.standing.team_id] || {};
+        html += '<tr class="qualified-row"><td class="tabular">' + (index + 1) + '</td>' +
+                '<td class="team-cell">' + escapeHtml(team.name || 'Équipe inconnue') + '</td>' +
+                '<td>' + escapeHtml(entry.groupName) + '</td>' +
+                '<td class="tabular points-col">' + entry.standing.points + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('teamsRanking').insertAdjacentHTML('beforeend', html);
+}
+
+// Explication publique et lisible des regles de qualification pour
+// CE tournoi -- pour que les visiteurs comprennent comment ça
+// fonctionne sans avoir a deviner.
+function renderFormatExplanation(tournament, formatType, qualifiersPerGroup, bestThirdPlaces) {
+    const el = document.getElementById('formatExplanation');
+    if (!el) return;
+
+    const formatLabels = { league: 'Championnat (un seul classement général)', groups_knockout: 'Phase de groupes puis élimination directe', knockout: 'Élimination directe' };
+    let text = '<strong>' + (formatLabels[formatType] || formatType) + '</strong>';
+
+    if (formatType === 'groups_knockout') {
+        text += ' — les ' + qualifiersPerGroup + ' premier(s) de chaque groupe se qualifient directement';
+        if (bestThirdPlaces > 0) text += ', ainsi que les ' + bestThirdPlaces + ' meilleur(s) troisième(s) tous groupes confondus';
+        text += '.';
+    } else if (formatType === 'knockout') {
+        text += ' — chaque rencontre élimine directement le perdant.';
+    } else {
+        text += ' — le classement final se fait sur l\'ensemble des rencontres.';
+    }
+
+    if (tournament && tournament.qualification_explainer) {
+        text += '<br><span class="format-extra-note">' + escapeHtml(tournament.qualification_explainer) + '</span>';
+    }
+
+    el.innerHTML = text;
+    el.style.display = 'block';
 }
 
 // ═══════════════════════════════════════════════════════════

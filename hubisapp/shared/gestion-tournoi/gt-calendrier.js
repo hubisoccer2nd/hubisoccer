@@ -350,54 +350,87 @@ window.GTCalendrier = (function () {
         var alea = options.alea;
 
         var liste = classement && classement.length ? classement.slice() : melanger(equipes, alea);
-        var rencontres = [];
-        var utilisees = {};
-        var position = 0;
+
+        var dejaVus = {};
+        dejaJoues.forEach(function (paire) {
+            dejaVus[paire] = true;
+            var bouts = String(paire).split('|');
+            if (bouts.length === 2) dejaVus[bouts[1] + '|' + bouts[0]] = true;
+        });
 
         function ontDejaJoue(a, b) {
-            return dejaJoues.indexOf(a + '|' + b) !== -1 || dejaJoues.indexOf(b + '|' + a) !== -1;
+            return !!dejaVus[a + '|' + b];
         }
 
-        for (var i = 0; i < liste.length; i++) {
-            var a = liste[i];
-            if (utilisees[a]) continue;
+        // Nombre impair : la dernière du classement est exemptée,
+        // c'est la convention du système suisse.
+        var exempte = null;
+        if (liste.length % 2 === 1) exempte = liste.pop();
 
-            var adversaire = null;
-            for (var j = i + 1; j < liste.length; j++) {
-                var b = liste[j];
-                if (utilisees[b]) continue;
+        // Appariement avec RETOUR ARRIÈRE.
+        //
+        // Un appariement glouton de gauche à droite se peint dans un
+        // coin : il place les premières équipes sans se soucier de
+        // la suite, et les deux dernières restantes se retrouvent
+        // parfois être deux équipes qui se sont déjà rencontrées.
+        // Le glouton n'a alors plus aucune issue et rejoue l'affiche.
+        //
+        // Le retour arrière essaie un autre adversaire en amont
+        // jusqu'à trouver un appariement complet valable.
+        var plafond = 200000;   // garde-fou : jamais de boucle infinie
+        var visites = 0;
+
+        function apparier(restantes) {
+            if (!restantes.length) return [];
+            if (++visites > plafond) return null;
+
+            var a = restantes[0];
+            for (var i = 1; i < restantes.length; i++) {
+                var b = restantes[i];
                 if (ontDejaJoue(a, b)) continue;
-                adversaire = b;
-                break;
-            }
 
-            // Aucun adversaire neuf disponible : on prend le
-            // premier libre plutôt que de laisser l'équipe dehors.
-            if (adversaire === null) {
-                for (var k = i + 1; k < liste.length; k++) {
-                    if (!utilisees[liste[k]]) { adversaire = liste[k]; break; }
-                }
+                var suivantes = restantes.filter(function (_, k) { return k !== 0 && k !== i; });
+                var suite = apparier(suivantes);
+                if (suite) return [[a, b]].concat(suite);
             }
+            return null;   // aucune solution avec « a » en tête
+        }
 
-            utilisees[a] = true;
+        var paires = apparier(liste);
+
+        // Aucun appariement parfait n'existe : toutes les
+        // rencontres possibles ont déjà eu lieu. On apparie alors
+        // dans l'ordre du classement, en le disant.
+        var toutesDejaJouees = false;
+        if (!paires) {
+            toutesDejaJouees = true;
+            paires = [];
+            for (var j = 0; j + 1 < liste.length; j += 2) {
+                paires.push([liste[j], liste[j + 1]]);
+            }
+        }
+
+        var rencontres = [];
+        var position = 0;
+
+        paires.forEach(function (paire) {
             position++;
-
-            if (adversaire === null) {
-                rencontres.push({
-                    equipeA: a, equipeB: null,
-                    tour: 'Ronde ' + ronde, codeTour: 'R' + ronde,
-                    journee: ronde, groupe: null, manche: 1,
-                    positionTableau: position, exemption: true
-                });
-                continue;
-            }
-
-            utilisees[adversaire] = true;
             rencontres.push({
-                equipeA: a, equipeB: adversaire,
+                equipeA: paire[0], equipeB: paire[1],
                 tour: 'Ronde ' + ronde, codeTour: 'R' + ronde,
                 journee: ronde, groupe: null, manche: 1,
-                positionTableau: position, exemption: false
+                positionTableau: position, exemption: false,
+                affichesRejouees: toutesDejaJouees
+            });
+        });
+
+        if (exempte !== null) {
+            position++;
+            rencontres.push({
+                equipeA: exempte, equipeB: null,
+                tour: 'Ronde ' + ronde, codeTour: 'R' + ronde,
+                journee: ronde, groupe: null, manche: 1,
+                positionTableau: position, exemption: true
             });
         }
 

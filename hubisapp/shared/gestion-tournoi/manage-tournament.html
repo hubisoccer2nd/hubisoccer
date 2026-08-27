@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="manage-tournament.css">
     <link rel="stylesheet" href="gt-formats.css">
     <link rel="stylesheet" href="gt-calendrier.css">
+    <link rel="stylesheet" href="gt-classement.css">
     <link rel="stylesheet" href="gt-picker.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -154,6 +155,7 @@
             <button class="tab-btn" data-tab="teams"><i class="fas fa-users"></i> Équipes</button>
             <button class="tab-btn" data-tab="format"><i class="fas fa-sitemap"></i> Format</button>
             <button class="tab-btn" data-tab="matches"><i class="fas fa-futbol"></i> Matchs</button>
+            <button class="tab-btn" data-tab="classement"><i class="fas fa-ranking-star"></i> Classement</button>
             <button class="tab-btn" data-tab="reports"><i class="fas fa-file-alt"></i> Rapports</button>
             <button class="tab-btn" data-tab="prizes"><i class="fas fa-trophy"></i> Primes</button>
             <button class="tab-btn" data-tab="signatures"><i class="fas fa-file-signature"></i> Signatures</button>
@@ -197,4 +199,315 @@
                 <div class="section-header">
                     <h2 class="section-title"><i class="fas fa-users"></i> Équipes participantes</h2>
                     <div class="section-actions">
-                        <a id="inviteParticipantsLink" hre
+                        <a id="inviteParticipantsLink" href="#" class="btn-secondary"><i class="fas fa-user-plus"></i> Inviter des participants</a>
+                        <button id="addTeamBtn" class="btn-primary"><i class="fas fa-plus"></i> Ajouter une équipe</button>
+                    </div>
+                </div>
+                <div id="teamsList" class="teams-grid"></div>
+            </div>
+
+            <!-- Tirage des groupes -->
+            <div class="glass-card" id="tirageCard">
+                <h2 class="section-title"><i class="fas fa-shuffle"></i> Tirage des groupes</h2>
+                <p class="section-hint">Deux façons de faire, au choix : laisser le système tirer au sort, ou placer chaque équipe à la main dans la liste ci-dessus. Le tirage ne touche jamais aux équipes ni à leurs effectifs — il ne fait qu'écrire un nom de groupe.</p>
+
+                <div class="tirage-reglages">
+                    <div class="tirage-champ">
+                        <label for="tirageNbGroupes">Nombre de groupes</label>
+                        <input type="number" id="tirageNbGroupes" min="2" max="32" value="4">
+                    </div>
+                    <div class="tirage-champ">
+                        <label for="tirageMode">Mode</label>
+                        <select id="tirageMode">
+                            <option value="aleatoire">Aléatoire simple</option>
+                            <option value="chapeaux">Par chapeaux</option>
+                        </select>
+                    </div>
+                    <div class="tirage-champ" id="tirageChapeauxChamp" style="display:none;">
+                        <label for="tirageNbChapeaux">Nombre de chapeaux</label>
+                        <input type="number" id="tirageNbChapeaux" min="2" max="8" value="4">
+                    </div>
+                    <button id="tirerGroupesBtn" class="btn-primary"><i class="fas fa-dice"></i> Tirer au sort</button>
+                </div>
+
+                <div id="tirageApercu" class="tirage-apercu" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Matchs -->
+        <div id="matchesTab" class="tab-content">
+            <div class="glass-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-futbol"></i> Matchs</h2>
+                    <div class="section-actions">
+                        <button id="genererCalendrierBtn" class="btn-secondary"><i class="fas fa-wand-magic-sparkles"></i> Générer le calendrier</button>
+                        <button id="addMatchBtn" class="btn-primary"><i class="fas fa-plus"></i> Ajouter un match</button>
+                    </div>
+                </div>
+                <p class="section-hint">Le générateur crée toutes les rencontres d'un coup, d'après le format choisi dans l'onglet <strong>Format</strong>. Ensuite, chaque match reste modifiable un par un : date, heure, résultat, suppression.</p>
+                <div id="matchesList" class="matches-list"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Classement -->
+        <div id="classementTab" class="tab-content">
+            <div class="glass-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-ranking-star"></i> Classement</h2>
+                    <button id="recalculerClassementBtn" class="btn-primary"><i class="fas fa-rotate"></i> Recalculer le classement</button>
+                </div>
+                <p class="section-hint">Le classement ne se recalcule jamais tout seul : c'est ce bouton qui relit les résultats et réécrit le tableau. Il applique le barème et l'ordre de départage réglés dans l'onglet <strong>Format</strong>.</p>
+                <p id="classementEtat" class="classement-etat"></p>
+                <div id="classementApercu"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Rapports -->
+        <div id="reportsTab" class="tab-content">
+            <div class="glass-card">
+                <h2 class="section-title"><i class="fas fa-file-alt"></i> Rapports de match</h2>
+                <div id="reportsList" class="reports-list"></div>
+            </div>
+        </div>
+
+        <!-- Onglet Primes -->
+        <div id="prizesTab" class="tab-content">
+            <div class="glass-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-trophy"></i> Récompenses</h2>
+                    <button id="addPrizeBtn" class="btn-primary"><i class="fas fa-plus"></i> Ajouter une prime</button>
+                </div>
+                <div id="prizesList" class="prizes-list"></div>
+            </div>
+        </div>
+
+        <div id="signaturesTab" class="tab-content">
+            <div class="glass-card">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-file-signature"></i> Signatures du règlement</h2>
+                    <span class="signatures-count" id="signaturesCount">0 signature(s)</span>
+                </div>
+                <p class="section-hint">Liste des participants ayant lu et accepté électroniquement le règlement de ce tournoi. Exportez une preuve individuelle si besoin.</p>
+                <div id="signaturesList" class="signatures-list">
+                    <div class="loader-inline"><i class="fas fa-spinner fa-pulse"></i> Chargement…</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="formatTab" class="tab-content">
+            <div class="glass-card">
+                <h2 class="section-title"><i class="fas fa-sitemap"></i> Format de compétition</h2>
+                <p class="section-hint">23 formats disponibles, du championnat aller-retour au modèle de la Ligue des Champions. Les paramètres, le barème de points, l'ordre de départage et les zones de qualification s'adaptent au format choisi. Tant qu'aucun match n'a de résultat enregistré, tout reste modifiable.</p>
+
+                <div id="gtFormatEditeur"></div>
+
+                <div id="formatAvertissement" class="format-avertissement" style="display:none;"></div>
+
+                <button id="saveFormatBtn" class="btn-primary"><i class="fas fa-check"></i> Enregistrer le format</button>
+                <p class="section-hint" style="margin-top:14px;"><i class="fas fa-arrow-right"></i> Pour répartir les équipes dans les groupes, utilise le menu déroulant "Groupe" directement sur chaque équipe dans l'onglet <strong>Équipes</strong>.</p>
+            </div>
+
+        </div>
+
+    </div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+
+<!-- ===== MODALES ===== -->
+
+<div id="editTournamentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Modifier le tournoi</h2>
+            <span class="close-modal" onclick="closeModal('editTournamentModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="editTournamentForm">
+                <div class="form-group"><label>Nom</label><input type="text" id="editName" required></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Date début</label><input type="datetime-local" id="editStartDate" required></div>
+                    <div class="form-group"><label>Date fin</label><input type="datetime-local" id="editEndDate" required></div>
+                </div>
+                <div class="form-group"><label>Lieu</label><input type="text" id="editLocation"></div>
+                <div class="form-group"><label>Description <span class="hint">(HTML/CSS autorisés)</span></label><textarea id="editDescription" rows="3"></textarea></div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Logo</label>
+                        <div class="file-drop-area" id="editLogoDropArea"><i class="fas fa-camera"></i><span>Changer</span><input type="file" id="editLogoFile" accept="image/*" style="display:none;"></div>
+                        <div id="editLogoPreview" class="media-preview"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Affiche / Bannière</label>
+                        <div class="file-drop-area" id="editBannerDropArea"><i class="fas fa-panorama"></i><span>Changer</span><input type="file" id="editBannerFile" accept="image/*" style="display:none;"></div>
+                        <div id="editBannerPreview" class="media-preview banner"></div>
+                    </div>
+                </div>
+                <div class="form-group"><label>Vidéo de présentation (lien YouTube/Vimeo)</label><input type="url" id="editVideoUrl"></div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type de participation</label>
+                        <select id="editParticipationType"><option value="collectif">Collectif</option><option value="individuel">Individuel</option></select>
+                    </div>
+                    <div class="form-group"><label>Prix de participation (FCFA)</label><input type="number" id="editParticipationPrice" min="0" step="500"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Titulaires max. (1-11)</label><input type="number" id="editMaxStarters" min="1" max="11"></div>
+                    <div class="form-group"><label>Staff max. (1-6)</label><input type="number" id="editMaxStaff" min="1" max="6"></div>
+                </div>
+
+                <div class="form-group"><label>Cagnotte totale (FCFA)</label><input type="number" id="editPrizePool" step="1000"></div>
+                <div class="form-group"><label>Code d'inscription (public)</label><input type="text" id="editRegistrationCode"></div>
+                <div class="form-group"><label>Règlement <span class="hint">(HTML/CSS autorisés)</span></label><textarea id="editRules" rows="3"></textarea></div>
+                <div class="form-group"><label>URL de streaming</label><input type="url" id="editStreamUrl"></div>
+                <div class="form-group">
+                    <label>Statut</label>
+                    <select id="editStatus">
+                        <option value="draft">Brouillon</option>
+                        <option value="published">Publié</option>
+                        <option value="completed">Terminé</option>
+                        <option value="cancelled">Annulé</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('editTournamentModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="addTeamModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2><i class="fas fa-plus"></i> Ajouter une équipe</h2><span class="close-modal" onclick="closeModal('addTeamModal')">&times;</span></div>
+        <div class="modal-body">
+            <form id="addTeamForm">
+                <div class="form-group"><label>Nom de l'équipe</label><input type="text" id="teamName" required></div>
+                <div class="form-group"><label>Catégorie d'âge (optionnel)</label><input type="text" id="teamAgeCategory" placeholder="Ex : U17, Senior"></div>
+                <div class="form-group"><label>Logo de l'équipe</label>
+                    <div class="file-drop-area" id="teamLogoDropArea">
+                        <i class="fas fa-camera"></i>
+                        <span>Cliquez pour choisir une photo</span>
+                        <input type="file" id="teamLogoFile" accept="image/*" style="display:none;">
+                    </div>
+                    <div id="teamLogoPreview" class="logo-preview"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('addTeamModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="addMatchModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2><i class="fas fa-plus"></i> Ajouter un match</h2><span class="close-modal" onclick="closeModal('addMatchModal')">&times;</span></div>
+        <div class="modal-body">
+            <form id="addMatchForm">
+                <div class="form-group"><label>Date et heure</label><input type="datetime-local" id="matchDate" required></div>
+                <div class="form-group"><label>Journée / Tour (optionnel)</label><input type="text" id="matchRound" placeholder="Ex : Journée 1, Quart de finale"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Équipe domicile</label><select id="matchHomeTeam" required></select></div>
+                    <div class="form-group"><label>Équipe extérieur</label><select id="matchAwayTeam" required></select></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('addMatchModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modale ENREGISTRER RÉSULTAT (nouvelle fonctionnalité) -->
+<div id="recordResultModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2><i class="fas fa-clipboard-check"></i> Enregistrer le résultat</h2><span class="close-modal" onclick="closeModal('recordResultModal')">&times;</span></div>
+        <div class="modal-body">
+            <form id="recordResultForm">
+                <input type="hidden" id="resultMatchId">
+                <div class="result-teams-preview" id="resultTeamsPreview"></div>
+                <div class="form-row score-row">
+                    <div class="form-group"><label id="resultTeamALabel">Équipe A</label><input type="number" id="resultScoreA" min="0" required></div>
+                    <div class="form-group"><label id="resultTeamBLabel">Équipe B</label><input type="number" id="resultScoreB" min="0" required></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('recordResultModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm"><i class="fas fa-check"></i> Valider le résultat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="addPrizeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2><i class="fas fa-plus"></i> Ajouter une prime</h2><span class="close-modal" onclick="closeModal('addPrizeModal')">&times;</span></div>
+        <div class="modal-body">
+            <form id="addPrizeForm">
+                <div class="form-group"><label>Bénéficiaire</label><select id="prizeRecipientType"><option value="team">Équipe</option><option value="player">Joueur</option></select></div>
+                <div class="form-group" id="prizeTeamGroup"><label>Équipe</label><select id="prizeTeamId"></select></div>
+                <div class="form-group" id="prizePlayerGroup" style="display:none;"><label>ID Joueur (HubISoccer ID)</label><input type="text" id="prizePlayerId" placeholder="Ex : HUB-000123"></div>
+                <div class="form-group"><label>Montant (FCFA)</label><input type="number" id="prizeAmount" required></div>
+                <div class="form-group"><label>Raison (optionnel)</label><input type="text" id="prizeReason"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('addPrizeModal')">Annuler</button>
+                    <button type="submit" class="btn-confirm">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODALE : APERCU DE GENERATION DU CALENDRIER ===== -->
+<div id="genererCalendrierModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2><i class="fas fa-wand-magic-sparkles"></i> Générer le calendrier</h2>
+            <span class="close-modal" data-modal="genererCalendrierModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="genererApercu"></div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" data-modal="genererCalendrierModal">Annuler</button>
+            <button type="button" id="confirmerGenerationBtn" class="btn-confirm"><i class="fas fa-check"></i> Générer</button>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-futbol"></i> FIFA · CAF · Fédérations</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="gt-picker.js"></script>
+<script src="gt-formats.js"></script>
+<script src="gt-calendrier.js"></script>
+<script src="gt-classement.js"></script>
+<script src="manage-tournament.js"></script>
+</body>
+</html>

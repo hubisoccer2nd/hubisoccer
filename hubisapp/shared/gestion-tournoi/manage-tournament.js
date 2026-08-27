@@ -45,6 +45,7 @@ const TBL_MATCHES          = 'supabaseAuthPrive_gt_matches';
 const TBL_REPORTS           = 'supabaseAuthPrive_gt_match_reports';
 const TBL_PRIZES              = 'supabaseAuthPrive_gt_prizes';
 const TBL_PROFILES              = 'supabaseAuthPrive_profiles';
+const TBL_STANDINGS = 'supabaseAuthPrive_gt_standings';
 const LOGO_BUCKET                  = 'gt-team-logos';
 
 // ═══════════════════════════════════════════════════════════
@@ -838,6 +839,179 @@ async function confirmerGeneration() {
     await loadMatches();
 }
 
+// ═══════════════════════════════════════════════════════════
+// RECALCUL DU CLASSEMENT (chantier 03)
+// ------------------------------------------------------------
+// Le calcul vit dans gt-classement.js, qui ne touche ni au DOM ni
+// au reseau. Ici : lire matchs et equipes, appeler le moteur,
+// ecrire gt_standings, montrer le resultat.
+//
+// Rien ne se declenche automatiquement — c'est le bouton qui
+// commande, comme decide au point 06.
+// ═══════════════════════════════════════════════════════════
+
+async function recalculerLeClassement() {
+    const etat = document.getElementById('classementEtat');
+    const apercu = document.getElementById('classementApercu');
+
+    showLoader();
+
+    // --- Les rencontres
+    const { data: matchs, error: erreurMatchs } = await supabaseClient
+        .from(TBL_MATCHES)
+        .select('id, team_a_id, team_b_id, score_a, score_b, status, is_bye, matchday, match_date, group_name, forfeit_team_id, penalty_winner_id')
+        .eq('tournament_id', currentTournamentId);
+
+    if (erreurMatchs) {
+        hideLoader();
+        showToast('Impossible de lire les rencontres : ' + erreurMatchs.message, 'error');
+        return;
+    }
+
+    // --- Les equipes
+    const equipes = await chargerEquipesDuTournoi();
+    if (!equipes.length) {
+        hideLoader();
+        showToast('Aucune équipe inscrite : rien à classer.', 'warning');
+        return;
+    }
+
+    // --- Les reglages venus du chantier 01
+    const config = currentTournament.format_config || {};
+    const bareme = {
+        pointsVictoire:          currentTournament.points_win  ?? 3,
+        pointsNul:               currentTournament.points_draw ?? 1,
+        pointsDefaite:           currentTournament.points_loss ?? 0,
+        pointsVictoireTirsAuBut: config.pointsVictoireTirsAuBut ?? 2,
+        pointsDefaiteTirsAuBut:  config.pointsDefaiteTirsAuBut  ?? 1,
+        forfaitVainqueur:        currentTournament.forfeit_score_winner ?? 3,
+        forfaitPerdant:          currentTournament.forfeit_score_loser  ?? 0
+    };
+    const departage = Array.isArray(currentTournament.tiebreak_rules) && currentTournament.tiebreak_rules.length
+        ? currentTournament.tiebreak_rules
+        : GTClassement.DEPARTAGE_DEFAUT;
+    const zones = Array.isArray(currentTournament.qualification_zones)
+        ? currentTournament.qualification_zones : [];
+
+    // --- Groupes, si le format en a
+    const groupeDe = {};
+    let avecGroupes = false;
+    equipes.forEach(function(e) {
+        if (e.group_name) { groupeDe[e.id] = e.group_name; avecGroupes = true; }
+    });
+
+    const identifiants = equipes.map(function(e) { return e.id; });
+    const parametres = {
+        matchs: matchs || [],
+        equipes: identifiants,
+        bareme: bareme,
+        departage: departage,
+        zones: zones
+    };
+
+    let lignesAEcrire = [];
+    let rendu = '';
+    const nomDe = {};
+    equipes.forEach(function(e) { nomDe[e.id] = e.name; });
+
+    if (avecGroupes && currentTournament.format_type === 'groups_knockout') {
+        const parGroupe = GTClassement.calculerParGroupe(Object.assign({}, parametres, { groupeDe: groupeDe }));
+        Object.keys(parGroupe).forEach(function(nom) {
+            lignesAEcrire = lignesAEcrire.concat(GTClassement.pourLaBase(parGroupe[nom], currentTournamentId));
+            rendu += '<h4 class="classement-groupe">' + escapeHtml(nom) + '</h4>' +
+                     tableauClassement(parGroupe[nom], nomDe);
+        });
+
+        const meilleursTroisiemes = currentTournament.best_third_place_count || 0;
+        if (meilleursTroisiemes > 0) {
+            const rangTroisieme = (currentTournament.qualifiers_per_group || 2) + 1;
+            const troisiemes = GTClassement.classerLesTroisiemes(parGroupe, rangTroisieme, departage);
+            rendu += '<h4 class="classement-groupe">Meilleurs ' + rangTroisieme + 'es — ' +
+                     meilleursTroisiemes + ' repêché(s)</h4>' +
+                     tableauClassement(troisiemes, nomDe, meilleursTroisiemes);
+        }
+    } else {
+        const classement = GTClassement.calculer(parametres);
+        lignesAEcrire = GTClassement.pourLaBase(classement, currentTournamentId);
+        rendu = tableauClassement(classement, nomDe);
+    }
+
+    // --- Ecriture : on remplace les lignes du tournoi
+    const maintenant = new Date().toISOString();
+    lignesAEcrire.forEach(function(l) { l.updated_at = maintenant; });
+
+    const { error: erreurSuppression } = await supabaseClient
+        .from(TBL_STANDINGS).delete().eq('tournament_id', currentTournamentId);
+    if (erreurSuppression) {
+        hideLoader();
+        showToast('Impossible de remettre le classement à zéro : ' + erreurSuppression.message, 'error');
+        return;
+    }
+
+    let ecrites = 0;
+    for (let i = 0; i < lignesAEcrire.length; i += 100) {
+        const paquet = lignesAEcrire.slice(i, i + 100);
+        const { error } = await supabaseClient.from(TBL_STANDINGS).insert(paquet);
+        if (error) {
+            hideLoader();
+            showToast('Erreur à l\'écriture du classement : ' + error.message, 'error');
+            return;
+        }
+        ecrites += paquet.length;
+    }
+
+    hideLoader();
+    apercu.innerHTML = rendu;
+
+    const joues = (matchs || []).filter(function(m) {
+        return m.status === 'completed' && !m.is_bye && m.team_a_id && m.team_b_id;
+    }).length;
+    etat.innerHTML = '<i class="fas fa-circle-check"></i> ' + ecrites + ' ligne(s) recalculées à partir de ' +
+                     joues + ' rencontre(s) terminée(s), le ' +
+                     new Date().toLocaleString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) + '.';
+    showToast('Classement recalculé.', 'success');
+}
+
+// Rendu du tableau, avec la bande de couleur des zones.
+function tableauClassement(lignes, nomDe, ligneQualification) {
+    if (!lignes.length) return '<p class="empty-hint">Aucune équipe à classer.</p>';
+
+    const couleurs = { vert:'#27ae60', bleu:'#3498db', turquoise:'#16a085',
+                       or:'#C99A00', violet:'#551B8C', rouge:'#e74c3c' };
+
+    let html = '<div class="classement-table-wrap"><table class="classement-table">' +
+        '<thead><tr><th></th><th>#</th><th class="col-equipe">Équipe</th>' +
+        '<th>J</th><th>V</th><th>N</th><th>D</th><th>BP</th><th>BC</th><th>DIFF</th><th class="col-pts">Pts</th>' +
+        '<th class="col-forme">Forme</th></tr></thead><tbody>';
+
+    lignes.forEach(function(l, index) {
+        const diff = l.goals_for - l.goals_against;
+        const couleur = l.zone ? (couleurs[l.zone.couleur] || 'transparent') : 'transparent';
+        const qualifie = ligneQualification && (index + 1) <= ligneQualification;
+
+        html += '<tr' + (qualifie ? ' class="classement-qualifie"' : '') + '>' +
+            '<td class="col-zone"><span style="background:' + couleur + '"></span></td>' +
+            '<td class="tabular">' + (l.rang || index + 1) + '</td>' +
+            '<td class="col-equipe">' + escapeHtml(nomDe[l.team_id] || 'Équipe ' + l.team_id) +
+                (l.__egaliteNonTranchee ? ' <span class="classement-egalite" title="Égalité non tranchée par les critères choisis">=</span>' : '') +
+            '</td>' +
+            '<td class="tabular">' + l.played + '</td>' +
+            '<td class="tabular">' + l.wins + '</td>' +
+            '<td class="tabular">' + l.draws + '</td>' +
+            '<td class="tabular">' + l.losses + '</td>' +
+            '<td class="tabular">' + l.goals_for + '</td>' +
+            '<td class="tabular">' + l.goals_against + '</td>' +
+            '<td class="tabular">' + (diff > 0 ? '+' : '') + diff + '</td>' +
+            '<td class="tabular col-pts">' + l.points + '</td>' +
+            '<td class="col-forme">' + (l.recent_form || []).map(function(r) {
+                return '<span class="forme-' + r + '">' + r + '</span>';
+            }).join('') + '</td>' +
+            '</tr>';
+    });
+
+    return html + '</tbody></table></div>';
+}
+
 let selectedTeamLogoFile = null;
 
 async function uploadTeamLogo(file) {
@@ -1465,6 +1639,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (champ) champ.style.display = this.value === 'chapeaux' ? 'flex' : 'none';
     });
     document.getElementById('genererCalendrierBtn')?.addEventListener('click', preparerGeneration);
+    document.getElementById('recalculerClassementBtn')?.addEventListener('click', recalculerLeClassement);
     document.getElementById('confirmerGenerationBtn')?.addEventListener('click', confirmerGeneration);
     document.querySelectorAll('[data-modal="genererCalendrierModal"]').forEach(function(element) {
         element.addEventListener('click', function() { closeModal('genererCalendrierModal'); });

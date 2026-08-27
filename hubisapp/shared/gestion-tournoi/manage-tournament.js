@@ -534,6 +534,310 @@ async function saveFormat() {
     showToast('Format enregistré : ' + (configuration.format_config.nom || configuration.format_type), 'success');
 }
 
+// ═══════════════════════════════════════════════════════════
+// TIRAGE DES GROUPES ET GENERATION DU CALENDRIER (chantier 02)
+// ------------------------------------------------------------
+// Le calcul vit dans gt-calendrier.js, qui ne touche ni au DOM ni
+// au reseau. Ici on ne fait que : lire les equipes, appeler le
+// moteur, montrer un apercu, puis ecrire en base apres
+// confirmation.
+// ═══════════════════════════════════════════════════════════
+
+let dernierTirage = null;
+let calendrierPropose = null;
+
+// ---------- TIRAGE DES GROUPES ----------
+
+async function tirerLesGroupes() {
+    const equipes = await chargerEquipesDuTournoi();
+    if (equipes.length < 2) {
+        showToast('Il faut au moins deux équipes inscrites pour tirer les groupes.', 'warning');
+        return;
+    }
+
+    const nbGroupes = parseInt(document.getElementById('tirageNbGroupes').value, 10) || 2;
+    const mode = document.getElementById('tirageMode').value;
+
+    if (nbGroupes > equipes.length) {
+        showToast('Il y a ' + equipes.length + ' équipe(s) pour ' + nbGroupes + ' groupes : réduis le nombre de groupes.', 'warning');
+        return;
+    }
+
+    let options = {};
+    if (mode === 'chapeaux') {
+        const nbChapeaux = parseInt(document.getElementById('tirageNbChapeaux').value, 10) || 4;
+        const parChapeau = Math.ceil(equipes.length / nbChapeaux);
+        const chapeaux = [];
+        for (let i = 0; i < equipes.length; i += parChapeau) {
+            chapeaux.push(equipes.slice(i, i + parChapeau).map(function(e) { return e.id; }));
+        }
+        options.chapeaux = chapeaux;
+    }
+
+    const repartition = GTCalendrier.tirerGroupes(equipes.map(function(e) { return e.id; }), nbGroupes, options);
+    dernierTirage = repartition;
+    afficherApercuTirage(repartition, equipes);
+}
+
+function afficherApercuTirage(repartition, equipes) {
+    const nomDe = {};
+    equipes.forEach(function(e) { nomDe[e.id] = e.name; });
+
+    const zone = document.getElementById('tirageApercu');
+    zone.style.display = 'block';
+    zone.innerHTML =
+        '<div class="tirage-groupes">' +
+        Object.keys(repartition).map(function(groupe) {
+            return '<div class="tirage-groupe">' +
+                   '<h4>' + escapeHtml(groupe) + '</h4>' +
+                   '<ol>' + repartition[groupe].map(function(id) {
+                       return '<li>' + escapeHtml(nomDe[id] || 'Équipe ' + id) + '</li>';
+                   }).join('') + '</ol></div>';
+        }).join('') +
+        '</div>' +
+        '<div class="tirage-actions">' +
+            '<button type="button" class="btn-secondary" id="retirerBtn"><i class="fas fa-rotate"></i> Retirer au sort</button>' +
+            '<button type="button" class="btn-primary" id="validerTirageBtn"><i class="fas fa-check"></i> Valider ce tirage</button>' +
+        '</div>' +
+        '<p class="section-hint">Tant que tu n\'as pas validé, rien n\'est écrit. Tu peux relancer le tirage autant de fois que tu veux.</p>';
+
+    document.getElementById('retirerBtn').addEventListener('click', tirerLesGroupes);
+    document.getElementById('validerTirageBtn').addEventListener('click', validerLeTirage);
+}
+
+async function validerLeTirage() {
+    if (!dernierTirage) return;
+
+    showLoader();
+    let erreurs = 0;
+    for (const groupe of Object.keys(dernierTirage)) {
+        for (const idEquipe of dernierTirage[groupe]) {
+            const { error } = await supabaseClient
+                .from(TBL_TEAMS)
+                .update({ group_name: groupe })
+                .eq('id', idEquipe);
+            if (error) erreurs++;
+        }
+    }
+    hideLoader();
+
+    if (erreurs) {
+        showToast(erreurs + ' équipe(s) n\'ont pas pu être placées.', 'error');
+        return;
+    }
+
+    showToast('Tirage validé : ' + Object.keys(dernierTirage).length + ' groupes constitués.', 'success');
+    document.getElementById('tirageApercu').style.display = 'none';
+    dernierTirage = null;
+    await loadTeams();
+}
+
+// ---------- GENERATION DU CALENDRIER ----------
+
+async function chargerEquipesDuTournoi() {
+    const { data, error } = await supabaseClient
+        .from(TBL_TEAMS)
+        .select('id, name, group_name')
+        .eq('tournament_id', currentTournamentId)
+        .order('name');
+    if (error) {
+        showToast('Impossible de charger les équipes : ' + error.message, 'error');
+        return [];
+    }
+    return data || [];
+}
+
+async function preparerGeneration() {
+    const config = currentTournament && currentTournament.format_config ? currentTournament.format_config : null;
+    const code = config && config.code ? config.code : null;
+
+    if (!code) {
+        showToast('Choisis d\'abord un format dans l\'onglet Format.', 'warning');
+        return;
+    }
+
+    const equipes = await chargerEquipesDuTournoi();
+    if (equipes.length < 2) {
+        showToast('Il faut au moins deux équipes inscrites.', 'warning');
+        return;
+    }
+
+    const format = GTFormats.parCode(code);
+    const valeurs = config.valeurs || {};
+
+    // Si les equipes portent deja un groupe, on respecte ce
+    // decoupage plutot que d'en tirer un nouveau.
+    let groupesExistants = null;
+    const avecGroupe = equipes.filter(function(e) { return e.group_name; });
+    if (avecGroupe.length === equipes.length && avecGroupe.length) {
+        groupesExistants = {};
+        equipes.forEach(function(e) {
+            (groupesExistants[e.group_name] = groupesExistants[e.group_name] || []).push(e.id);
+        });
+    }
+
+    const resultat = GTCalendrier.genererDepuisFormat(
+        code,
+        format ? format.famille : 'championnat',
+        valeurs,
+        equipes.map(function(e) { return e.id; }),
+        { groupesExistants: groupesExistants }
+    );
+
+    calendrierPropose = GTCalendrier.repartirDates(
+        resultat.rencontres,
+        currentTournament.start_date,
+        currentTournament.end_date
+    );
+
+    const existants = await compterMatchsExistants();
+    afficherApercuGeneration(format, resultat, equipes, existants, groupesExistants);
+    openModal('genererCalendrierModal');
+}
+
+async function compterMatchsExistants() {
+    const { data } = await supabaseClient
+        .from(TBL_MATCHES)
+        .select('id, score_a')
+        .eq('tournament_id', currentTournamentId);
+    const tous = data || [];
+    return { total: tous.length, avecResultat: tous.filter(function(m) { return m.score_a !== null; }).length };
+}
+
+function afficherApercuGeneration(format, resultat, equipes, existants, groupesExistants) {
+    const nomDe = {};
+    equipes.forEach(function(e) { nomDe[e.id] = e.name; });
+
+    const rencontres = calendrierPropose;
+    const vraisMatchs = rencontres.filter(function(m) { return !m.exemption && !m.aDefinir; });
+    const exemptions  = rencontres.filter(function(m) { return m.exemption; });
+    const aDefinir    = rencontres.filter(function(m) { return m.aDefinir; });
+    const journees    = new Set(rencontres.map(function(m) { return m.journee || m.tour; })).size;
+
+    let html = '<div class="apercu-resume">' +
+        '<div class="apercu-chiffre"><b>' + (format ? escapeHtml(format.nom) : '—') + '</b><span>Format</span></div>' +
+        '<div class="apercu-chiffre"><b>' + equipes.length + '</b><span>Équipes</span></div>' +
+        '<div class="apercu-chiffre"><b>' + vraisMatchs.length + '</b><span>Rencontres</span></div>' +
+        '<div class="apercu-chiffre"><b>' + journees + '</b><span>Journées / tours</span></div>' +
+        '</div>';
+
+    if (resultat.avertissement) {
+        html += '<p class="apercu-note"><i class="fas fa-circle-info"></i> ' + escapeHtml(resultat.avertissement) + '</p>';
+    }
+    if (exemptions.length) {
+        html += '<p class="apercu-note"><i class="fas fa-forward"></i> ' + exemptions.length +
+                ' exemption(s) : le tableau compte plus de places que d\'équipes, ces équipes passent le premier tour sans jouer.</p>';
+    }
+    if (aDefinir.length) {
+        html += '<p class="apercu-note"><i class="fas fa-hourglass-half"></i> ' + aDefinir.length +
+                ' rencontre(s) restent à définir : leurs affiches se remplissent au fur et à mesure des qualifications.</p>';
+    }
+    if (groupesExistants) {
+        html += '<p class="apercu-note"><i class="fas fa-users"></i> Les groupes déjà attribués aux équipes sont respectés : aucun nouveau tirage.</p>';
+    }
+
+    if (existants.total) {
+        html += '<div class="apercu-danger">' +
+            '<i class="fas fa-triangle-exclamation"></i>' +
+            '<div><strong>' + existants.total + ' match' + (existants.total > 1 ? 's existent' : ' existe') + ' déjà pour ce tournoi';
+        if (existants.avecResultat) {
+            html += ', dont <strong>' + existants.avecResultat + ' avec un résultat enregistré</strong>';
+        }
+        html += '.</strong>' +
+            '<p>Générer remplacera l\'intégralité du calendrier. ' +
+            (existants.avecResultat ? 'Les résultats seront perdus. ' : '') +
+            'Pour confirmer, écris <code>REMPLACER</code> ci-dessous.</p>' +
+            '<input type="text" id="generationConfirmation" autocomplete="off" placeholder="REMPLACER">' +
+            '</div></div>';
+    }
+
+    // Apercu des 12 premieres rencontres
+    html += '<h4 class="apercu-titre">Aperçu</h4><ul class="apercu-liste">' +
+        rencontres.slice(0, 12).map(function(m) {
+            const a = m.equipeA ? escapeHtml(nomDe[m.equipeA] || '?') : '<em>à définir</em>';
+            const b = m.equipeB ? escapeHtml(nomDe[m.equipeB] || '?') : (m.exemption ? '<em>exempt</em>' : '<em>à définir</em>');
+            const date = m.date ? new Date(m.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '';
+            return '<li><span class="apercu-tour">' + escapeHtml(m.tour) + '</span>' +
+                   '<span class="apercu-affiche">' + a + ' – ' + b + '</span>' +
+                   '<span class="apercu-date">' + date + '</span></li>';
+        }).join('') +
+        (rencontres.length > 12 ? '<li class="apercu-reste">… et ' + (rencontres.length - 12) + ' autre(s)</li>' : '') +
+        '</ul>';
+
+    document.getElementById('genererApercu').innerHTML = html;
+}
+
+async function confirmerGeneration() {
+    if (!calendrierPropose || !calendrierPropose.length) {
+        showToast('Rien à générer.', 'warning');
+        return;
+    }
+
+    const champ = document.getElementById('generationConfirmation');
+    if (champ && champ.value.trim().toUpperCase() !== 'REMPLACER') {
+        showToast('Écris REMPLACER dans le champ de confirmation : le calendrier actuel va être remplacé.', 'warning');
+        champ.focus();
+        return;
+    }
+
+    showLoader();
+
+    // Remplacement : on retire les rencontres existantes avant de
+    // reecrire. C'est ta decision 03 — un calendrier de poules et un
+    // tableau a elimination directe n'ont aucune structure commune,
+    // il n'y a rien a convertir.
+    if (champ) {
+        const { error: erreurSuppression } = await supabaseClient
+            .from(TBL_MATCHES)
+            .delete()
+            .eq('tournament_id', currentTournamentId);
+        if (erreurSuppression) {
+            hideLoader();
+            showToast('Impossible de retirer l\'ancien calendrier : ' + erreurSuppression.message, 'error');
+            return;
+        }
+    }
+
+    const maintenant = new Date().toISOString();
+    const lignes = calendrierPropose.map(function(m) {
+        return {
+            tournament_id: currentTournamentId,
+            team_a_id: m.equipeA || null,
+            team_b_id: m.equipeB || null,
+            match_date: m.date || null,
+            round: m.tour,
+            matchday: m.journee || null,
+            group_name: m.groupe || null,
+            bracket_position: m.positionTableau || null,
+            leg: m.manche || 1,
+            is_bye: !!m.exemption,
+            status: m.exemption ? 'completed' : 'scheduled',
+            generated_at: maintenant
+        };
+    });
+
+    // Insertion par paquets : une ligue a 380 rencontres, PostgREST
+    // n'aime pas les charges utiles trop grosses.
+    let inseres = 0;
+    for (let i = 0; i < lignes.length; i += 100) {
+        const paquet = lignes.slice(i, i + 100);
+        const { error } = await supabaseClient.from(TBL_MATCHES).insert(paquet);
+        if (error) {
+            hideLoader();
+            showToast('Erreur à l\'insertion (' + inseres + ' rencontre(s) déjà créées) : ' + error.message, 'error');
+            await loadMatches();
+            return;
+        }
+        inseres += paquet.length;
+    }
+
+    hideLoader();
+    closeModal('genererCalendrierModal');
+    calendrierPropose = null;
+    showToast(inseres + ' rencontre(s) générées.', 'success');
+    await loadMatches();
+}
+
 let selectedTeamLogoFile = null;
 
 async function uploadTeamLogo(file) {
@@ -1153,6 +1457,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('recordResultForm')?.addEventListener('submit', saveMatchResult);
 
     document.getElementById('saveFormatBtn')?.addEventListener('click', saveFormat);
+
+    // --- Chantier 02 : tirage des groupes et generation du calendrier
+    document.getElementById('tirerGroupesBtn')?.addEventListener('click', tirerLesGroupes);
+    document.getElementById('tirageMode')?.addEventListener('change', function() {
+        const champ = document.getElementById('tirageChapeauxChamp');
+        if (champ) champ.style.display = this.value === 'chapeaux' ? 'flex' : 'none';
+    });
+    document.getElementById('genererCalendrierBtn')?.addEventListener('click', preparerGeneration);
+    document.getElementById('confirmerGenerationBtn')?.addEventListener('click', confirmerGeneration);
+    document.querySelectorAll('[data-modal="genererCalendrierModal"]').forEach(function(element) {
+        element.addEventListener('click', function() { closeModal('genererCalendrierModal'); });
+    });
     // Les anciens boutons radio formatType et la fonction
     // updateFormatSettingsVisibility ont disparu avec le passage a
     // l'editeur gt-formats.js : l'ecouteur qui les visait est

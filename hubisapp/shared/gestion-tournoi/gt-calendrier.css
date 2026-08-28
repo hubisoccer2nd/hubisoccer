@@ -1,0 +1,252 @@
+/* ============================================================
+   HubISoccer — gt-calendrier.css
+   Système Gestion Tournois — Tirage des groupes et génération
+   ------------------------------------------------------------
+   Aucune variable de couleur n'est définie ici : ce fichier
+   consomme uniquement les tokens du :root déjà présent dans le
+   CSS de chaque page. La charte reste intacte.
+   ============================================================ */
+
+/* ═══════════════ TIRAGE DES GROUPES ═══════════════ */
+
+.tirage-reglages {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    margin-top: 16px;
+}
+.tirage-champ {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+.tirage-champ label {
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.tirage-champ input,
+.tirage-champ select {
+    font-family: var(--font-ui);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    padding: 10px 13px;
+    font-size: .87rem;
+    color: var(--ink);
+    background: var(--white);
+    min-width: 150px;
+}
+.tirage-champ input:hover,
+.tirage-champ select:hover { border-color: var(--violet); }
+
+.tirage-apercu {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--gray-200);
+}
+.tirage-groupes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 12px;
+}
+.tirage-groupe {
+    background: var(--gray-100);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+}
+.tirage-groupe h4 {
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--violet);
+    margin: 0 0 9px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.tirage-groupe ol {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.tirage-groupe li {
+    font-size: .84rem;
+    color: var(--ink);
+    line-height: 1.4;
+}
+.tirage-groupe li::marker {
+    color: var(--gray-400);
+    font-size: .78rem;
+}
+.tirage-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+/* ═══════════════ APERÇU DE GÉNÉRATION ═══════════════ */
+
+.modal-large { max-width: 640px; }
+
+.apercu-resume {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1px;
+    background: var(--gray-200);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.apercu-chiffre {
+    background: var(--white);
+    padding: 14px 14px 12px;
+    text-align: center;
+}
+.apercu-chiffre b {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.25;
+    word-break: break-word;
+}
+.apercu-chiffre span {
+    display: block;
+    margin-top: 5px;
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.apercu-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    background: var(--violet-pale);
+    border-radius: var(--radius-sm);
+    padding: 11px 14px;
+    font-size: .83rem;
+    color: var(--gray-900);
+    line-height: 1.55;
+    margin: 0 0 10px;
+}
+.apercu-note i {
+    color: var(--violet);
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.apercu-danger {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--corps-pale);
+    border: 1px solid var(--corps);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin: 14px 0;
+}
+.apercu-danger > i {
+    color: var(--corps);
+    font-size: 1.05rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.apercu-danger strong { color: var(--ink); font-size: .87rem; }
+.apercu-danger p {
+    font-size: .82rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+    margin: 6px 0 10px;
+}
+.apercu-danger code {
+    background: var(--white);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: var(--font-num, monospace);
+    color: var(--corps);
+    font-weight: 700;
+}
+.apercu-danger input {
+    font-family: var(--font-ui);
+    border: 1px solid var(--corps);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-size: .86rem;
+    color: var(--ink);
+    background: var(--white);
+    width: 100%;
+    max-width: 240px;
+    letter-spacing: .06em;
+}
+
+.apercu-titre {
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin: 18px 0 8px;
+}
+.apercu-liste {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+.apercu-liste li {
+    display: grid;
+    grid-template-columns: minmax(90px, auto) 1fr auto;
+    align-items: baseline;
+    gap: 12px;
+    background: var(--gray-100);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: .82rem;
+}
+.apercu-tour {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--violet);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.apercu-affiche { color: var(--ink); min-width: 0; }
+.apercu-affiche em { color: var(--gray-400); font-style: italic; }
+.apercu-date {
+    font-size: .76rem;
+    color: var(--gray-400);
+    white-space: nowrap;
+}
+.apercu-reste {
+    display: block !important;
+    text-align: center;
+    color: var(--gray-400) !important;
+    font-style: italic;
+    background: transparent !important;
+}
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media (max-width: 640px) {
+    .tirage-reglages { flex-direction: column; align-items: stretch; }
+    .tirage-champ input,
+    .tirage-champ select { min-width: 0; width: 100%; }
+    .tirage-actions > button { flex: 1 1 100%; justify-content: center; }
+    .apercu-liste li { grid-template-columns: 1fr; gap: 3px; }
+    .apercu-date { text-align: left; }
+}

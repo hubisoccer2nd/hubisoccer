@@ -1,0 +1,522 @@
+/* ============================================================
+   HubISoccer — gt-paiement.css
+   Système Gestion Tournois — paiement & revenus
+   ------------------------------------------------------------
+   Aucune variable de couleur n'est définie ici : ce fichier
+   consomme uniquement les tokens du :root déjà présent dans le
+   CSS de chaque page. La charte reste intacte.
+
+   Les états d'une demande reprennent les couleurs de la charte :
+     en attente      --gold-dark
+     preuve déposée  --ame
+     validé          --esprit
+     refusé          --corps
+     annulé          --gray-400
+   ============================================================ */
+
+/* ═══════════════ LES MOYENS DE PAIEMENT ═══════════════ */
+.gtp-moyens {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.gtp-moyen {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-ui);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+}
+.gtp-moyen:hover {
+    border-color: var(--violet-light);
+    box-shadow: var(--shadow-sm);
+}
+.gtp-moyen.choisi {
+    border-color: var(--violet);
+    box-shadow: 0 0 0 3px var(--violet-pale);
+}
+.gtp-moyen.indisponible {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.gtp-moyen-icone {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    background: var(--violet-pale);
+    color: var(--violet);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+.gtp-moyen.choisi .gtp-moyen-icone {
+    background: var(--violet);
+    color: var(--white);
+}
+.gtp-moyen-corps { min-width: 0; flex: 1; }
+.gtp-moyen-nom {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.25;
+}
+.gtp-moyen-desc {
+    font-size: .74rem;
+    color: var(--gray-600);
+    line-height: 1.45;
+    margin-top: 3px;
+}
+.gtp-moyen-canal {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: .64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.gtp-moyen-canal.interne { background: var(--esprit-pale); color: var(--esprit); }
+.gtp-moyen-canal.externe { background: var(--ame-pale); color: var(--ame); }
+
+.gtp-groupe-titre {
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--violet);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin: 20px 0 10px;
+}
+.gtp-groupe-titre:first-child { margin-top: 0; }
+
+/* ═══════════════ LES COORDONNÉES DE L'ORGANISATEUR ═══════════════ */
+.gtp-coordonnees {
+    border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--violet);
+    border-radius: var(--radius-sm);
+    background: var(--gray-100);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+}
+.gtp-coordonnees-titre {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 10px;
+}
+.gtp-coordonnee {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--gray-200);
+    font-size: .82rem;
+}
+.gtp-coordonnee:last-child { border-bottom: 0; }
+.gtp-coordonnee .cle { color: var(--gray-600); }
+.gtp-coordonnee .valeur {
+    font-family: var(--font-num);
+    font-weight: 700;
+    color: var(--ink);
+    text-align: right;
+    word-break: break-word;
+}
+.gtp-coordonnee .valeur a { color: var(--violet); }
+.gtp-consignes {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--gray-200);
+    font-size: .8rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.gtp-copier {
+    margin-left: 8px;
+    border: 1px solid var(--gray-200);
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    color: var(--gray-600);
+    font-size: .68rem;
+    padding: 2px 7px;
+    cursor: pointer;
+}
+.gtp-copier:hover { border-color: var(--violet-light); color: var(--violet); }
+
+/* ═══════════════ LE FORMULAIRE DU PAYEUR ═══════════════ */
+.gtp-champs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+.gtp-champ {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.gtp-champ.pleine-largeur { grid-column: 1 / -1; }
+.gtp-champ label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+.gtp-champ label .obligatoire { color: var(--corps); }
+.gtp-champ input,
+.gtp-champ textarea,
+.gtp-champ select {
+    padding: 10px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: .88rem;
+    width: 100%;
+}
+.gtp-champ input[type="number"],
+.gtp-champ input.tabular { font-family: var(--font-num); }
+.gtp-champ textarea { min-height: 78px; resize: vertical; }
+.gtp-champ input:focus,
+.gtp-champ textarea:focus,
+.gtp-champ select:focus {
+    outline: none;
+    border-color: var(--violet-light);
+    box-shadow: 0 0 0 3px var(--violet-pale);
+}
+.gtp-champ-aide {
+    font-size: .72rem;
+    color: var(--gray-600);
+    line-height: 1.45;
+}
+.gtp-champ-aide.protege {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--esprit);
+    font-weight: 600;
+}
+
+.gtp-erreurs {
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    border: 1px solid var(--corps);
+    border-radius: var(--radius-sm);
+    background: var(--corps-pale);
+    color: var(--corps);
+    font-size: .82rem;
+    line-height: 1.6;
+}
+.gtp-erreurs ul { margin: 6px 0 0; padding-left: 18px; }
+.gtp-erreurs:empty { display: none; }
+
+/* ═══════════════ LA PREUVE ═══════════════ */
+.gtp-preuve {
+    border: 1px dashed var(--gray-400);
+    border-radius: var(--radius-md);
+    background: var(--gray-100);
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+}
+.gtp-preuve:hover { border-color: var(--violet); background: var(--violet-pale); }
+.gtp-preuve i { font-size: 1.4rem; color: var(--violet); display: block; margin-bottom: 8px; }
+.gtp-preuve-texte { font-size: .84rem; color: var(--gray-900); font-weight: 600; }
+.gtp-preuve-aide { font-size: .74rem; color: var(--gray-600); margin-top: 4px; }
+.gtp-preuve-apercu {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    font-size: .8rem;
+}
+.gtp-preuve-apercu img {
+    width: 46px; height: 46px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+}
+.gtp-preuve-apercu .nom { flex: 1; min-width: 0; word-break: break-all; color: var(--gray-900); }
+
+/* ═══════════════ LE RÉCAPITULATIF D'UN MONTANT ═══════════════ */
+.gtp-partage {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    overflow: hidden;
+}
+.gtp-partage-ligne {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    font-size: .85rem;
+}
+.gtp-partage-ligne:last-child { border-bottom: 0; }
+.gtp-partage-ligne .cle { color: var(--gray-600); }
+.gtp-partage-ligne .valeur {
+    font-family: var(--font-num);
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+}
+.gtp-partage-ligne.retrait .valeur { color: var(--corps); }
+.gtp-partage-ligne.total {
+    background: var(--violet-pale);
+    border-top: 2px solid var(--violet);
+}
+.gtp-partage-ligne.total .cle { color: var(--violet); font-weight: 700; }
+.gtp-partage-ligne.total .valeur { color: var(--violet); font-size: 1rem; }
+
+.gtp-alerte {
+    margin-top: 12px;
+    padding: 11px 14px;
+    border: 1px solid var(--gold-dark);
+    border-radius: var(--radius-sm);
+    background: var(--gray-100);
+    color: var(--gray-900);
+    font-size: .8rem;
+    line-height: 1.6;
+}
+.gtp-alerte i { color: var(--gold-dark); margin-right: 6px; }
+
+/* ═══════════════ LES ÉTATS ═══════════════ */
+.gtp-etat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 11px;
+    border-radius: var(--radius-pill);
+    font-size: .72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.gtp-etat.etat-attente { background: var(--gray-100); color: var(--gold-dark); }
+.gtp-etat.etat-preuve  { background: var(--ame-pale); color: var(--ame); }
+.gtp-etat.etat-valide  { background: var(--esprit-pale); color: var(--esprit); }
+.gtp-etat.etat-refuse  { background: var(--corps-pale); color: var(--corps); }
+.gtp-etat.etat-annule  { background: var(--gray-100); color: var(--gray-400); }
+
+/* ═══════════════ LA LISTE DES DEMANDES ═══════════════ */
+.gtp-demandes { display: flex; flex-direction: column; gap: 10px; }
+
+.gtp-demande {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    padding: 14px 16px;
+}
+.gtp-demande-tete {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.gtp-demande-payeur {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+.gtp-demande-montant {
+    font-family: var(--font-num);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--violet);
+    white-space: nowrap;
+}
+.gtp-demande-meta {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    font-size: .76rem;
+    color: var(--gray-600);
+}
+.gtp-demande-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.gtp-demande-motif {
+    margin-top: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--corps-pale);
+    color: var(--corps);
+    font-size: .78rem;
+    line-height: 1.55;
+}
+.gtp-demande-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--gray-200);
+}
+.gtp-demande-actions:empty { display: none; }
+
+.gtp-lien-preuve {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--violet);
+    font-weight: 600;
+    font-size: .78rem;
+}
+
+/* ═══════════════ LA CONFIGURATION CÔTÉ ORGANISATEUR ═══════════════ */
+.gtp-config-moyen {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+.gtp-config-tete {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    background: var(--gray-100);
+    cursor: pointer;
+}
+.gtp-config-tete .gtp-moyen-icone { width: 32px; height: 32px; font-size: .88rem; }
+.gtp-config-nom { flex: 1; font-size: .86rem; font-weight: 700; color: var(--ink); }
+.gtp-config-etat {
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: var(--radius-pill);
+}
+.gtp-config-etat.actif { background: var(--esprit-pale); color: var(--esprit); }
+.gtp-config-etat.inactif { background: var(--gray-200); color: var(--gray-600); }
+.gtp-config-corps { padding: 16px; }
+.gtp-config-corps[hidden] { display: none; }
+
+.gtp-bascule {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 23px;
+    flex: 0 0 auto;
+}
+.gtp-bascule input { opacity: 0; width: 0; height: 0; }
+.gtp-bascule .curseur {
+    position: absolute;
+    inset: 0;
+    background: var(--gray-200);
+    border-radius: var(--radius-pill);
+    transition: background .18s ease;
+}
+.gtp-bascule .curseur::before {
+    content: "";
+    position: absolute;
+    height: 17px; width: 17px;
+    left: 3px; top: 3px;
+    background: var(--white);
+    border-radius: 50%;
+    transition: transform .18s ease;
+}
+.gtp-bascule input:checked + .curseur { background: var(--esprit); }
+.gtp-bascule input:checked + .curseur::before { transform: translateX(19px); }
+
+/* ═══════════════ ÉTAT ET MESSAGES ═══════════════ */
+.gtp-etat-ligne {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .83rem;
+    color: var(--gray-600);
+    margin: 12px 0;
+}
+.gtp-etat-ligne:empty { display: none; }
+.gtp-etat-ligne i { color: var(--esprit); }
+
+.gtp-vide {
+    padding: 26px 18px;
+    border: 1px dashed var(--gray-200);
+    border-radius: var(--radius-md);
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-size: .87rem;
+    text-align: center;
+    line-height: 1.6;
+}
+.gtp-vide strong { color: var(--gray-900); }
+
+.gtp-cartes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(146px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.gtp-carte {
+    padding: 15px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+}
+.gtp-carte i { font-size: 1rem; color: var(--violet); display: block; margin-bottom: 7px; }
+.gtp-carte .valeur {
+    font-family: var(--font-num);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.15;
+    word-break: break-word;
+}
+.gtp-carte .libelle {
+    margin-top: 5px;
+    font-size: .71rem;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+/* ═══════════════ MOBILE ═══════════════ */
+@media (max-width: 640px) {
+    .gtp-moyens { grid-template-columns: 1fr; }
+    .gtp-champs { grid-template-columns: 1fr; }
+    .gtp-cartes { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+    .gtp-carte .valeur { font-size: 1.05rem; }
+    .gtp-demande-tete { flex-direction: column; gap: 6px; }
+}
+
+/* Le filtre des demandes, dans l'en-tête de section */
+.gtp-filtre {
+    padding: 8px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    color: var(--gray-900);
+    font-family: var(--font-ui);
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.gtp-filtre:focus {
+    outline: none;
+    border-color: var(--violet-light);
+    box-shadow: 0 0 0 3px var(--violet-pale);
+}

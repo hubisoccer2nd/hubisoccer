@@ -1,0 +1,698 @@
+/* ============================================================
+   HubISoccer — gt-terrain.css
+   Système Gestion Tournois — le terrain et la composition
+   ------------------------------------------------------------
+   LE TERRAIN EST TRACÉ, PAS DESSINÉ
+
+   Aucune image. Chaque ligne est un élément positionné en
+   pourcentage, aux proportions réglementaires réelles :
+
+     surface de réparation   16,5 m sur 105  = 15,71 %
+                             40,32 m sur 68  = 59,29 %
+     surface de but           5,5 m sur 105  =  5,24 %
+                             18,32 m sur 68  = 26,94 %
+     point de penalty          11 m sur 105  = 10,48 %
+     rond central       rayon 9,15 m         = 26,91 % de large
+                                               17,43 % de haut
+     arc de cercle      même rayon, tronqué à la surface
+     corner             rayon 1 m            =  2,94 % de large
+
+   Un terrain qui change de taille à l'écran garde donc ses
+   proportions : le rond central reste rond, la surface reste
+   à sa place.
+
+   LES COULEURS
+
+   Le vert de la pelouse et le blanc des lignes sont les deux
+   seules couleurs de ce fichier qui ne viennent pas d'un token :
+   aucun token de la charte ne décrit une pelouse. Tout le reste
+   — puces, cartes, boutons, textes — consomme le :root déjà
+   présent dans la page. La charte n'est pas touchée.
+   ============================================================ */
+
+/* ═══════════════ LE CADRE ═══════════════ */
+.gt-terrain-cadre {
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 26px 30px 34px;
+}
+
+.gt-terrain {
+    position: relative;
+    width: 100%;
+    /* 68 m de large sur 105 m de long — le terrain est vu
+       debout, on attaque vers le haut. */
+    aspect-ratio: 68 / 105;
+    border-radius: 6px;
+    overflow: hidden;
+    touch-action: none;          /* le glisser-déposer tactile gère lui-même le geste */
+    user-select: none;
+    -webkit-user-select: none;
+
+    /* La pelouse et ses bandes de tonte. */
+    background-color: #2f8f4e;
+    background-image:
+        repeating-linear-gradient(
+            180deg,
+            rgba(255, 255, 255, .055) 0,
+            rgba(255, 255, 255, .055) 9.09%,
+            rgba(0, 0, 0, .045) 9.09%,
+            rgba(0, 0, 0, .045) 18.18%
+        );
+    box-shadow: inset 0 0 60px rgba(0, 0, 0, .22), var(--shadow-md);
+}
+
+.gt-terrain[data-sport="basket"] {
+    aspect-ratio: 15 / 28;
+    background-color: #b9793f;
+    background-image: repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 2px, transparent 2px, transparent 26px);
+}
+.gt-terrain[data-sport="volley"] {
+    aspect-ratio: 1 / 1;
+    background-color: #c96a3d;
+    background-image: none;
+}
+.gt-terrain[data-sport="handball"] {
+    aspect-ratio: 20 / 40;
+    background-color: #3f7fbf;
+    background-image: none;
+}
+
+/* ═══════════════ LES LIGNES ═══════════════ */
+.gt-terrain-lignes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.gt-terrain-lignes > span {
+    position: absolute;
+    border: 2px solid rgba(255, 255, 255, .78);
+    box-sizing: border-box;
+}
+
+/* Le rectangle de jeu — les quatre lignes extérieures.
+   Elles épousent exactement le cadre : sans cela, toutes les
+   mesures réglementaires qui suivent seraient décalées de la
+   marge, et l'arc de cercle mordrait dans la surface de
+   réparation au lieu de la border. */
+.gt-terrain-lignes::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 3px solid rgba(255, 255, 255, .9);
+    border-radius: 6px;
+}
+
+/* --- Ligne médiane et rond central --- */
+.gt-terrain-lignes .ligne-mediane {
+    left: 0; right: 0; top: 50%;
+    height: 0;
+    border-width: 2px 0 0 0;
+}
+.gt-terrain-lignes .rond-central {
+    left: 50%; top: 50%;
+    width: 26.91%; height: 17.43%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+}
+.gt-terrain-lignes .point-central {
+    left: 50%; top: 50%;
+    width: 5px; height: 5px;
+    transform: translate(-50%, -50%);
+    border: 0;
+    background: rgba(255, 255, 255, .85);
+    border-radius: 50%;
+}
+
+/* --- Surfaces de réparation --- */
+.gt-terrain-lignes .surface {
+    left: 20.36%;
+    width: 59.29%;
+    height: 15.71%;
+}
+.gt-terrain-lignes .surface.haut { top: 0; border-top: 0; }
+.gt-terrain-lignes .surface.bas  { bottom: 0; border-bottom: 0; }
+
+/* --- Surfaces de but --- */
+.gt-terrain-lignes .six-metres {
+    left: 36.53%;
+    width: 26.94%;
+    height: 5.24%;
+}
+.gt-terrain-lignes .six-metres.haut { top: 0; border-top: 0; }
+.gt-terrain-lignes .six-metres.bas  { bottom: 0; border-bottom: 0; }
+
+/* --- Points de penalty --- */
+.gt-terrain-lignes .point-penalty {
+    left: 50%;
+    width: 5px; height: 5px;
+    transform: translateX(-50%);
+    border: 0;
+    background: rgba(255, 255, 255, .85);
+    border-radius: 50%;
+}
+.gt-terrain-lignes .point-penalty.haut { top: 10.48%; }
+.gt-terrain-lignes .point-penalty.bas  { bottom: 10.48%; }
+
+/* --- Arcs de cercle : l'ellipse du rond central centrée sur le
+       point de penalty, tronquée à la ligne de surface. --- */
+.gt-terrain-lignes .arc {
+    left: 50%;
+    width: 26.91%; height: 17.43%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+}
+.gt-terrain-lignes .arc.haut {
+    top: 1.76%;
+    clip-path: inset(80% 0 0 0);
+}
+.gt-terrain-lignes .arc.bas {
+    bottom: 1.76%;
+    clip-path: inset(0 0 80% 0);
+}
+
+/* --- Corners : un quart de cercle, pas un cercle entier.
+       Chacun ne garde que le quadrant qui rentre dans le jeu. --- */
+.gt-terrain-lignes .corner {
+    width: 2.94%; height: 1.90%;
+    border-radius: 50%;
+}
+.gt-terrain-lignes .corner.hg { top: 0;    left: 0;   transform: translate(-50%, -50%); clip-path: inset(50% 0 0 50%); }
+.gt-terrain-lignes .corner.hd { top: 0;    right: 0;  transform: translate(50%, -50%);  clip-path: inset(50% 50% 0 0); }
+.gt-terrain-lignes .corner.bg { bottom: 0; left: 0;   transform: translate(-50%, 50%);  clip-path: inset(0 0 50% 50%); }
+.gt-terrain-lignes .corner.bd { bottom: 0; right: 0;  transform: translate(50%, 50%);   clip-path: inset(0 50% 50% 0); }
+
+/* --- Les buts : 7,32 m sur 68 = 10,76 % de la largeur, posés
+       contre la ligne de but --- */
+.gt-terrain-lignes .but {
+    left: 44.62%;
+    width: 10.76%;
+    height: 1.9%;
+    background: rgba(255, 255, 255, .22);
+    border-width: 3px;
+}
+.gt-terrain-lignes .but.haut { top: 0; border-top: 0; }
+.gt-terrain-lignes .but.bas  { bottom: 0; border-bottom: 0; }
+
+/* ═══════════════ AUTRES SPORTS ═══════════════ */
+/* Handball — surface de but à 6 m, jet franc pointillé à 9 m. */
+.gt-terrain-lignes .zone {
+    left: 22%; width: 56%; height: 15%;
+    border-radius: 0 0 60% 60% / 0 0 100% 100%;
+}
+.gt-terrain-lignes .zone.haut { top: 0; border-top: 0; }
+.gt-terrain-lignes .zone.bas  { bottom: 0; border-radius: 60% 60% 0 0 / 100% 100% 0 0; border-bottom: 0; }
+.gt-terrain-lignes .jet-franc {
+    left: 14%; width: 72%; height: 22.5%;
+    border-style: dashed;
+    border-radius: 0 0 60% 60% / 0 0 100% 100%;
+}
+.gt-terrain-lignes .jet-franc.haut { top: 0; border-top: 0; }
+.gt-terrain-lignes .jet-franc.bas  { bottom: 0; border-radius: 60% 60% 0 0 / 100% 100% 0 0; border-bottom: 0; }
+
+/* Basket — raquette, cercle de lancer franc, ligne à 3 points. */
+.gt-terrain-lignes .raquette { left: 33%; width: 34%; height: 20.7%; }
+.gt-terrain-lignes .raquette.haut { top: 0; border-top: 0; }
+.gt-terrain-lignes .raquette.bas  { bottom: 0; border-bottom: 0; }
+.gt-terrain-lignes .cercle-lancer {
+    left: 50%; width: 24%; height: 12.9%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+}
+.gt-terrain-lignes .cercle-lancer.haut { top: 16.8%; }
+.gt-terrain-lignes .cercle-lancer.bas  { bottom: 16.8%; }
+.gt-terrain-lignes .trois-points {
+    left: 6%; width: 88%; height: 33%;
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+}
+.gt-terrain-lignes .trois-points.haut { top: 0; border-top: 0; }
+.gt-terrain-lignes .trois-points.bas  { bottom: 0; border-radius: 50% 50% 0 0 / 100% 100% 0 0; border-bottom: 0; }
+.gt-terrain-lignes .panier {
+    left: 50%; width: 4%; height: 2%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: rgba(255,255,255,.6);
+}
+.gt-terrain-lignes .panier.haut { top: 5.5%; }
+.gt-terrain-lignes .panier.bas  { bottom: 5.5%; }
+
+/* Volley — filet au centre, lignes d'attaque à 3 m. */
+.gt-terrain-lignes .filet {
+    left: 0; right: 0; top: 50%;
+    height: 6px;
+    transform: translateY(-50%);
+    border: 0;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,.85) 0 3px, transparent 3px 7px);
+}
+.gt-terrain-lignes .ligne-attaque {
+    left: 0; right: 0;
+    height: 0;
+    border-width: 2px 0 0 0;
+}
+.gt-terrain-lignes .ligne-attaque.haut { top: 33.3%; }
+.gt-terrain-lignes .ligne-attaque.bas  { top: 66.7%; }
+
+/* ═══════════════ LES COTES ═══════════════ */
+/* Point 23 : les dimensions le long des lignes, et le rappel
+   en NB sous le terrain. */
+.gt-cote {
+    position: absolute;
+    font-family: var(--font-num);
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    letter-spacing: .02em;
+    white-space: nowrap;
+}
+.gt-cote-longueur {
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    transform-origin: center;
+}
+.gt-cote-largeur {
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+}
+.gt-terrain-rappel {
+    margin: 12px auto 0;
+    max-width: 620px;
+    font-size: .76rem;
+    line-height: 1.55;
+    color: var(--gray-600);
+    text-align: center;
+}
+.gt-terrain-rappel b { color: var(--gray-900); }
+
+/* ═══════════════ LES SPORTIFS SUR LE TERRAIN ═══════════════ */
+.gt-terrain-places {
+    position: absolute;
+    inset: 0;
+}
+
+.gt-place {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 74px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: grab;
+    transition: filter .15s ease;
+}
+.gt-place:hover { filter: brightness(1.08); }
+.gt-place.deplace {
+    cursor: grabbing;
+    z-index: 40;
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .45));
+    transition: none;
+}
+.gt-place.non-modifiable { cursor: default; }
+
+.gt-place-pastille {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--white);
+    background: var(--violet);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+}
+.gt-place-pastille img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gt-place-initiales {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--white); font-weight: 700; font-size: .78rem;
+}
+.gt-place-numero {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 4px;
+    border-radius: var(--radius-pill);
+    background: var(--gold);
+    color: var(--ink);
+    font-family: var(--font-num);
+    font-size: .64rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--white);
+}
+.gt-place-nom {
+    max-width: 100%;
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, .48);
+    color: var(--white);
+    font-size: .66rem;
+    font-weight: 700;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gt-place-poste {
+    font-size: .6rem;
+    color: rgba(255, 255, 255, .82);
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
+}
+
+/* --- Emplacement vide : la place existe, personne dedans --- */
+.gt-place.vide .gt-place-pastille {
+    background: rgba(255, 255, 255, .14);
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, .6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, .75);
+}
+.gt-place.vide .gt-place-nom {
+    background: rgba(0, 0, 0, .3);
+    font-weight: 600;
+    opacity: .9;
+}
+
+/* --- Les icônes d'état (point 26) --- */
+.gt-place-etats {
+    position: absolute;
+    left: -6px;
+    top: -4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.gt-etat {
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .56rem;
+    color: var(--white);
+    border: 1.5px solid var(--white);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+}
+.gt-etat.blessure   { background: var(--corps); }
+.gt-etat.sortie     { background: var(--corps); }
+.gt-etat.entree     { background: var(--esprit); }
+.gt-etat.capitaine  { background: var(--gold); color: var(--ink); }
+.gt-etat.suspendu   { background: var(--gray-900); }
+
+.gt-place.est-sorti { opacity: .5; }
+
+/* --- La cible de dépôt --- */
+.gt-terrain.depot-actif { outline: 3px dashed rgba(255, 255, 255, .6); outline-offset: -6px; }
+
+/* ═══════════════ LE BANC ═══════════════ */
+.gt-banc {
+    margin-top: 18px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    padding: 14px 16px;
+}
+.gt-banc-titre {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 10px;
+}
+.gt-banc-titre .compte {
+    font-family: var(--font-num);
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--gray-600);
+}
+.gt-banc-liste {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-height: 62px;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    transition: background .15s ease;
+}
+.gt-banc-liste.depot-actif { background: var(--violet-pale); outline: 2px dashed var(--violet-light); }
+.gt-banc-liste:empty::after {
+    content: "Le banc est vide.";
+    color: var(--gray-400);
+    font-size: .8rem;
+    align-self: center;
+    margin: 0 auto;
+}
+
+.gt-banc-place {
+    position: relative;
+    width: 66px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: grab;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: background .15s ease;
+}
+.gt-banc-place:hover { background: var(--gray-100); }
+.gt-banc-place.non-modifiable { cursor: default; }
+.gt-banc-place .gt-place-pastille { width: 38px; height: 38px; border-color: var(--gray-200); }
+.gt-banc-place .gt-place-nom {
+    background: transparent;
+    color: var(--gray-900);
+    font-size: .64rem;
+}
+.gt-banc-place .gt-place-poste { color: var(--gray-400); text-shadow: none; }
+
+/* ═══════════════ LA BARRE D'OUTILS ═══════════════ */
+.gt-compo-outils {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 16px;
+}
+.gt-compo-champ {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 132px;
+}
+.gt-compo-champ label {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.gt-compo-champ select,
+.gt-compo-champ input {
+    padding: 9px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: .84rem;
+    font-weight: 600;
+}
+.gt-compo-champ select:focus,
+.gt-compo-champ input:focus {
+    outline: none;
+    border-color: var(--violet-light);
+    box-shadow: 0 0 0 3px var(--violet-pale);
+}
+
+.gt-compo-etat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .82rem;
+    color: var(--gray-600);
+    margin: 0 0 14px;
+}
+.gt-compo-etat:empty { display: none; }
+.gt-compo-etat i { color: var(--esprit); }
+.gt-compo-etat.verrouille i { color: var(--corps); }
+
+.gt-compo-aide {
+    font-size: .78rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+    margin: 0 0 14px;
+}
+.gt-compo-aide kbd {
+    font-family: var(--font-num);
+    font-size: .72rem;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+/* ═══════════════ LECTURE SEULE ═══════════════ */
+.gt-compo-lecture {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    border-radius: var(--radius-pill);
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-size: .74rem;
+    font-weight: 600;
+}
+
+/* ═══════════════ MODALE DU SPORTIF ═══════════════ */
+.gt-fiche {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.gt-fiche-tete {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+.gt-fiche-photo {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--violet);
+    flex: 0 0 auto;
+    border: 2px solid var(--gray-200);
+}
+.gt-fiche-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gt-fiche-photo .gt-place-initiales { font-size: 1.1rem; }
+.gt-fiche-nom {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.25;
+}
+.gt-fiche-sous {
+    font-size: .8rem;
+    color: var(--gray-600);
+    margin-top: 3px;
+}
+.gt-fiche-brassards {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+.gt-brassard {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: var(--radius-pill);
+    font-size: .68rem;
+    font-weight: 700;
+}
+.gt-brassard.capitaine { background: var(--gold); color: var(--ink); }
+.gt-brassard.president { background: var(--violet); color: var(--white); }
+.gt-brassard.coach     { background: var(--ame); color: var(--white); }
+.gt-brassard.blesse    { background: var(--corps-pale); color: var(--corps); }
+.gt-brassard.suspendu  { background: var(--gray-200); color: var(--gray-900); }
+
+.gt-fiche-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 9px;
+}
+.gt-fiche-ligne {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+}
+.gt-fiche-ligne .cle { font-size: .74rem; color: var(--gray-600); }
+.gt-fiche-ligne .valeur {
+    font-family: var(--font-num);
+    font-size: .84rem;
+    font-weight: 700;
+    color: var(--ink);
+    text-align: right;
+}
+.gt-fiche-titre {
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--violet);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin: 4px 0 0;
+}
+.gt-fiche-vide {
+    padding: 14px;
+    border: 1px dashed var(--gray-200);
+    border-radius: var(--radius-sm);
+    color: var(--gray-600);
+    font-size: .8rem;
+    text-align: center;
+    line-height: 1.6;
+}
+.gt-fiche-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--gray-200);
+    padding-top: 14px;
+}
+
+/* ═══════════════ MOBILE ═══════════════ */
+@media (max-width: 640px) {
+    .gt-terrain-cadre { padding: 20px 22px 28px; }
+    .gt-place { width: 58px; }
+    .gt-place-pastille { width: 36px; height: 36px; }
+    .gt-place-nom { font-size: .6rem; }
+    .gt-place-poste { display: none; }
+    .gt-place-numero { min-width: 17px; height: 17px; font-size: .58rem; }
+    .gt-banc-place { width: 58px; }
+    .gt-compo-champ { min-width: 0; flex: 1 1 140px; }
+    .gt-fiche-grille { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── CHANTIER 11 — le joueur SAISI ─────────────────────────────
+   L'appui long saisit le joueur avant de le deplacer. Sans un
+   signe a l'ecran, on ne sait pas si le geste a ete recu : on
+   attend, on relache, et rien ne s'est passe. Le jeton grossit
+   et se detache, la vibration confirme, et le doigt commande. */
+.gt-place.saisi,
+.gt-banc-place.saisi {
+    transform-origin: center;
+    box-shadow: 0 0 0 3px var(--gold), 0 10px 26px rgba(22, 22, 31, .32);
+    z-index: 60;
+}
+.gt-place.saisi { transform: translate(-50%, -50%) scale(1.14); }
+.gt-banc-place.saisi { transform: scale(1.08); }
+
+/* Pendant le deplacement, le jeton passe au-dessus de tout et
+   ne capte plus le pointeur : sans cela il se viserait lui-meme
+   et le depot tomberait toujours au meme endroit. */
+.gt-place.deplace,
+.gt-banc-place.deplace {
+    z-index: 80;
+    pointer-events: none;
+    opacity: .92;
+}

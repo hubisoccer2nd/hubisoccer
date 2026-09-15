@@ -18,37 +18,19 @@ let hasMore           = false;
 let isLoading         = false;
 let recentSearches    = [];
 
-const ROLE_DASHBOARD_MAP = {
-    'FOOT': '../../footballeur/dashboard/foot-dash.html',
-    'BASK': '../../basketteur/dashboard/basketteur-dash.html',
-    'TENN': '../../tennisman/dashboard/tennisman-dash.html',
-    'ATHL': '../../athlete/dashboard/athlete-dash.html',
-    'HANDB': '../../handballeur/dashboard/handballeur-dash.html',
-    'VOLL': '../../volleyeur/dashboard/volleyeur-dash.html',
-    'RUGBY': '../../rugbyman/dashboard/rugbyman-dash.html',
-    'NATA': '../../nageur/dashboard/nageur-dash.html',
-    'ARTSM': '../../arts_martiaux/dashboard/arts_martiaux-dash.html',
-    'CYCL': '../../cycliste/dashboard/cycliste-dash.html',
-    'CHAN': '../../chanteur/dashboard/chanteur-dash.html',
-    'DANS': '../../danseur/dashboard/danseur-dash.html',
-    'COMP': '../../compositeur/dashboard/compositeur-dash.html',
-    'ACIN': '../../acteur_cinema/dashboard/acteur_cinema-dash.html',
-    'ATHE': '../../acteur_theatre/dashboard/acteur_theatre-dash.html',
-    'HUMO': '../../humoriste/dashboard/humoriste-dash.html',
-    'SLAM': '../../slameur/dashboard/slameur-dash.html',
-    'DJ': '../../dj/dashboard/dj-dash.html',
-    'CIRQ': '../../cirque/dashboard/cirque-dash.html',
-    'VISU': '../../artiste_visuel/dashboard/artiste_visuel-dash.html',
-    'PARRAIN': '../../parrain/dashboard/parrain-dash.html',
-    'AGENT': '../../agent_fifa/dashboard/agent_fifa-dash.html',
-    'COACH': '../../coach/dashboard/coach-dash.html',
-    'MEDIC': '../../staff_medical/dashboard/staff_medical-dash.html',
-    'ARBIT': '../../corps_arbitral/dashboard/corps_arbitral-dash.html',
-    'ACAD': '../../academie_sportive/dashboard/academie_sportive-dash.html',
-    'FORM': '../../formateur/dashboard/formateur-dash.html',
-    'TOURN': '../../gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html',
-    'ADMIN': '../../authprive/admin/admin-dashboard.html'
-};
+// ========== DEBUT : LIENS VERS LES ESPACES PRIVES ==========
+//
+// La table « role_code -> tableau de bord » qui se trouvait ici a ete
+// supprimee : elle pointait vers des dossiers absents du depot
+// (agent_fifa, tennisman, athlete, handballeur, formateur...) et son
+// repli '../../index.html' n'existe pas non plus. Chaque entree du
+// menu renvoyait donc une erreur 404.
+//
+// role-nav.js, charge par search.html juste avant ce fichier, fournit
+// les liens verifies : getRoleHome / getRoleLabel / getRoleMenu /
+// applyRoleLinks.
+//
+// ========== FIN : LIENS VERS LES ESPACES PRIVES ==========
 
 const ALL_ROLES = [
     { code: 'FOOT', label: '⚽ Footballeur' },
@@ -88,9 +70,14 @@ async function initSessionAndProfile() {
     document.getElementById('userName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
     updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name);
 
-    const dash = ROLE_DASHBOARD_MAP[currentProfile.role_code] || '../../index.html';
-    document.getElementById('dropDashboard').href = dash;
-    document.getElementById('navLogo').onclick = () => window.location.href = dash;
+    // Liens vers l'espace prive du role : logo, « Tableau de bord »,
+    // bouton de retour. Chemins verifies par role-nav.js.
+    if (typeof applyRoleLinks === 'function') {
+        applyRoleLinks(currentProfile.role_code);
+    } else {
+        const dd = document.getElementById('dropDashboard');
+        if (dd) dd.href = '../construction.html';
+    }
     document.getElementById('backBtn').addEventListener('click', () => {
         window.history.back() || (window.location.href = 'feed.html');
     });
@@ -156,7 +143,7 @@ function renderRecentSearches() {
         return;
     }
     container.innerHTML = recentSearches.map(q => `
-        <div class="suggestion-item" data-query="${escapeHtml(q)}">
+        <div class="suggestion-item" data-query="${escapeAttr(q)}">
             <i class="fas fa-history"></i>
             <span>${escapeHtml(q)}</span>
         </div>
@@ -200,7 +187,7 @@ async function loadTrending() {
         }
 
         container.innerHTML = trending.map(t => `
-            <div class="suggestion-item" data-query="${escapeHtml('#' + t.tag)}">
+            <div class="suggestion-item" data-query="${escapeAttr('#' + t.tag)}">
                 <i class="fas fa-hashtag"></i>
                 <span>${escapeHtml(t.tag)}</span>
                 <small>${t.count} post${t.count > 1 ? 's' : ''}</small>
@@ -291,10 +278,17 @@ async function performSearch(reset = false) {
     }
 }
 
+// Nettoie la saisie avant de l'injecter dans un filtre PostgREST :
+// une virgule ou une parenthèse détournerait sinon la requête.
+function sanitizeSearch(q) {
+    return String(q || '').replace(/[,()%_*"'\\]/g, ' ').trim();
+}
+
 async function searchProfiles(query) {
+    const safeQuery = sanitizeSearch(query);
     let q = sb.from('supabaseAuthPrive_communities')
         .select('*, profiles:supabaseAuthPrive_profiles!hubisoccer_id(*)', { count: 'exact' })
-        .or(`name.ilike.%${query}%,feed_id.ilike.%${query}%`)
+        .or(`name.ilike.%${safeQuery}%,feed_id.ilike.%${safeQuery}%`)
         .range(offset, offset + PAGE_SIZE - 1);
 
     if (activeRole !== 'all') {
@@ -313,9 +307,10 @@ async function searchProfiles(query) {
 }
 
 async function searchPosts(query) {
+    const safeQuery = sanitizeSearch(query);
     let q = sb.from('supabaseAuthPrive_posts')
         .select('*, author:supabaseAuthPrive_profiles!author_hubisoccer_id(full_name, display_name, avatar_url, role_code)', { count: 'exact' })
-        .ilike('content', `%${query}%`)
+        .ilike('content', `%${safeQuery}%`)
         .range(offset, offset + PAGE_SIZE - 1);
 
     if (activeRole !== 'all') {
@@ -334,7 +329,7 @@ async function searchPosts(query) {
 }
 
 async function searchHashtags(query) {
-    const cleanQuery = query.replace('#', '');
+    const cleanQuery = sanitizeSearch(query).replace(/#/g, '');
     const { data, error, count } = await sb
         .from('supabaseAuthPrive_posts')
         .select('*', { count: 'exact' })
@@ -373,7 +368,7 @@ function renderProfileCard(community) {
     return `
         <div class="result-card profile-card" onclick="openProfile('${community.hubisoccer_id}')">
             <div class="profile-avatar">
-                ${avatarUrl ? `<img src="${avatarUrl}" alt="">` : `<div class="avatar-initials">${initials}</div>`}
+                ${avatarUrl ? `<img src="${escapeAttr(avatarUrl)}" alt="">` : `<div class="avatar-initials">${initials}</div>`}
             </div>
             <div class="profile-info">
                 <div class="profile-name">${escapeHtml(name)} ${profile.certified ? '<i class="fas fa-check-circle" style="color:var(--primary);"></i>' : ''}</div>
@@ -395,13 +390,13 @@ function renderPostCard(post) {
     const authorAvatar = author.avatar_url;
     const authorInitials = getInitials(authorName);
     const content = post.content ? formatText(post.content.substring(0, 200)) : '';
-    const media = post.media_url ? `<div class="post-media-thumb"><img src="${post.media_url}" alt=""></div>` : '';
+    const media = post.media_url ? `<div class="post-media-thumb"><img src="${escapeAttr(post.media_url)}" alt=""></div>` : '';
 
     return `
         <div class="result-card post-card" onclick="openPost('${post.id}')">
             <div class="post-header">
                 <div class="post-author-avatar">
-                    ${authorAvatar ? `<img src="${authorAvatar}" alt="">` : `<div class="avatar-initials small">${authorInitials}</div>`}
+                    ${authorAvatar ? `<img src="${escapeAttr(authorAvatar)}" alt="">` : `<div class="avatar-initials small">${authorInitials}</div>`}
                 </div>
                 <div class="post-author-info">
                     <span class="post-author-name">${escapeHtml(authorName)}</span>

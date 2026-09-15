@@ -1,7 +1,14 @@
 /* ============================================================
    HubISoccer — match-report-export.js
-   Export des rapports de match (Word, Excel, PDF) ============================================================ */
+   Système Gestion Tournois — Export rapport de match
+   ------------------------------------------------------------
+   Tables migrees vers supabaseAuthPrive_gt_*. Routage dynamique
+   profil/parametres + niveaux de sidebar ajoutes. Les exports
+   (Word/Excel/PDF) etaient deja autonomes cote client, sans
+   jointure -- conserves tels quels.
+   ============================================================ */
 'use strict';
+
 // ═══════════════════════════════════════════════════════════
 // 1. CONFIGURATION SUPABASE
 // ═══════════════════════════════════════════════════════════
@@ -11,7 +18,31 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 window.__SUPABASE_CLIENT = supabaseClient;
 
 // ═══════════════════════════════════════════════════════════
-// 2. ÉTAT GLOBAL
+// 2. TABLES (convention supabaseAuthPrive_gt_*)
+// ═══════════════════════════════════════════════════════════
+const TBL_MATCHES        = 'supabaseAuthPrive_gt_matches';
+const TBL_TEAMS             = 'supabaseAuthPrive_gt_teams';
+const TBL_TOURNAMENTS          = 'supabaseAuthPrive_gt_tournaments';
+const TBL_REPORTS                 = 'supabaseAuthPrive_gt_match_reports';
+const TBL_PROFILES                   = 'supabaseAuthPrive_profiles';
+
+// ═══════════════════════════════════════════════════════════
+// 3. TABLE DE ROUTAGE PROFIL / PARAMETRES PAR ROLE
+// ═══════════════════════════════════════════════════════════
+const ROLE_PROFILE_ROUTES = {
+    FOOT:   { profile: '../../footballeur/profile-edit/foot-profile.html',       settings: '../../footballeur/settings/foot-settings.html' },
+    COACH:  { profile: '../../coach/profile-edit/coach-profile.html',            settings: '../../coach/settings/coach-settings.html' },
+    ACAD:   { profile: '../../academie/profile-edit/academie-profile.html',      settings: '../../academie/settings/academie-settings.html' },
+    AGENT:  { profile: '../../agent/profile-edit/agent-profile.html',            settings: '../../agent/settings/agent-settings.html' },
+    PARRAIN:{ profile: '../../parrain/profile-edit/parrain-profile.html',        settings: '../../parrain/settings/parrain-settings.html' },
+    MEDIC:  { profile: '../../staff_medical/profile-edit/staff-profile.html',    settings: '../../staff_medical/settings/staff-settings.html' },
+    ARBIT:  { profile: '../../corps_arbitral/profile-edit/arbitre-profile.html', settings: '../../corps_arbitral/settings/arbitre-settings.html' },
+    TOURN:  { profile: '../../gestionnaire_tournoi/profile-edit/gt-profile.html', settings: '../../gestionnaire_tournoi/settings/gt-settings.html' }
+};
+const GESTIONNAIRE_ROLE_CODES = ['TOURN'];
+
+// ═══════════════════════════════════════════════════════════
+// 4. ÉTAT GLOBAL
 // ═══════════════════════════════════════════════════════════
 let currentUser = null;
 let userProfile = null;
@@ -19,24 +50,17 @@ let currentMatchId = null;
 let allReports = [];
 
 // ═══════════════════════════════════════════════════════════
-// 3. LOADER
+// 5. LOADER
 // ═══════════════════════════════════════════════════════════
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
+function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
 
 // ═══════════════════════════════════════════════════════════
-// 4. TOAST (30 secondes)
+// 6. TOAST (30 secondes)
 // ═══════════════════════════════════════════════════════════
 function showToast(message, type, duration) {
     if (!type) type = 'info';
-    if (!duration) duration = 30000;
+    if (!duration) duration = 20000;
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -44,12 +68,7 @@ function showToast(message, type, duration) {
         container.className = 'toast-container';
         document.body.appendChild(container);
     }
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
     const toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.innerHTML = '<div class="toast-icon"><i class="fas ' + (icons[type] || icons.info) + '"></i></div>' +
@@ -69,7 +88,7 @@ function showToast(message, type, duration) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 5. UTILITAIRES
+// 7. UTILITAIRES
 // ═══════════════════════════════════════════════════════════
 function getInitials(name) {
     if (!name) return '?';
@@ -77,24 +96,20 @@ function getInitials(name) {
     if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     return name[0].toUpperCase();
 }
-
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m];
-    });
+    return String(str).replace(/[&<>]/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]; });
 }
 
 // ═══════════════════════════════════════════════════════════
-// 6. SESSION
+// 8. SESSION
 // ═══════════════════════════════════════════════════════════
 async function checkSession() {
     showLoader();
     const { data } = await supabaseClient.auth.getSession();
     const session = data.session;
-    const error = !session;
     hideLoader();
-    if (error || !session) {
+    if (!session) {
         window.location.href = '../../authprive/users/login.html';
         return null;
     }
@@ -103,12 +118,12 @@ async function checkSession() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 7. CHARGEMENT DU PROFIL
+// 9. CHARGEMENT DU PROFIL
 // ═══════════════════════════════════════════════════════════
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
-        .from('supabaseAuthPrive_profiles')
+        .from(TBL_PROFILES)
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
@@ -119,25 +134,40 @@ async function loadProfile() {
     }
     userProfile = data;
     updateNavbarUI();
+    applyRoleTier();
     return userProfile;
 }
 
+function applyRoleTier() {
+    const isGestionnaire = GESTIONNAIRE_ROLE_CODES.indexOf(userProfile.role_code) !== -1;
+    if (!isGestionnaire) {
+        document.querySelectorAll('[data-tier="gestionnaire"]').forEach(function(el) { el.style.display = 'none'; });
+    }
+}
+
+function applyProfileRouting() {
+    const routes = ROLE_PROFILE_ROUTES[userProfile.role_code];
+    const profileLink = document.getElementById('profileLink');
+    const settingsLink = document.getElementById('settingsLink');
+    if (routes) {
+        if (profileLink) profileLink.href = routes.profile;
+        if (settingsLink) settingsLink.href = routes.settings;
+    } else {
+        if (profileLink) profileLink.style.display = 'none';
+        if (settingsLink) settingsLink.style.display = 'none';
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
-// 8. MISE À JOUR DE LA NAVBAR
+// 10. MISE À JOUR DE LA NAVBAR
 // ═══════════════════════════════════════════════════════════
 function updateNavbarUI() {
     if (!userProfile) return;
-
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
     const userInitials = document.getElementById('userAvatarInitials');
-
-    if (userName) {
-        userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
-    }
-
+    if (userName) userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
     const avatarUrl = userProfile.avatar_url;
-
     if (avatarUrl && avatarUrl !== '') {
         if (userAvatar) { userAvatar.src = avatarUrl; userAvatar.style.display = 'block'; }
         if (userInitials) userInitials.style.display = 'none';
@@ -146,10 +176,11 @@ function updateNavbarUI() {
         if (userInitials) { userInitials.textContent = initials; userInitials.style.display = 'flex'; }
         if (userAvatar) userAvatar.style.display = 'none';
     }
+    applyProfileRouting();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 9. RÉCUPÉRATION DE L'ID DU MATCH DANS L'URL
+// 11. RÉCUPÉRATION DE L'ID DU MATCH DANS L'URL
 // ═══════════════════════════════════════════════════════════
 function getMatchIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -157,17 +188,26 @@ function getMatchIdFromUrl() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 10. CHARGEMENT DES INFOS DU MATCH
+// 12. CHARGEMENT DES INFOS DU MATCH (requetes separees)
 // ═══════════════════════════════════════════════════════════
 async function loadMatchInfo() {
     if (!currentMatchId) {
-        showToast('Aucun match spécifié.', 'error');
+        GTPicker.monter({
+            conteneur: 'gtPicker',
+            type: 'match',
+            parametre: 'match_id',
+            portee: 'tousMatchs',
+            icone: 'fa-file-export',
+            titre: 'Quel rapport voulez-vous exporter ?',
+            aide: 'Choisissez d\'abord le tournoi, puis la rencontre.',
+            messageVide: 'Aucun tournoi disponible pour le moment.'
+        });
         return;
     }
 
     showLoader();
     const { data: match, error } = await supabaseClient
-        .from('gestionnairetournoi_matches')
+        .from(TBL_MATCHES)
         .select('id, team_a_id, team_b_id, match_date, tournament_id')
         .eq('id', currentMatchId)
         .single();
@@ -178,34 +218,22 @@ async function loadMatchInfo() {
         return;
     }
 
-    let teamAName = 'Équipe A';
-    let teamBName = 'Équipe B';
+    let teamAName = 'Équipe A', teamBName = 'Équipe B';
 
     if (match.team_a_id) {
-        const { data: teamA } = await supabaseClient
-            .from('gestionnairetournoi_teams')
-            .select('name')
-            .eq('id', match.team_a_id)
-            .single();
+        const { data: teamA } = await supabaseClient.from(TBL_TEAMS).select('name').eq('id', match.team_a_id).maybeSingle();
         if (teamA) teamAName = teamA.name;
     }
     if (match.team_b_id) {
-        const { data: teamB } = await supabaseClient
-            .from('gestionnairetournoi_teams')
-            .select('name')
-            .eq('id', match.team_b_id)
-            .single();
+        const { data: teamB } = await supabaseClient.from(TBL_TEAMS).select('name').eq('id', match.team_b_id).maybeSingle();
         if (teamB) teamBName = teamB.name;
     }
 
     document.getElementById('matchTeams').textContent = teamAName + ' vs ' + teamBName;
     document.getElementById('matchDate').textContent = match.match_date ? new Date(match.match_date).toLocaleDateString('fr-FR') : 'Date inconnue';
+
     if (match.tournament_id) {
-        const { data: tData } = await supabaseClient
-            .from('gestionnairetournoi_tournaments')
-            .select('location')
-            .eq('id', match.tournament_id)
-            .single();
+        const { data: tData } = await supabaseClient.from(TBL_TOURNAMENTS).select('location').eq('id', match.tournament_id).maybeSingle();
         document.getElementById('matchLocation').textContent = tData?.location || 'Lieu non précisé';
     }
 
@@ -213,14 +241,14 @@ async function loadMatchInfo() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 11. CHARGEMENT DES RAPPORTS
+// 13. CHARGEMENT DES RAPPORTS
 // ═══════════════════════════════════════════════════════════
 async function loadReports() {
     if (!currentMatchId) return;
 
     showLoader();
     const { data, error } = await supabaseClient
-        .from('gestionnairetournoi_match_reports')
+        .from(TBL_REPORTS)
         .select('*')
         .eq('match_id', currentMatchId)
         .order('created_at', { ascending: false });
@@ -236,28 +264,24 @@ async function loadReports() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 12. RENDU DES RAPPORTS
+// 14. RENDU DES RAPPORTS
 // ═══════════════════════════════════════════════════════════
 function renderReports() {
     const container = document.getElementById('reportsList');
     const exportBtns = document.getElementById('exportButtons');
 
     if (!allReports.length) {
-        container.innerHTML = '<p>Aucun rapport trouvé pour ce match.</p>';
+        container.innerHTML = '<p class="empty-hint">Aucun rapport trouvé pour ce match. <a href="match-report.html?match_id=' + currentMatchId + '">En rédiger un</a>.</p>';
         if (exportBtns) exportBtns.style.display = 'none';
         return;
     }
 
     if (exportBtns) exportBtns.style.display = 'flex';
 
-    const typeLabels = {
-        referee: 'Rapport arbitre',
-        commissioner: 'Rapport commissaire',
-        medical: 'Rapport médical'
-    };
+    const typeLabels = { referee: 'Rapport arbitre', commissioner: 'Rapport commissaire', medical: 'Rapport médical' };
 
     let html = '';
-    allReports.forEach(function(report, index) {
+    allReports.forEach(function(report) {
         const content = report.content || {};
         const typeLabel = typeLabels[report.report_type] || report.report_type;
         const date = report.created_at ? new Date(report.created_at).toLocaleString('fr-FR') : '';
@@ -281,10 +305,7 @@ function renderReports() {
         }
 
         html += '<div class="report-item">' +
-                '<div class="report-header">' +
-                '<h3><i class="fas fa-file-alt"></i> ' + typeLabel + '</h3>' +
-                '<span class="report-date">' + date + '</span>' +
-                '</div>' +
+                '<div class="report-header"><h3><i class="fas fa-file-alt"></i> ' + typeLabel + '</h3><span class="report-date">' + date + '</span></div>' +
                 '<div class="report-details">' + detailsHtml + '</div>' +
                 (report.file_url ? '<p><a href="' + report.file_url + '" target="_blank"><i class="fas fa-paperclip"></i> Pièce jointe</a></p>' : '') +
                 '</div>';
@@ -294,33 +315,29 @@ function renderReports() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 13. FONCTIONS D'EXPORT
+// 15. FONCTIONS D'EXPORT
 // ═══════════════════════════════════════════════════════════
 
-// Export Word (format .doc basique)
 function exportToWord() {
-    if (!allReports.length) {
-        showToast('Aucun rapport à exporter.', 'warning');
-        return;
-    }
+    if (!allReports.length) { showToast('Aucun rapport à exporter.', 'warning'); return; }
 
-    let htmlContent = '<html><head><meta charset="UTF-8"><style>body { font-family: Arial; } h1 { color: #551B8C; }</style></head><body>';
-    htmlContent += '<h1>Rapports de match</h1>';
-    htmlContent += '<p>' + document.getElementById('matchTeams').textContent + '</p>';
-    htmlContent += '<p>' + document.getElementById('matchDate').textContent + '</p>';
+    let htmlContent = '<html><head><meta charset="UTF-8"></head><body>';
+    htmlContent += '<h1 style="color:#551B8C;">Rapports de match</h1>';
+    htmlContent += '<p><strong>' + document.getElementById('matchTeams').textContent + '</strong></p>';
+    htmlContent += '<p>' + document.getElementById('matchDate').textContent + ' — ' + document.getElementById('matchLocation').textContent + '</p>';
 
     allReports.forEach(function(report) {
         const content = report.content || {};
-        htmlContent += '<hr><h2>' + (report.report_type) + '</h2>';
+        htmlContent += '<hr><h2 style="color:#551B8C;">' + report.report_type + '</h2>';
         if (report.report_type === 'referee') {
             htmlContent += '<p>Score : ' + (content.homeScore || '0') + ' - ' + (content.awayScore || '0') + '</p>';
-            htmlContent += '<p>Jaunes domicile : ' + (content.yellowHome || '-') + '</p>';
-            htmlContent += '<p>Jaunes extérieur : ' + (content.yellowAway || '-') + '</p>';
-            htmlContent += '<p>Rouges : ' + (content.redCards || '-') + '</p>';
+            htmlContent += '<p>Cartons jaunes domicile : ' + (content.yellowHome || '-') + '</p>';
+            htmlContent += '<p>Cartons jaunes extérieur : ' + (content.yellowAway || '-') + '</p>';
+            htmlContent += '<p>Cartons rouges : ' + (content.redCards || '-') + '</p>';
             if (content.remarks) htmlContent += '<p>Remarques : ' + content.remarks + '</p>';
         } else if (report.report_type === 'commissioner') {
             htmlContent += '<p>Affluence : ' + (content.attendance || '-') + '</p>';
-            htmlContent += '<p>Évaluation : ' + (content.orgRating || '-') + '/5</p>';
+            htmlContent += '<p>Évaluation : ' + (content.orgRating || '-') + '</p>';
             if (content.remarks) htmlContent += '<p>Observations : ' + content.remarks + '</p>';
         } else if (report.report_type === 'medical') {
             htmlContent += '<p>Blessures domicile : ' + (content.injuriesHome || '-') + '</p>';
@@ -342,12 +359,8 @@ function exportToWord() {
     showToast('Export Word généré avec succès !', 'success');
 }
 
-// Export Excel (CSV)
 function exportToExcel() {
-    if (!allReports.length) {
-        showToast('Aucun rapport à exporter.', 'warning');
-        return;
-    }
+    if (!allReports.length) { showToast('Aucun rapport à exporter.', 'warning'); return; }
 
     let csv = 'Type;Date;Détails\n';
     allReports.forEach(function(report) {
@@ -374,22 +387,20 @@ function exportToExcel() {
     showToast('Export Excel généré avec succès !', 'success');
 }
 
-// Export PDF (via html2pdf)
 function exportToPDF() {
-    if (!allReports.length) {
-        showToast('Aucun rapport à exporter.', 'warning');
-        return;
-    }
+    if (!allReports.length) { showToast('Aucun rapport à exporter.', 'warning'); return; }
 
-    // Construire le contenu HTML pour le PDF
-    let htmlContent = '<div style="font-family: Arial; padding: 20px;">';
-    htmlContent += '<h1 style="color: #551B8C;">Rapports de match</h1>';
+    const container = document.createElement('div');
+    container.style.fontFamily = 'Arial';
+    container.style.padding = '20px';
+
+    let htmlContent = '<h1 style="color:#551B8C;">Rapports de match</h1>';
     htmlContent += '<p><strong>' + document.getElementById('matchTeams').textContent + '</strong></p>';
-    htmlContent += '<p>' + document.getElementById('matchDate').textContent + ' - ' + document.getElementById('matchLocation').textContent + '</p>';
+    htmlContent += '<p>' + document.getElementById('matchDate').textContent + ' — ' + document.getElementById('matchLocation').textContent + '</p>';
 
     allReports.forEach(function(report) {
         const content = report.content || {};
-        htmlContent += '<hr><h2 style="color: #551B8C;">' + report.report_type + '</h2>';
+        htmlContent += '<hr><h2 style="color:#551B8C;">' + report.report_type + '</h2>';
         if (report.report_type === 'referee') {
             htmlContent += '<p><strong>Score :</strong> ' + (content.homeScore || '0') + ' - ' + (content.awayScore || '0') + '</p>';
             htmlContent += '<p><strong>Cartons jaunes domicile :</strong> ' + (content.yellowHome || '-') + '</p>';
@@ -409,7 +420,7 @@ function exportToPDF() {
         if (report.file_url) htmlContent += '<p>Pièce jointe : ' + report.file_url + '</p>';
     });
 
-    htmlContent += '</div>';
+    container.innerHTML = htmlContent;
 
     const opt = {
         margin: 10,
@@ -419,24 +430,19 @@ function exportToPDF() {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    html2pdf().set(opt).from(htmlContent).save();
+    html2pdf().set(opt).from(container).save();
     showToast('Export PDF généré avec succès !', 'success');
 }
 
 // ═══════════════════════════════════════════════════════════
-// 14. UI : SIDEBAR, MENU, DÉCONNEXION
+// 16. UI : SIDEBAR, MENU, DÉCONNEXION
 // ═══════════════════════════════════════════════════════════
 function initUserMenu() {
     const userMenu = document.getElementById('userMenu');
     const dropdown = document.getElementById('userDropdown');
     if (!userMenu || !dropdown) return;
-    userMenu.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdown.classList.toggle('show');
-    });
-    document.addEventListener('click', function() {
-        dropdown.classList.remove('show');
-    });
+    userMenu.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); });
+    document.addEventListener('click', function() { dropdown.classList.remove('show'); });
 }
 
 function initSidebar() {
@@ -444,34 +450,18 @@ function initSidebar() {
     const overlay = document.getElementById('sidebarOverlay');
     const menuBtn = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeLeftSidebar');
-
-    function openSidebar() {
-        if (sidebar) sidebar.classList.add('active');
-        if (overlay) overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
+    function openSidebar() { if (sidebar) sidebar.classList.add('active'); if (overlay) overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function closeSidebar() { if (sidebar) sidebar.classList.remove('active'); if (overlay) overlay.classList.remove('active'); document.body.style.overflow = ''; }
     if (menuBtn) menuBtn.addEventListener('click', openSidebar);
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
-
     let sx = 0, sy = 0;
-    document.addEventListener('touchstart', function(e) {
-        sx = e.changedTouches[0].screenX;
-        sy = e.changedTouches[0].screenY;
-    }, { passive: true });
+    document.addEventListener('touchstart', function(e) { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY; }, { passive: true });
     document.addEventListener('touchend', function(e) {
-        const dx = e.changedTouches[0].screenX - sx;
-        const dy = e.changedTouches[0].screenY - sy;
+        const dx = e.changedTouches[0].screenX - sx, dy = e.changedTouches[0].screenY - sy;
         if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) return;
         if (e.cancelable) e.preventDefault();
-        if (dx > 0 && sx < 40) openSidebar();
-        else if (dx < 0) closeSidebar();
+        if (dx > 0 && sx < 40) openSidebar(); else if (dx < 0) closeSidebar();
     }, { passive: false });
 }
 
@@ -479,29 +469,25 @@ function initLogout() {
     document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            supabaseClient.auth.signOut().then(function() {
-                window.location.href = '../../../index.html';
-            });
+            supabaseClient.auth.signOut().then(function() { window.location.href = '../../../index.html'; });
         });
     });
 }
 
 // ═══════════════════════════════════════════════════════════
-// 15. INITIALISATION
+// 17. INITIALISATION
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function() {
     const user = await checkSession();
     if (!user) return;
 
     await loadProfile();
-
     initUserMenu();
     initSidebar();
     initLogout();
 
     document.getElementById('langSelect')?.addEventListener('change', function(e) {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        showToast('Langue : ' + selectedOption.text, 'info');
+        showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
 
     currentMatchId = getMatchIdFromUrl();
@@ -511,7 +497,5 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('exportWordBtn')?.addEventListener('click', exportToWord);
     document.getElementById('exportExcelBtn')?.addEventListener('click', exportToExcel);
     document.getElementById('exportPdfBtn')?.addEventListener('click', exportToPDF);
-    document.getElementById('backBtn')?.addEventListener('click', function() {
-        window.history.back();
-    });
+    document.getElementById('backBtn')?.addEventListener('click', function() { window.history.back(); });
 });

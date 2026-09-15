@@ -7,7 +7,7 @@
 // ----------------------------------------------
 // TOAST (notifications éphémères)
 // ----------------------------------------------
-function toast(message, type = 'info', duration = 30000) {
+function toast(message, type = 'info', duration = 4000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -87,15 +87,24 @@ function closeAllModals() {
 // FORMATAGE DE TEXTE
 // ----------------------------------------------
 function escapeHtml(str) {
-    if (!str) return '';
-    const map = {
-        '&': '&amp;',
-        // '<': '&lt;',
-        // '>': '&gt;',
-        // '"': '&quot;',
-        // "'": '&#39;'
-    };
-    return String(str).replace(/[&]/g, c => map[c]);
+    if (str === null || str === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+}
+
+/**
+ * Échappe une valeur destinée à un ATTRIBUT HTML (src, alt, data-*, title...)
+ * Neutralise aussi les guillemets, contrairement au rendu de texte.
+ */
+function escapeAttr(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function getInitials(name) {
@@ -181,6 +190,7 @@ window.openModal = openModal;
 window.closeModal = closeModal;
 window.closeAllModals = closeAllModals;
 window.escapeHtml = escapeHtml;
+window.escapeAttr = escapeAttr;
 window.getInitials = getInitials;
 window.formatText = formatText;
 window.timeSince = timeSince;

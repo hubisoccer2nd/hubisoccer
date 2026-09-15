@@ -1,6 +1,21 @@
 /* ============================================================
    HubISoccer — live-stream.js
-   Page Live Stream – Gestion des tournois
+   Système Gestion Tournois — Diffusion en direct (organisateur)
+   ------------------------------------------------------------
+   Le fichier source ne contenait AUCUNE logique video -- c'etait
+   deja un suivi de stats en direct (score/tirs/possession/corners
+   via abonnements Supabase Realtime), conserve tel quel car
+   genuinement utile et adapte a ce type de synchronisation
+   (petites charges JSON, pas de video).
+   Nouveau dans cette version : vraie capture camera (avant/
+   arriere) via getUserMedia -- apercu LOCAL uniquement, honnete
+   sur ce que ça represente (voir note dans l'interface). La
+   diffusion reellement vue par les spectateurs, elle, passe par
+   stream_url (YouTube/Twitch/Facebook Live) -- c'est la seule
+   maniere de tenir a grande echelle avec cette architecture,
+   puisque Supabase ne fait ni video ni CDN.
+   Tables migrees vers supabaseAuthPrive_gt_*, routage dynamique
+   profil + niveaux de sidebar ajoutes.
    ============================================================ */
 'use strict';
 
@@ -13,33 +28,57 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 window.__SUPABASE_CLIENT = supabaseClient;
 
 // ═══════════════════════════════════════════════════════════
-// 2. ÉTAT GLOBAL
+// 2. TABLES
+// ═══════════════════════════════════════════════════════════
+const TBL_MATCHES        = 'supabaseAuthPrive_gt_matches';
+const TBL_TEAMS             = 'supabaseAuthPrive_gt_teams';
+const TBL_TOURNAMENTS          = 'supabaseAuthPrive_gt_tournaments';
+const TBL_LIVE_STATS               = 'supabaseAuthPrive_gt_match_live_stats';
+const TBL_MATCH_EVENTS                = 'supabaseAuthPrive_gt_match_events';
+const TBL_PROFILES                       = 'supabaseAuthPrive_profiles';
+
+// ═══════════════════════════════════════════════════════════
+// 3. TABLE DE ROUTAGE PROFIL / PARAMETRES PAR ROLE
+// ═══════════════════════════════════════════════════════════
+const ROLE_PROFILE_ROUTES = {
+    FOOT:   { profile: '../../footballeur/profile-edit/foot-profile.html',       settings: '../../footballeur/settings/foot-settings.html' },
+    COACH:  { profile: '../../coach/profile-edit/coach-profile.html',            settings: '../../coach/settings/coach-settings.html' },
+    ACAD:   { profile: '../../academie/profile-edit/academie-profile.html',      settings: '../../academie/settings/academie-settings.html' },
+    AGENT:  { profile: '../../agent/profile-edit/agent-profile.html',            settings: '../../agent/settings/agent-settings.html' },
+    PARRAIN:{ profile: '../../parrain/profile-edit/parrain-profile.html',        settings: '../../parrain/settings/parrain-settings.html' },
+    MEDIC:  { profile: '../../staff_medical/profile-edit/staff-profile.html',    settings: '../../staff_medical/settings/staff-settings.html' },
+    ARBIT:  { profile: '../../corps_arbitral/profile-edit/arbitre-profile.html', settings: '../../corps_arbitral/settings/arbitre-settings.html' },
+    TOURN:  { profile: '../../gestionnaire_tournoi/profile-edit/gt-profile.html', settings: '../../gestionnaire_tournoi/settings/gt-settings.html' }
+};
+const GESTIONNAIRE_ROLE_CODES = ['TOURN'];
+
+// ═══════════════════════════════════════════════════════════
+// 4. ÉTAT GLOBAL
 // ═══════════════════════════════════════════════════════════
 let currentUser = null;
 let userProfile = null;
 let selectedMatch = null;
+let selectedTournamentId = null;
 let liveStatsSubscription = null;
 let matchEventsSubscription = null;
+let scoreSubscription = null;
+
+let cameraStream = null;
+let currentFacingMode = 'user';
+let micEnabled = true;
 
 // ═══════════════════════════════════════════════════════════
-// 3. LOADER
+// 5. LOADER
 // ═══════════════════════════════════════════════════════════
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
+function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
 
 // ═══════════════════════════════════════════════════════════
-// 4. TOAST (30 secondes)
+// 6. TOAST (30 secondes)
 // ═══════════════════════════════════════════════════════════
 function showToast(message, type, duration) {
     if (!type) type = 'info';
-    if (!duration) duration = 30000;
+    if (!duration) duration = 20000;
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -47,12 +86,7 @@ function showToast(message, type, duration) {
         container.className = 'toast-container';
         document.body.appendChild(container);
     }
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
     const toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.innerHTML = '<div class="toast-icon"><i class="fas ' + (icons[type] || icons.info) + '"></i></div>' +
@@ -72,8 +106,12 @@ function showToast(message, type, duration) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 5. UTILITAIRES
+// 7. UTILITAIRES
 // ═══════════════════════════════════════════════════════════
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>]/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]; });
+}
 function getInitials(name) {
     if (!name) return '?';
     const parts = name.trim().split(/\s+/);
@@ -82,15 +120,14 @@ function getInitials(name) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 6. SESSION
+// 8. SESSION
 // ═══════════════════════════════════════════════════════════
 async function checkSession() {
     showLoader();
     const { data } = await supabaseClient.auth.getSession();
     const session = data.session;
-    const error = !session;
     hideLoader();
-    if (error || !session) {
+    if (!session) {
         window.location.href = '../../authprive/users/login.html';
         return null;
     }
@@ -99,12 +136,12 @@ async function checkSession() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 7. CHARGEMENT DU PROFIL
+// 9. CHARGEMENT DU PROFIL
 // ═══════════════════════════════════════════════════════════
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
-        .from('supabaseAuthPrive_profiles')
+        .from(TBL_PROFILES)
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
@@ -115,25 +152,40 @@ async function loadProfile() {
     }
     userProfile = data;
     updateNavbarUI();
+    applyRoleTier();
     return userProfile;
 }
 
+function applyRoleTier() {
+    const isGestionnaire = GESTIONNAIRE_ROLE_CODES.indexOf(userProfile.role_code) !== -1;
+    if (!isGestionnaire) {
+        document.querySelectorAll('[data-tier="gestionnaire"]').forEach(function(el) { el.style.display = 'none'; });
+    }
+}
+
+function applyProfileRouting() {
+    const routes = ROLE_PROFILE_ROUTES[userProfile.role_code];
+    const profileLink = document.getElementById('profileLink');
+    const settingsLink = document.getElementById('settingsLink');
+    if (routes) {
+        if (profileLink) profileLink.href = routes.profile;
+        if (settingsLink) settingsLink.href = routes.settings;
+    } else {
+        if (profileLink) profileLink.style.display = 'none';
+        if (settingsLink) settingsLink.style.display = 'none';
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
-// 8. MISE À JOUR DE LA NAVBAR
+// 10. MISE À JOUR DE LA NAVBAR
 // ═══════════════════════════════════════════════════════════
 function updateNavbarUI() {
     if (!userProfile) return;
-
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
     const userInitials = document.getElementById('userAvatarInitials');
-
-    if (userName) {
-        userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
-    }
-
+    if (userName) userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
     const avatarUrl = userProfile.avatar_url;
-
     if (avatarUrl && avatarUrl !== '') {
         if (userAvatar) { userAvatar.src = avatarUrl; userAvatar.style.display = 'block'; }
         if (userInitials) userInitials.style.display = 'none';
@@ -142,17 +194,20 @@ function updateNavbarUI() {
         if (userInitials) { userInitials.textContent = initials; userInitials.style.display = 'flex'; }
         if (userAvatar) userAvatar.style.display = 'none';
     }
+    applyProfileRouting();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 9. CHARGEMENT DES MATCHS
+// 11. CHARGEMENT DES MATCHS EN DIRECT
 // ═══════════════════════════════════════════════════════════
 async function loadMatches() {
     const { data, error } = await supabaseClient
-        .from('gestionnairetournoi_matches')
-        .select('id, match_date, status, team_a_id, team_b_id, score_a, score_b')
+        .from(TBL_MATCHES)
+        .select('id, match_date, status, team_a_id, team_b_id, score_a, score_b, tournament_id')
         .eq('status', 'live')
         .order('match_date', { ascending: false });
+
+    const select = document.getElementById('matchSelect');
 
     if (error) {
         console.error('Erreur chargement matchs:', error);
@@ -160,7 +215,6 @@ async function loadMatches() {
         return;
     }
 
-    const select = document.getElementById('matchSelect');
     select.innerHTML = '<option value="">-- Choisir un match --</option>';
 
     if (!data || data.length === 0) {
@@ -168,139 +222,178 @@ async function loadMatches() {
         return;
     }
 
-    // Récupérer les noms des équipes pour chaque match
-    for (const match of data) {
-        let teamAName = 'Équipe A';
-        let teamBName = 'Équipe B';
+    const teamIds = new Set();
+    data.forEach(function(m) { if (m.team_a_id) teamIds.add(m.team_a_id); if (m.team_b_id) teamIds.add(m.team_b_id); });
+    const { data: teams } = await supabaseClient.from(TBL_TEAMS).select('id, name').in('id', Array.from(teamIds));
+    const teamNameMap = {};
+    (teams || []).forEach(function(t) { teamNameMap[t.id] = t.name; });
 
-        if (match.team_a_id) {
-            const { data: teamA } = await supabaseClient
-                .from('gestionnairetournoi_teams')
-                .select('name')
-                .eq('id', match.team_a_id)
-                .single();
-            if (teamA) teamAName = teamA.name;
-        }
-        if (match.team_b_id) {
-            const { data: teamB } = await supabaseClient
-                .from('gestionnairetournoi_teams')
-                .select('name')
-                .eq('id', match.team_b_id)
-                .single();
-            if (teamB) teamBName = teamB.name;
-        }
-
+    data.forEach(function(match) {
+        const teamAName = teamNameMap[match.team_a_id] || 'Équipe A';
+        const teamBName = teamNameMap[match.team_b_id] || 'Équipe B';
         const option = document.createElement('option');
         option.value = match.id;
         option.textContent = teamAName + ' vs ' + teamBName + ' (' + (match.score_a || 0) + '-' + (match.score_b || 0) + ')';
         option.dataset.teamA = teamAName;
         option.dataset.teamB = teamBName;
-        option.dataset.scoreA = match.score_a || 0;
-        option.dataset.scoreB = match.score_b || 0;
+        option.dataset.tournamentId = match.tournament_id || '';
         select.appendChild(option);
-    }
+    });
 }
 
 // ═══════════════════════════════════════════════════════════
-// 10. SÉLECTION D'UN MATCH
+// 12. SÉLECTION D'UN MATCH
 // ═══════════════════════════════════════════════════════════
 async function selectMatch(matchId) {
-    if (liveStatsSubscription) {
-        liveStatsSubscription.unsubscribe();
-        liveStatsSubscription = null;
-    }
-    if (matchEventsSubscription) {
-        matchEventsSubscription.unsubscribe();
-        matchEventsSubscription = null;
-    }
+    unsubscribeAll();
+    stopCamera();
+
+    const sections = ['cameraSection', 'streamUrlSection', 'scoreSection', 'statsSection', 'eventsSection'];
 
     if (!matchId) {
-        document.getElementById('playerContainer').innerHTML = '<div class="player-placeholder"><i class="fas fa-play-circle"></i><p>Sélectionnez un match pour voir le flux</p></div>';
-        resetStatsDisplay();
+        sections.forEach(function(id) { document.getElementById(id).style.display = 'none'; });
+        selectedMatch = null;
+        selectedTournamentId = null;
         return;
     }
 
-    // Récupérer les détails du match
-    const { data: match } = await supabaseClient
-        .from('gestionnairetournoi_matches')
-        .select('*')
-        .eq('id', matchId)
-        .single();
+    const option = document.querySelector('#matchSelect option[value="' + matchId + '"]');
+    selectedMatch = matchId;
+    selectedTournamentId = option ? option.dataset.tournamentId : null;
 
-    if (!match) {
-        showToast('Match introuvable', 'error');
-        return;
-    }
+    document.getElementById('homeTeamName').textContent = option ? option.dataset.teamA : '—';
+    document.getElementById('awayTeamName').textContent = option ? option.dataset.teamB : '—';
 
-    selectedMatch = match;
+    sections.forEach(function(id) { document.getElementById(id).style.display = 'block'; });
 
-    // Afficher le stream si disponible
-    displayStream(match);
+    // La section camera/lien de diffusion n'a de sens que pour
+    // l'organisateur du tournoi -- verifie via tournament.created_by
+    await checkOrganizerPermission();
 
-    // Mettre à jour le score
-    updateScoreDisplay(match);
-
-    // Charger les statistiques live
-    await loadLiveStats(matchId);
-    subscribeToLiveStats(matchId);
-
-    // Charger les événements
+    resetStatsDisplay();
     await loadMatchEvents(matchId);
+    subscribeToLiveStats(matchId);
     subscribeToMatchEvents(matchId);
 }
 
-// ═══════════════════════════════════════════════════════════
-// 11. AFFICHAGE DU STREAM
-// ═══════════════════════════════════════════════════════════
-function displayStream(match) {
-    const container = document.getElementById('playerContainer');
-    if (!match.stream_url) {
-        container.innerHTML = '<div class="player-placeholder"><i class="fas fa-video-slash"></i><p>Aucun flux disponible pour ce match</p></div>';
+async function checkOrganizerPermission() {
+    if (!selectedTournamentId) {
+        document.getElementById('cameraSection').style.display = 'none';
+        document.getElementById('streamUrlSection').style.display = 'none';
         return;
     }
-    container.innerHTML = '<iframe src="' + match.stream_url + '" frameborder="0" allowfullscreen></iframe>';
-}
 
-// ═══════════════════════════════════════════════════════════
-// 12. AFFICHAGE DU SCORE
-// ═══════════════════════════════════════════════════════════
-function updateScoreDisplay(match) {
-    document.getElementById('homeScore').textContent = match.score_a || 0;
-    document.getElementById('awayScore').textContent = match.score_b || 0;
-
-    const option = document.querySelector('#matchSelect option:checked');
-    if (option) {
-        document.getElementById('homeTeamName').textContent = option.dataset.teamA || 'Équipe A';
-        document.getElementById('awayTeamName').textContent = option.dataset.teamB || 'Équipe B';
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-// 13. STATISTIQUES LIVE
-// ═══════════════════════════════════════════════════════════
-async function loadLiveStats(matchId) {
-    const { data } = await supabaseClient
-        .from('gestionnairetournoi_match_live_stats')
-        .select('*')
-        .eq('match_id', matchId)
+    const { data: tournament } = await supabaseClient
+        .from(TBL_TOURNAMENTS)
+        .select('created_by, stream_url')
+        .eq('id', selectedTournamentId)
         .maybeSingle();
 
-    if (data) {
-        updateLiveStatsUI(data);
-    } else {
-        // Créer une entrée par défaut
-        const { data: newData } = await supabaseClient
-            .from('gestionnairetournoi_match_live_stats')
-            .insert([{ match_id: matchId }])
-            .select()
-            .single();
-        if (newData) updateLiveStatsUI(newData);
+    const isOrganizer = !!(tournament && tournament.created_by === currentUser.id);
+
+    document.getElementById('cameraSection').style.display = isOrganizer ? 'block' : 'none';
+    document.getElementById('streamUrlSection').style.display = isOrganizer ? 'block' : 'none';
+
+    if (isOrganizer) {
+        document.getElementById('streamUrlInput').value = (tournament && tournament.stream_url) || '';
     }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 13. CAMÉRA (getUserMedia — aperçu local réel)
+// ═══════════════════════════════════════════════════════════
+async function startCamera() {
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode },
+            audio: true
+        });
+    } catch (err) {
+        showToast('Impossible d\'accéder à la caméra : ' + err.message, 'error');
+        return;
+    }
+
+    const video = document.getElementById('cameraPreview');
+    video.srcObject = cameraStream;
+
+    document.getElementById('cameraLiveBadge').style.display = 'flex';
+    document.getElementById('switchCameraBtn').disabled = false;
+    document.getElementById('toggleMicBtn').disabled = false;
+
+    const toggleBtn = document.getElementById('toggleCameraBtn');
+    toggleBtn.innerHTML = '<i class="fas fa-stop"></i> Arrêter la caméra';
+    toggleBtn.classList.add('active');
+}
+
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(function(track) { track.stop(); });
+        cameraStream = null;
+    }
+    const video = document.getElementById('cameraPreview');
+    if (video) video.srcObject = null;
+
+    const badge = document.getElementById('cameraLiveBadge');
+    if (badge) badge.style.display = 'none';
+    const switchBtn = document.getElementById('switchCameraBtn');
+    if (switchBtn) switchBtn.disabled = true;
+    const micBtn = document.getElementById('toggleMicBtn');
+    if (micBtn) micBtn.disabled = true;
+
+    const toggleBtn = document.getElementById('toggleCameraBtn');
+    if (toggleBtn) {
+        toggleBtn.innerHTML = '<i class="fas fa-video"></i> Démarrer la caméra';
+        toggleBtn.classList.remove('active');
+    }
+}
+
+async function switchCamera() {
+    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    if (cameraStream) {
+        stopCamera();
+        await startCamera();
+    }
+}
+
+function toggleMic() {
+    if (!cameraStream) return;
+    micEnabled = !micEnabled;
+    cameraStream.getAudioTracks().forEach(function(track) { track.enabled = micEnabled; });
+    const micBtn = document.getElementById('toggleMicBtn');
+    micBtn.innerHTML = micEnabled ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash"></i>';
+    micBtn.classList.toggle('muted', !micEnabled);
+}
+
+// ═══════════════════════════════════════════════════════════
+// 14. PUBLICATION DU LIEN DE DIFFUSION
+// ═══════════════════════════════════════════════════════════
+async function saveStreamUrl() {
+    if (!selectedTournamentId) return;
+    const url = document.getElementById('streamUrlInput').value.trim();
+
+    showLoader();
+    const { error } = await supabaseClient
+        .from(TBL_TOURNAMENTS)
+        .update({ stream_url: url || null })
+        .eq('id', selectedTournamentId);
+    hideLoader();
+
+    if (error) {
+        showToast('Erreur lors de la publication du lien.', 'error');
+        return;
+    }
+    showToast('Lien de diffusion publié ! Visible dans Direct intégré.', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════
+// 15. AFFICHAGE DU SCORE ET DES STATS
+// ═══════════════════════════════════════════════════════════
+function updateScoreDisplay(match) {
+    document.getElementById('homeScore').textContent = match.score_a ?? 0;
+    document.getElementById('awayScore').textContent = match.score_b ?? 0;
 }
 
 function updateLiveStatsUI(stats) {
-    if (!stats) return;
-
     document.getElementById('shotsHome').textContent = stats.shots_home || 0;
     document.getElementById('shotsAway').textContent = stats.shots_away || 0;
     document.getElementById('shotsOnTargetHome').textContent = stats.shots_on_target_home || 0;
@@ -310,7 +403,6 @@ function updateLiveStatsUI(stats) {
     document.getElementById('cornersHome').textContent = stats.corners_home || 0;
     document.getElementById('cornersAway').textContent = stats.corners_away || 0;
 
-    // Possession
     const possessionHome = stats.possession_home || 50;
     const possessionAway = stats.possession_away || 50;
     document.querySelector('.possession-home').style.width = possessionHome + '%';
@@ -322,8 +414,6 @@ function updateLiveStatsUI(stats) {
 function resetStatsDisplay() {
     document.getElementById('homeScore').textContent = '0';
     document.getElementById('awayScore').textContent = '0';
-    document.getElementById('homeTeamName').textContent = '-';
-    document.getElementById('awayTeamName').textContent = '-';
     updateLiveStatsUI({
         shots_home: 0, shots_away: 0,
         shots_on_target_home: 0, shots_on_target_away: 0,
@@ -334,66 +424,47 @@ function resetStatsDisplay() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 14. ÉVÉNEMENTS DU MATCH
+// 16. ÉVÉNEMENTS DU MATCH
 // ═══════════════════════════════════════════════════════════
 async function loadMatchEvents(matchId) {
     const { data } = await supabaseClient
-        .from('gestionnairetournoi_match_events')
+        .from(TBL_MATCH_EVENTS)
         .select('*')
         .eq('match_id', matchId)
         .order('minute', { ascending: true });
 
-    const container = document.getElementById('eventsList');
-    if (!data || data.length === 0) {
-        container.innerHTML = '<p>Aucun événement pour le moment.</p>';
-        return;
-    }
-
-    renderEventsList(data);
+    renderEventsList(data || []);
 }
 
 function renderEventsList(events) {
     const container = document.getElementById('eventsList');
     if (!events || events.length === 0) {
-        container.innerHTML = '<p>Aucun événement pour le moment.</p>';
+        container.innerHTML = '<p class="empty-hint">Aucun événement pour le moment.</p>';
         return;
     }
 
-    const iconMap = {
-        goal: '⚽',
-        yellow_card: '🟨',
-        red_card: '🟥',
-        substitution: '🔄',
-        penalty: '🥅'
-    };
+    const iconMap = { goal: '⚽', yellow_card: '🟨', red_card: '🟥', substitution: '🔄', penalty: '🥅' };
 
-    let html = '';
-    events.forEach(function(event) {
+    container.innerHTML = events.map(function(event) {
         const icon = iconMap[event.event_type] || '📌';
-        html += '<div class="event-item">' +
-                '<span class="event-minute">' + (event.minute || '') + '\'</span>' +
-                '<span class="event-icon">' + icon + '</span>' +
-                '<span class="event-desc">' + (event.description || event.event_type) + '</span>' +
-                '</div>';
-    });
-
-    container.innerHTML = html;
+        return '<div class="event-item">' +
+               '<span class="event-minute tabular">' + (event.minute || '') + '\'</span>' +
+               '<span class="event-icon">' + icon + '</span>' +
+               '<span class="event-desc">' + escapeHtml(event.description || event.event_type) + '</span>' +
+               '</div>';
+    }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
-// 15. SOUSCRIPTIONS TEMPS RÉEL
+// 17. SOUSCRIPTIONS TEMPS RÉEL
 // ═══════════════════════════════════════════════════════════
 function subscribeToLiveStats(matchId) {
     liveStatsSubscription = supabaseClient
         .channel('live_stats_' + matchId)
         .on('postgres_changes', {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'gestionnairetournoi_match_live_stats',
+            event: 'UPDATE', schema: 'public', table: TBL_LIVE_STATS,
             filter: 'match_id=eq.' + matchId
-        }, function(payload) {
-            updateLiveStatsUI(payload.new);
-        })
+        }, function(payload) { updateLiveStatsUI(payload.new); })
         .subscribe();
 }
 
@@ -401,45 +472,35 @@ function subscribeToMatchEvents(matchId) {
     matchEventsSubscription = supabaseClient
         .channel('match_events_' + matchId)
         .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'gestionnairetournoi_match_events',
+            event: 'INSERT', schema: 'public', table: TBL_MATCH_EVENTS,
             filter: 'match_id=eq.' + matchId
-        }, async function() {
-            await loadMatchEvents(matchId);
-        })
+        }, async function() { await loadMatchEvents(matchId); })
         .subscribe();
 
-    // Écouter aussi les mises à jour du score
-    supabaseClient
+    scoreSubscription = supabaseClient
         .channel('match_score_' + matchId)
         .on('postgres_changes', {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'gestionnairetournoi_matches',
+            event: 'UPDATE', schema: 'public', table: TBL_MATCHES,
             filter: 'id=eq.' + matchId
-        }, function(payload) {
-            if (payload.new) {
-                updateScoreDisplay(payload.new);
-            }
-        })
+        }, function(payload) { if (payload.new) updateScoreDisplay(payload.new); })
         .subscribe();
 }
 
+function unsubscribeAll() {
+    if (liveStatsSubscription) { liveStatsSubscription.unsubscribe(); liveStatsSubscription = null; }
+    if (matchEventsSubscription) { matchEventsSubscription.unsubscribe(); matchEventsSubscription = null; }
+    if (scoreSubscription) { scoreSubscription.unsubscribe(); scoreSubscription = null; }
+}
+
 // ═══════════════════════════════════════════════════════════
-// 16. UI : SIDEBAR, MENU, DÉCONNEXION
+// 18. UI : SIDEBAR, MENU, DÉCONNEXION
 // ═══════════════════════════════════════════════════════════
 function initUserMenu() {
     const userMenu = document.getElementById('userMenu');
     const dropdown = document.getElementById('userDropdown');
     if (!userMenu || !dropdown) return;
-    userMenu.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdown.classList.toggle('show');
-    });
-    document.addEventListener('click', function() {
-        dropdown.classList.remove('show');
-    });
+    userMenu.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); });
+    document.addEventListener('click', function() { dropdown.classList.remove('show'); });
 }
 
 function initSidebar() {
@@ -447,34 +508,18 @@ function initSidebar() {
     const overlay = document.getElementById('sidebarOverlay');
     const menuBtn = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeLeftSidebar');
-
-    function openSidebar() {
-        if (sidebar) sidebar.classList.add('active');
-        if (overlay) overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
+    function openSidebar() { if (sidebar) sidebar.classList.add('active'); if (overlay) overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function closeSidebar() { if (sidebar) sidebar.classList.remove('active'); if (overlay) overlay.classList.remove('active'); document.body.style.overflow = ''; }
     if (menuBtn) menuBtn.addEventListener('click', openSidebar);
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
-
     let sx = 0, sy = 0;
-    document.addEventListener('touchstart', function(e) {
-        sx = e.changedTouches[0].screenX;
-        sy = e.changedTouches[0].screenY;
-    }, { passive: true });
+    document.addEventListener('touchstart', function(e) { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY; }, { passive: true });
     document.addEventListener('touchend', function(e) {
-        const dx = e.changedTouches[0].screenX - sx;
-        const dy = e.changedTouches[0].screenY - sy;
+        const dx = e.changedTouches[0].screenX - sx, dy = e.changedTouches[0].screenY - sy;
         if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) return;
         if (e.cancelable) e.preventDefault();
-        if (dx > 0 && sx < 40) openSidebar();
-        else if (dx < 0) closeSidebar();
+        if (dx > 0 && sx < 40) openSidebar(); else if (dx < 0) closeSidebar();
     }, { passive: false });
 }
 
@@ -482,15 +527,14 @@ function initLogout() {
     document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            supabaseClient.auth.signOut().then(function() {
-                window.location.href = '../../../index.html';
-            });
+            stopCamera();
+            supabaseClient.auth.signOut().then(function() { window.location.href = '../../../index.html'; });
         });
     });
 }
 
 // ═══════════════════════════════════════════════════════════
-// 17. INITIALISATION
+// 19. INITIALISATION
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function() {
     const user = await checkSession();
@@ -504,17 +548,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     initLogout();
 
     document.getElementById('langSelect')?.addEventListener('change', function(e) {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        showToast('Langue : ' + selectedOption.text, 'info');
+        showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
-
-    document.getElementById('backBtn')?.addEventListener('click', function() {
-        window.history.back();
-    });
+    document.getElementById('backBtn')?.addEventListener('click', function() { stopCamera(); window.history.back(); });
 
     await loadMatches();
 
-    document.getElementById('matchSelect')?.addEventListener('change', function() {
-        selectMatch(this.value);
+    document.getElementById('matchSelect')?.addEventListener('change', function() { selectMatch(this.value); });
+
+    document.getElementById('toggleCameraBtn')?.addEventListener('click', function() {
+        if (cameraStream) stopCamera(); else startCamera();
     });
+    document.getElementById('switchCameraBtn')?.addEventListener('click', switchCamera);
+    document.getElementById('toggleMicBtn')?.addEventListener('click', toggleMic);
+    document.getElementById('saveStreamUrlBtn')?.addEventListener('click', saveStreamUrl);
+
+    window.addEventListener('beforeunload', stopCamera);
 });

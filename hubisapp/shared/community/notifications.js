@@ -13,37 +13,19 @@ let hasMore = false;
 let loading = false;
 let activeFilter = 'all';
 
-const ROLE_DASHBOARD_MAP = {
-  'FOOT': '../../footballeur/dashboard/foot-dash.html',
-  'BASK': '../../basketteur/dashboard/basketteur-dash.html',
-  'TENN': '../../tennisman/dashboard/tennisman-dash.html',
-  'ATHL': '../../athlete/dashboard/athlete-dash.html',
-  'HANDB': '../../handballeur/dashboard/handballeur-dash.html',
-  'VOLL': '../../volleyeur/dashboard/volleyeur-dash.html',
-  'RUGBY': '../../rugbyman/dashboard/rugbyman-dash.html',
-  'NATA': '../../nageur/dashboard/nageur-dash.html',
-  'ARTSM': '../../arts_martiaux/dashboard/arts_martiaux-dash.html',
-  'CYCL': '../../cycliste/dashboard/cycliste-dash.html',
-  'CHAN': '../../chanteur/dashboard/chanteur-dash.html',
-  'DANS': '../../danseur/dashboard/danseur-dash.html',
-  'COMP': '../../compositeur/dashboard/compositeur-dash.html',
-  'ACIN': '../../acteur_cinema/dashboard/acteur_cinema-dash.html',
-  'ATHE': '../../acteur_theatre/dashboard/acteur_theatre-dash.html',
-  'HUMO': '../../humoriste/dashboard/humoriste-dash.html',
-  'SLAM': '../../slameur/dashboard/slameur-dash.html',
-  'DJ': '../../dj/dashboard/dj-dash.html',
-  'CIRQ': '../../cirque/dashboard/cirque-dash.html',
-  'VISU': '../../artiste_visuel/dashboard/artiste_visuel-dash.html',
-  'PARRAIN': '../../parrain/dashboard/parrain-dash.html',
-  'AGENT': '../../agent_fifa/dashboard/agent_fifa-dash.html',
-  'COACH': '../../coach/dashboard/coach-dash.html',
-  'MEDIC': '../../staff_medical/dashboard/staff_medical-dash.html',
-  'ARBIT': '../../corps_arbitral/dashboard/corps_arbitral-dash.html',
-  'ACAD': '../../academie_sportive/dashboard/academie_sportive-dash.html',
-  'FORM': '../../formateur/dashboard/formateur-dash.html',
-  'TOURN': '../../gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html',
-  'ADMIN': '../../authprive/admin/admin-dashboard.html'
-};
+// ========== DEBUT : LIENS VERS LES ESPACES PRIVES ==========
+//
+// La table « role_code -> tableau de bord » qui se trouvait ici a ete
+// supprimee : elle pointait vers des dossiers absents du depot
+// (agent_fifa, tennisman, athlete, handballeur, formateur...) et son
+// repli '../../index.html' n'existe pas non plus. Chaque entree du
+// menu renvoyait donc une erreur 404.
+//
+// role-nav.js, charge par notifications.html juste avant ce fichier, fournit
+// les liens verifies : getRoleHome / getRoleLabel / getRoleMenu /
+// applyRoleLinks.
+//
+// ========== FIN : LIENS VERS LES ESPACES PRIVES ==========
 
 async function initSessionAndProfile() {
   const auth = await requireAuth();
@@ -52,9 +34,14 @@ async function initSessionAndProfile() {
   document.getElementById('userName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
   updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name);
   
-  const dash = ROLE_DASHBOARD_MAP[currentProfile.role_code] || '../../index.html';
-  document.getElementById('dropDashboard').href = dash;
-  document.getElementById('navLogo').onclick = () => window.location.href = dash;
+  // Liens vers l'espace prive du role : logo, « Tableau de bord »,
+  // bouton de retour. Chemins verifies par role-nav.js.
+  if (typeof applyRoleLinks === 'function') {
+      applyRoleLinks(currentProfile.role_code);
+  } else {
+      const dd = document.getElementById('dropDashboard');
+      if (dd) dd.href = '../construction.html';
+  }
   document.getElementById('backBtn').addEventListener('click', () => {
     window.history.back() || (window.location.href = 'feed.html');
   });
@@ -153,7 +140,7 @@ function makeNotificationItem(n) {
   const readClass = n.read ? '' : 'unread';
   
   return `
-        <div class="notification-item ${readClass}" data-id="${n.id}" onclick="handleNotificationClick('${n.id}', '${n.data?.link || ''}', ${n.read})">
+        <div class="notification-item ${readClass}" data-id="${n.id}" onclick="handleNotificationClick('${escapeAttr(n.id)}', '${escapeAttr(n.data?.link || '')}', ${!!n.read})">
             <div class="notif-icon" style="background:${config.bg}; color:${config.color}">
                 <i class="fas ${config.icon}"></i>
             </div>
@@ -233,6 +220,43 @@ function initFilters() {
   });
 }
 
+// ========== DEBUT : TEMPS RÉEL ==========
+let notifChannel = null;
+
+function subscribeToNotifications() {
+    if (notifChannel) notifChannel.unsubscribe();
+    notifChannel = sb.channel('notifications_live')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'supabaseAuthPrive_notifications',
+            filter: `recipient_hubisoccer_id=eq.${currentProfile.hubisoccer_id}`
+        }, (payload) => {
+            const n = payload.new;
+            // Respecte le filtre actif
+            if (activeFilter === 'unread' && n.read) return;
+            if (activeFilter !== 'all' && activeFilter !== 'unread' && n.type !== activeFilter) return;
+            notifications.unshift(n);
+            renderNotifications();
+            playNotifSound();
+        })
+        .subscribe();
+}
+
+function playNotifSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.07, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.start(); osc.stop(ctx.currentTime + 0.3);
+    } catch (e) { /* son facultatif */ }
+}
+// ========== FIN : TEMPS RÉEL ==========
+
 async function init() {
   setLoader(true, 'Vérification de votre session...');
   const sessionOk = await initSessionAndProfile();
@@ -243,6 +267,7 @@ async function init() {
   setLoader(false);
   
   initFilters();
+  subscribeToNotifications();
   
   document.getElementById('markAllReadBtn').addEventListener('click', markAllAsRead);
   document.getElementById('clearAllBtn').addEventListener('click', clearAll);

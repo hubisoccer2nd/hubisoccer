@@ -1,6 +1,23 @@
 /* ============================================================
    HubISoccer — tournament-rules.js
-   Page Règlement du tournoi – Version adaptée
+   Système Gestion Tournois — Règlement
+   ------------------------------------------------------------
+   Corrections appliquees :
+   - Le contenu du reglement etait entierement code en dur (7
+     paragraphes generiques identiques pour tous les tournois),
+     ignorant totalement le champ rules propre a chaque tournoi.
+     Desormais lu et affiche reellement, assaini via DOMPurify
+     (meme principe que create-tournament/tournament-details).
+   - La page exigeait un ?id= et redirigeait sinon -- desormais
+     fonctionne aussi SANS id, affichant uniquement le reglement
+     general (utile depuis le menu, sans contexte de tournoi
+     precis).
+   - Tables migrees vers supabaseAuthPrive_gt_*.
+   - Routage dynamique profil/parametres + niveaux de sidebar.
+   - La signature electronique (fonctionnalite deja presente et
+     sensee) est conservee -- sa dependance SignaturePad, jamais
+     chargee dans le fichier source, l'empechait de fonctionner ;
+     corrige au niveau du HTML.
    ============================================================ */
 'use strict';
 
@@ -13,31 +30,47 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 window.__SUPABASE_CLIENT = supabaseClient;
 
 // ═══════════════════════════════════════════════════════════
-// 2. ÉTAT GLOBAL
+// 2. TABLES
+// ═══════════════════════════════════════════════════════════
+const TBL_TOURNAMENTS = 'supabaseAuthPrive_gt_tournaments';
+const TBL_PARTICIPANTS  = 'supabaseAuthPrive_gt_participants';
+const TBL_PROFILES         = 'supabaseAuthPrive_profiles';
+
+// ═══════════════════════════════════════════════════════════
+// 3. TABLE DE ROUTAGE PROFIL / PARAMETRES PAR ROLE
+// ═══════════════════════════════════════════════════════════
+const ROLE_PROFILE_ROUTES = {
+    FOOT:   { profile: '../../footballeur/profile-edit/foot-profile.html',       settings: '../../footballeur/settings/foot-settings.html' },
+    COACH:  { profile: '../../coach/profile-edit/coach-profile.html',            settings: '../../coach/settings/coach-settings.html' },
+    ACAD:   { profile: '../../academie/profile-edit/academie-profile.html',      settings: '../../academie/settings/academie-settings.html' },
+    AGENT:  { profile: '../../agent/profile-edit/agent-profile.html',            settings: '../../agent/settings/agent-settings.html' },
+    PARRAIN:{ profile: '../../parrain/profile-edit/parrain-profile.html',        settings: '../../parrain/settings/parrain-settings.html' },
+    MEDIC:  { profile: '../../staff_medical/profile-edit/staff-profile.html',    settings: '../../staff_medical/settings/staff-settings.html' },
+    ARBIT:  { profile: '../../corps_arbitral/profile-edit/arbitre-profile.html', settings: '../../corps_arbitral/settings/arbitre-settings.html' },
+    TOURN:  { profile: '../../gestionnaire_tournoi/profile-edit/gt-profile.html', settings: '../../gestionnaire_tournoi/settings/gt-settings.html' }
+};
+const GESTIONNAIRE_ROLE_CODES = ['TOURN'];
+
+// ═══════════════════════════════════════════════════════════
+// 4. ÉTAT GLOBAL
 // ═══════════════════════════════════════════════════════════
 let currentUser = null;
 let userProfile = null;
 let signaturePad = null;
+let currentTournamentId = null;
 
 // ═══════════════════════════════════════════════════════════
-// 3. LOADER
+// 5. LOADER
 // ═══════════════════════════════════════════════════════════
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
+function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
 
 // ═══════════════════════════════════════════════════════════
-// 4. TOAST (30 secondes)
+// 6. TOAST (30 secondes)
 // ═══════════════════════════════════════════════════════════
 function showToast(message, type, duration) {
     if (!type) type = 'info';
-    if (!duration) duration = 30000;
+    if (!duration) duration = 20000;
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -45,12 +78,7 @@ function showToast(message, type, duration) {
         container.className = 'toast-container';
         document.body.appendChild(container);
     }
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
     const toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.innerHTML = '<div class="toast-icon"><i class="fas ' + (icons[type] || icons.info) + '"></i></div>' +
@@ -70,15 +98,11 @@ function showToast(message, type, duration) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 5. UTILITAIRES
+// 7. UTILITAIRES
 // ═══════════════════════════════════════════════════════════
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m];
-    });
+function sanitizeHtml(raw) {
+    return window.DOMPurify ? DOMPurify.sanitize(raw || '') : String(raw || '').replace(/</g, '&lt;');
 }
-
 function getInitials(name) {
     if (!name) return '?';
     const parts = name.trim().split(/\s+/);
@@ -87,21 +111,7 @@ function getInitials(name) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 6. RÉCUPÉRATION DE L'ID DU TOURNOI
-// ═══════════════════════════════════════════════════════════
-function getTournamentIdFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    if (!id) {
-        showToast('Aucun identifiant de tournoi fourni.', 'error');
-        window.location.href = 'acceuil.html';
-        return null;
-    }
-    return parseInt(id);
-}
-
-// ═══════════════════════════════════════════════════════════
-// 7. SESSION
+// 8. SESSION
 // ═══════════════════════════════════════════════════════════
 async function checkSession() {
     showLoader();
@@ -117,12 +127,12 @@ async function checkSession() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 8. CHARGEMENT DU PROFIL
+// 9. PROFIL
 // ═══════════════════════════════════════════════════════════
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
-        .from('supabaseAuthPrive_profiles')
+        .from(TBL_PROFILES)
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
@@ -130,21 +140,36 @@ async function loadProfile() {
     if (error || !data) return null;
     userProfile = data;
     updateNavbarUI();
+    applyRoleTier();
     return userProfile;
 }
 
-// ═══════════════════════════════════════════════════════════
-// 9. MISE À JOUR DE LA NAVBAR
-// ═══════════════════════════════════════════════════════════
+function applyRoleTier() {
+    const isGestionnaire = GESTIONNAIRE_ROLE_CODES.indexOf(userProfile.role_code) !== -1;
+    if (!isGestionnaire) {
+        document.querySelectorAll('[data-tier="gestionnaire"]').forEach(function(el) { el.style.display = 'none'; });
+    }
+}
+
+function applyProfileRouting() {
+    const routes = ROLE_PROFILE_ROUTES[userProfile.role_code];
+    const profileLink = document.getElementById('profileLink');
+    const settingsLink = document.getElementById('settingsLink');
+    if (routes) {
+        if (profileLink) profileLink.href = routes.profile;
+        if (settingsLink) settingsLink.href = routes.settings;
+    } else {
+        if (profileLink) profileLink.style.display = 'none';
+        if (settingsLink) settingsLink.style.display = 'none';
+    }
+}
+
 function updateNavbarUI() {
+    if (!userProfile) return;
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
     const userInitials = document.getElementById('userAvatarInitials');
-
-    if (!userProfile) return;
-
     if (userName) userName.textContent = userProfile.full_name || 'Utilisateur';
-
     const avatarUrl = userProfile.avatar_url;
     if (avatarUrl && avatarUrl !== '') {
         if (userAvatar) { userAvatar.src = avatarUrl; userAvatar.style.display = 'block'; }
@@ -154,83 +179,78 @@ function updateNavbarUI() {
         if (userInitials) { userInitials.textContent = initials; userInitials.style.display = 'flex'; }
         if (userAvatar) userAvatar.style.display = 'none';
     }
+    applyProfileRouting();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 10. CHARGEMENT DU RÈGLEMENT
+// 10. RÈGLEMENT SPÉCIFIQUE DU TOURNOI (si ?id= fourni)
 // ═══════════════════════════════════════════════════════════
-async function loadTournamentRules(tournamentId) {
+async function loadTournamentSpecificRules() {
+    const params = new URLSearchParams(window.location.search);
+    currentTournamentId = params.get('id');
+
+    // Sans id : reglement general uniquement, page pleinement
+    // utilisable (contrairement au fichier source qui redirigeait)
+    if (!currentTournamentId) return;
+
     showLoader();
     const { data, error } = await supabaseClient
-        .from('gestionnairetournoi_tournaments')
-        .select('id, name, description, start_date, end_date')
-        .eq('id', tournamentId)
+        .from(TBL_TOURNAMENTS)
+        .select('id, name, start_date, end_date, rules')
+        .eq('id', currentTournamentId)
         .single();
-
     hideLoader();
 
     if (error || !data) {
-        showToast('Tournoi introuvable', 'error');
-        window.location.href = 'acceuil.html';
+        showToast('Tournoi introuvable — affichage du règlement général.', 'warning');
+        currentTournamentId = null;
         return;
     }
 
     document.getElementById('tournamentName').textContent = 'Règlement — ' + data.name;
     const start = data.start_date ? new Date(data.start_date).toLocaleDateString('fr-FR') : '—';
     const end = data.end_date ? new Date(data.end_date).toLocaleDateString('fr-FR') : '—';
-    document.getElementById('tournamentDates').textContent = start + ' - ' + end;
+    document.getElementById('tournamentDates').textContent = start + ' → ' + end;
 
-    // Contenu du règlement (basé sur la description ou un contenu fixe)
-    const rulesContent = document.getElementById('rulesContent');
-    rulesContent.innerHTML = '<div class="rules-text">' +
-        '<h3>1. Généralités</h3>' +
-        '<p>Le tournoi "' + escapeHtml(data.name) + '" est organisé par HubISoccer. En participant, vous acceptez de respecter l\'ensemble des règles énoncées ci-dessous.</p>' +
-        '<h3>2. Participation</h3>' +
-        '<p>Le tournoi est ouvert aux joueurs licenciés et aux équipes dûment inscrites. Toute inscription doit être validée par l\'organisation.</p>' +
-        '<h3>3. Règles du jeu</h3>' +
-        '<p>Les matchs se déroulent selon les règles officielles de la fédération concernée. Tout comportement antisportif sera sanctionné.</p>' +
-        '<h3>4. Arbitrage</h3>' +
-        '<p>Les arbitres sont désignés par l\'organisation. Leurs décisions sont sans appel.</p>' +
-        '<h3>5. Récompenses</h3>' +
-        '<p>Les prix sont attribués selon le classement final. Toute réclamation doit être faite dans les 24 heures suivant la fin du tournoi.</p>' +
-        '<h3>6. Droit à l\'image</h3>' +
-        '<p>Les participants autorisent HubISoccer à utiliser leur image à des fins promotionnelles liées au tournoi.</p>' +
-        '<h3>7. Acceptation du règlement</h3>' +
-        '<p>La signature électronique de ce règlement vaut acceptation pleine et entière des conditions ci-dessus.</p>' +
-        '</div>';
-
-    // Signature
-    const signatureBlock = document.getElementById('signatureBlock');
-    if (signatureBlock) {
-        signatureBlock.style.display = 'block';
-
-        // Vérifier si l'utilisateur a déjà signé
-        const { data: existing } = await supabaseClient
-            .from('gestionnairetournoi_participants')
-            .select('has_agreed_to_rules')
-            .eq('tournament_id', tournamentId)
-            .eq('user_id', currentUser.id)
-            .maybeSingle();
-
-        if (existing && existing.has_agreed_to_rules) {
-            signatureBlock.innerHTML = '<p>Vous avez déjà accepté le règlement de ce tournoi. <i class="fas fa-check-circle" style="color: var(--success);"></i></p>';
-        } else {
-            initSignaturePad();
-        }
+    if (data.rules) {
+        document.getElementById('specificRulesContent').innerHTML = sanitizeHtml(data.rules);
+        document.getElementById('specificRulesBlock').style.display = 'block';
     }
+
+    await initSignatureSection();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 11. SIGNATURE ÉLECTRONIQUE
+// 11. SIGNATURE ÉLECTRONIQUE (uniquement si un tournoi est en contexte)
 // ═══════════════════════════════════════════════════════════
+async function initSignatureSection() {
+    if (!currentTournamentId) return;
+
+    const signatureBlock = document.getElementById('signatureBlock');
+    signatureBlock.style.display = 'block';
+
+    const { data: existing } = await supabaseClient
+        .from(TBL_PARTICIPANTS)
+        .select('has_agreed_to_rules')
+        .eq('tournament_id', currentTournamentId)
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+    if (existing && existing.has_agreed_to_rules) {
+        signatureBlock.innerHTML = '<div class="already-signed"><i class="fas fa-check-circle"></i> Vous avez déjà accepté le règlement de ce tournoi.</div>';
+    } else {
+        initSignaturePad();
+    }
+}
+
 function initSignaturePad() {
     const canvas = document.getElementById('signatureCanvas');
-    if (!canvas) return;
+    if (!canvas || typeof SignaturePad === 'undefined') return;
 
-    signaturePad = new SignaturePad(canvas, {
-        backgroundColor: 'white',
-        penColor: '#551B8C'
-    });
+    canvas.width = canvas.offsetWidth || 400;
+    canvas.height = 200;
+
+    signaturePad = new SignaturePad(canvas, { backgroundColor: 'white', penColor: '#551B8C' });
 
     document.getElementById('clearSignatureBtn').addEventListener('click', function() {
         signaturePad.clear();
@@ -242,28 +262,25 @@ function initSignaturePad() {
             return;
         }
 
-        const tournamentId = getTournamentIdFromURL();
-        if (!tournamentId) return;
-
         const signatureData = signaturePad.toDataURL();
 
         showLoader();
         const { error } = await supabaseClient
-            .from('gestionnairetournoi_participants')
+            .from(TBL_PARTICIPANTS)
             .upsert({
-                tournament_id: tournamentId,
+                tournament_id: currentTournamentId,
                 user_id: currentUser.id,
                 has_agreed_to_rules: true,
-                signature_data: signatureData
+                signature_data: signatureData,
+                agreed_at: new Date().toISOString()
             }, { onConflict: 'tournament_id, user_id' });
-
         hideLoader();
 
         if (error) {
             showToast('Erreur lors de l\'enregistrement de la signature.', 'error');
         } else {
             showToast('Règlement accepté avec succès !', 'success');
-            document.getElementById('signatureBlock').innerHTML = '<p>Vous avez accepté le règlement de ce tournoi. <i class="fas fa-check-circle" style="color: var(--success);"></i></p>';
+            document.getElementById('signatureBlock').innerHTML = '<div class="already-signed"><i class="fas fa-check-circle"></i> Vous avez accepté le règlement de ce tournoi.</div>';
         }
     });
 }
@@ -275,13 +292,8 @@ function initUserMenu() {
     const userMenu = document.getElementById('userMenu');
     const dropdown = document.getElementById('userDropdown');
     if (!userMenu || !dropdown) return;
-    userMenu.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdown.classList.toggle('show');
-    });
-    document.addEventListener('click', function() {
-        dropdown.classList.remove('show');
-    });
+    userMenu.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); });
+    document.addEventListener('click', function() { dropdown.classList.remove('show'); });
 }
 
 function initSidebar() {
@@ -289,34 +301,18 @@ function initSidebar() {
     const overlay = document.getElementById('sidebarOverlay');
     const menuBtn = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeLeftSidebar');
-
-    function openSidebar() {
-        if (sidebar) sidebar.classList.add('active');
-        if (overlay) overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
+    function openSidebar() { if (sidebar) sidebar.classList.add('active'); if (overlay) overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function closeSidebar() { if (sidebar) sidebar.classList.remove('active'); if (overlay) overlay.classList.remove('active'); document.body.style.overflow = ''; }
     if (menuBtn) menuBtn.addEventListener('click', openSidebar);
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
-
     let sx = 0, sy = 0;
-    document.addEventListener('touchstart', function(e) {
-        sx = e.changedTouches[0].screenX;
-        sy = e.changedTouches[0].screenY;
-    }, { passive: true });
+    document.addEventListener('touchstart', function(e) { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY; }, { passive: true });
     document.addEventListener('touchend', function(e) {
-        const dx = e.changedTouches[0].screenX - sx;
-        const dy = e.changedTouches[0].screenY - sy;
+        const dx = e.changedTouches[0].screenX - sx, dy = e.changedTouches[0].screenY - sy;
         if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) return;
         if (e.cancelable) e.preventDefault();
-        if (dx > 0 && sx < 40) openSidebar();
-        else if (dx < 0) closeSidebar();
+        if (dx > 0 && sx < 40) openSidebar(); else if (dx < 0) closeSidebar();
     }, { passive: false });
 }
 
@@ -324,9 +320,7 @@ function initLogout() {
     document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            supabaseClient.auth.signOut().then(function() {
-                window.location.href = '../../../index.html';
-            });
+            supabaseClient.auth.signOut().then(function() { window.location.href = '../../../index.html'; });
         });
     });
 }
@@ -335,27 +329,18 @@ function initLogout() {
 // 13. INITIALISATION
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function() {
-    const tournamentId = getTournamentIdFromURL();
-    if (!tournamentId) return;
-
     const user = await checkSession();
     if (!user) return;
 
     await loadProfile();
-    updateNavbarUI();
-
     initUserMenu();
     initSidebar();
     initLogout();
 
-    document.getElementById('backBtn')?.addEventListener('click', function() {
-        window.history.back();
-    });
-
+    document.getElementById('backBtn')?.addEventListener('click', function() { window.history.back(); });
     document.getElementById('langSelect')?.addEventListener('change', function(e) {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        showToast('Langue : ' + selectedOption.text, 'info');
+        showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
 
-    await loadTournamentRules(tournamentId);
+    await loadTournamentSpecificRules();
 });

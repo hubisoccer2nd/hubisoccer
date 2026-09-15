@@ -260,15 +260,23 @@ input, select, textarea { font-family:inherit; outline:none; }
 }
 .cover-preview:hover { border-color:var(--primary); background:var(--primary-xlight); }
 .cover-preview i { font-size:1.8rem; }
-.cover-preview img { width:100%; height:100%; object-fit:cover; }
+.cover-preview img { width:100%; height:100%; object-fit:cover; display:block; }
 
 /* Mini profil preview */
 .profile-preview-card {
     border-radius:var(--radius); border:1px solid var(--gray-light);
     overflow:hidden; margin-top:20px;
 }
+/* La couverture recoit une image via JS (backgroundImage). Sans
+   background-size/position, l'image s'affichait a sa taille naturelle
+   et se repetait en mosaique. On cadre donc explicitement. */
 .preview-cover {
-    height:80px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    height:80px;
+    background-color:var(--primary);
+    background-image:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
 }
 .preview-avatar-wrap { padding:0 16px; position:relative; margin-top:-28px; }
 .preview-avatar {
@@ -438,3 +446,38 @@ input, select, textarea { font-family:inherit; outline:none; }
     .step-label { display:none; }
 }
 /* ===== FIN CSS ===== */
+/* ============================================================
+   AJOUTS — CORRECTIFS DE LA PAGE DE CONFIGURATION
+   ------------------------------------------------------------
+   Les styles du recapitulatif (.recap-row, .recap-label,
+   .recap-value, .recap-avatar, .recap-cover-thumb) et de l'etat
+   de l'identifiant (.id-check) existent deja plus haut dans ce
+   fichier : ils ne sont PAS redefinis ici pour ne pas entrer en
+   conflit avec eux.
+   ============================================================ */
+
+/* ---------- Barre de navigation ----------
+   La navbar contient maintenant un bouton « retour a mon espace »
+   dont la destination depend du role (voir role-nav.js).
+   On aere la zone de droite pour l'accueillir. */
+.c-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* ---------- Etat desactive des boutons d'action ----------
+   Le bouton de creation reste desactive tant que les conditions
+   ne sont pas acceptees : il doit se voir. */
+.btn-gold:disabled,
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.3);
+}
+
+/* ---------- Responsive de la barre de navigation ---------- */
+@media (max-width: 640px) {
+    .c-nav-right { gap: 8px; }
+    .c-nav-title { display: none; }
+}

@@ -149,7 +149,7 @@ function renderMyStories() {
                 <div class="my-story-item">
                     <div class="my-story-thumb" data-story-id="${story.id}">
                         <div class="story-thumb-wrap active-story">
-                            ${thumbUrl ? (isVideo ? `<video src="${thumbUrl}" muted></video>` : `<img src="${thumbUrl}" alt="">`) : ''}
+                            ${thumbUrl ? (isVideo ? `<video src="${escapeAttr(thumbUrl)}" muted></video>` : `<img src="${escapeAttr(thumbUrl)}" alt="">`) : ''}
                             <div class="story-thumb-overlay"><span>${time}</span></div>
                         </div>
                     </div>
@@ -249,7 +249,7 @@ function makeStoryListItem(g, idx) {
     return `
         <div class="story-list-item" data-group-idx="${idx}">
             <div class="story-list-avatar-wrap">
-                ${avatarUrl ? `<img src="${avatarUrl}" alt="" style="display:block;">` : ''}
+                ${avatarUrl ? `<img src="${escapeAttr(avatarUrl)}" alt="" style="display:block;">` : ''}
                 <div class="story-list-avatar-initials" style="display:${avatarUrl ? 'none' : 'flex'};">${initials}</div>
             </div>
             <div class="story-list-info">
@@ -389,7 +389,7 @@ async function showStoryViewers(storyId) {
             const name = viewer.full_name || viewer.display_name || 'Utilisateur';
             const avatarUrl = viewer.avatar_url;
             return `<li class="users-list-item" onclick="window.location.href='profil-feed.html?id=${viewer.hubisoccer_id}'">
-                ${avatarUrl ? `<img src="${avatarUrl}" alt="">` : `<div class="user-avatar-placeholder">${getInitials(name)}</div>`}
+                ${avatarUrl ? `<img src="${escapeAttr(avatarUrl)}" alt="">` : `<div class="user-avatar-placeholder">${getInitials(name)}</div>`}
                 <span class="users-list-item-name">${escapeHtml(name)}</span>
             </li>`;
         }).join('') || '<li style="padding:16px;color:var(--gray);text-align:center">Aucune vue</li>';
@@ -540,7 +540,7 @@ function handleStoryFileSelect(file) {
     if (preview) {
         preview.innerHTML = `
             <div style="position:relative">
-                ${isVideo ? `<video src="${url}" controls style="width:100%;max-height:240px;border-radius:8px"></video>` : `<img src="${url}" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px">`}
+                ${isVideo ? `<video src="${escapeAttr(url)}" controls style="width:100%;max-height:240px;border-radius:8px"></video>` : `<img src="${escapeAttr(url)}" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px">`}
                 <button class="story-preview-remove" onclick="clearStoryFile()"><i class="fas fa-times"></i></button>
             </div>
             <p style="font-size:0.72rem;color:var(--gray);margin-top:6px;text-align:center">${file.name} — ${(file.size/1024/1024).toFixed(1)} Mo</p>
@@ -658,6 +658,18 @@ async function init() {
 
     await loadAllStories();
     setLoader(false);
+
+    // Ouverture directe si la page est appelée avec ?user= et/ou ?story=
+    const params = new URLSearchParams(window.location.search);
+    const targetUser = params.get('user');
+    const targetStory = params.get('story');
+    if (targetStory || targetUser) {
+        const url = new URL('stories-view.html', window.location.href);
+        if (targetUser) url.searchParams.set('user', targetUser);
+        if (targetStory) url.searchParams.set('story', targetStory);
+        window.location.replace(url.toString());
+        return;
+    }
 
     document.getElementById('myStoryAdd').addEventListener('click', () => openModal('modalUploadStory'));
 

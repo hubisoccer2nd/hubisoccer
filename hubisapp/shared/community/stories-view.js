@@ -724,10 +724,18 @@ async function sendHubiCoins() {
             return;
         }
 
-        await sb.from('supabaseAuthPrive_hubis_wallets').upsert(
-            { user_hubisoccer_id: currentProfile.hubisoccer_id, balance: balance - amount },
-            { onConflict: 'user_hubisoccer_id' }
-        );
+        // Débit conditionnel : l'écriture n'aboutit que si le solde n'a pas
+        // changé entre-temps, ce qui empêche de dépenser deux fois la même somme.
+        const { data: debited } = await sb.from('supabaseAuthPrive_hubis_wallets')
+            .update({ balance: balance - amount })
+            .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
+            .eq('balance', balance)
+            .select('balance');
+
+        if (!debited || debited.length === 0) {
+            toast('Votre solde a changé, veuillez réessayer', 'warning');
+            return;
+        }
 
         const { data: rec } = await sb
             .from('supabaseAuthPrive_hubis_wallets')
@@ -862,7 +870,7 @@ async function showStoryViewers() {
         const viewer = v.viewer || {};
         const name = viewer.full_name || viewer.display_name || 'Utilisateur';
         return `<div class="sv-viewer-item">
-            ${viewer.avatar_url ? `<img src="${viewer.avatar_url}">` : `<div class="sv-viewer-avatar-initials">${getInitials(name)}</div>`}
+            ${viewer.avatar_url ? `<img src="${escapeAttr(viewer.avatar_url)}">` : `<div class="sv-viewer-avatar-initials">${getInitials(name)}</div>`}
             <span class="sv-viewer-name">${escapeHtml(name)}</span>
             <span class="sv-viewer-time">${timeSince(v.viewed_at)}</span>
         </div>`;

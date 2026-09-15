@@ -1,6 +1,20 @@
 /* ============================================================
    HubISoccer — demande-carte.js
-   Demande de carte de tournoi – Version adaptée
+   Système Gestion Tournois — Ma carte de tournoi
+   ------------------------------------------------------------
+   Corrections appliquees :
+   - Tables migrees vers supabaseAuthPrive_gt_*.
+   - La carte n'etait JAMAIS enregistree cote serveur -- seulement
+     dans le localStorage du navigateur. Aucun organisateur
+     n'aurait jamais pu voir une demande. Ajoutee une vraie
+     insertion dans supabaseAuthPrive_gt_cartes (table dediee,
+     voir demande-carte-table.sql), le localStorage reste comme
+     cache local pratique mais n'est plus la seule source.
+   - Photo et logo du club etaient stockes en base64 en memoire,
+     jamais vraiment televerses. Convertis en vrais televersements
+     Supabase Storage (bucket gt-cartes-photos), coherent avec
+     le reste de la plateforme.
+   - Routage dynamique profil/parametres + niveaux de sidebar.
    ============================================================ */
 'use strict';
 
@@ -13,35 +27,57 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 window.__SUPABASE_CLIENT = supabaseClient;
 
 // ═══════════════════════════════════════════════════════════
-// 2. ÉTAT GLOBAL
+// 2. TABLES
+// ═══════════════════════════════════════════════════════════
+const TBL_CARTES     = 'supabaseAuthPrive_gt_cartes';
+const TBL_PROFILES     = 'supabaseAuthPrive_profiles';
+const PHOTO_BUCKET        = 'gt-cartes-photos';
+
+// ═══════════════════════════════════════════════════════════
+// 3. TABLE DE ROUTAGE PROFIL / PARAMETRES PAR ROLE
+// ═══════════════════════════════════════════════════════════
+const ROLE_PROFILE_ROUTES = {
+    FOOT:   { profile: '../../footballeur/profile-edit/foot-profile.html',       settings: '../../footballeur/settings/foot-settings.html' },
+    COACH:  { profile: '../../coach/profile-edit/coach-profile.html',            settings: '../../coach/settings/coach-settings.html' },
+    ACAD:   { profile: '../../academie/profile-edit/academie-profile.html',      settings: '../../academie/settings/academie-settings.html' },
+    AGENT:  { profile: '../../agent/profile-edit/agent-profile.html',            settings: '../../agent/settings/agent-settings.html' },
+    PARRAIN:{ profile: '../../parrain/profile-edit/parrain-profile.html',        settings: '../../parrain/settings/parrain-settings.html' },
+    MEDIC:  { profile: '../../staff_medical/profile-edit/staff-profile.html',    settings: '../../staff_medical/settings/staff-settings.html' },
+    ARBIT:  { profile: '../../corps_arbitral/profile-edit/arbitre-profile.html', settings: '../../corps_arbitral/settings/arbitre-settings.html' },
+    TOURN:  { profile: '../../gestionnaire_tournoi/profile-edit/gt-profile.html', settings: '../../gestionnaire_tournoi/settings/gt-settings.html' }
+};
+const GESTIONNAIRE_ROLE_CODES = ['TOURN'];
+const CATEGORY_LABELS = {
+    public_show: 'Public Show You',
+    public_detection: 'Détection HubISoccer',
+    private_hubisoccer: 'Privé HubISoccer',
+    private_simple: 'Privé Simple'
+};
+
+// ═══════════════════════════════════════════════════════════
+// 4. ÉTAT GLOBAL
 // ═══════════════════════════════════════════════════════════
 let currentUser = null;
 let userProfile = null;
 let ownerSignatureData = null;
 let signaturePad = null;
-let currentSignatureType = null;
-let clubLogoData = null;
-let photoData = null;
+let clubLogoFile = null;
+let photoFile = null;
+let clubLogoPreviewUrl = null;
+let photoPreviewUrl = null;
 
 // ═══════════════════════════════════════════════════════════
-// 3. LOADER
+// 5. LOADER
 // ═══════════════════════════════════════════════════════════
-function showLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'flex';
-}
-
-function hideLoader() {
-    const loader = document.getElementById('globalLoader');
-    if (loader) loader.style.display = 'none';
-}
+function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
+function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
 
 // ═══════════════════════════════════════════════════════════
-// 4. TOAST (30 secondes)
+// 6. TOAST (30 secondes)
 // ═══════════════════════════════════════════════════════════
 function showToast(message, type, duration) {
     if (!type) type = 'info';
-    if (!duration) duration = 30000;
+    if (!duration) duration = 20000;
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -49,12 +85,7 @@ function showToast(message, type, duration) {
         container.className = 'toast-container';
         document.body.appendChild(container);
     }
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
     const toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.innerHTML = '<div class="toast-icon"><i class="fas ' + (icons[type] || icons.info) + '"></i></div>' +
@@ -74,15 +105,12 @@ function showToast(message, type, duration) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 5. UTILITAIRES
+// 7. UTILITAIRES
 // ═══════════════════════════════════════════════════════════
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m];
-    });
+    return String(str).replace(/[&<>]/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]; });
 }
-
 function getInitials(name) {
     if (!name) return '?';
     const parts = name.trim().split(/\s+/);
@@ -91,15 +119,14 @@ function getInitials(name) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 6. SESSION
+// 8. SESSION
 // ═══════════════════════════════════════════════════════════
 async function checkSession() {
     showLoader();
     const { data } = await supabaseClient.auth.getSession();
     const session = data.session;
-    const error = !session;
     hideLoader();
-    if (error || !session) {
+    if (!session) {
         window.location.href = '../../authprive/users/login.html';
         return null;
     }
@@ -108,12 +135,12 @@ async function checkSession() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 7. CHARGEMENT DU PROFIL
+// 9. CHARGEMENT DU PROFIL
 // ═══════════════════════════════════════════════════════════
 async function loadProfile() {
     showLoader();
     const { data, error } = await supabaseClient
-        .from('supabaseAuthPrive_profiles')
+        .from(TBL_PROFILES)
         .select('*')
         .eq('auth_uuid', currentUser.id)
         .single();
@@ -124,25 +151,40 @@ async function loadProfile() {
     }
     userProfile = data;
     updateNavbarUI();
+    applyRoleTier();
     return userProfile;
 }
 
+function applyRoleTier() {
+    const isGestionnaire = GESTIONNAIRE_ROLE_CODES.indexOf(userProfile.role_code) !== -1;
+    if (!isGestionnaire) {
+        document.querySelectorAll('[data-tier="gestionnaire"]').forEach(function(el) { el.style.display = 'none'; });
+    }
+}
+
+function applyProfileRouting() {
+    const routes = ROLE_PROFILE_ROUTES[userProfile.role_code];
+    const profileLink = document.getElementById('profileLink');
+    const settingsLink = document.getElementById('settingsLink');
+    if (routes) {
+        if (profileLink) profileLink.href = routes.profile;
+        if (settingsLink) settingsLink.href = routes.settings;
+    } else {
+        if (profileLink) profileLink.style.display = 'none';
+        if (settingsLink) settingsLink.style.display = 'none';
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
-// 8. MISE À JOUR DE LA NAVBAR
+// 10. MISE À JOUR DE LA NAVBAR
 // ═══════════════════════════════════════════════════════════
 function updateNavbarUI() {
     if (!userProfile) return;
-
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
     const userInitials = document.getElementById('userAvatarInitials');
-
-    if (userName) {
-        userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
-    }
-
+    if (userName) userName.textContent = userProfile.full_name || userProfile.display_name || 'Utilisateur';
     const avatarUrl = userProfile.avatar_url;
-
     if (avatarUrl && avatarUrl !== '') {
         if (userAvatar) { userAvatar.src = avatarUrl; userAvatar.style.display = 'block'; }
         if (userInitials) userInitials.style.display = 'none';
@@ -151,30 +193,28 @@ function updateNavbarUI() {
         if (userInitials) { userInitials.textContent = initials; userInitials.style.display = 'flex'; }
         if (userAvatar) userAvatar.style.display = 'none';
     }
+    applyProfileRouting();
 }
 
 // ═══════════════════════════════════════════════════════════
-// 9. GESTION DES FICHIERS (PHOTO, LOGO)
+// 11. GESTION DES FICHIERS (aperçu local + fichier réel conservé)
 // ═══════════════════════════════════════════════════════════
-function handleFileUpload(fileInput, previewDiv, callback) {
+function handleFileSelect(fileInput, previewDiv, onSelected) {
     const file = fileInput.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
-        const dataURL = e.target.result;
-        previewDiv.innerHTML = '<img src="' + dataURL + '" style="max-width:100px;">';
-        if (callback) callback(dataURL);
+        previewDiv.innerHTML = '<img src="' + e.target.result + '" style="max-width:100px;">';
     };
     reader.readAsDataURL(file);
+    if (onSelected) onSelected(file);
 }
 
 // ═══════════════════════════════════════════════════════════
-// 10. SIGNATURE
+// 12. SIGNATURE
 // ═══════════════════════════════════════════════════════════
-function openSignatureModal(type) {
-    currentSignatureType = type;
-    const title = type === 'owner' ? 'Signature du propriétaire' : 'Signature';
-    document.getElementById('signatureModalTitle').innerHTML = '<i class="fas fa-pen"></i> ' + title;
+function openSignatureModal() {
+    document.getElementById('signatureModalTitle').innerHTML = '<i class="fas fa-pen"></i> Signature du titulaire';
     document.getElementById('signatureModal').style.display = 'flex';
     const canvas = document.getElementById('signatureCanvas');
     canvas.width = canvas.offsetWidth || 400;
@@ -182,38 +222,28 @@ function openSignatureModal(type) {
     if (signaturePad) signaturePad.clear();
     else signaturePad = new SignaturePad(canvas, { backgroundColor: 'white', penColor: '#551B8C' });
 }
-
-function closeSignatureModal() {
-    document.getElementById('signatureModal').style.display = 'none';
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('clearSignatureBtn')?.addEventListener('click', function() {
-        if (signaturePad) signaturePad.clear();
-    });
-    document.getElementById('saveSignatureBtn')?.addEventListener('click', function() {
-        if (signaturePad && !signaturePad.isEmpty()) {
-            const dataURL = signaturePad.toDataURL();
-            if (currentSignatureType === 'owner') {
-                ownerSignatureData = dataURL;
-                document.getElementById('ownerSignImg').src = dataURL;
-                document.getElementById('ownerSignaturePreview').innerHTML = '<img src="' + dataURL + '" style="max-height:60px;">';
-            }
-            closeSignatureModal();
-        } else {
-            showToast('Veuillez signer.', 'warning');
-        }
-    });
-});
+function closeSignatureModal() { document.getElementById('signatureModal').style.display = 'none'; }
 
 // ═══════════════════════════════════════════════════════════
-// 11. GÉNÉRATION DE LA CARTE
+// 13. TÉLÉVERSEMENT RÉEL (photo + logo)
+// ═══════════════════════════════════════════════════════════
+async function uploadCardImage(file, label) {
+    const ext = file.name.split('.').pop();
+    const path = currentUser.id + '/' + label + '_' + Date.now() + '.' + ext;
+    const { error } = await supabaseClient.storage.from(PHOTO_BUCKET).upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data } = supabaseClient.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 14. GÉNÉRATION DE LA CARTE
 // ═══════════════════════════════════════════════════════════
 function generateTrackingCode() {
     return 'HUB-' + Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
-function generateCard() {
+async function generateCard() {
     const fullName = document.getElementById('fullName').value.trim();
     const birthDate = document.getElementById('birthDate').value;
     const nationality = document.getElementById('nationality').value.trim();
@@ -223,7 +253,7 @@ function generateCard() {
     const countryCode = document.getElementById('countryCode').value.trim().toUpperCase();
     const acceptRules = document.getElementById('acceptRules').checked;
 
-    if (!fullName || !birthDate || !nationality || !country || !acceptRules || !photoData) {
+    if (!fullName || !birthDate || !nationality || !country || !acceptRules || !photoFile) {
         showToast('Veuillez remplir tous les champs obligatoires, accepter le règlement et charger une photo.', 'error');
         return;
     }
@@ -232,89 +262,116 @@ function generateCard() {
         return;
     }
 
-    const trackingCode = generateTrackingCode();
-    const issueDate = new Date().toLocaleDateString('fr-FR');
-    const expiryDate = new Date();
-    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-    const expiryDateStr = expiryDate.toLocaleDateString('fr-FR');
-    const deliveryPlace = 'Cotonou, Bénin';
-
-    // Obtenir la catégorie depuis l'URL
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get('type');
-    const categoryLabels = {
-        public_show: 'Public Show You',
-        public_detection: 'Détection HubISoccer',
-        private_hubisoccer: 'Privé HubISoccer',
-        private_simple: 'Privé Simple'
-    };
-    const categoryLabel = categoryLabels[category] || category;
+    const categoryLabel = CATEGORY_LABELS[category] || category;
 
-    // Stocker temporairement dans le localStorage
-    const cardData = {
-        fullName, birthDate, nationality, country, club, tournamentName,
-        trackingCode, issueDate, expiryDateStr, deliveryPlace,
-        ownerSignature: ownerSignatureData,
-        category, categoryLabel,
-        photo: photoData,
-        clubLogo: clubLogoData || null,
-        countryCode: countryCode || 'bj'
-    };
-    localStorage.setItem('pendingCard_' + trackingCode, JSON.stringify(cardData));
+    const trackingCode = generateTrackingCode();
+    const issueDate = new Date();
+    const expiryDate = new Date();
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+    const deliveryPlace = 'Cotonou, Bénin';
 
-    // Remplir l'aperçu de la carte
+    showLoader();
+
+    // Televersement reel des images (remplace le base64-seulement du fichier source)
+    let photoUrl = null, clubLogoUrl = null;
+    try {
+        photoUrl = await uploadCardImage(photoFile, 'photo');
+        if (clubLogoFile) clubLogoUrl = await uploadCardImage(clubLogoFile, 'logo');
+    } catch (err) {
+        hideLoader();
+        showToast('Erreur envoi des images : ' + err.message, 'error');
+        return;
+    }
+
+    // Enregistrement reel en base -- absent du fichier source, qui ne
+    // stockait la carte que dans le localStorage du navigateur
+    const { error: insertError } = await supabaseClient.from(TBL_CARTES).insert([{
+        user_id: currentUser.id,
+        tracking_code: trackingCode,
+        category: category,
+        full_name: fullName,
+        birth_date: birthDate,
+        nationality: nationality,
+        country: country,
+        country_code: countryCode || 'bj',
+        club: club || null,
+        tournament_name: tournamentName || null,
+        photo_url: photoUrl,
+        club_logo_url: clubLogoUrl,
+        owner_signature: ownerSignatureData,
+        issue_date: issueDate.toISOString().split('T')[0],
+        expiry_date: expiryDate.toISOString().split('T')[0],
+        delivery_place: deliveryPlace
+    }]);
+
+    hideLoader();
+
+    if (insertError) {
+        showToast('Erreur lors de l\'enregistrement : ' + insertError.message, 'error');
+        return;
+    }
+
+    // Cache local pratique (facultatif, la base est desormais la source de verite)
+    try {
+        localStorage.setItem('pendingCard_' + trackingCode, JSON.stringify({ trackingCode, fullName, category }));
+    } catch (e) { /* localStorage indisponible : sans consequence, la carte est deja en base */ }
+
+    renderCardPreview({
+        trackingCode, fullName, birthDate, nationality, country, club, categoryLabel, tournamentName,
+        photoUrl, clubLogoUrl, ownerSignature: ownerSignatureData,
+        issueDate: issueDate.toLocaleDateString('fr-FR'),
+        expiryDateStr: expiryDate.toLocaleDateString('fr-FR'),
+        deliveryPlace, countryCode
+    });
+
+    showToast('Carte générée et enregistrée avec succès !', 'success');
+}
+
+function renderCardPreview(d) {
     document.getElementById('frontInfo').innerHTML =
-        '<p><strong>N° Carte :</strong> ' + trackingCode + '</p>' +
-        '<p><strong>Nom :</strong> ' + escapeHtml(fullName) + '</p>' +
-        '<p><strong>Date naissance :</strong> ' + birthDate + '</p>' +
-        '<p><strong>Nationalité :</strong> ' + escapeHtml(nationality) + '</p>' +
-        '<p><strong>Pays :</strong> ' + escapeHtml(country) + '</p>' +
-        '<p><strong>Club :</strong> ' + escapeHtml(club || '-') + '</p>' +
-        '<p><strong>Catégorie :</strong> ' + categoryLabel + '</p>' +
-        '<p><strong>Tournoi :</strong> ' + escapeHtml(tournamentName || '-') + '</p>';
+        '<p><strong>N° Carte :</strong> ' + escapeHtml(d.trackingCode) + '</p>' +
+        '<p><strong>Nom :</strong> ' + escapeHtml(d.fullName) + '</p>' +
+        '<p><strong>Date naissance :</strong> ' + d.birthDate + '</p>' +
+        '<p><strong>Nationalité :</strong> ' + escapeHtml(d.nationality) + '</p>' +
+        '<p><strong>Pays :</strong> ' + escapeHtml(d.country) + '</p>' +
+        '<p><strong>Club :</strong> ' + escapeHtml(d.club || '-') + '</p>' +
+        '<p><strong>Catégorie :</strong> ' + escapeHtml(d.categoryLabel) + '</p>' +
+        '<p><strong>Tournoi :</strong> ' + escapeHtml(d.tournamentName || '-') + '</p>';
 
-    document.getElementById('ownerSignImg').src = ownerSignatureData;
-    if (clubLogoData) document.getElementById('clubLogoDisplay').src = clubLogoData;
-    if (photoData) {
-        const frontInfoDiv = document.getElementById('frontInfo');
-        const photoHtml = '<div class="photo-titulaire"><img src="' + photoData + '" style="width:80px; height:80px; border-radius:50%; object-fit:cover; margin-top:10px;"></div>';
-        frontInfoDiv.insertAdjacentHTML('beforeend', photoHtml);
+    document.getElementById('ownerSignImg').src = d.ownerSignature;
+    if (d.clubLogoUrl) document.getElementById('clubLogoDisplay').src = d.clubLogoUrl;
+    if (d.photoUrl) {
+        document.getElementById('frontInfo').insertAdjacentHTML('beforeend',
+            '<div class="photo-titulaire"><img src="' + d.photoUrl + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:10px;"></div>');
     }
 
     const qrDiv = document.getElementById('qrCode');
     qrDiv.innerHTML = '';
-    new QRCode(qrDiv, {
-        text: 'https://hubisoccer.com/verify-card?code=' + trackingCode,
-        width: 100,
-        height: 100
-    });
+    new QRCode(qrDiv, { text: 'https://hubisoccer.com/verify-card?code=' + d.trackingCode, width: 100, height: 100 });
 
     document.getElementById('backInfo').innerHTML =
         '<p><strong>Délivré par :</strong> HubISoccer</p>' +
-        '<p><strong>Lieu de délivrance :</strong> ' + deliveryPlace + '</p>' +
-        '<p><strong>Date de délivrance :</strong> ' + issueDate + '</p>' +
-        '<p><strong>Valable jusqu\'au :</strong> ' + expiryDateStr + '</p>';
+        '<p><strong>Lieu de délivrance :</strong> ' + escapeHtml(d.deliveryPlace) + '</p>' +
+        '<p><strong>Date de délivrance :</strong> ' + d.issueDate + '</p>' +
+        '<p><strong>Valable jusqu\'au :</strong> ' + d.expiryDateStr + '</p>';
 
-    document.getElementById('flagImg').src = 'https://flagcdn.com/64x48/' + (countryCode || 'bj').toLowerCase() + '.png';
+    document.getElementById('flagImg').src = 'https://flagcdn.com/64x48/' + (d.countryCode || 'bj').toLowerCase() + '.png';
 
     document.getElementById('cardPreviewSection').style.display = 'block';
-    document.querySelector('.form-section').style.display = 'none';
+    document.getElementById('formSection').style.display = 'none';
 }
 
 // ═══════════════════════════════════════════════════════════
-// 12. UI : SIDEBAR, MENU, DÉCONNEXION
+// 15. UI : SIDEBAR, MENU, DÉCONNEXION
 // ═══════════════════════════════════════════════════════════
 function initUserMenu() {
     const userMenu = document.getElementById('userMenu');
     const dropdown = document.getElementById('userDropdown');
     if (!userMenu || !dropdown) return;
-    userMenu.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdown.classList.toggle('show');
-    });
-    document.addEventListener('click', function() {
-        dropdown.classList.remove('show');
-    });
+    userMenu.addEventListener('click', function(e) { e.stopPropagation(); dropdown.classList.toggle('show'); });
+    document.addEventListener('click', function() { dropdown.classList.remove('show'); });
 }
 
 function initSidebar() {
@@ -322,34 +379,18 @@ function initSidebar() {
     const overlay = document.getElementById('sidebarOverlay');
     const menuBtn = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeLeftSidebar');
-
-    function openSidebar() {
-        if (sidebar) sidebar.classList.add('active');
-        if (overlay) overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
+    function openSidebar() { if (sidebar) sidebar.classList.add('active'); if (overlay) overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function closeSidebar() { if (sidebar) sidebar.classList.remove('active'); if (overlay) overlay.classList.remove('active'); document.body.style.overflow = ''; }
     if (menuBtn) menuBtn.addEventListener('click', openSidebar);
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
-
     let sx = 0, sy = 0;
-    document.addEventListener('touchstart', function(e) {
-        sx = e.changedTouches[0].screenX;
-        sy = e.changedTouches[0].screenY;
-    }, { passive: true });
+    document.addEventListener('touchstart', function(e) { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY; }, { passive: true });
     document.addEventListener('touchend', function(e) {
-        const dx = e.changedTouches[0].screenX - sx;
-        const dy = e.changedTouches[0].screenY - sy;
+        const dx = e.changedTouches[0].screenX - sx, dy = e.changedTouches[0].screenY - sy;
         if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < 55) return;
         if (e.cancelable) e.preventDefault();
-        if (dx > 0 && sx < 40) openSidebar();
-        else if (dx < 0) closeSidebar();
+        if (dx > 0 && sx < 40) openSidebar(); else if (dx < 0) closeSidebar();
     }, { passive: false });
 }
 
@@ -357,15 +398,13 @@ function initLogout() {
     document.querySelectorAll('#logoutLink, #logoutLinkSidebar').forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            supabaseClient.auth.signOut().then(function() {
-                window.location.href = '../../../index.html';
-            });
+            supabaseClient.auth.signOut().then(function() { window.location.href = '../../../index.html'; });
         });
     });
 }
 
 // ═══════════════════════════════════════════════════════════
-// 13. INITIALISATION
+// 16. INITIALISATION
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function() {
     const user = await checkSession();
@@ -379,45 +418,47 @@ document.addEventListener('DOMContentLoaded', async function() {
     initLogout();
 
     document.getElementById('langSelect')?.addEventListener('change', function(e) {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        showToast('Langue : ' + selectedOption.text, 'info');
+        showToast('Langue : ' + e.target.options[e.target.selectedIndex].text, 'info');
     });
+    document.getElementById('backBtn')?.addEventListener('click', function() { window.history.back(); });
 
-    // Catégorie depuis l'URL
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get('type');
-    const categoryLabels = {
-        public_show: 'Public Show You',
-        public_detection: 'Détection HubISoccer',
-        private_hubisoccer: 'Privé HubISoccer',
-        private_simple: 'Privé Simple'
-    };
-    if (!category || !categoryLabels[category]) {
+    if (!category || !CATEGORY_LABELS[category]) {
         showToast('Catégorie invalide, retour à la page de choix.', 'error');
-        setTimeout(function() {
-            window.location.href = 'demande-carte.html';
-        }, 2000);
+        setTimeout(function() { window.location.href = 'carte-de-tournoi-choix.html'; }, 2000);
         return;
     }
-    document.getElementById('categoryDisplay').value = categoryLabels[category];
+    document.getElementById('categoryDisplay').value = CATEGORY_LABELS[category];
+    document.getElementById('categoryLabel').textContent = CATEGORY_LABELS[category];
 
-    // Uploads
-    document.getElementById('clubLogoFile').addEventListener('change', function() {
-        handleFileUpload(this, document.getElementById('clubLogoPreview'), function(dataURL) {
-            clubLogoData = dataURL;
-        });
+    document.getElementById('clubLogoBtn')?.addEventListener('click', function() { document.getElementById('clubLogoFile').click(); });
+    document.getElementById('photoBtn')?.addEventListener('click', function() { document.getElementById('photoFile').click(); });
+
+    document.getElementById('clubLogoFile')?.addEventListener('change', function() {
+        handleFileSelect(this, document.getElementById('clubLogoPreview'), function(file) { clubLogoFile = file; });
     });
-    document.getElementById('photoFile').addEventListener('change', function() {
-        handleFileUpload(this, document.getElementById('photoPreview'), function(dataURL) {
-            photoData = dataURL;
-        });
+    document.getElementById('photoFile')?.addEventListener('change', function() {
+        handleFileSelect(this, document.getElementById('photoPreview'), function(file) { photoFile = file; });
     });
 
-    // Génération
-    document.getElementById('generateCardBtn').addEventListener('click', generateCard);
+    document.getElementById('ownerSignaturePreview')?.addEventListener('click', openSignatureModal);
+    document.getElementById('clearSignatureBtn')?.addEventListener('click', function() { if (signaturePad) signaturePad.clear(); });
+    document.getElementById('saveSignatureBtn')?.addEventListener('click', function() {
+        if (signaturePad && !signaturePad.isEmpty()) {
+            ownerSignatureData = signaturePad.toDataURL();
+            document.getElementById('ownerSignImg').src = ownerSignatureData;
+            document.getElementById('ownerSignaturePreview').innerHTML = '<img src="' + ownerSignatureData + '" style="max-height:60px;">';
+            closeSignatureModal();
+        } else {
+            showToast('Veuillez signer.', 'warning');
+        }
+    });
+    window.closeSignatureModal = closeSignatureModal;
 
-    // Impression PDF
-    document.getElementById('printCardBtn').addEventListener('click', function() {
+    document.getElementById('generateCardBtn')?.addEventListener('click', generateCard);
+
+    document.getElementById('printCardBtn')?.addEventListener('click', function() {
         const element = document.getElementById('cardPreview');
         html2pdf().from(element).set({
             margin: 0.5,
@@ -428,26 +469,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         }).save();
     });
 
-    // Modifier
-    document.getElementById('editCardBtn').addEventListener('click', function() {
+    document.getElementById('editCardBtn')?.addEventListener('click', function() {
         document.getElementById('cardPreviewSection').style.display = 'none';
-        document.querySelector('.form-section').style.display = 'block';
+        document.getElementById('formSection').style.display = 'block';
     });
 
-    // Réinitialiser
-    document.getElementById('resetFormBtn').addEventListener('click', function() {
+    document.getElementById('resetFormBtn')?.addEventListener('click', function() {
         document.getElementById('carteForm').reset();
         ownerSignatureData = null;
-        photoData = null;
-        clubLogoData = null;
+        photoFile = null;
+        clubLogoFile = null;
         document.getElementById('ownerSignaturePreview').innerHTML = '<i class="fas fa-pen"></i> Cliquez pour signer';
         document.getElementById('photoPreview').innerHTML = '';
         document.getElementById('clubLogoPreview').innerHTML = '';
+        document.getElementById('categoryDisplay').value = CATEGORY_LABELS[category];
         document.getElementById('cardPreviewSection').style.display = 'none';
-        document.querySelector('.form-section').style.display = 'block';
+        document.getElementById('formSection').style.display = 'block';
     });
-
-    // Exposer les fonctions globales nécessaires
-    window.openSignatureModal = openSignatureModal;
-    window.closeSignatureModal = closeSignatureModal;
 });

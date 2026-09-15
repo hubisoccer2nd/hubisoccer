@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnostic communauté | HubISoccer</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+    :root { --primary:#551B8C; --ok:#1a9e57; --ko:#d63d3d; --gray:#6c757d; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background:#f4f1f9; color:#1a1a2e; padding:16px; line-height:1.55;
+    }
+    h1 { font-size:1.15rem; color:var(--primary); margin-bottom:4px; }
+    .sub { font-size:0.84rem; color:var(--gray); margin-bottom:18px; }
+    .test {
+        background:#fff; border-radius:12px; padding:14px 16px; margin-bottom:10px;
+        border-left:5px solid var(--gray); box-shadow:0 2px 10px rgba(0,0,0,.06);
+    }
+    .test.ok { border-left-color:var(--ok); }
+    .test.ko { border-left-color:var(--ko); }
+    .test h2 { font-size:0.92rem; margin-bottom:6px; }
+    .verdict { font-weight:700; font-size:0.86rem; }
+    .verdict.ok { color:var(--ok); }
+    .verdict.ko { color:var(--ko); }
+    pre {
+        margin-top:8px; padding:10px; background:#f7f5fb; border-radius:8px;
+        font-size:0.74rem; white-space:pre-wrap; word-break:break-word;
+        font-family: ui-monospace, Menlo, Consolas, monospace; color:#333;
+    }
+    #copier {
+        position:sticky; bottom:12px; width:100%; padding:14px;
+        background:var(--primary); color:#fff; border:none; border-radius:999px;
+        font-size:0.95rem; font-weight:700; cursor:pointer; margin-top:14px;
+    }
+    #resume { background:#fff3cd; border-radius:12px; padding:14px 16px; margin-bottom:14px; font-size:0.88rem; }
+</style>
+</head>
+<body>
+
+<h1>Diagnostic de la communauté</h1>
+<p class="sub">Cette page est autonome : elle ne dépend d'aucun autre fichier du site.
+Elle rejoue une à une les requêtes du fil et affiche l'erreur exacte.</p>
+
+<div id="resume">Tests en cours…</div>
+<div id="sortie"></div>
+<button id="copier">Copier tout le rapport</button>
+
+<script>
+// Mêmes identifiants que session.js (clé publique « anon »).
+const SUPABASE_URL  = 'https://niewavngipvowwxxguqu.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZXdhdm5naXB2b3d3eHhndXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDI1OTAsImV4cCI6MjA5MTIxODU5MH0._UdeCuHW9IgVqDOGTddr3yqP6HTjxU5XNo4MMMGEcmU';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const sortie = document.getElementById('sortie');
+const lignes = [];
+
+function bloc(titre, ok, detail) {
+    const d = document.createElement('div');
+    d.className = 'test ' + (ok ? 'ok' : 'ko');
+    const h = document.createElement('h2'); h.textContent = titre;
+    const v = document.createElement('div');
+    v.className = 'verdict ' + (ok ? 'ok' : 'ko');
+    v.textContent = ok ? 'OK' : 'ECHEC';
+    d.appendChild(h); d.appendChild(v);
+    if (detail) { const p = document.createElement('pre'); p.textContent = detail; d.appendChild(p); }
+    sortie.appendChild(d);
+    lignes.push((ok ? '[OK]   ' : '[ECHEC] ') + titre + (detail ? '\n        ' + detail.replace(/\n/g,'\n        ') : ''));
+}
+
+function decrire(error) {
+    if (!error) return '';
+    return 'code    : ' + (error.code    || '(aucun)') +
+         '\nmessage : ' + (error.message || '(aucun)') +
+         '\ndetails : ' + (error.details || '(aucun)') +
+         '\nhint    : ' + (error.hint    || '(aucun)');
+}
+
+async function essai(titre, fn) {
+    try {
+        const { data, error, count } = await fn();
+        if (error) { bloc(titre, false, decrire(error)); return null; }
+        const n = (count !== null && count !== undefined) ? count
+                : (Array.isArray(data) ? data.length : (data ? 1 : 0));
+        bloc(titre, true, 'lignes renvoyees : ' + n);
+        return data;
+    } catch (e) {
+        bloc(titre, false, decrire(e) || String(e));
+        return null;
+    }
+}
+
+(async function lancer() {
+    // --- 1. Les publications existent-elles ? (aucune jointure) ---
+    await essai('1. Compter les publications (sans jointure)', () =>
+        sb.from('supabaseAuthPrive_posts').select('*', { count: 'exact', head: true }));
+
+    // --- 2. Lire une publication brute ---
+    await essai('2. Lire 1 publication brute', () =>
+        sb.from('supabaseAuthPrive_posts').select('*').limit(1));
+
+    // --- 3. La colonne is_scheduled existe-t-elle ? ---
+    await essai('3. Filtrer sur is_scheduled', () =>
+        sb.from('supabaseAuthPrive_posts').select('id').eq('is_scheduled', false).limit(1));
+
+    // --- 4. Jointure avec les profils (le point suspect) ---
+    await essai('4. Jointure posts -> profils', () =>
+        sb.from('supabaseAuthPrive_posts')
+          .select('id, author:supabaseAuthPrive_profiles!author_hubisoccer_id(full_name)')
+          .limit(1));
+
+    // --- 5. Jointure avec les communautes ---
+    await essai('5. Jointure posts -> communautes', () =>
+        sb.from('supabaseAuthPrive_posts')
+          .select('id, community:supabaseAuthPrive_communities!community_id(name)')
+          .limit(1));
+
+    // --- 6. La requete EXACTE du fil ---
+    await essai('6. Requete complete du fil (celle qui echoue)', () =>
+        sb.from('supabaseAuthPrive_posts')
+          .select('*, author:supabaseAuthPrive_profiles!author_hubisoccer_id(hubisoccer_id, full_name, display_name, avatar_url, role_code, feed_id, certified), community:supabaseAuthPrive_communities!community_id(name, feed_id, avatar_url)')
+          .eq('is_scheduled', false)
+          .order('created_at', { ascending: false })
+          .range(0, 9));
+
+    // --- 7. Autres tables du fil ---
+    await essai('7. Table des profils', () =>
+        sb.from('supabaseAuthPrive_profiles').select('*', { count: 'exact', head: true }));
+    await essai('8. Table des communautes', () =>
+        sb.from('supabaseAuthPrive_communities').select('*', { count: 'exact', head: true }));
+    await essai('9. Table des abonnements', () =>
+        sb.from('supabaseAuthPrive_follows').select('*', { count: 'exact', head: true }));
+    await essai('10. Table des commentaires', () =>
+        sb.from('supabaseAuthPrive_comments').select('*', { count: 'exact', head: true }));
+
+    // ============================================================
+    //  PARTIE 2 — REJOUER CHAQUE BOUTON DE FILTRE DU FIL
+    // ------------------------------------------------------------
+    //  Le fil fonctionne pour certains filtres et echoue pour
+    //  d'autres, et pas de la meme facon selon l'utilisateur.
+    //  On rejoue donc chaque filtre EXACTEMENT comme feed.js le
+    //  construit, avec la session reellement connectee.
+    // ============================================================
+    const SELECT_FIL =
+        '*, author:supabaseAuthPrive_profiles!author_hubisoccer_id(hubisoccer_id, full_name, display_name, avatar_url, role_code, feed_id, certified), community:supabaseAuthPrive_communities!community_id(name, feed_id, avatar_url)';
+    const PAGE_SIZE = 20;
+
+    // --- Session reellement active dans ce navigateur ---
+    let monId = null;
+    try {
+        const { data: sess } = await sb.auth.getSession();
+        if (sess && sess.session && sess.session.user) {
+            bloc('11. Session connectee', true, 'uuid : ' + sess.session.user.id);
+            const { data: prof } = await sb.from('supabaseAuthPrive_profiles')
+                .select('hubisoccer_id, role_code')
+                .eq('auth_uuid', sess.session.user.id).maybeSingle();
+            if (prof) {
+                monId = prof.hubisoccer_id;
+                bloc('12. Mon profil', true, 'hubisoccer_id : ' + prof.hubisoccer_id +
+                     '\nrole_code : ' + (prof.role_code || '(vide)'));
+            } else {
+                bloc('12. Mon profil', false, 'aucun profil pour cet auth_uuid');
+            }
+        } else {
+            bloc('11. Session connectee', false,
+                 'AUCUNE session : les tests suivants s\'executent en anonyme. ' +
+                 'Connectez-vous sur le site puis rechargez cette page.');
+        }
+    } catch (e) { bloc('11. Session connectee', false, String(e)); }
+
+    // --- Filtre « Tout » : les 5 pages successives ---
+    for (let page = 0; page < 5; page++) {
+        const debut = page * PAGE_SIZE;
+        const fin   = debut + PAGE_SIZE - 1;
+        await essai('13.' + page + ' Filtre TOUT — page ' + (page + 1) +
+                    ' (range ' + debut + '-' + fin + ')', () =>
+            sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+              .eq('is_scheduled', false)
+              .order('created_at', { ascending: false })
+              .range(debut, fin));
+    }
+
+    // --- Filtre « Médias » ---
+    await essai('14. Filtre MEDIAS', () =>
+        sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+          .eq('is_scheduled', false).not('media_url', 'is', null)
+          .order('created_at', { ascending: false }).range(0, PAGE_SIZE - 1));
+
+    // --- Filtre « Sondages » ---
+    await essai('15. Filtre SONDAGES', () =>
+        sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+          .eq('is_scheduled', false).not('poll_data', 'is', null)
+          .order('created_at', { ascending: false }).range(0, PAGE_SIZE - 1));
+
+    // --- Filtre « Abonnements » : le point le plus suspect ---
+    if (monId) {
+        const { data: follows, error: errF } = await sb
+            .from('supabaseAuthPrive_follows')
+            .select('following_hubisoccer_id')
+            .eq('follower_hubisoccer_id', monId);
+
+        if (errF) {
+            bloc('16. Lire mes abonnements', false, decrire(errF));
+        } else {
+            const ids = (follows || []).map(f => f.following_hubisoccer_id);
+            const longueurUrl = ids.join(',').length;
+            bloc('16. Lire mes abonnements', true,
+                 'abonnements : ' + ids.length +
+                 '\nlongueur de la liste d\'identifiants : ' + longueurUrl + ' caracteres' +
+                 (longueurUrl > 2000
+                    ? '\nATTENTION : liste tres longue, l\'URL de la requete peut depasser la limite du serveur.'
+                    : ''));
+            if (ids.length) {
+                await essai('17. Filtre ABONNEMENTS (' + ids.length + ' identifiants)', () =>
+                    sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+                      .eq('is_scheduled', false)
+                      .in('author_hubisoccer_id', ids)
+                      .order('created_at', { ascending: false })
+                      .range(0, PAGE_SIZE - 1));
+            }
+        }
+    }
+
+    // --- Filtre par role (les pastilles sous les onglets) ---
+    await essai('18. Filtre par ROLE (author.role_code)', () =>
+        sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+          .eq('is_scheduled', false)
+          .eq('author.role_code', 'FOOT')
+          .order('created_at', { ascending: false }).range(0, PAGE_SIZE - 1));
+
+    // --- Recherche dans le fil ---
+    await essai('19. Recherche dans le contenu', () =>
+        sb.from('supabaseAuthPrive_posts').select(SELECT_FIL)
+          .eq('is_scheduled', false)
+          .ilike('content', '%a%')
+          .order('created_at', { ascending: false }).range(0, PAGE_SIZE - 1));
+
+    // --- Filtre « Épinglés » (publications enregistrees) ---
+    if (monId) {
+        await essai('20. Mes publications enregistrees', () =>
+            sb.from('supabaseAuthPrive_saved_posts').select('post_id')
+              .eq('user_hubisoccer_id', monId));
+    }
+
+    const echecs = lignes.filter(l => l.startsWith('[ECHEC')).length;
+    const resume = document.getElementById('resume');
+    if (echecs === 0) {
+        resume.style.background = '#d4f5e2';
+        resume.textContent = 'Aucune erreur cote base : le probleme vient des fichiers du site, pas de la base.';
+    } else {
+        resume.style.background = '#ffe0e0';
+        resume.textContent = echecs + ' test(s) en echec. Le premier ECHEC ci-dessous designe la cause.';
+    }
+    lignes.unshift('DIAGNOSTIC HUBISOCCER — ' + new Date().toISOString());
+})();
+
+document.getElementById('copier').addEventListener('click', function () {
+    const texte = lignes.join('\n\n');
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(texte).then(
+            () => { this.textContent = 'Rapport copie !'; },
+            () => { alert(texte); }
+        );
+    } else { alert(texte); }
+});
+</script>
+</body>
+</html>

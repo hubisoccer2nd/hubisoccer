@@ -15,37 +15,19 @@ let hasMoreComments   = false;
 let commentMediaFile  = null;
 let commentSubscription = null;
 
-const ROLE_DASHBOARD_MAP = {
-    'FOOT': '../../footballeur/dashboard/foot-dash.html',
-    'BASK': '../../basketteur/dashboard/basketteur-dash.html',
-    'TENN': '../../tennisman/dashboard/tennisman-dash.html',
-    'ATHL': '../../athlete/dashboard/athlete-dash.html',
-    'HANDB': '../../handballeur/dashboard/handballeur-dash.html',
-    'VOLL': '../../volleyeur/dashboard/volleyeur-dash.html',
-    'RUGBY': '../../rugbyman/dashboard/rugbyman-dash.html',
-    'NATA': '../../nageur/dashboard/nageur-dash.html',
-    'ARTSM': '../../arts_martiaux/dashboard/arts_martiaux-dash.html',
-    'CYCL': '../../cycliste/dashboard/cycliste-dash.html',
-    'CHAN': '../../chanteur/dashboard/chanteur-dash.html',
-    'DANS': '../../danseur/dashboard/danseur-dash.html',
-    'COMP': '../../compositeur/dashboard/compositeur-dash.html',
-    'ACIN': '../../acteur_cinema/dashboard/acteur_cinema-dash.html',
-    'ATHE': '../../acteur_theatre/dashboard/acteur_theatre-dash.html',
-    'HUMO': '../../humoriste/dashboard/humoriste-dash.html',
-    'SLAM': '../../slameur/dashboard/slameur-dash.html',
-    'DJ': '../../dj/dashboard/dj-dash.html',
-    'CIRQ': '../../cirque/dashboard/cirque-dash.html',
-    'VISU': '../../artiste_visuel/dashboard/artiste_visuel-dash.html',
-    'PARRAIN': '../../parrain/dashboard/parrain-dash.html',
-    'AGENT': '../../agent_fifa/dashboard/agent_fifa-dash.html',
-    'COACH': '../../coach/dashboard/coach-dash.html',
-    'MEDIC': '../../staff_medical/dashboard/staff_medical-dash.html',
-    'ARBIT': '../../corps_arbitral/dashboard/corps_arbitral-dash.html',
-    'ACAD': '../../academie_sportive/dashboard/academie_sportive-dash.html',
-    'FORM': '../../formateur/dashboard/formateur-dash.html',
-    'TOURN': '../../gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html',
-    'ADMIN': '../../authprive/admin/admin-dashboard.html'
-};
+// ========== DEBUT : LIENS VERS LES ESPACES PRIVES ==========
+//
+// La table « role_code -> tableau de bord » qui se trouvait ici a ete
+// supprimee : c'etait la troisieme copie divergente du module, et elle
+// pointait vers des dossiers absents du depot (agent_fifa, tennisman,
+// athlete, handballeur...). Son repli '../../index.html' n'existe pas
+// non plus, donc meme l'echec renvoyait un 404.
+//
+// role-nav.js, charge par post-view.html juste avant ce fichier,
+// fournit les liens verifies :  getRoleHome / getRoleLabel /
+// getRoleMenu / applyRoleLinks.
+//
+// ========== FIN : LIENS VERS LES ESPACES PRIVES ==========
 
 async function initSessionAndProfile() {
     const auth = await requireAuth();
@@ -55,16 +37,31 @@ async function initSessionAndProfile() {
     updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'user');
     updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name, 'composer');
 
-    const dash = ROLE_DASHBOARD_MAP[currentProfile.role_code] || '../../index.html';
-    document.getElementById('dropDashboard').href = dash;
-    document.getElementById('navLogo').onclick = function() { window.location.href = dash; };
-    document.getElementById('backBtn').addEventListener('click', function() {
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            window.location.href = 'feed.html';
-        }
-    });
+    // Liens vers l'espace prive du role : logo, « Tableau de bord »,
+    // bouton de retour. Chemins verifies par role-nav.js.
+    if (typeof applyRoleLinks === 'function') {
+        applyRoleLinks(currentProfile.role_code);
+    } else {
+        const fallback = '../construction.html';
+        const dd = document.getElementById('dropDashboard');
+        if (dd) dd.href = fallback;
+        console.warn('[post-view] role-nav.js absent : navigation de repli utilisee.');
+    }
+
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', function () {
+            // Retour au fil plutot qu'a l'historique quand la page a ete
+            // ouverte directement par un lien partage : history.back()
+            // sortait alors du site.
+            if (document.referrer && document.referrer.indexOf(window.location.host) !== -1
+                && window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = 'feed.html';
+            }
+        });
+    }
 
     return true;
 }
@@ -136,9 +133,9 @@ function renderPost(post) {
     let mediaHtml = '';
     if (post.media_url) {
         if (post.media_type === 'video') {
-            mediaHtml = `<div class="pv-media"><video src="${post.media_url}" controls preload="metadata"></video></div>`;
+            mediaHtml = `<div class="pv-media"><video src="${escapeAttr(post.media_url)}" controls preload="metadata"></video></div>`;
         } else {
-            mediaHtml = `<div class="pv-media"><img src="${post.media_url}" alt="Media" loading="lazy" onclick="openMediaZoom('${post.media_url}','image')"></div>`;
+            mediaHtml = `<div class="pv-media"><img src="${escapeAttr(post.media_url)}" alt="Media" loading="lazy" onclick="openMediaZoom('${post.media_url}','image')"></div>`;
         }
     }
 
@@ -196,14 +193,14 @@ function renderPost(post) {
 
     const authorInitials = getInitials(authorName);
     const authorAvatarHtml = author.avatar_url
-        ? `<img class="pv-avatar" src="${author.avatar_url}" alt="" onclick="openUserProfile('${post.author_hubisoccer_id}')" style="display:block;">`
-        : `<div class="pv-avatar-initials" onclick="openUserProfile('${post.author_hubisoccer_id}')">${authorInitials}</div>`;
+        ? `<img class="pv-avatar" src="${escapeAttr(author.avatar_url)}" alt="" onclick="openUserProfile('${escapeAttr(post.author_hubisoccer_id)}')" style="display:block;">`
+        : `<div class="pv-avatar-initials" onclick="openUserProfile('${escapeAttr(post.author_hubisoccer_id)}')">${authorInitials}</div>`;
 
     document.getElementById('postFullCard').innerHTML = `
         <div class="pv-post-header">
             ${authorAvatarHtml}
             <div class="pv-meta">
-                <div class="pv-author" onclick="openUserProfile('${post.author_hubisoccer_id}')">
+                <div class="pv-author" onclick="openUserProfile('${escapeAttr(post.author_hubisoccer_id)}')">
                     ${escapeHtml(authorName)}${certified}
                 </div>
                 <div class="pv-author-sub">
@@ -266,6 +263,83 @@ function togglePostMenu(btn) {
     document.addEventListener('click', () => menu.classList.remove('show'), { once: true });
 }
 
+// ========== DEBUT : COMPTEURS FIABLES ==========
+//
+// PROBLEME CORRIGE ICI.
+// Les compteurs de cette page etaient calcules en memoire puis
+// reecrits en base :
+//     currentPost.likes_count = valeur_lue_au_chargement + 1;
+//     update({ likes_count: currentPost.likes_count })
+//
+// Deux personnes qui aiment la meme publication en meme temps
+// lisent toutes les deux la meme valeur de depart et ecrivent
+// toutes les deux « depart + 1 » : un like est perdu, et il ne
+// revient jamais puisque rien ne recompte.
+//
+// syncPostCounter() compte les lignes REELLES dans la table de
+// reactions, puis ecrit ce total. Le resultat est exact quel que
+// soit le nombre de personnes qui agissent simultanement.
+//
+async function syncPostCounter(table, column, filterColumn, filterValue) {
+    try {
+        const { count, error } = await sb
+            .from(table)
+            .select('id', { count: 'exact', head: true })
+            .eq(filterColumn, filterValue);
+
+        if (error) throw error;
+        return count || 0;
+    } catch (err) {
+        console.warn('[post-view] recomptage de ' + column + ' impossible :', err.message);
+        return null;
+    }
+}
+
+//
+// Recompte une reaction sur la publication courante, met a jour la
+// base et l'affichage. Renvoie le total exact, ou null en cas
+// d'echec (l'affichage reste alors sur la valeur optimiste).
+//
+async function refreshPostCount(table, column, elementId) {
+    const total = await syncPostCounter(
+        table, column, 'post_id', currentPost.id
+    );
+    if (total === null) return null;
+
+    currentPost[column] = total;
+
+    const el = document.getElementById(elementId);
+    if (el) el.textContent = total;
+
+    await sb.from('supabaseAuthPrive_posts')
+        .update({ [column]: total })
+        .eq('id', currentPost.id);
+
+    return total;
+}
+
+//
+// Recompte les commentaires de la publication courante.
+//
+async function refreshCommentsCount() {
+    const total = await syncPostCounter(
+        'supabaseAuthPrive_comments', 'comments_count', 'post_id', currentPost.id
+    );
+    if (total === null) return null;
+
+    currentPost.comments_count = total;
+
+    const el = document.getElementById('commentCount');
+    if (el) el.textContent = total;
+
+    await sb.from('supabaseAuthPrive_posts')
+        .update({ comments_count: total })
+        .eq('id', currentPost.id);
+
+    return total;
+}
+// ========== FIN : COMPTEURS FIABLES ==========
+
 async function toggleLike() {
     const btn = document.getElementById('pvLikeBtn');
     const countEl = document.getElementById('pvLikeCount');
@@ -285,8 +359,9 @@ async function toggleLike() {
             });
         }
     }
+    // Affichage optimiste immediat, puis recomptage exact en base.
     countEl.textContent = currentPost.likes_count;
-    await sb.from('supabaseAuthPrive_posts').update({ likes_count: currentPost.likes_count }).eq('id', currentPost.id);
+    await refreshPostCount('supabaseAuthPrive_post_likes', 'likes_count', 'pvLikeCount');
 }
 
 async function toggleDislike() {
@@ -301,8 +376,9 @@ async function toggleDislike() {
         currentPost.dislikes_count = (currentPost.dislikes_count || 0) + 1;
         await sb.from('supabaseAuthPrive_post_dislikes').insert({ post_id: currentPost.id, user_hubisoccer_id: currentProfile.hubisoccer_id });
     }
+    // Affichage optimiste immediat, puis recomptage exact en base.
     countEl.textContent = currentPost.dislikes_count;
-    await sb.from('supabaseAuthPrive_posts').update({ dislikes_count: currentPost.dislikes_count }).eq('id', currentPost.id);
+    await refreshPostCount('supabaseAuthPrive_post_dislikes', 'dislikes_count', 'pvDislikeCount');
 }
 
 async function toggleSave() {
@@ -380,8 +456,8 @@ function makeCommentCard(c, replies = []) {
     const initials = getInitials(authorName);
 
     const avatarBlock = avatarUrl
-        ? `<img class="cm-avatar" src="${avatarUrl}" alt="" onclick="openUserProfile('${c.author_hubisoccer_id}')" style="display:block;">`
-        : `<div class="cm-avatar-initials" onclick="openUserProfile('${c.author_hubisoccer_id}')">${initials}</div>`;
+        ? `<img class="cm-avatar" src="${escapeAttr(avatarUrl)}" alt="" onclick="openUserProfile('${escapeAttr(c.author_hubisoccer_id)}')" style="display:block;">`
+        : `<div class="cm-avatar-initials" onclick="openUserProfile('${escapeAttr(c.author_hubisoccer_id)}')">${initials}</div>`;
 
     return `
         <div class="comment-card" id="cm_${c.id}">
@@ -393,8 +469,8 @@ function makeCommentCard(c, replies = []) {
                         ${author.role_code ? `<span class="cm-role-badge">${escapeHtml(author.role_code)}</span>` : ''}
                     </div>
                     <div class="cm-text">${formatText(c.content)}</div>
-                    ${c.media_url ? `<div class="cm-media"><img src="${c.media_url}" alt="" onclick="openMediaZoom('${c.media_url}','image')"></div>` : ''}
-                    ${c.audio_url ? `<div class="cm-audio"><audio controls src="${c.audio_url}"></audio></div>` : ''}
+                    ${c.media_url ? `<div class="cm-media"><img src="${escapeAttr(c.media_url)}" alt="" onclick="openMediaZoom('${c.media_url}','image')"></div>` : ''}
+                    ${c.audio_url ? `<div class="cm-audio"><audio controls src="${escapeAttr(c.audio_url)}"></audio></div>` : ''}
                 </div>
                 <div class="cm-footer">
                     <button class="cm-action-btn ${c.liked_by_me ? 'liked' : ''}" onclick="likeComment('${c.id}', this)">
@@ -409,7 +485,7 @@ function makeCommentCard(c, replies = []) {
                 <div id="replyCompose_${c.id}" style="display:none; margin-top:8px;">
                     <div class="cm-reply-compose">
                         <div class="cm-reply-avatar-initials">${getInitials(currentProfile.full_name || '')}</div>
-                        <img src="${currentProfile.avatar_url || ''}" alt="" style="display:${currentProfile.avatar_url ? 'block' : 'none'}; width:26px;height:26px;border-radius:50%;">
+                        <img src="${escapeAttr(currentProfile.avatar_url || '')}" alt="" style="display:${currentProfile.avatar_url ? 'block' : 'none'}; width:26px;height:26px;border-radius:50%;">
                         <textarea rows="1" id="replyInput_${c.id}" placeholder="Répondre à ${escapeHtml(authorName)}..."></textarea>
                         <button onclick="sendReply('${c.id}')"><i class="fas fa-paper-plane"></i></button>
                     </div>
@@ -426,10 +502,10 @@ function makeReplyCard(r) {
     const initials = getInitials(authorName);
     return `
         <div class="cm-reply-card" id="cm_${r.id}">
-            <div class="cm-reply-avatar-initials" onclick="openUserProfile('${r.author_hubisoccer_id}')" style="display:${avatarUrl ? 'none' : 'flex'};">
+            <div class="cm-reply-avatar-initials" onclick="openUserProfile('${escapeAttr(r.author_hubisoccer_id)}')" style="display:${avatarUrl ? 'none' : 'flex'};">
                 ${initials}
             </div>
-            <img class="cm-reply-avatar" src="${avatarUrl || ''}" alt="" onclick="openUserProfile('${r.author_hubisoccer_id}')" style="display:${avatarUrl ? 'block' : 'none'};">
+            <img class="cm-reply-avatar" src="${escapeAttr(avatarUrl || '')}" alt="" onclick="openUserProfile('${escapeAttr(r.author_hubisoccer_id)}')" style="display:${avatarUrl ? 'block' : 'none'};">
             <div class="cm-reply-bubble">
                 <div class="cm-reply-author">${escapeHtml(authorName)}</div>
                 <div class="cm-reply-text">${formatText(r.content)}</div>
@@ -480,10 +556,128 @@ async function sendReply(parentId) {
     }
 }
 
+
+// ========== DEBUT : ÉMOJIS & AUDIO DES COMMENTAIRES ==========
+const PV_EMOJIS = ['😊','😂','❤️','👍','🔥','⚽','👏','🎉','🙏','😮','💪','🏆','🥳','🌟','😢','😡','🎯','🚀'];
+let pvAudioRecorder = null;
+let pvAudioChunks = [];
+let pvAudioBlob = null;
+let pvRecSeconds = 0;
+let pvRecInterval = null;
+
+function pvToggleEmojiPicker() {
+    let picker = document.getElementById('pvEmojiPicker');
+    if (picker) { picker.remove(); return; }
+
+    picker = document.createElement('div');
+    picker.id = 'pvEmojiPicker';
+    picker.className = 'pv-emoji-picker';
+    picker.innerHTML = PV_EMOJIS.map(e => `<span>${e}</span>`).join('');
+
+    const anchor = document.getElementById('commentEmojiBtn');
+    anchor.parentElement.appendChild(picker);
+
+    picker.querySelectorAll('span').forEach(el => {
+        el.addEventListener('click', () => {
+            const input = document.getElementById('mainCommentInput');
+            input.value += el.textContent;
+            input.focus();
+            picker.remove();
+        });
+    });
+
+    setTimeout(() => {
+        document.addEventListener('click', function hide(ev) {
+            if (!picker.contains(ev.target) && ev.target !== anchor) {
+                picker.remove();
+                document.removeEventListener('click', hide);
+            }
+        });
+    }, 10);
+}
+
+// Choisit un format d'enregistrement réellement lisible par l'appareil
+function pvPickAudioFormat() {
+    const candidates = [
+        { mime: 'audio/mp4', ext: 'm4a' },
+        { mime: 'audio/webm;codecs=opus', ext: 'webm' },
+        { mime: 'audio/webm', ext: 'webm' },
+        { mime: 'audio/ogg;codecs=opus', ext: 'ogg' }
+    ];
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported) {
+        for (const c of candidates) if (MediaRecorder.isTypeSupported(c.mime)) return c;
+    }
+    return { mime: '', ext: 'webm' };
+}
+
+async function pvStartAudio() {
+    if (pvAudioRecorder && pvAudioRecorder.state === 'recording') { pvStopAudio(); return; }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const fmt = pvPickAudioFormat();
+        try {
+            pvAudioRecorder = fmt.mime ? new MediaRecorder(stream, { mimeType: fmt.mime }) : new MediaRecorder(stream);
+        } catch (e) {
+            pvAudioRecorder = new MediaRecorder(stream);
+        }
+        pvAudioChunks = [];
+        pvRecSeconds = 0;
+        pvAudioRecorder.ondataavailable = e => pvAudioChunks.push(e.data);
+        pvAudioRecorder.onstop = () => {
+            const realMime = (pvAudioRecorder.mimeType || fmt.mime || 'audio/webm').split(';')[0];
+            pvAudioBlob = new Blob(pvAudioChunks, { type: realMime });
+            stream.getTracks().forEach(t => t.stop());
+            pvShowAudioPreview();
+        };
+        pvAudioRecorder.start();
+
+        const btn = document.getElementById('commentAudioBtn');
+        btn.classList.add('recording');
+        btn.innerHTML = '<i class="fas fa-stop"></i>';
+        pvRecInterval = setInterval(() => {
+            pvRecSeconds++;
+            btn.title = `Enregistrement ${pvRecSeconds}s — cliquer pour arrêter`;
+            if (pvRecSeconds >= 120) pvStopAudio();
+        }, 1000);
+        toast('Enregistrement en cours…', 'info');
+    } catch (err) {
+        toast('Micro non disponible', 'error');
+    }
+}
+
+function pvStopAudio() {
+    if (pvAudioRecorder && pvAudioRecorder.state !== 'inactive') pvAudioRecorder.stop();
+    clearInterval(pvRecInterval);
+    const btn = document.getElementById('commentAudioBtn');
+    btn.classList.remove('recording');
+    btn.innerHTML = '<i class="fas fa-microphone"></i>';
+    btn.title = 'Commentaire audio';
+}
+
+function pvShowAudioPreview() {
+    const preview = document.getElementById('commentMediaPreview');
+    const url = URL.createObjectURL(pvAudioBlob);
+    preview.innerHTML = `
+        <div class="pv-audio-preview">
+            <audio controls src="${escapeAttr(url)}"></audio>
+            <button class="remove-comment-media" onclick="pvDiscardAudio()" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+        </div>`;
+    preview.style.display = 'block';
+}
+
+function pvDiscardAudio() {
+    pvAudioBlob = null;
+    const preview = document.getElementById('commentMediaPreview');
+    preview.innerHTML = '';
+    preview.style.display = 'none';
+}
+window.pvDiscardAudio = pvDiscardAudio;
+// ========== FIN : ÉMOJIS & AUDIO DES COMMENTAIRES ==========
+
 async function sendComment() {
     const input = document.getElementById('mainCommentInput');
     const content = input.value.trim();
-    if (!content && !commentMediaFile) { toast('Écris un commentaire', 'warning'); return; }
+    if (!content && !commentMediaFile && !pvAudioBlob) { toast('Écris un commentaire', 'warning'); return; }
 
     const btn = document.getElementById('sendCommentBtn');
     btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -502,11 +696,25 @@ async function sendComment() {
             document.getElementById('commentMediaPreview').style.display = 'none';
         }
 
+        let audioUrl = null;
+        if (pvAudioBlob) {
+            const mime = pvAudioBlob.type || 'audio/webm';
+            const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';
+            const path = `comments/${currentProfile.hubisoccer_id}/audio_${Date.now()}.${ext}`;
+            const { error: aErr } = await sb.storage.from('post_media').upload(path, pvAudioBlob, { contentType: mime });
+            if (!aErr) {
+                const { data: aUrl } = sb.storage.from('post_media').getPublicUrl(path);
+                audioUrl = aUrl.publicUrl;
+            }
+            pvDiscardAudio();
+        }
+
         const { data, error } = await sb.from('supabaseAuthPrive_comments').insert({
             post_id: currentPost.id,
             author_hubisoccer_id: currentProfile.hubisoccer_id,
             content: content || null,
             media_url: mediaUrl,
+            audio_url: audioUrl,
             parent_id: null
         }).select('*, author:supabaseAuthPrive_profiles!author_hubisoccer_id(full_name, display_name, avatar_url, role_code)').single();
 
@@ -514,9 +722,10 @@ async function sendComment() {
 
         document.getElementById('commentsFeed').insertAdjacentHTML('afterbegin', makeCommentCard(data, []));
         input.value = ''; input.style.height = 'auto';
+        // Affichage optimiste, puis recomptage exact.
         currentPost.comments_count = (currentPost.comments_count || 0) + 1;
         document.getElementById('commentCount').textContent = currentPost.comments_count;
-        await sb.from('supabaseAuthPrive_posts').update({ comments_count: currentPost.comments_count }).eq('id', currentPost.id);
+        await refreshCommentsCount();
 
         if (currentPost.author_hubisoccer_id !== currentProfile.hubisoccer_id) {
             await sb.from('supabaseAuthPrive_notifications').insert({
@@ -547,9 +756,26 @@ async function likeComment(commentId, btn) {
         if (countEl) countEl.textContent = (comment.likes_count || 0) + 1;
         await sb.from('supabaseAuthPrive_comment_likes').insert({ comment_id: commentId, user_hubisoccer_id: currentProfile.hubisoccer_id });
     }
-    const newLikes = parseInt(countEl?.textContent || '0');
-    comment.likes_count = newLikes;
-    await sb.from('supabaseAuthPrive_comments').update({ likes_count: newLikes }).eq('id', commentId);
+    // Recomptage exact du nombre de « j'aime » du commentaire.
+    //
+    // Avant, le total ecrit en base etait relu depuis le TEXTE du
+    // bouton (parseInt sur le contenu affiche). Si deux personnes
+    // aimaient le meme commentaire au meme moment, chacune ecrivait
+    // sa propre valeur d'ecran et un like disparaissait. Pire : si
+    // l'affichage etait vide, parseInt renvoyait NaN et le compteur
+    // passait a null en base.
+    const total = await syncPostCounter(
+        'supabaseAuthPrive_comment_likes', 'likes_count', 'comment_id', commentId
+    );
+
+    if (total === null) return;
+
+    comment.likes_count = total;
+    if (countEl) countEl.textContent = total;
+
+    await sb.from('supabaseAuthPrive_comments')
+        .update({ likes_count: total })
+        .eq('id', commentId);
 }
 
 async function deleteComment(commentId) {
@@ -558,7 +784,7 @@ async function deleteComment(commentId) {
     document.getElementById(`cm_${commentId}`)?.remove();
     currentPost.comments_count = Math.max(0, (currentPost.comments_count || 1) - 1);
     document.getElementById('commentCount').textContent = currentPost.comments_count;
-    await sb.from('supabaseAuthPrive_posts').update({ comments_count: currentPost.comments_count }).eq('id', currentPost.id);
+    await refreshCommentsCount();
     toast('Commentaire supprimé', 'success');
 }
 
@@ -619,7 +845,7 @@ async function loadRelatedPosts(userId, excludeId) {
     document.getElementById('relatedPosts').innerHTML = data.map(p => `
         <div class="related-post-item" onclick="window.location.href='post-view.html?id=${p.id}'">
             ${p.media_url && p.media_url.match(/\.(jpg|jpeg|png|gif|webp)$/i)
-                ? `<img class="related-thumb" src="${p.media_url}" alt="" onerror="this.style.display='none'">`
+                ? `<img class="related-thumb" src="${escapeAttr(p.media_url)}" alt="" onerror="this.style.display='none'">`
                 : `<div class="related-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem">📝</div>`}
             <div class="related-info">
                 <h5>${escapeHtml(p.content?.substring(0, 80) || 'Publication')}</h5>
@@ -664,8 +890,8 @@ function showLikes() {
                 const p = l.profiles || {};
                 const name = p.full_name || p.display_name || 'Utilisateur';
                 const avatarUrl = p.avatar_url;
-                return `<li class="pv-user-item" onclick="openUserProfile('${l.user_hubisoccer_id}')">
-                    ${avatarUrl ? `<img src="${avatarUrl}" alt="">` : `<div class="pv-user-avatar-initials">${getInitials(name)}</div>`}
+                return `<li class="pv-user-item" onclick="openUserProfile('${escapeAttr(l.user_hubisoccer_id)}')">
+                    ${avatarUrl ? `<img src="${escapeAttr(avatarUrl)}" alt="">` : `<div class="pv-user-avatar-initials">${getInitials(name)}</div>`}
                     <span class="pv-user-item-name">${escapeHtml(name)}</span>
                 </li>`;
             }).join('') || '<li style="padding:16px;color:var(--gray);text-align:center">Aucun j\'aime</li>';
@@ -685,8 +911,8 @@ function showDislikes() {
                 const p = l.profiles || {};
                 const name = p.full_name || p.display_name || 'Utilisateur';
                 const avatarUrl = p.avatar_url;
-                return `<li class="pv-user-item" onclick="openUserProfile('${l.user_hubisoccer_id}')">
-                    ${avatarUrl ? `<img src="${avatarUrl}" alt="">` : `<div class="pv-user-avatar-initials">${getInitials(name)}</div>`}
+                return `<li class="pv-user-item" onclick="openUserProfile('${escapeAttr(l.user_hubisoccer_id)}')">
+                    ${avatarUrl ? `<img src="${escapeAttr(avatarUrl)}" alt="">` : `<div class="pv-user-avatar-initials">${getInitials(name)}</div>`}
                     <span class="pv-user-item-name">${escapeHtml(name)}</span>
                 </li>`;
             }).join('') || '<li style="padding:16px;color:var(--gray);text-align:center">Aucun dislike</li>';
@@ -747,8 +973,8 @@ async function submitReport() {
 function openMediaZoom(url, type) {
     const viewer = document.getElementById('mediaViewer');
     viewer.innerHTML = type === 'video'
-        ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:8px"></video>`
-        : `<img src="${url}" alt="" style="max-width:90vw;max-height:80vh;border-radius:8px">`;
+        ? `<video src="${escapeAttr(url)}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:8px"></video>`
+        : `<img src="${escapeAttr(url)}" alt="" style="max-width:90vw;max-height:80vh;border-radius:8px">`;
     openModal('modalMedia');
 }
 
@@ -787,13 +1013,16 @@ async function init() {
     document.getElementById('commentSort').addEventListener('change', function() { commentOffset = 0; comments = []; loadComments(false); });
 
     document.getElementById('commentMediaBtn').addEventListener('click', function() { document.getElementById('commentMediaInput').click(); });
+    document.getElementById('commentEmojiBtn')?.addEventListener('click', function(e) { e.stopPropagation(); pvToggleEmojiPicker(); });
+    document.getElementById('commentAudioBtn')?.addEventListener('click', pvStartAudio);
+    document.getElementById('menuToggle')?.addEventListener('click', function() { window.location.href = 'feed.html'; });
     document.getElementById('commentMediaInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
         commentMediaFile = file;
         const url = URL.createObjectURL(file);
         const preview = document.getElementById('commentMediaPreview');
-        preview.innerHTML = `<div style="position:relative"><img src="${url}" style="max-height:120px;border-radius:8px"><button class="remove-comment-media" onclick="removeCommentMedia()"><i class="fas fa-times"></i></button></div>`;
+        preview.innerHTML = `<div style="position:relative"><img src="${escapeAttr(url)}" style="max-height:120px;border-radius:8px"><button class="remove-comment-media" onclick="removeCommentMedia()"><i class="fas fa-times"></i></button></div>`;
         preview.style.display = 'block';
     });
 
@@ -815,8 +1044,10 @@ function subscribeComments() {
             if (!c.parent_id) {
                 const { data: author } = await sb.from('supabaseAuthPrive_profiles').select('full_name, display_name, avatar_url, role_code').eq('hubisoccer_id', c.author_hubisoccer_id).single();
                 document.getElementById('commentsFeed').insertAdjacentHTML('afterbegin', makeCommentCard({ ...c, author }, []));
-                currentPost.comments_count = (currentPost.comments_count || 0) + 1;
-                document.getElementById('commentCount').textContent = currentPost.comments_count;
+                // Recomptage exact plutot qu'un increment en memoire :
+                // si plusieurs commentaires arrivent en rafale pendant
+                // que la page est ouverte, le total reste juste.
+                await refreshCommentsCount();
             }
         })
         .subscribe();

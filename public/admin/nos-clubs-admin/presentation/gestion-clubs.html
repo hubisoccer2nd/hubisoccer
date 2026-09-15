@@ -1,3 +1,4 @@
+<!-- DEBUT : public/admin/nos-clubs-admin/gestion/gestion-clubs.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,7 +7,6 @@
     <title>Admin - Gestion des clubs | HubISoccer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Quill n'est plus utilisé -->
     <link rel="stylesheet" href="gestion-clubs.css">
 </head>
 <body>
@@ -17,19 +17,22 @@
     <!-- ========== FIN : LOADER GLOBAL ========== -->
 
     <!-- ========== DÉBUT : NAVIGATION ADMIN ========== -->
+
     <nav>
         <a href="../../../index.html" class="logo-link">
-            <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
-        </a>
+        <img src="../../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav"></a>
         <div class="nav-right">
-            <span class="admin-badge"><i class="fas fa-users"></i> Administration Clubs</span>
-            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+        <span class="admin-badge"><i class="fas fa-users"></i> Administration Clubs</span>
+        <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="../administration.html"><i class="fas fa-th-large"></i> Portail</a>
-                <a href="../acteurs-admin/acteurs-admin.html"><i class="fas fa-users"></i> Acteurs</a>
-                <a href="../premierpas-admin/premier-pas-admin.html"><i class="fas fa-running"></i> Premier Pas</a>
-                <a href="../artistes-admin/artistes-admin.html"><i class="fas fa-paint-brush"></i> Artistes</a>
-                <a href="../tournoi-admin/tournoi-admin.html"><i class="fas fa-trophy"></i> Tournois</a>
+                <a href="../../administration.html"><i class="fas fa-th-large"></i> Portail</a>
+                <a href="gestion-clubs.html" class="active"><i class="fas fa-users"></i> Clubs</a>
+                <a href="../gestion/gestion-inscriptions.html"><i class="fas fa-file-alt"></i> Inscriptions</a>
+                <a href="../gestion/gestion-contrats-signatures.html"><i class="fas fa-file-signature"></i> Contrats signés</a>
+                <a href="../gestion/gestion-contrats-templates.html"><i class="fas fa-file-contract"></i> Templates</a>
+                <a href="../gestion/gestion-messages.html"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="../gestion/gestion-performances.html"><i class="fas fa-chart-line"></i> Performances</a>
+                <a href="../gestion/gestion-presences.html"><i class="fas fa-calendar-check"></i> Présences</a>
                 <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
             </div>
         </div>
@@ -161,7 +164,7 @@
                     <textarea id="clubConclusion" rows="8" placeholder="Conclusion et pied de page..."></textarea>
                 </div>
 
-                <!-- Uploads (fichiers sélectionnés seulement, pas d'upload auto) -->
+                <!-- Uploads -->
                 <div class="form-row">
                     <div class="form-group">
                         <label>Logo du club</label>
@@ -207,9 +210,8 @@
 
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Scripts -->
-    <!-- Quill n'est plus chargé -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="gestion-clubs.js"></script>
 </body>
 </html>
+<!-- FIN : public/admin/nos-clubs-admin/gestion/gestion-clubs.html -->

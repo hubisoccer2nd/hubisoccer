@@ -1,17 +1,26 @@
+<!-- DEBUT : esp/index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="titre_esp">En savoir plus | HubISoccer</title>
+    <title>ESP - HubISoccer</title>
+    <meta name="description" content="Espace de ressources et d'informations HubISoccer.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/esp.css">
+    <link rel="stylesheet" href="esp.css">
 </head>
 <body>
+    <!-- ========== DÉBUT : LOADER ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> <span data-i18n="loader.message">Chargement...</span>
+    </div>
+    <!-- ========== FIN : LOADER ========== -->
+
+    <!-- ========== DÉBUT : NAVBAR OFFICIELLE ========== -->
     <nav>
-        <a href="../index.html" class="logo-link">
-            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        <a href="../" class="logo-link">
+            <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
             <select class="lang-picker" id="langSelect">
@@ -40,69 +49,79 @@
                 <option value="pl">🇵🇱 Polski</option>
                 <option value="vi">🇻🇳 Tiếng Việt</option>
             </select>
-            <button class="menu-toggle" id="menuToggle">
-                <span></span><span></span><span></span>
-            </button>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="e-marketing-hubisoccer.html" data-i18n="hub_market">HUBISOCCER MARKET</a>
-                <a href="hub-community.html" data-i18n="hub_community">HUB COMMUNITY</a>
-                <a href="scouting.html" data-i18n="scouting">SCOUTING</a>
-                <a href="processus.html" data-i18n="processus">PROCESSUS</a>
-                <a href="affiliation.html" data-i18n="affiliation">AFFILIATION</a>
-                <a href="premier-pas.html" data-i18n="premier-pas">PREMIER-PAS</a>
-                <a href="parrain.html" data-i18n="parrain">PARRAINS</a>
-                <a href="tournoi.html" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
-                <a href="esp.html" data-i18n="esp">SAVOIR+</a>
-                <a href="#" class="btn-auth" data-i18n="connexion">Connexion</a>
-                <a href="#" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
+                <a href="../scouting/" data-i18n="scouting">SCOUTING</a>
+                <a href="../processus/" data-i18n="processus">PROCESSUS</a>
+                <a href="../affiliation/" data-i18n="affiliation">AFFILIATION</a>
+                <a href="../premier-pas/" data-i18n="premier_pas">PREMIER‑PAS</a>
+                <a href="../acteurs/" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
+                <a href="../artiste-adhesion/" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
+                <a href="../clubs/" data-i18n="nos_clubs">NOS CLUBS</a>
+                <a href="../tournoi/" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
+                <a href="../esp/" class="active" data-i18n="esp">SAVOIR+</a>
+                <a href="../hub-community/" data-i18n="hub_community">HUB COMMUNITY</a>
+                <a href="../e-marketing/" data-i18n="hub_market">MARKET</a>
+                <a href="../acteurs-login/" class="btn-auth" data-i18n="connexion">Connexion</a>
+                <a href="../hubisapp/authprive/users/signup/" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
             </div>
         </div>
     </nav>
+    <!-- ========== FIN : NAVBAR ========== -->
 
-    <main class="esp-container">
-        <div class="esp-header">
-            <h1 data-i18n="esp_titre">En savoir plus sur HubISoccer</h1>
-            <p data-i18n="esp_sous_titre">Toutes les informations utiles pour mieux nous connaître.</p>
-        </div>
+    <!-- ========== DÉBUT : HEADER ========== -->
+    <header class="esp-header">
+        <h1 data-i18n="esp.title">SAVOIR+</h1>
+        <p data-i18n="esp.subtitle">Tout ce qu'il faut savoir pour réussir dans l'écosystème HubISoccer.</p>
+    </header>
+    <!-- ========== FIN : HEADER ========== -->
 
-        <div class="esp-grid">
-            <a href="faq.html" class="esp-card">
+    <!-- ========== DÉBUT : GRILLE DE RESSOURCES ========== -->
+    <main>
+        <div class="resources-grid">
+            <a href="../faq/" class="resource-card">
                 <i class="fas fa-question-circle"></i>
-                <h3 data-i18n="faq_titre">FAQ</h3>
-                <p data-i18n="faq_desc">Questions fréquentes sur le fonctionnement de la plateforme.</p>
+                <h3 data-i18n="esp.faq">FAQ</h3>
+                <p data-i18n="esp.faq.desc">Questions fréquentes</p>
             </a>
-            <a href="cgu.html" class="esp-card">
+            <a href="../cgu/" class="resource-card">
                 <i class="fas fa-file-contract"></i>
-                <h3 data-i18n="cgu_titre">CGU</h3>
-                <p data-i18n="cgu_desc">Conditions générales d'utilisation du site.</p>
+                <h3 data-i18n="esp.cgu">CGU</h3>
+                <p data-i18n="esp.cgu.desc">Conditions Générales d'Utilisation</p>
             </a>
-            <a href="mentions-legales.html" class="esp-card">
-                <i class="fas fa-gavel"></i>
-                <h3 data-i18n="mentions_titre">Mentions légales</h3>
-                <p data-i18n="mentions_desc">Informations juridiques et éditeur du site.</p>
+            <a href="../mentions-legales/" class="resource-card">
+                <i class="fas fa-balance-scale"></i>
+                <h3 data-i18n="esp.mentions">Mentions Légales</h3>
+                <p data-i18n="esp.mentions.desc">Informations légales</p>
             </a>
-            <a href="contact.html" class="esp-card">
+            <a href="../contact/" class="resource-card">
                 <i class="fas fa-envelope"></i>
-                <h3 data-i18n="contact_titre">Contact</h3>
-                <p data-i18n="contact_desc">Comment nous joindre par email ou téléphone.</p>
+                <h3 data-i18n="esp.contact">Contact</h3>
+                <p data-i18n="esp.contact.desc">Nous contacter</p>
             </a>
-            <a href="partenaires.html" class="esp-card">
+            <a href="../partenaires/" class="resource-card">
                 <i class="fas fa-handshake"></i>
-                <h3 data-i18n="partenaires_titre">Partenaires</h3>
-                <p data-i18n="partenaires_desc">Nos partenaires et soutiens.</p>
+                <h3 data-i18n="esp.partenaires">Partenaires</h3>
+                <p data-i18n="esp.partenaires.desc">Nos partenaires</p>
             </a>
-            <a href="actualites.html" class="esp-card">
+            <a href="../actualites/" class="resource-card">
                 <i class="fas fa-newspaper"></i>
-                <h3 data-i18n="actualites_titre">Actualités</h3>
-                <p data-i18n="actualites_desc">Les dernières nouvelles du projet.</p>
+                <h3 data-i18n="esp.actualites">Actualités</h3>
+                <p data-i18n="esp.actualites.desc">Dernières nouvelles</p>
             </a>
-            <a href="resultats.html" class="esp-card">
-                <i class="fas fa-chart-line"></i>
-                <h3 data-i18n="resultats_titre">Résultats</h3>
-                <p data-i18n="resultats_desc">Classements et résultats des tournois.</p>
+            <a href="../resultats/" class="resource-card">
+                <i class="fas fa-trophy"></i>
+                <h3 data-i18n="esp.resultats">Résultats</h3>
+                <p data-i18n="esp.resultats.desc">Résultats des tournois</p>
+            </a>
+            <a href="../clubs/" class="resource-card">
+                <i class="fas fa-users"></i>
+                <h3 data-i18n="esp.parrains">PARRAINS</h3>
+                <p data-i18n="esp.parrains.desc">Espace parrains</p>
             </a>
         </div>
     </main>
+    <!-- ========== FIN : GRILLE DE RESSOURCES ========== -->
 
     <footer>
         <div class="compliance-badges">
@@ -121,6 +140,10 @@
         </div>
     </footer>
 
-    <script src="js/esp.js"></script>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="esp.js"></script>
 </body>
 </html>
+<!-- FIN : esp/index.html -->

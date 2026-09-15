@@ -1,178 +1,122 @@
-// Configuration Supabase
+/* DEBUT : public/admin/processus-admin/processus-admin.js */
+// ========== PROCESSUS-ADMIN.JS ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
-const supabaseAdminPublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ===== OUVERTURE DES MODALES =====
-document.getElementById('openEtapesModalBtn').addEventListener('click', () => {
-    document.getElementById('etapesModal').classList.add('active');
-    loadEtapes();
-});
-document.getElementById('openStatsModalBtn').addEventListener('click', () => {
-    document.getElementById('statsModal').classList.add('active');
-    loadStats();
-});
+// Éléments DOM
+const globalLoader = document.getElementById('globalLoader');
+function showLoader() { if (globalLoader) globalLoader.style.display = 'flex'; }
+function hideLoader() { if (globalLoader) globalLoader.style.display = 'none'; }
 
-// ===== FERMETURE DES MODALES =====
-window.closeModal = (modalId) => {
-    document.getElementById(modalId).classList.remove('active');
-};
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+}
 
-document.querySelectorAll('.admin-modal').forEach(modal => {
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('active');
-    });
-});
-
-// ===== MESSAGES =====
-function showMessage(text, type) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${type}`;
-    msgDiv.textContent = text;
-    const activeModal = document.querySelector('.admin-modal.active .modal-body');
-    if (activeModal) activeModal.prepend(msgDiv);
-    else document.querySelector('.admin-container').prepend(msgDiv);
-    msgDiv.style.display = 'block';
-    setTimeout(() => msgDiv.remove(), 3000);
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-content">${escapeHtml(message)}</div><button class="toast-close">×</button>`;
+    container.appendChild(toast);
+    toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+    setTimeout(() => toast.remove(), 3000);
 }
 
 // ========== GESTION DES ÉTAPES ==========
-async function loadEtapes() {
-    const { data, error } = await supabaseAdminPublic.from('public_processus_etapes').select('*').order('order', { ascending: true });
-    if (error) { showMessage('Erreur chargement étapes', 'error'); return; }
-    const container = document.getElementById('etapesList');
-    if (!data.length) { container.innerHTML = '<p>Aucune étape</p>'; return; }
-    container.innerHTML = data.map(item => `
-        <div class="item-card" data-id="${item.id}">
-            <div class="item-info">
-                <h4>${escapeHtml(item.titre)}</h4>
-                <p>${escapeHtml(item.description || '')}</p>
-                <small>Icône: ${item.icone || 'fa-question'}</small>
-            </div>
-            <div class="item-actions">
-                <button class="edit-btn" onclick="editEtape(${item.id})">Modifier</button>
-                <button class="delete-btn" onclick="deleteEtape(${item.id})">Supprimer</button>
+const stepsContainer = document.getElementById('stepsContainer');
+const processusForm = document.getElementById('processusForm');
+
+async function loadSteps() {
+    if (!stepsContainer) return;
+    showLoader();
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('public_processus_etapes')
+            .select('*')
+            .order('etape', { ascending: true });
+        if (error) throw error;
+        renderSteps(data || []);
+    } catch (err) { showToast('Erreur chargement étapes', 'error'); } finally { hideLoader(); }
+}
+
+function renderSteps(steps) {
+    if (!stepsContainer) return;
+    if (steps.length === 0) {
+        stepsContainer.innerHTML = '<p>Aucune étape trouvée.</p>';
+        return;
+    }
+    stepsContainer.innerHTML = steps.map(step => `
+        <div class="step-item">
+            <div class="step-number">${step.etape}</div>
+            <div class="step-fields">
+                <div class="form-group">
+                    <label>Titre</label>
+                    <input type="text" id="title_${step.etape}" value="${escapeHtml(step.titre)}">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="desc_${step.etape}" rows="3">${escapeHtml(step.description)}</textarea>
+                </div>
             </div>
         </div>
     `).join('');
 }
 
-window.editEtape = async (id) => {
-    const { data } = await supabaseAdminPublic.from('public_processus_etapes').select('*').eq('id', id).single();
-    if (!data) return;
-    const newTitre = prompt('Nouveau titre', data.titre);
-    if (newTitre === null) return;
-    const newDesc = prompt('Nouvelle description', data.description);
-    const newIcon = prompt('Icône (nom FontAwesome, ex: fa-user-plus)', data.icone);
-    const newOrder = prompt('Ordre', data.order);
-    const { error } = await supabaseAdminPublic.from('public_processus_etapes').update({
-        titre: newTitre,
-        description: newDesc,
-        icone: newIcon,
-        order: parseInt(newOrder) || 0
-    }).eq('id', id);
-    if (error) showMessage('Erreur modification', 'error');
-    else { showMessage('Modifié', 'success'); loadEtapes(); }
-};
-
-window.deleteEtape = async (id) => {
-    if (!confirm('Supprimer définitivement cette étape ?')) return;
-    const { error } = await supabaseAdminPublic.from('public_processus_etapes').delete().eq('id', id);
-    if (error) showMessage('Erreur suppression', 'error');
-    else { showMessage('Supprimé', 'success'); loadEtapes(); }
-};
-
-async function addEtape(e) {
+async function saveSteps(e) {
     e.preventDefault();
-    const titre = document.getElementById('etapeTitre').value;
-    const description = document.getElementById('etapeDesc').value;
-    const icone = document.getElementById('etapeIcon').value;
-    const order = parseInt(document.getElementById('etapeOrder').value) || 0;
-    const { error } = await supabaseAdminPublic.from('public_processus_etapes').insert({ titre, description, icone, order });
-    if (error) showMessage('Erreur ajout: ' + error.message, 'error');
-    else {
-        showMessage('Étape ajoutée', 'success');
-        document.getElementById('addEtapeForm').reset();
-        loadEtapes();
-    }
+    const stepElements = document.querySelectorAll('.step-item');
+    if (!stepElements.length) return;
+
+    showLoader();
+    try {
+        for (const el of stepElements) {
+            const num = el.querySelector('.step-number').textContent;
+            const titre = el.querySelector('input').value.trim();
+            const description = el.querySelector('textarea').value.trim();
+            if (!titre || !description) continue;
+
+            const { error } = await supabaseAdmin
+                .from('public_processus_etapes')
+                .upsert({
+                    etape: parseInt(num),
+                    titre: titre,
+                    description: description,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'etape' });
+
+            if (error) throw error;
+        }
+        showToast('Étapes enregistrées avec succès', 'success');
+    } catch (err) { showToast('Erreur lors de l\'enregistrement', 'error'); } finally { hideLoader(); }
 }
 
-// ========== GESTION DES STATISTIQUES ==========
-async function loadStats() {
-    const { data, error } = await supabaseAdminPublic.from('public_processus_stats').select('*').order('order', { ascending: true });
-    if (error) { showMessage('Erreur chargement stats', 'error'); return; }
-    const container = document.getElementById('statsList');
-    if (!data.length) { container.innerHTML = '<p>Aucune statistique</p>'; return; }
-    container.innerHTML = data.map(item => `
-        <div class="item-card" data-id="${item.id}">
-            <div class="item-info">
-                <h4>${escapeHtml(item.nombre)}</h4>
-                <p>${escapeHtml(item.label)}</p>
-            </div>
-            <div class="item-actions">
-                <button class="edit-btn" onclick="editStat(${item.id})">Modifier</button>
-                <button class="delete-btn" onclick="deleteStat(${item.id})">Supprimer</button>
-            </div>
-        </div>
-    `).join('');
+if (processusForm) processusForm.addEventListener('submit', saveSteps);
+
+// ========== MENU MOBILE & DÉCONNEXION ==========
+const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
+if (menuToggle && navLinks) {
+    menuToggle.addEventListener('click', () => { navLinks.classList.toggle('active'); menuToggle.classList.toggle('open'); });
+    document.addEventListener('click', (e) => { if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) { navLinks.classList.remove('active'); menuToggle.classList.remove('open'); } });
 }
 
-window.editStat = async (id) => {
-    const { data } = await supabaseAdminPublic.from('public_processus_stats').select('*').eq('id', id).single();
-    if (!data) return;
-    const newNombre = prompt('Nouveau nombre (ex: 500+)', data.nombre);
-    if (newNombre === null) return;
-    const newLabel = prompt('Nouveau label', data.label);
-    const newOrder = prompt('Ordre', data.order);
-    const { error } = await supabaseAdminPublic.from('public_processus_stats').update({
-        nombre: newNombre,
-        label: newLabel,
-        order: parseInt(newOrder) || 0
-    }).eq('id', id);
-    if (error) showMessage('Erreur modification', 'error');
-    else { showMessage('Modifié', 'success'); loadStats(); }
-};
-
-window.deleteStat = async (id) => {
-    if (!confirm('Supprimer définitivement cette statistique ?')) return;
-    const { error } = await supabaseAdminPublic.from('public_processus_stats').delete().eq('id', id);
-    if (error) showMessage('Erreur suppression', 'error');
-    else { showMessage('Supprimé', 'success'); loadStats(); }
-};
-
-async function addStat(e) {
-    e.preventDefault();
-    const nombre = document.getElementById('statNombre').value;
-    const label = document.getElementById('statLabel').value;
-    const order = parseInt(document.getElementById('statOrder').value) || 0;
-    const { error } = await supabaseAdminPublic.from('public_processus_stats').insert({ nombre, label, order });
-    if (error) showMessage('Erreur ajout: ' + error.message, 'error');
-    else {
-        showMessage('Statistique ajoutée', 'success');
-        document.getElementById('addStatForm').reset();
-        loadStats();
-    }
-}
-
-// ===== UTILITAIRE =====
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = '../../../';
     });
 }
 
-// ===== INITIALISATION glace =====
-document.getElementById('refreshEtapes').addEventListener('click', loadEtapes);
-document.getElementById('refreshStats').addEventListener('click', loadStats);
-
-document.getElementById('addEtapeForm').addEventListener('submit', addEtape);
-document.getElementById('addStatForm').addEventListener('submit', addStat);
-
-// Déconnexion
-document.getElementById('logoutBtn').addEventListener('click', () => {
-    window.location.href = '../administration.html';
-});
+// ========== INITIALISATION ==========
+loadSteps();
+/* FIN : public/admin/processus-admin/processus-admin.js */

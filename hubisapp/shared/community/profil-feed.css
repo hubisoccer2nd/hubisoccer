@@ -607,3 +607,92 @@ ul { list-style:none; }
     .btn-primary, .btn-outline { padding:8px 14px; font-size:0.8rem; }
     .lightbox-close { top:10px; right:15px; font-size:2rem; }
 }
+
+/* ============================================================
+   AJOUTS — CLASSES UTILISÉES PAR profil-feed.js SANS STYLE
+   ------------------------------------------------------------
+   Ces sélecteurs sont produits par le JavaScript de la page mais
+   n'avaient aucune règle : les blocs concernés s'affichaient
+   sans mise en forme.
+   ============================================================ */
+
+/* ---------- État vide (onglet sans contenu) ---------- */
+.c-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 44px 24px;
+    text-align: center;
+    color: var(--gray);
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.c-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--primary-xlight);
+    color: var(--primary);
+    font-size: 1.6rem;
+}
+
+.c-empty strong,
+.c-empty h3 {
+    color: var(--dark);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* ---------- Bloc nom + rôle d'une carte de suggestion ----------
+   Sans ce conteneur, le nom et le rôle se collaient au bouton
+   « Suivre » et la carte perdait son alignement vertical. */
+.suggestion-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+}
+
+.suggestion-info .suggestion-name,
+.suggestion-info .suggestion-role {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------- Initiales quand la communauté n'a pas d'avatar ----------
+   Remplace la balise <img src=""> qui affichait une icône cassée.
+   Mêmes dimensions que .suggestion-card img pour garder la carte
+   parfaitement alignée. */
+.suggestion-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    background: var(--primary);
+    color: var(--white);
+    font-size: 1.05rem;
+    font-weight: 700;
+    user-select: none;
+}
+
+/* ---------- Le bouton « Suivre » doit rester cliquable au regard ---------- */
+.suggestion-follow-btn { cursor: pointer; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+    .c-empty { padding: 30px 16px; }
+    .suggestion-initials { width: 52px; height: 52px; font-size: 0.95rem; }
+}

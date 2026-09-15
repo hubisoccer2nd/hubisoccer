@@ -1,0 +1,203 @@
+/* ============================================================
+   HUBISOCCER — ROLE-NAV.CSS
+   Styles de la navigation partagée de l'espace Communauté
+   ------------------------------------------------------------
+   Accompagne role-nav.js. Chargé par TOUTES les pages de la
+   communauté, juste après la feuille de style de la page pour
+   pouvoir s'appuyer sur ses variables (--primary, --gold...).
+   Toutes les classes sont préfixées « rn- » : aucun risque de
+   collision avec les styles existants de chaque page.
+   ============================================================ */
+
+/* ========== DEBUT : VARIABLES DE REPLI ==========
+   Si une page ne définit pas ces variables, on fournit les
+   valeurs de la charte HubISoccer pour que le menu reste juste. */
+:root {
+    --rn-primary:      #551B8C;
+    --rn-primary-soft: rgba(85, 27, 140, 0.08);
+    --rn-gold:         #FFCC00;
+    --rn-text:         #1a1a2e;
+    --rn-muted:        #6c757d;
+    --rn-border:       #e8e4f0;
+    --rn-surface:      #ffffff;
+    --rn-radius:       12px;
+}
+/* ========== FIN : VARIABLES DE REPLI ========== */
+
+
+/* ========== DEBUT : SECTION DE MENU ========== */
+.rn-section {
+    margin-bottom: 22px;
+}
+
+.rn-section + .rn-section {
+    padding-top: 18px;
+    border-top: 1px solid var(--rn-border);
+}
+
+.rn-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--rn-muted);
+    margin: 0 0 10px 12px;
+}
+
+.rn-title i {
+    color: var(--rn-primary);
+    font-size: 0.8rem;
+}
+/* ========== FIN : SECTION DE MENU ========== */
+
+
+/* ========== DEBUT : LIEN DE MENU ========== */
+.rn-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-bottom: 2px;
+    border-radius: var(--rn-radius);
+    color: var(--rn-text);
+    font-size: 0.92rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.rn-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 1rem;
+    color: var(--rn-muted);
+    transition: color 0.18s ease;
+    flex-shrink: 0;
+}
+
+.rn-link:hover {
+    background: var(--rn-primary-soft);
+    color: var(--rn-primary);
+    transform: translateX(2px);
+}
+
+.rn-link:hover i {
+    color: var(--rn-primary);
+}
+
+.rn-link.active {
+    background: var(--rn-primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+.rn-link.active i {
+    color: var(--rn-gold);
+}
+
+.rn-link:focus-visible {
+    outline: 2px solid var(--rn-primary);
+    outline-offset: 2px;
+}
+/* ========== FIN : LIEN DE MENU ========== */
+
+
+/* ========== DEBUT : MODULES À VENIR ========== */
+.rn-link.rn-soon {
+    color: var(--rn-muted);
+}
+
+.rn-badge {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--rn-gold);
+    color: #1a1a2e;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+/* ========== FIN : MODULES À VENIR ========== */
+
+
+/* ========== DEBUT : ESPACE PRIVÉ NON CONSTRUIT ========== */
+.rn-pending {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    margin: 0 6px;
+    border: 1px dashed var(--rn-border);
+    border-radius: var(--rn-radius);
+    background: var(--rn-primary-soft);
+}
+
+.rn-pending strong {
+    font-size: 0.92rem;
+    color: var(--rn-primary);
+}
+
+.rn-pending span {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--rn-muted);
+}
+
+.rn-pending .rn-link {
+    padding: 8px 10px;
+    background: var(--rn-surface);
+    font-size: 0.84rem;
+}
+/* ========== FIN : ESPACE PRIVÉ NON CONSTRUIT ========== */
+
+
+/* ========== DEBUT : BOUTON RETOUR ESPACE PRIVÉ (en-tête) ========== */
+.rn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 999px;
+    background: var(--rn-primary);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.86rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: filter 0.18s ease;
+}
+
+.rn-back:hover {
+    filter: brightness(1.12);
+}
+
+.rn-back i {
+    font-size: 0.8rem;
+}
+/* ========== FIN : BOUTON RETOUR ESPACE PRIVÉ ========== */
+
+
+/* ========== DEBUT : RESPONSIVE ========== */
+@media (max-width: 900px) {
+    .rn-section {
+        margin-bottom: 16px;
+    }
+    .rn-link {
+        padding: 12px 14px;
+        font-size: 0.95rem;
+    }
+    .rn-back span {
+        display: none;
+    }
+    .rn-back {
+        padding: 8px 12px;
+    }
+}
+/* ========== FIN : RESPONSIVE ========== */

@@ -1,174 +1,180 @@
+/* DEBUT : public/admin/partenaires-admin/partenaires-admin.js */
 // ========== PARTENAIRES-ADMIN.JS ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentEditId = null;
+// Éléments DOM
+const globalLoader = document.getElementById('globalLoader');
+function showLoader() { if (globalLoader) globalLoader.style.display = 'flex'; }
+function hideLoader() { if (globalLoader) globalLoader.style.display = 'none'; }
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+}
+
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-content">${escapeHtml(message)}</div><button class="toast-close">×</button>`;
+    container.appendChild(toast);
+    toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// ========== GESTION DES PARTENAIRES ==========
+const partenairesBody = document.getElementById('partenairesBody');
+const partenaireForm = document.getElementById('partenaireForm');
+const formTitle = document.getElementById('formTitle');
+const partenaireId = document.getElementById('partenaireId');
+const nomInput = document.getElementById('nom');
+const descriptionInput = document.getElementById('description');
+const siteWebInput = document.getElementById('site_web');
+const logoFileInput = document.getElementById('logoFile');
+const ordreInput = document.getElementById('ordre');
+const cancelBtn = document.getElementById('cancelBtn');
 
 async function loadPartenaires() {
-  const { data, error } = await supabaseAdmin.from('public_partenaires').select('*').order('ordre', { ascending: true });
-  if (error) {
-    console.error(error);
-    return;
-  }
-  const container = document.getElementById('partenairesList');
-  if (!data || data.length === 0) {
-    container.innerHTML = '<p>Aucun article partenaire.</p>';
-    return;
-  }
-  let html = '';
-  data.forEach(p => {
-    html += `
-            <div class="list-item" data-id="${p.id}">
-                <div class="info">
-                    <strong>${escapeHtml(p.nom)}</strong>
-                    <small>Ordre: ${p.ordre}</small>
-                    <small>Date: ${new Date(p.date_publication).toLocaleDateString()}</small>
-                </div>
-                <div class="actions">
-                    <button class="edit-btn" onclick="editPartenaire(${p.id})">Modifier</button>
-                    <button class="delete-btn" onclick="deletePartenaire(${p.id})">Supprimer</button>
-                </div>
-            </div>
-        `;
-  });
-  container.innerHTML = html;
+    if (!partenairesBody) return;
+    showLoader();
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('public_partenaires')
+            .select('*')
+            .order('ordre', { ascending: true });
+        if (error) throw error;
+        renderTable(data || []);
+    } catch (err) { showToast('Erreur chargement partenaires', 'error'); } finally { hideLoader(); }
 }
 
-async function uploadFile(file, bucket) {
-  const timestamp = Date.now();
-  const fileName = `${timestamp}_${file.name}`;
-  const { error } = await supabaseAdmin.storage.from(bucket).upload(fileName, file);
-  if (error) throw error;
-  const { data: urlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(fileName);
-  return urlData.publicUrl;
-}
+function renderTable(partenaires) {
+    if (!partenairesBody) return;
+    if (partenaires.length === 0) {
+        partenairesBody.innerHTML = '<tr><td colspan="5">Aucun partenaire enregistré.</td></tr>';
+        return;
+    }
+    partenairesBody.innerHTML = partenaires.map(p => `
+        <tr>
+            <td><img src="${escapeHtml(p.logo_url)}" alt="${escapeHtml(p.nom)}" style="width:60px;height:60px;object-fit:contain;border-radius:8px;"></td>
+            <td>${escapeHtml(p.nom)}</td>
+            <td>${escapeHtml(p.description || '-')}</td>
+            <td>${p.ordre || 0}</td>
+            <td class="actions-cell">
+                <button class="btn-icon btn-edit" data-id="${p.id}"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon btn-delete" data-id="${p.id}"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        </tr>
+    `).join('');
 
-async function savePartenaire(event) {
-  event.preventDefault();
-  const id = document.getElementById('partenaireId').value;
-  const nom = document.getElementById('nom').value;
-  const contenu = document.getElementById('contenu').value;
-  const ordre = parseInt(document.getElementById('ordre').value) || 0;
-  const date = document.getElementById('date_publication').value;
-  const logoFile = document.getElementById('logo').files[0];
-  const mediaFile = document.getElementById('media').files[0];
-  let logoUrl = null;
-  let mediaUrl = null;
-  let mediaType = null;
-  
-  if (logoFile) {
-    try {
-      logoUrl = await uploadFile(logoFile, 'partenaires_logos');
-    } catch (err) {
-      alert('Erreur upload logo : ' + err.message);
-      return;
-    }
-  }
-  if (mediaFile) {
-    try {
-      mediaUrl = await uploadFile(mediaFile, 'partenaires_medias');
-      if (mediaFile.type.startsWith('image/')) mediaType = 'image';
-      else if (mediaFile.type.startsWith('video/')) mediaType = 'video';
-      else if (mediaFile.type.startsWith('audio/')) mediaType = 'audio';
-    } catch (err) {
-      alert('Erreur upload média : ' + err.message);
-      return;
-    }
-  }
-  
-  const data = {
-    nom,
-    contenu,
-    ordre,
-    date_publication: date ? new Date(date).toISOString() : new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  if (logoUrl) data.logo_url = logoUrl;
-  if (mediaUrl) {
-    data.media_url = mediaUrl;
-    data.media_type = mediaType;
-  }
-  
-  let error;
-  if (id) {
-    const { error: updateError } = await supabaseAdmin.from('public_partenaires').update(data).eq('id', id);
-    error = updateError;
-  } else {
-    data.created_at = new Date().toISOString();
-    const { error: insertError } = await supabaseAdmin.from('public_partenaires').insert([data]);
-    error = insertError;
-  }
-  
-  if (error) {
-    alert('Erreur : ' + error.message);
-  } else {
-    alert(id ? 'Article modifié' : 'Article ajouté');
-    resetForm();
-    loadPartenaires();
-  }
+    partenairesBody.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => editPartenaire(btn.dataset.id)));
+    partenairesBody.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => deletePartenaire(btn.dataset.id)));
 }
 
 function resetForm() {
-  document.getElementById('partenaireId').value = '';
-  document.getElementById('nom').value = '';
-  document.getElementById('contenu').value = '';
-  document.getElementById('ordre').value = '0';
-  document.getElementById('date_publication').value = '';
-  document.getElementById('logo').value = '';
-  document.getElementById('media').value = '';
-  document.getElementById('formTitle').textContent = 'Ajouter un partenaire';
-  document.getElementById('cancelBtn').style.display = 'none';
-  currentEditId = null;
+    partenaireForm.reset();
+    partenaireId.value = '';
+    ordreInput.value = '0';
+    formTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Ajouter un partenaire';
+    cancelBtn.style.display = 'none';
 }
 
-window.editPartenaire = async (id) => {
-  const { data, error } = await supabaseAdmin.from('public_partenaires').select('*').eq('id', id).single();
-  if (error) {
-    alert('Erreur chargement article');
-    return;
-  }
-  currentEditId = id;
-  document.getElementById('partenaireId').value = data.id;
-  document.getElementById('nom').value = data.nom;
-  document.getElementById('contenu').value = data.contenu;
-  document.getElementById('ordre').value = data.ordre;
-  if (data.date_publication) {
-    const d = new Date(data.date_publication);
-    document.getElementById('date_publication').value = d.toISOString().slice(0, 16);
-  }
-  document.getElementById('formTitle').textContent = 'Modifier le partenaire';
-  document.getElementById('cancelBtn').style.display = 'inline-block';
-};
-
-window.deletePartenaire = async (id) => {
-  if (!confirm('Supprimer cet article ?')) return;
-  const { error } = await supabaseAdmin.from('public_partenaires').delete().eq('id', id);
-  if (error) alert('Erreur : ' + error.message);
-  else {
-    alert('Article supprimé');
-    loadPartenaires();
-  }
-};
-
-document.getElementById('cancelBtn').addEventListener('click', resetForm);
-document.getElementById('partenaireForm').addEventListener('submit', savePartenaire);
-document.getElementById('refreshList').addEventListener('click', loadPartenaires);
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
+async function editPartenaire(id) {
+    showLoader();
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('public_partenaires')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        partenaireId.value = data.id;
+        nomInput.value = data.nom || '';
+        descriptionInput.value = data.description || '';
+        siteWebInput.value = data.site_web || '';
+        ordreInput.value = data.ordre || 0;
+        formTitle.innerHTML = '<i class="fas fa-edit"></i> Modifier le partenaire';
+        cancelBtn.style.display = 'inline-block';
+    } catch (err) { showToast('Erreur chargement partenaire', 'error'); } finally { hideLoader(); }
 }
 
-// Déconnexion désactivée pour le développement (commentée)
-// document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-//     await supabaseAdmin.auth.signOut();
-//     window.location.href = '../administration.html';
-// });
+async function uploadLogo(file) {
+    const fileName = `partenaire_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+    const { error } = await supabaseAdmin.storage.from('partenaires_logos').upload(fileName, file);
+    if (error) throw error;
+    const { data: urlData } = supabaseAdmin.storage.from('partenaires_logos').getPublicUrl(fileName);
+    return urlData.publicUrl;
+}
 
+async function savePartenaire(e) {
+    e.preventDefault();
+    const id = partenaireId.value;
+    const nom = nomInput.value.trim();
+    const description = descriptionInput.value.trim();
+    const site_web = siteWebInput.value.trim();
+    const ordre = parseInt(ordreInput.value) || 0;
+    const logoFile = logoFileInput.files[0];
+
+    if (!nom) { showToast('Veuillez saisir un nom', 'warning'); return; }
+
+    showLoader();
+    try {
+        let logo_url = id ? (await supabaseAdmin.from('public_partenaires').select('logo_url').eq('id', id).single()).data?.logo_url : null;
+        if (logoFile) logo_url = await uploadLogo(logoFile);
+
+        const payload = { nom, description, site_web, ordre, logo_url, updated_at: new Date().toISOString() };
+        if (id) {
+            const { error } = await supabaseAdmin.from('public_partenaires').update(payload).eq('id', id);
+            if (error) throw error;
+            showToast('Partenaire modifié', 'success');
+        } else {
+            const { error } = await supabaseAdmin.from('public_partenaires').insert([{ ...payload, created_at: new Date().toISOString() }]);
+            if (error) throw error;
+            showToast('Partenaire ajouté', 'success');
+        }
+        resetForm();
+        loadPartenaires();
+    } catch (err) { showToast('Erreur enregistrement', 'error'); } finally { hideLoader(); }
+}
+
+async function deletePartenaire(id) {
+    if (!confirm('Supprimer ce partenaire ?')) return;
+    showLoader();
+    try {
+        const { error } = await supabaseAdmin.from('public_partenaires').delete().eq('id', id);
+        if (error) throw error;
+        showToast('Partenaire supprimé', 'success');
+        loadPartenaires();
+    } catch (err) { showToast('Erreur suppression', 'error'); } finally { hideLoader(); }
+}
+
+partenaireForm.addEventListener('submit', savePartenaire);
+cancelBtn.addEventListener('click', resetForm);
+
+// ========== MENU MOBILE & DÉCONNEXION ==========
+const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
+if (menuToggle && navLinks) {
+    menuToggle.addEventListener('click', () => { navLinks.classList.toggle('active'); menuToggle.classList.toggle('open'); });
+    document.addEventListener('click', (e) => { if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) { navLinks.classList.remove('active'); menuToggle.classList.remove('open'); } });
+}
+
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = '../../../';
+    });
+}
+
+// ========== INITIALISATION ==========
 loadPartenaires();
+/* FIN : public/admin/partenaires-admin/partenaires-admin.js */

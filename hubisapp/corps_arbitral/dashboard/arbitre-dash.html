@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Tableau de bord Arbitre | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="arbitre-dash.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-whistle"></i> Espace Corps Arbitral</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/arbitre-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/arbitre-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-whistle"></i><h3>Menu Corps Arbitral</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="arbitre-dash.html" class="active">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../verification/arbitre-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../fitness/arbitre-fitness.html">
+            <i class="fas fa-running"></i><span>Tests Physiques & Fitness</span>
+        </a>
+        <a href="../designations/arbitre-designations.html">
+            <i class="fas fa-calendar-check"></i><span>Mes Désignations</span>
+        </a>
+        <a href="../rapports/arbitre-rapports.html">
+            <i class="fas fa-clipboard-list"></i><span>Rapports de Match</span>
+        </a>
+        <a href="../evaluations/arbitre-evaluations.html">
+            <i class="fas fa-star-half-alt"></i><span>Évaluations Reçues</span>
+        </a>
+        <a href="../formation/arbitre-formation.html">
+            <i class="fas fa-book"></i><span>Formation & Lois du Jeu</span>
+        </a>
+        <a href="../honoraires/arbitre-honoraires.html">
+            <i class="fas fa-file-invoice-dollar"></i><span>Mes Honoraires</span>
+        </a>
+        <a href="../revenus/arbitre-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <a href="../certifications/arbitre-certif.html">
+            <i class="fas fa-certificate"></i><span>Diplômes & Certificats</span>
+        </a>
+        <a href="../cv/arbitre-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/arbitre-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="dashboard-main">
+<div class="dashboard-container">
+
+    <!-- ===== DEBUT CARTE PROFIL ===== -->
+    <aside class="profile-card glass-card">
+        <div class="avatar-upload" onclick="triggerUpload()">
+            <div id="profileAvatarContainer" class="avatar-container">
+                <img src="" id="profileDisplay" alt="Avatar" style="display:none;">
+                <div class="profile-initials" id="profileDisplayInitials"></div>
+            </div>
+            <div class="edit-badge"><i class="fas fa-camera"></i></div>
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        </div>
+        <button id="deleteAvatarBtn" class="btn-delete-avatar" style="display:none;">
+            <i class="fas fa-trash-alt"></i> Supprimer la photo
+        </button>
+        <h2 id="dashboardName">—</h2>
+        <div class="arbitre-pseudo"><i class="fas fa-whistle"></i><span id="arbitrePseudo">—</span></div>
+        <div class="arbitre-contact">
+            <p><i class="fas fa-phone-alt"></i> <span id="arbitrePhone">—</span></p>
+            <p><i class="fas fa-envelope"></i> <span id="arbitreEmail">—</span></p>
+            <p><i class="fas fa-flag"></i> <span id="arbitreCountryFlag">🌍</span> <span id="arbitreCountryName">—</span></p>
+        </div>
+        <p class="role-badge">Corps Arbitral</p>
+        <div class="id-copy-box" onclick="copyID()">
+            <i class="fas fa-id-card"></i><span id="arbitreID">ID : —</span><i class="fas fa-copy copy-icon"></i>
+        </div>
+        <div class="stats-mini-container">
+            <button class="mini-stat-btn" onclick="location.href='../verification/arbitre-verif.html'">
+                <i class="fas fa-chart-pie"></i>
+                <span class="mini-stat-value" id="profileCompletion">0</span>%
+                <span class="mini-stat-label">Profil complété</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-binoculars"></i>
+                <span class="mini-stat-value" id="scoutingViews">0</span>
+                <span class="mini-stat-label">Vues profil</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-star"></i>
+                <span class="mini-stat-value" id="recruiterFavs">0</span>
+                <span class="mini-stat-label">Favoris</span>
+            </button>
+        </div>
+        <a href="../cv/arbitre-cv.html" class="btn-download-cv">
+            <i class="fas fa-file-pdf"></i> Télécharger mon CV PDF
+        </a>
+    </aside>
+    <!-- ===== FIN CARTE PROFIL ===== -->
+
+    <div class="main-panel">
+
+        <!-- En-tête arbitre -->
+        <div class="arbitre-header glass-card">
+            <div class="arbitre-header-left">
+                <h1 id="arbitreFullName">—</h1>
+                <p class="arbitre-position" id="arbitrePosition">Grade non renseigné</p>
+            </div>
+            <div class="arbitre-header-right">
+                <div class="arbitre-basic-info">
+                    <span><i class="fas fa-birthday-cake"></i> <span id="arbitreAge">—</span> ans</span>
+                    <span><i class="fas fa-globe-africa"></i> <span id="arbitreNationality">—</span></span>
+                    <span><i class="fas fa-whistle"></i> <span id="arbitreGrade">—</span></span>
+                    <span><i class="fas fa-building"></i> <span id="arbitreFederation">—</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== DEBUT WIDGETS DE PILOTAGE ===== -->
+        <div class="pilot-grid">
+            <button class="pilot-card" onclick="location.href='../designations/arbitre-designations.html'">
+                <div class="pilot-icon esprit"><i class="fas fa-calendar-check"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotMatchs">0</span>
+                    <span class="pilot-label">Matchs officiés</span>
+                    <span class="pilot-sub">Total à ce jour</span>
+                </div>
+            </button>
+            <button class="pilot-card" onclick="location.href='../designations/arbitre-designations.html'">
+                <div class="pilot-icon corps"><i class="fas fa-hourglass-half"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotAttente">0</span>
+                    <span class="pilot-label">Désignations en attente</span>
+                    <span class="pilot-sub">À confirmer</span>
+                </div>
+            </button>
+            <button class="pilot-card" onclick="location.href='../evaluations/arbitre-evaluations.html'">
+                <div class="pilot-icon ame"><i class="fas fa-star-half-alt"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotEvaluation">0</span>
+                    <span class="pilot-label">Score moyen /10</span>
+                    <span class="pilot-sub">Évaluations reçues</span>
+                </div>
+            </button>
+            <button class="pilot-card" onclick="location.href='../honoraires/arbitre-honoraires.html'">
+                <div class="pilot-icon gold"><i class="fas fa-file-invoice-dollar"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value pilot-value-sm" id="pilotHonoraires">0 €</span>
+                    <span class="pilot-label">Honoraires</span>
+                    <span class="pilot-sub">Total calculé</span>
+                </div>
+            </button>
+        </div>
+        <!-- ===== FIN WIDGETS DE PILOTAGE ===== -->
+
+        <!-- ===== DEBUT ALERTES ===== -->
+        <div class="alerts-section glass-card">
+            <h3 class="section-title"><i class="fas fa-bell"></i> Alertes</h3>
+            <div id="alertsList" class="alerts-list">
+                <p class="empty-state" id="alertsEmpty">
+                    <i class="fas fa-check-circle"></i> Tout est en ordre. Aucune alerte pour l'instant. 🌱
+                </p>
+            </div>
+        </div>
+        <!-- ===== FIN ALERTES ===== -->
+
+        <!-- Stats globales -->
+        <div class="global-stats-grid">
+            <div class="stat-card-global"><div class="stat-card-label">MATCHS OFFICIÉS</div><div class="stat-card-value" id="nbMatchs">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">CARTONS DISTRIBUÉS</div><div class="stat-card-value" id="nbCartons">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">HONORAIRES TOTAUX</div><div class="stat-card-value" id="totalHonoraires">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">ANNÉES D'EXPÉRIENCE</div><div class="stat-card-value" id="anneesExp">—</div></div>
+        </div>
+
+        <!-- Compétences principales -->
+        <div class="main-skills glass-card">
+            <h3 class="section-title"><i class="fas fa-chart-bar"></i> Compétences principales</h3>
+            <div class="skills-grid">
+                <div class="skill-item"><span class="skill-label">Connaissance des Lois du Jeu</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_lois" style="width:0%"></div></div><span class="skill-value" id="skill_lois_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Gestion de match</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_gestion" style="width:0%"></div></div><span class="skill-value" id="skill_gestion_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Rapidité de décision</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_rapidite" style="width:0%"></div></div><span class="skill-value" id="skill_rapidite_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Positionnement sur le terrain</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_position" style="width:0%"></div></div><span class="skill-value" id="skill_position_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Résistance au stress</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_stress" style="width:0%"></div></div><span class="skill-value" id="skill_stress_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Impartialité</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_impartial" style="width:0%"></div></div><span class="skill-value" id="skill_impartial_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Condition physique</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_physique" style="width:0%"></div></div><span class="skill-value" id="skill_physique_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Communication</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_comm" style="width:0%"></div></div><span class="skill-value" id="skill_comm_value">0</span></div>
+            </div>
+        </div>
+
+        <!-- Profil détaillé Trinité -->
+        <div class="attributes-section glass-card">
+            <h3 class="section-title"><i class="fas fa-list-ul"></i> Profil détaillé — Corps · Âme · Esprit</h3>
+            <div class="attributes-tabs">
+                <button class="attr-tab active" data-cat="competences"><i class="fas fa-whistle"></i> Esprit — Compétences Arbitrales</button>
+                <button class="attr-tab" data-cat="activite"><i class="fas fa-chart-pie"></i> Âme — Activité & Parcours</button>
+                <button class="attr-tab" data-cat="contrat"><i class="fas fa-file-contract"></i> Corps — Statut & Structure</button>
+            </div>
+            <div id="competences-attrs" class="attr-content active">
+                <div class="attr-grid">
+                    <div class="attr-item"><span class="attr-name">Connaissance des Lois du Jeu</span><span class="attr-value" id="cp_loi">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Gestion de match</span><span class="attr-value" id="cp_ges">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Communication</span><span class="attr-value" id="cp_com">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Gestion de la discipline</span><span class="attr-value" id="cp_dis">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Rapidité de décision</span><span class="attr-value" id="cp_rap">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Positionnement</span><span class="attr-value" id="cp_pos">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Gestion du VAR</span><span class="attr-value" id="cp_var">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Résistance au stress</span><span class="attr-value" id="cp_str">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Autorité naturelle</span><span class="attr-value" id="cp_aut">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Impartialité</span><span class="attr-value" id="cp_imp">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Coordination avec assistants</span><span class="attr-value" id="cp_coo">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Condition physique</span><span class="attr-value" id="cp_phy">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Éthique professionnelle</span><span class="attr-value" id="cp_eth">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Pédagogie</span><span class="attr-value" id="cp_ped">0</span></div>
+                </div>
+            </div>
+            <div id="activite-attrs" class="attr-content">
+                <div class="attr-grid">
+                    <div class="attr-item"><span class="attr-name">Matchs officiés (total)</span><span class="attr-value" id="ac_mat">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Cartons jaunes distribués</span><span class="attr-value" id="ac_jau">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Cartons rouges distribués</span><span class="attr-value" id="ac_rou">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Décisions VAR</span><span class="attr-value" id="ac_varr">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Score d'évaluation moyen</span><span class="attr-value" id="ac_sco">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Désignations en attente</span><span class="attr-value" id="ac_att">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Années d'expérience</span><span class="attr-value" id="ac_ann">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Taux de disponibilité</span><span class="attr-value" id="ac_dis">0</span></div>
+                </div>
+            </div>
+            <div id="contrat-attrs" class="attr-content">
+                <div class="attr-grid">
+                    <div class="attr-item"><span class="attr-name">Grade d'arbitrage</span><span class="attr-value" id="co_gra">0</span></div>
+                    <div class="attr-item"><span class="attr-name">N° de licence</span><span class="attr-value" id="co_lic">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Fédération / Ligue</span><span class="attr-value" id="co_fed">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Date début d'exercice</span><span class="attr-value" id="co_deb">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Dernier test fitness</span><span class="attr-value" id="co_fit">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Résultat du test</span><span class="attr-value" id="co_res">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Pays d'exercice</span><span class="attr-value" id="co_pay">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Honoraires totaux perçus</span><span class="attr-value" id="co_hon">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes & Évaluations -->
+        <div class="reports-section glass-card">
+            <h3 class="section-title"><i class="fas fa-file-signature"></i> Notes & Évaluations</h3>
+            <div class="reports-body">
+                <p id="scoutingReports" class="reports-text">Aucune note pour le moment.</p>
+            </div>
+        </div>
+
+        <!-- ===== DEBUT ACTIONS RAPIDES ===== -->
+        <div class="quick-actions glass-card">
+            <h3 class="section-title"><i class="fas fa-bolt"></i> Actions rapides</h3>
+            <div class="quick-grid">
+                <a href="../designations/arbitre-designations.html" class="quick-btn">
+                    <i class="fas fa-calendar-check"></i><span>Voir mes désignations</span>
+                </a>
+                <a href="../rapports/arbitre-rapports.html" class="quick-btn">
+                    <i class="fas fa-clipboard-list"></i><span>Nouveau rapport de match</span>
+                </a>
+                <a href="../fitness/arbitre-fitness.html" class="quick-btn">
+                    <i class="fas fa-running"></i><span>Mes tests fitness</span>
+                </a>
+                <a href="../verification/arbitre-verif.html" class="quick-btn">
+                    <i class="fas fa-shield-alt"></i><span>Vérifier mon statut</span>
+                </a>
+            </div>
+        </div>
+        <!-- ===== FIN ACTIONS RAPIDES ===== -->
+
+    </div>
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-whistle"></i> HubISoccer · Triple Projet</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="arbitre-dash.js"></script>
+</body>
+</html>

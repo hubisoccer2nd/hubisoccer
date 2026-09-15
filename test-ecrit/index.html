@@ -1,3 +1,4 @@
+<!-- DEBUT : test-ecrit/index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,7 +8,7 @@
     <meta name="description" content="Épreuve de qualification pour les sportifs HubISoccer. QCM et questions rédactionnelles selon votre sport.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/test-ecrit.css">
+    <link rel="stylesheet" href="test-ecrit.css">
 </head>
 <body>
     <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
@@ -16,8 +17,8 @@
     </div>
 
     <nav>
-        <a href="../index.html" class="logo-link">
-            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        <a href="../" class="logo-link">
+            <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
             <select class="lang-picker" id="langSelect">
@@ -52,16 +53,16 @@
                 <span></span>
             </button>
             <div class="nav-links" id="navLinks">
-                <a href="../index.html" data-i18n="nav.home">Accueil</a>
-                <a href="scouting.html" data-i18n="nav.scouting">Scouting</a>
-                <a href="processus.html" data-i18n="nav.process">Processus</a>
-                <a href="affiliation.html" data-i18n="nav.affiliation">Affiliation</a>
-                <a href="acteurs.html" data-i18n="nav.actors">Devenir acteur</a>
-                <a href="tournoi.html" data-i18n="nav.tournaments">Tournois</a>
-                <a href="hub-community.html" data-i18n="nav.community">Community</a>
-                <a href="e-marketing-hubisoccer.html" data-i18n="nav.market">Market</a>
-                <a href="public/auth/login.html" class="btn-auth" data-i18n="nav.login">Connexion</a>
-                <a href="public/auth/signup.html" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
+                <a href="../" data-i18n="nav.home">Accueil</a>
+                <a href="../scouting/" data-i18n="nav.scouting">Scouting</a>
+                <a href="../processus/" data-i18n="nav.process">Processus</a>
+                <a href="../affiliation/" data-i18n="nav.affiliation">Affiliation</a>
+                <a href="../acteurs/" data-i18n="nav.actors">Devenir acteur</a>
+                <a href="../tournoi/" data-i18n="nav.tournaments">Tournois</a>
+                <a href="../hub-community/" data-i18n="nav.community">Community</a>
+                <a href="../e-marketing/" data-i18n="nav.market">Market</a>
+                <a href="../acteurs-login/" class="btn-auth" data-i18n="nav.login">Connexion</a>
+                <a href="../hubisapp/authprive/users/signup/" class="btn-auth gold" data-i18n="nav.signup">Inscription</a>
             </div>
         </div>
     </nav>
@@ -129,7 +130,7 @@
                 <h1 data-i18n="exam.wait_title">Épreuve soumise !</h1>
                 <p data-i18n="exam.wait_message">Votre copie a bien été enregistrée. Un correcteur l'analysera sous 1h à 24h. Vous recevrez votre note et un PDF corrigé dans votre espace de suivi.</p>
                 <p data-i18n="exam.wait_thanks">Merci de votre confiance.</p>
-                <a href="suivi.html" class="btn-primary" data-i18n="exam.go_suivi">Aller à mon suivi</a>
+                <a href="../suivi/" class="btn-primary" data-i18n="exam.go_suivi">Aller à mon suivi</a>
             </div>
         </div>
     </main>
@@ -154,6 +155,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/test-ecrit.js"></script>
+    <script src="test-ecrit.js"></script>
 </body>
 </html>
+<!-- FIN : test-ecrit/index.html -->

@@ -1,3 +1,4 @@
+/* DEBUT : public/admin/nos-clubs-admin/gestion/gestion-contrats-signatures.js */
 // ========== GESTION-CONTRATS-SIGNATURES.JS ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
@@ -209,7 +210,7 @@ document.getElementById('refreshBtn').addEventListener('click', () => {
 });
 // ========== FIN : ÉVÉNEMENTS FILTRES ==========
 
-// ========== DÉBUT : MENU MOBILE ==========
+// ========== DÉBUT : MENU MOBILE ET DÉCONNEXION ==========
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 if (menuToggle && navLinks) {
@@ -220,11 +221,20 @@ if (menuToggle && navLinks) {
         }
     });
 }
-document.getElementById('logoutBtn')?.addEventListener('click', e => { e.preventDefault(); showToast('Déconnexion', 'info'); });
-// ========== FIN : MENU MOBILE ==========
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // VRAIE DÉCONNEXION
+        localStorage.removeItem('hubiLang');
+        window.location.href = '../../../index.html';
+    });
+}
+// ========== FIN : MENU MOBILE ET DÉCONNEXION ==========
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', () => {
     loadSignatures();
 });
 // ========== FIN DE GESTION-CONTRATS-SIGNATURES.JS ==========
+/* FIN : public/admin/nos-clubs-admin/gestion/gestion-contrats-signatures.js */

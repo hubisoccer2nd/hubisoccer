@@ -1,9 +1,23 @@
-// ========== MESSAGES-ADMIN.JS (CORRIGÉ) ==========
+// ========== DEBUT : messages-admin.js (corrigé session + déconnexion + sujet réponse) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ========== UTILITAIRES ==========
+// ========== DEBUT : VÉRIFICATION DE SESSION ==========
+(async () => {
+    const { data: { session } } = await supabaseAdmin.auth.getSession();
+    if (!session) {
+        window.location.href = '../administration.html';
+        return;
+    }
+    document.getElementById('authCheck').style.display = 'none';
+    document.getElementById('adminContent').style.display = 'block';
+    chargerMessagesPublics();
+    chargerMessagesPrives();
+})();
+// ========== FIN : VÉRIFICATION DE SESSION ==========
+
+// ========== DEBUT : UTILITAIRES ==========
 function showLoader() {
     const loader = document.getElementById('globalLoader');
     if (loader) loader.style.display = 'flex';
@@ -66,8 +80,9 @@ async function getUserNom(userId) {
         return 'Utilisateur inconnu';
     }
 }
+// ========== FIN : UTILITAIRES ==========
 
-// ========== ONGLETS ==========
+// ========== DEBUT : ONGLETS ==========
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 tabBtns.forEach(btn => {
@@ -81,8 +96,9 @@ tabBtns.forEach(btn => {
         else if (tabId === 'prive') chargerMessagesPrives();
     });
 });
+// ========== FIN : ONGLETS ==========
 
-// ========== MESSAGES PUBLICS (contact) ==========
+// ========== DEBUT : MESSAGES PUBLICS (contact) ==========
 const publicContainer = document.getElementById('publicMessagesList');
 const publicFilterSelect = document.getElementById('publicFilter');
 const refreshPublicBtn = document.getElementById('refreshPublicBtn');
@@ -170,8 +186,9 @@ async function supprimerMessagePublic(id) {
 
 if (refreshPublicBtn) refreshPublicBtn.addEventListener('click', chargerMessagesPublics);
 if (publicFilterSelect) publicFilterSelect.addEventListener('change', chargerMessagesPublics);
+// ========== FIN : MESSAGES PUBLICS ==========
 
-// ========== MESSAGES PRIVÉS ==========
+// ========== DEBUT : MESSAGES PRIVÉS ==========
 const priveContainer = document.getElementById('priveConversationsList');
 const priveFilterSelect = document.getElementById('priveFilter');
 const refreshPriveBtn = document.getElementById('refreshPriveBtn');
@@ -201,10 +218,10 @@ async function chargerMessagesPrives() {
         for (const msg of messages) {
             const autreId = msg.expediteur_id === 'admin' ? msg.destinataire_id : msg.expediteur_id;
             if (!conversationsMap.has(autreId)) {
-                // Obtenir le nom de l'interlocuteur (asynchrone mais on va le faire après la boucle pour éviter trop d'appels)
                 conversationsMap.set(autreId, {
                     autreId: autreId,
                     dernierMessage: msg.contenu,
+                    dernierSujet: msg.sujet, // on garde le sujet du dernier message
                     date: msg.created_at,
                     nonLu: (msg.destinataire_id === 'admin' && !msg.lu)
                 });
@@ -212,6 +229,7 @@ async function chargerMessagesPrives() {
                 const conv = conversationsMap.get(autreId);
                 if (new Date(msg.created_at) > new Date(conv.date)) {
                     conv.dernierMessage = msg.contenu;
+                    conv.dernierSujet = msg.sujet;
                     conv.date = msg.created_at;
                 }
                 if (msg.destinataire_id === 'admin' && !msg.lu) conv.nonLu = true;
@@ -253,10 +271,10 @@ function renderConversations(conversations) {
                     <span class="conversation-avec">${escapeHtml(conv.autreNom)}</span>
                     <span class="conversation-date">${new Date(conv.date).toLocaleString()}</span>
                 </div>
-                <div class="conversation-sujet">Dernier message</div>
+                <div class="conversation-sujet">📌 ${escapeHtml(conv.dernierSujet || 'Sans sujet')}</div>
                 <div class="conversation-preview">${escapeHtml(conv.dernierMessage.substring(0, 100))}${conv.dernierMessage.length > 100 ? '...' : ''}</div>
                 <div class="conversation-actions">
-                    <button class="btn-repondre" data-id="${conv.autreId}" data-nom="${escapeHtml(conv.autreNom)}">Répondre</button>
+                    <button class="btn-repondre" data-id="${conv.autreId}" data-nom="${escapeHtml(conv.autreNom)}" data-sujet="${escapeHtml(conv.dernierSujet || '')}">Répondre</button>
                     <button class="btn-supprimer" data-id="${conv.autreId}">Toute la conversation</button>
                 </div>
             </div>
@@ -265,18 +283,18 @@ function renderConversations(conversations) {
     priveContainer.innerHTML = html;
     // Attacher les événements
     document.querySelectorAll('#priveConversationsList .btn-repondre').forEach(btn => {
-        btn.addEventListener('click', () => ouvrirReponseModal(btn.dataset.id, btn.dataset.nom));
+        btn.addEventListener('click', () => ouvrirReponseModal(btn.dataset.id, btn.dataset.nom, btn.dataset.sujet));
     });
     document.querySelectorAll('#priveConversationsList .btn-supprimer').forEach(btn => {
         btn.addEventListener('click', () => supprimerConversation(btn.dataset.id));
     });
 }
 
-function ouvrirReponseModal(destinataireId, destinataireNom) {
+function ouvrirReponseModal(destinataireId, destinataireNom, sujetOriginal) {
     currentDestinataireId = destinataireId;
     if (reponseDestinataireId) reponseDestinataireId.value = destinataireNom;
-    if (reponseSujet) reponseSujet.value = '';
-    if (reponseOriginal) reponseOriginal.innerHTML = '';
+    if (reponseSujet) reponseSujet.value = 'Re: ' + (sujetOriginal || '');
+    if (reponseOriginal) reponseOriginal.innerHTML = ''; // sera peuplé plus tard si nécessaire
     if (reponseContenu) reponseContenu.value = '';
     if (reponseModal) reponseModal.classList.add('active');
 }
@@ -286,10 +304,10 @@ async function envoyerReponsePrivee() {
         showToast('Destinataire invalide', 'error');
         return;
     }
-    const sujet = reponseSujet ? reponseSujet.value.trim() : '';
+    const sujet = reponseSujet ? reponseSujet.value.trim() : 'Réponse';
     const contenu = reponseContenu ? reponseContenu.value.trim() : '';
-    if (!sujet || !contenu) {
-        showToast('Sujet et message requis', 'warning');
+    if (!contenu) {
+        showToast('Veuillez écrire un message.', 'warning');
         return;
     }
     showLoader();
@@ -335,8 +353,9 @@ async function supprimerConversation(autreId) {
 if (envoyerReponseBtn) envoyerReponseBtn.addEventListener('click', envoyerReponsePrivee);
 if (refreshPriveBtn) refreshPriveBtn.addEventListener('click', chargerMessagesPrives);
 if (priveFilterSelect) priveFilterSelect.addEventListener('change', chargerMessagesPrives);
+// ========== FIN : MESSAGES PRIVÉS ==========
 
-// Fermeture modale
+// ========== DEBUT : FERMETURE MODALE ==========
 const closeModalBtns = document.querySelectorAll('.close-modal');
 closeModalBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -346,8 +365,9 @@ closeModalBtns.forEach(btn => {
 window.addEventListener('click', (e) => {
     if (e.target === reponseModal) reponseModal.classList.remove('active');
 });
+// ========== FIN : FERMETURE MODALE ==========
 
-// ========== MENU MOBILE ==========
+// ========== DEBUT : MENU MOBILE ==========
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 if (menuToggle && navLinks) {
@@ -362,14 +382,17 @@ if (menuToggle && navLinks) {
         }
     });
 }
+// ========== FIN : MENU MOBILE ==========
+
+// ========== DEBUT : DÉCONNEXION ==========
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e) => {
+    logoutBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        showToast('Déconnexion (fonctionnalité à venir)', 'info');
+        await supabaseAdmin.auth.signOut();
+        window.location.href = '../administration.html';
     });
 }
+// ========== FIN : DÉCONNEXION ==========
 
-// ========== INITIALISATION ==========
-chargerMessagesPublics();
-chargerMessagesPrives();
+// ========== FIN : messages-admin.js ==========

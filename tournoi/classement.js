@@ -12,6 +12,7 @@ const translations = {
         'classement.logout': 'Déconnexion',
         'classement.dashboard': 'Tableau de bord',
         'classement.equipe': 'Mon équipe',
+        'classement.composer': 'Composer l\'équipe',
         'classement.matchs': 'Matchs',
         'classement.title': 'Classement',
         'classement.messagerie': 'Messages',
@@ -30,6 +31,8 @@ const translations = {
         'classement.sets_pour': 'SP',
         'classement.sets_contre': 'SC',
         'classement.aucune': 'Aucun classement disponible pour ce tournoi.',
+        'classement.filtre_groupe': 'Afficher le groupe :',
+        'classement.tous': 'Tous',
         'footer.badge1': 'Conformité APDP Bénin',
         'footer.badge2': 'Règlementation FIFA',
         'footer.badge3': 'Triple Projet Sport-Études-Carrière',
@@ -45,6 +48,7 @@ const translations = {
         'classement.logout': 'Logout',
         'classement.dashboard': 'Dashboard',
         'classement.equipe': 'My team',
+        'classement.composer': 'Compose team',
         'classement.matchs': 'Matches',
         'classement.title': 'Ranking',
         'classement.messagerie': 'Messages',
@@ -63,6 +67,8 @@ const translations = {
         'classement.sets_pour': 'SW',
         'classement.sets_contre': 'SL',
         'classement.aucune': 'No ranking available for this tournament.',
+        'classement.filtre_groupe': 'Show group:',
+        'classement.tous': 'All',
         'footer.badge1': 'APDP Benin Compliance',
         'footer.badge2': 'FIFA Regulations',
         'footer.badge3': 'Triple Project Sport-Studies-Career',
@@ -123,7 +129,6 @@ let monIdentifiant = null;  // equipe_id ou participant_id
 let equipeId = sessionStorage.getItem('tournoi_equipe_id') || null;
 let participantId = sessionStorage.getItem('tournoi_participant_id') || null;
 
-// Affichage conditionnel du lien "Mon équipe"
 const gererEquipeLink = document.getElementById('gererEquipeLink');
 if (equipeId) {
     gererEquipeLink.style.display = 'inline-block';
@@ -239,8 +244,10 @@ async function chargerClassement() {
         await getTypeEtIdentifiant();
         if (typeTournoi === 'collectif') {
             await chargerClassementCollectif();
+            document.getElementById('filtreGroupe').style.display = 'flex';
         } else {
             await chargerClassementIndividuel();
+            document.getElementById('filtreGroupe').style.display = 'none';
         }
     } catch (err) {
         console.error(err);
@@ -251,13 +258,34 @@ async function chargerClassement() {
 }
 
 async function chargerClassementCollectif() {
-    const { data, error } = await supabasePublic
+    const groupeFilter = document.getElementById('groupeFilter').value;
+    // Charger d'abord les groupes des équipes pour filtrer
+    let equipesFiltrees = null;
+    if (groupeFilter !== 'all') {
+        const { data: equipes } = await supabasePublic
+            .from('public_equipes')
+            .select('id')
+            .eq('groupe', groupeFilter);
+        equipesFiltrees = equipes ? equipes.map(e => e.id) : [];
+    }
+
+    let query = supabasePublic
         .from('public_classements')
         .select('*, public_equipes(nom_equipe)')
         .eq('tournoi_id', tournoiId)
         .order('points', { ascending: false })
         .order('difference_buts', { ascending: false })
         .order('buts_pour', { ascending: false });
+
+    if (equipesFiltrees) {
+        if (equipesFiltrees.length === 0) {
+            query = query.in('equipe_id', [-1]); // force vide
+        } else {
+            query = query.in('equipe_id', equipesFiltrees);
+        }
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     renderClassementCollectif(data || []);
 }
@@ -291,8 +319,9 @@ function renderClassementCollectif(classement) {
         const c = classement[i];
         const estMonEquipe = (c.equipe_id === monIdentifiant);
         const rowClass = estMonEquipe ? 'my-team' : '';
+        const rankClass = (i === 0) ? 'first-place' : '';
         html += `
-            <tr class="${rowClass}">
+            <tr class="${rowClass} ${rankClass}">
                 <td>${i+1}</td>
                 <td class="equipe-col">${escapeHtml(c.public_equipes?.nom_equipe || '?')}</td>
                 <td><strong>${c.points}</strong></td>
@@ -353,8 +382,9 @@ function renderClassementIndividuel(classement) {
         const c = classement[i];
         const estMoi = (c.participant_id === monIdentifiant);
         const rowClass = estMoi ? 'my-team' : '';
+        const rankClass = (i === 0) ? 'first-place' : '';
         html += `
-            <tr class="${rowClass}">
+            <tr class="${rowClass} ${rankClass}">
                 <td>${i+1}</td>
                 <td>${escapeHtml(c.public_participants_individuels?.nom_complet || '?')}</td>
                 <td><strong>${c.points}</strong></td>
@@ -374,6 +404,13 @@ function renderClassementIndividuel(classement) {
     container.innerHTML = html;
 }
 /* FIN CLASSEMENT */
+
+/* ============================================================
+   ÉVÉNEMENT FILTRE GROUPE
+   ============================================================ */
+document.getElementById('groupeFilter').addEventListener('change', () => {
+    chargerClassement();
+});
 
 /* ============================================================
    DÉCONNEXION

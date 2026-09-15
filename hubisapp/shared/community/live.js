@@ -21,6 +21,7 @@ let micEnabled = true;
 let camEnabled = true;
 let facingMode = 'user';
 let strengthCount = 0;
+let currentLiveHostId = null;
 
 const GIFTS = [
     { id:'ball', emoji:'⚽', name:'Ballon', price:10 },
@@ -87,7 +88,7 @@ function makeLiveCard(l) {
     return `
         <div class="live-card">
             <div class="live-card-thumb">
-                ${avatarUrl ? `<img src="${avatarUrl}" alt="" style="display:block;">` : ''}
+                ${avatarUrl ? `<img src="${escapeAttr(avatarUrl)}" alt="" style="display:block;">` : ''}
                 <div class="live-card-thumb-placeholder"><i class="fas fa-video"></i></div>
                 <div class="live-card-overlay"></div>
                 <div class="live-card-badge"><i class="fas fa-circle" style="font-size:0.5rem"></i> LIVE</div>
@@ -96,7 +97,7 @@ function makeLiveCard(l) {
             <div class="live-card-body">
                 <div class="live-card-title">${escapeHtml(l.title || 'Live sans titre')}</div>
                 <div class="live-card-host">
-                    ${avatarUrl ? `<img src="${avatarUrl}" alt="">` : `<div class="live-card-host-initials">${initials}</div>`}
+                    ${avatarUrl ? `<img src="${escapeAttr(avatarUrl)}" alt="">` : `<div class="live-card-host-initials">${initials}</div>`}
                     <span class="live-card-host-name">${escapeHtml(hostName)}</span>
                 </div>
                 ${host.role_code ? `<div class="live-card-sport">${escapeHtml(host.role_code)}</div>` : ''}
@@ -154,6 +155,7 @@ async function startLive() {
 
         if (error) throw error;
         currentLiveId = session.id;
+        currentLiveHostId = currentProfile.hubisoccer_id;
         isHost = true;
 
         // Utilisation du serveur cloud gratuit de PeerJS
@@ -200,6 +202,7 @@ async function notifyFollowers(session) {
 async function joinLive(liveSession) {
     try {
         currentLiveId = liveSession.id;
+        currentLiveHostId = liveSession.host_hubisoccer_id;
         isHost = false;
 
         peer = new Peer({ host: '0.peerjs.com', port: 443, secure: true });
@@ -326,7 +329,7 @@ function addChatMessage(msg, isOwn = false) {
     const div = document.createElement('div');
     div.className = `chat-msg ${isOwn ? 'own' : ''}`;
     div.innerHTML = `
-        ${!isOwn ? (msg.avatar ? `<img class="chat-msg-avatar" src="${msg.avatar}" alt="">` : `<div class="chat-msg-avatar-initials">${getInitials(msg.author)}</div>`) : ''}
+        ${!isOwn ? (msg.avatar ? `<img class="chat-msg-avatar" src="${escapeAttr(msg.avatar)}" alt="">` : `<div class="chat-msg-avatar-initials">${getInitials(msg.author)}</div>`) : ''}
         <div class="chat-msg-bubble">
             ${!isOwn ? `<div class="chat-msg-author">${escapeHtml(msg.author)}</div>` : ''}
             <div class="chat-msg-text">${escapeHtml(msg.text)}</div>
@@ -473,26 +476,100 @@ function shareLive() {
     toast('Lien du live copié !', 'success');
 }
 
+// Solde affiché dans la fenêtre des cadeaux
+async function loadMyBalance() {
+    try {
+        const { data } = await sb.from('supabaseAuthPrive_hubis_wallets')
+            .select('balance')
+            .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
+            .maybeSingle();
+        const bal = data?.balance || 0;
+        const el = document.getElementById('userBalance');
+        if (el) el.textContent = `${bal} HubiCoins`;
+        return bal;
+    } catch (e) {
+        return 0;
+    }
+}
+
 async function sendGift(gift) {
-    closeModal('modalGifts');
-    spawnFloatingEmoji(gift.emoji);
-    const msg = {
-        author: currentProfile.full_name || currentProfile.display_name,
-        avatar: currentProfile.avatar_url,
-        emoji: gift.emoji,
-        giftName: gift.name,
-        price: gift.price
-    };
-    addGiftMessage(msg);
-    await chatChannel?.send({ type: 'broadcast', event: 'gift', payload: msg });
-    await sb.from('supabaseAuthPrive_live_gifts').insert({
-        live_session_id: currentLiveId,
-        sender_hubisoccer_id: currentProfile.hubisoccer_id,
-        gift_type: gift.id,
-        gift_price: gift.price,
-        emoji: gift.emoji
-    });
-    toast(`${gift.emoji} Cadeau envoyé !`, 'success');
+    // Le cadeau était purement décoratif : rien n'était débité ni crédité.
+    if (!currentLiveHostId || currentLiveHostId === currentProfile.hubisoccer_id) {
+        toast('Vous ne pouvez pas vous offrir un cadeau', 'warning');
+        return;
+    }
+
+    const balance = await loadMyBalance();
+    if (balance < gift.price) {
+        toast(`Solde insuffisant : ${gift.price} 🪙 requis, vous avez ${balance} 🪙`, 'error');
+        return;
+    }
+
+    try {
+        // Débit conditionnel : n'aboutit que si le solde n'a pas changé entre-temps
+        const { data: debited } = await sb.from('supabaseAuthPrive_hubis_wallets')
+            .update({ balance: balance - gift.price })
+            .eq('user_hubisoccer_id', currentProfile.hubisoccer_id)
+            .eq('balance', balance)
+            .select('balance');
+
+        if (!debited || debited.length === 0) {
+            toast('Votre solde a changé, veuillez réessayer', 'warning');
+            return;
+        }
+
+        // Crédit de l'hôte du live
+        const { data: hostWallet } = await sb.from('supabaseAuthPrive_hubis_wallets')
+            .select('balance')
+            .eq('user_hubisoccer_id', currentLiveHostId)
+            .maybeSingle();
+        await sb.from('supabaseAuthPrive_hubis_wallets').upsert(
+            { user_hubisoccer_id: currentLiveHostId, balance: (hostWallet?.balance || 0) + gift.price },
+            { onConflict: 'user_hubisoccer_id' }
+        );
+
+        // Trace de la transaction
+        await sb.from('supabaseAuthPrive_hubis_transactions').insert({
+            sender_hubisoccer_id: currentProfile.hubisoccer_id,
+            receiver_hubisoccer_id: currentLiveHostId,
+            amount: gift.price,
+            type: 'live_gift',
+            reference_id: currentLiveId,
+            message: gift.name
+        });
+
+        await sb.from('supabaseAuthPrive_live_gifts').insert({
+            live_session_id: currentLiveId,
+            sender_hubisoccer_id: currentProfile.hubisoccer_id,
+            gift_type: gift.id,
+            gift_price: gift.price,
+            emoji: gift.emoji
+        });
+
+        await sb.from('supabaseAuthPrive_notifications').insert({
+            recipient_hubisoccer_id: currentLiveHostId,
+            type: 'coins_received',
+            title: 'Cadeau reçu',
+            message: `${currentProfile.full_name || currentProfile.display_name} vous a offert ${gift.emoji} ${gift.name} (${gift.price} 🪙)`,
+            data: { link: `live.html?room=${currentLiveId}` }
+        });
+
+        closeModal('modalGifts');
+        spawnFloatingEmoji(gift.emoji);
+        const msg = {
+            author: currentProfile.full_name || currentProfile.display_name,
+            avatar: currentProfile.avatar_url,
+            emoji: gift.emoji,
+            giftName: gift.name,
+            price: gift.price
+        };
+        addGiftMessage(msg);
+        await chatChannel?.send({ type: 'broadcast', event: 'gift', payload: msg });
+        await loadMyBalance();
+        toast(`${gift.emoji} Cadeau envoyé !`, 'success');
+    } catch (err) {
+        toast('Erreur : ' + err.message, 'error');
+    }
 }
 window.sendGift = sendGift;
 
@@ -544,7 +621,7 @@ async function init() {
     document.getElementById('leaveLiveBtn').addEventListener('click', leaveLive);
 
     document.getElementById('strengthBtn').addEventListener('click', sendStrength);
-    document.getElementById('openGiftBtn').addEventListener('click', () => openModal('modalGifts'));
+    document.getElementById('openGiftBtn').addEventListener('click', () => { loadMyBalance(); openModal('modalGifts'); });
     document.getElementById('shareBtn').addEventListener('click', shareLive);
     document.getElementById('reactBtn').addEventListener('click', () => openModal('modalReact'));
 

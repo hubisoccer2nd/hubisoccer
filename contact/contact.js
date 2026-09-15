@@ -1,71 +1,952 @@
+/* DEBUT : contact/contact.js */
 // ========== CONTACT.JS ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
-const supabaseSpacePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Menu mobile
-function initMobileMenu() {
-  const menuToggle = document.getElementById('menuToggle');
-  const navLinks = document.getElementById('navLinks');
-  if (!menuToggle || !navLinks) return;
-  const toggleMenu = (e) => {
-    e.preventDefault();
-    navLinks.classList.toggle('active');
-    menuToggle.classList.toggle('open');
-  };
-  menuToggle.removeEventListener('click', toggleMenu);
-  menuToggle.addEventListener('click', toggleMenu);
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('#menuToggle') && !e.target.closest('.nav-links')) {
-      navLinks.classList.remove('active');
-      menuToggle.classList.remove('open');
+// ========== TRADUCTIONS (24 LANGUES) ==========
+const translations = {
+    fr: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'NOS CLUBS',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Connexion',
+        'inscrire': 'S\'inscrire',
+        'contact.title': 'Contactez‑nous',
+        'contact.subtitle': 'Une question, une demande de partenariat ? Écrivez‑nous.',
+        'contact.nom': 'Nom *',
+        'contact.email': 'Email *',
+        'contact.sujet': 'Sujet *',
+        'contact.message': 'Message *',
+        'contact.envoyer': 'Envoyer',
+        'contact.success_title': 'Message envoyé !',
+        'contact.success_message': 'Nous vous répondrons dans les plus brefs délais.',
+        'contact.fill_all': 'Veuillez remplir tous les champs.',
+        'contact.error_send': 'Erreur lors de l\'envoi du message.',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    en: {
+        'loader.message': 'Loading...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'FIRST STEP',
+        'acteurs': 'BECOME AN ACTOR',
+        'artiste': 'BECOME AN ARTIST',
+        'nos_clubs': 'OUR CLUBS',
+        'tournoi_public': 'PUBLIC TOURNAMENT',
+        'esp': 'LEARN MORE',
+        'connexion': 'Login',
+        'inscrire': 'Sign up',
+        'contact.title': 'Contact us',
+        'contact.subtitle': 'A question, a partnership request? Write to us.',
+        'contact.nom': 'Name *',
+        'contact.email': 'Email *',
+        'contact.sujet': 'Subject *',
+        'contact.message': 'Message *',
+        'contact.envoyer': 'Send',
+        'contact.success_title': 'Message sent!',
+        'contact.success_message': 'We will reply as soon as possible.',
+        'contact.fill_all': 'Please fill in all fields.',
+        'contact.error_send': 'Error sending message.',
+        'footer_conformite': 'APDP Benin Compliance',
+        'footer_reglementation': 'FIFA Regulations',
+        'footer_double_projet': 'Triple Sport-Studies-Career Project',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | TIN : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. All rights reserved.'
+    },
+    yo: {
+        'loader.message': 'Nlọ...',
+        'hub_market': 'ỌJÀ',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'Ilana',
+        'affiliation': 'Ifọwọsi',
+        'premier_pas': 'Igbese Akọkọ',
+        'acteurs': 'Di Oṣere',
+        'artiste': 'Di Oṣere',
+        'nos_clubs': 'Awọn Ẹgbẹ Wa',
+        'tournoi_public': 'Idije Gbogbo eniyan',
+        'esp': 'Kọ Ẹkọ Siwaju',
+        'connexion': 'Wo ile',
+        'inscrire': 'Forukọsilẹ',
+        'contact.title': 'Kan si wa',
+        'contact.subtitle': 'Ibeere kan, ibeere ajọṣepọ? Kọ si wa.',
+        'contact.nom': 'Orukọ *',
+        'contact.email': 'Imeeli *',
+        'contact.sujet': 'Koko-ọrọ *',
+        'contact.message': 'Ifiranṣẹ *',
+        'contact.envoyer': 'Fi ranṣẹ',
+        'contact.success_title': 'Ifiranṣẹ ti firanṣẹ!',
+        'contact.success_message': 'A yoo dahun ni kete bi o ti ṣeeṣe.',
+        'contact.fill_all': 'Jọwọ fọwọsi gbogbo awọn aaye.',
+        'contact.error_send': 'Aṣiṣe fifiranṣẹ ifiranṣẹ.',
+        'footer_conformite': 'Ifaramọ APDP Benin',
+        'footer_reglementation': 'Awọn ilana FIFA',
+        'footer_double_projet': 'Ise agbese Idaraya-Ẹkọ-Meji',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM: RB/ABC/24 A 111814 | IFU: 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Gbogbo ẹtọ wa ni ipamọ.'
+    },
+    fon: {
+        'loader.message': 'Tɛn ɖo...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Mǐtɔn bɔlu xɔ ɖé lɛ',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Byɔ xɔntin',
+        'inscrire': 'Nyikɔ wlan',
+        'contact.title': 'Contactez‑nous',
+        'contact.subtitle': 'Une question, une demande de partenariat ? Écrivez‑nous.',
+        'contact.nom': 'Nom *',
+        'contact.email': 'Email *',
+        'contact.sujet': 'Sujet *',
+        'contact.message': 'Message *',
+        'contact.envoyer': 'Envoyer',
+        'contact.success_title': 'Message envoyé !',
+        'contact.success_message': 'Nous vous répondrons dans les plus brefs délais.',
+        'contact.fill_all': 'Veuillez remplir tous les champs.',
+        'contact.error_send': 'Erreur lors de l\'envoi du message.',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    mina: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Míà bɔlu hɔn ɖé lɛ',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Gé ɖé émè',
+        'inscrire': 'Ŋkɔ́ wlá',
+        'contact.title': 'Contactez‑nous',
+        'contact.subtitle': 'Une question, une demande de partenariat ? Écrivez‑nous.',
+        'contact.nom': 'Nom *',
+        'contact.email': 'Email *',
+        'contact.sujet': 'Sujet *',
+        'contact.message': 'Message *',
+        'contact.envoyer': 'Envoyer',
+        'contact.success_title': 'Message envoyé !',
+        'contact.success_message': 'Nous vous répondrons dans les plus brefs délais.',
+        'contact.fill_all': 'Veuillez remplir tous les champs.',
+        'contact.error_send': 'Erreur lors de l\'envoi du message.',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    lin: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Ba Clubs na biso',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Kota',
+        'inscrire': 'Komikomisa',
+        'contact.title': 'Contactez‑nous',
+        'contact.subtitle': 'Une question, une demande de partenariat ? Écrivez‑nous.',
+        'contact.nom': 'Nom *',
+        'contact.email': 'Email *',
+        'contact.sujet': 'Sujet *',
+        'contact.message': 'Message *',
+        'contact.envoyer': 'Envoyer',
+        'contact.success_title': 'Message envoyé !',
+        'contact.success_message': 'Nous vous répondrons dans les plus brefs délais.',
+        'contact.fill_all': 'Veuillez remplir tous les champs.',
+        'contact.error_send': 'Erreur lors de l\'envoi du message.',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    wol: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'Sunu clubs yi',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Dugg',
+        'inscrire': 'Seetal',
+        'contact.title': 'Contactez‑nous',
+        'contact.subtitle': 'Une question, une demande de partenariat ? Écrivez‑nous.',
+        'contact.nom': 'Nom *',
+        'contact.email': 'Email *',
+        'contact.sujet': 'Sujet *',
+        'contact.message': 'Message *',
+        'contact.envoyer': 'Envoyer',
+        'contact.success_title': 'Message envoyé !',
+        'contact.success_message': 'Nous vous répondrons dans les plus brefs délais.',
+        'contact.fill_all': 'Veuillez remplir tous les champs.',
+        'contact.error_send': 'Erreur lors de l\'envoi du message.',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    diou: {
+        'loader.message': 'Chargement...',
+        'hub_market': 'MARKET',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSUS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'PREMIER‑PAS',
+        'acteurs': 'DEVENEZ UN ACTEUR',
+        'artiste': 'DEVENEZ UN ARTISTE',
+        'nos_clubs': 'An ka clubs ni',
+        'tournoi_public': 'TOURNOI PUBLIC',
+        'esp': 'SAVOIR+',
+        'connexion': 'Dɔ́n',
+        'inscrire': 'Sɛ̀bɛ̀n',
+        'contact.title': 'Contactez‑nous',
+        'contact.subtitle': 'Une question, une demande de partenariat ? Écrivez‑nous.',
+        'contact.nom': 'Nom *',
+        'contact.email': 'Email *',
+        'contact.sujet': 'Sujet *',
+        'contact.message': 'Message *',
+        'contact.envoyer': 'Envoyer',
+        'contact.success_title': 'Message envoyé !',
+        'contact.success_message': 'Nous vous répondrons dans les plus brefs délais.',
+        'contact.fill_all': 'Veuillez remplir tous les champs.',
+        'contact.error_send': 'Erreur lors de l\'envoi du message.',
+        'footer_conformite': 'Conformité APDP Bénin',
+        'footer_reglementation': 'Règlementation FIFA',
+        'footer_double_projet': 'Triple Projet Sport-Études-Carrière',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tous droits réservés.'
+    },
+    ha: {
+        'loader.message': 'Ana lodi...',
+        'hub_market': 'KASUWA',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'TSARI',
+        'affiliation': 'ALAƘA',
+        'premier_pas': 'MATAKI NA FARKO',
+        'acteurs': 'ZAMA DAN WASAN',
+        'artiste': 'ZAMA MAWAKI',
+        'nos_clubs': 'KUNGIYOYINMU',
+        'tournoi_public': 'GASAR JAM\'IYYA',
+        'esp': 'KARA KOYO',
+        'connexion': 'Shiga',
+        'inscrire': 'Yi rajista',
+        'contact.title': 'Tuntube mu',
+        'contact.subtitle': 'Tambaya, buƙatar haɗin gwiwa? Rubuta mana.',
+        'contact.nom': 'Suna *',
+        'contact.email': 'Imel *',
+        'contact.sujet': 'Taken *',
+        'contact.message': 'Saƙo *',
+        'contact.envoyer': 'Aika',
+        'contact.success_title': 'An aika saƙo!',
+        'contact.success_message': 'Za mu amsa muku da wuri-wuri.',
+        'contact.fill_all': 'Da fatan za a cika dukkan filayen.',
+        'contact.error_send': 'Kuskuren aika saƙo.',
+        'footer_conformite': 'APDP Benin Amincewa',
+        'footer_reglementation': 'Dokokin FIFA',
+        'footer_double_projet': 'Tsarin Wasanni-Ilimi-Aiki Uku',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Duk haƙƙoƙin mallaka.'
+    },
+    sw: {
+        'loader.message': 'Inapakia...',
+        'hub_market': 'SOKO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'MCHAKATO',
+        'affiliation': 'Uhusiano',
+        'premier_pas': 'HATUA YA KWANZA',
+        'acteurs': 'KUWA MTAALAMU',
+        'artiste': 'KUWA MSANII',
+        'nos_clubs': 'VILABU VYETU',
+        'tournoi_public': 'MASHINDANO YA UMMA',
+        'esp': 'JIFUNZE ZAIDI',
+        'connexion': 'Ingia',
+        'inscrire': 'Jiandikishe',
+        'contact.title': 'Wasiliana nasi',
+        'contact.subtitle': 'Swali, ombi la ushirikiano? Tuandikie.',
+        'contact.nom': 'Jina *',
+        'contact.email': 'Barua pepe *',
+        'contact.sujet': 'Mada *',
+        'contact.message': 'Ujumbe *',
+        'contact.envoyer': 'Tuma',
+        'contact.success_title': 'Ujumbe umetumwa!',
+        'contact.success_message': 'Tutakujibu haraka iwezekanavyo.',
+        'contact.fill_all': 'Tafadhali jaza sehemu zote.',
+        'contact.error_send': 'Hitilafu wakati wa kutuma ujumbe.',
+        'footer_conformite': 'Uzingatiaji wa APDP Benin',
+        'footer_reglementation': 'Kanuni za FIFA',
+        'footer_double_projet': 'Mradi wa Michezo-Masomo-Kazi Mara Tatu',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Haki zote zimehifadhiwa.'
+    },
+    es: {
+        'loader.message': 'Cargando...',
+        'hub_market': 'MERCADO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESO',
+        'affiliation': 'AFILIACIÓN',
+        'premier_pas': 'PRIMER PASO',
+        'acteurs': 'CONVIÉRTETE EN ACTOR',
+        'artiste': 'CONVIÉRTETE EN ARTISTA',
+        'nos_clubs': 'NUESTROS CLUBES',
+        'tournoi_public': 'TORNEO PÚBLICO',
+        'esp': 'SABER MÁS',
+        'connexion': 'Iniciar sesión',
+        'inscrire': 'Registrarse',
+        'contact.title': 'Contáctenos',
+        'contact.subtitle': '¿Una pregunta, una solicitud de asociación? Escríbanos.',
+        'contact.nom': 'Nombre *',
+        'contact.email': 'Correo electrónico *',
+        'contact.sujet': 'Asunto *',
+        'contact.message': 'Mensaje *',
+        'contact.envoyer': 'Enviar',
+        'contact.success_title': '¡Mensaje enviado!',
+        'contact.success_message': 'Le responderemos lo antes posible.',
+        'contact.fill_all': 'Por favor, rellene todos los campos.',
+        'contact.error_send': 'Error al enviar el mensaje.',
+        'footer_conformite': 'Conformidad APDP Benín',
+        'footer_reglementation': 'Reglamento FIFA',
+        'footer_double_projet': 'Triple Proyecto Deporte-Estudios-Carrera',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Todos los derechos reservados.'
+    },
+    pt: {
+        'loader.message': 'Carregando...',
+        'hub_market': 'MERCADO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSO',
+        'affiliation': 'AFILIAÇÃO',
+        'premier_pas': 'PRIMEIRO PASSO',
+        'acteurs': 'TORNE-SE UM ATOR',
+        'artiste': 'TORNE-SE UM ARTISTA',
+        'nos_clubs': 'NOSSOS CLUBES',
+        'tournoi_public': 'TORNEIO PÚBLICO',
+        'esp': 'SAIBA MAIS',
+        'connexion': 'Entrar',
+        'inscrire': 'Inscrever-se',
+        'contact.title': 'Contacte-nos',
+        'contact.subtitle': 'Uma pergunta, um pedido de parceria? Escreva-nos.',
+        'contact.nom': 'Nome *',
+        'contact.email': 'E-mail *',
+        'contact.sujet': 'Assunto *',
+        'contact.message': 'Mensagem *',
+        'contact.envoyer': 'Enviar',
+        'contact.success_title': 'Mensagem enviada!',
+        'contact.success_message': 'Responderemos o mais rápido possível.',
+        'contact.fill_all': 'Por favor, preencha todos os campos.',
+        'contact.error_send': 'Erro ao enviar a mensagem.',
+        'footer_conformite': 'Conformidade APDP Benim',
+        'footer_reglementation': 'Regulamento FIFA',
+        'footer_double_projet': 'Triplo Projeto Desporto-Estudos-Carreira',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Todos os direitos reservados.'
+    },
+    de: {
+        'loader.message': 'Laden...',
+        'hub_market': 'MARKT',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROZESS',
+        'affiliation': 'AFFILIATION',
+        'premier_pas': 'ERSTER SCHRITT',
+        'acteurs': 'WERDE AKTEUR',
+        'artiste': 'WERDE KÜNSTLER',
+        'nos_clubs': 'UNSERE CLUBS',
+        'tournoi_public': 'ÖFFENTLICHES TURNIER',
+        'esp': 'MEHR ERFAHREN',
+        'connexion': 'Anmelden',
+        'inscrire': 'Registrieren',
+        'contact.title': 'Kontaktieren Sie uns',
+        'contact.subtitle': 'Eine Frage, eine Partnerschaftsanfrage? Schreiben Sie uns.',
+        'contact.nom': 'Name *',
+        'contact.email': 'E-Mail *',
+        'contact.sujet': 'Betreff *',
+        'contact.message': 'Nachricht *',
+        'contact.envoyer': 'Senden',
+        'contact.success_title': 'Nachricht gesendet!',
+        'contact.success_message': 'Wir werden Ihnen so schnell wie möglich antworten.',
+        'contact.fill_all': 'Bitte füllen Sie alle Felder aus.',
+        'contact.error_send': 'Fehler beim Senden der Nachricht.',
+        'footer_conformite': 'APDP Benin Konformität',
+        'footer_reglementation': 'FIFA-Regulierung',
+        'footer_double_projet': 'Dreifachprojekt Sport-Studium-Beruf',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Alle Rechte vorbehalten.'
+    },
+    it: {
+        'loader.message': 'Caricamento...',
+        'hub_market': 'MERCATO',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCESSO',
+        'affiliation': 'AFFILIAZIONE',
+        'premier_pas': 'PRIMO PASSO',
+        'acteurs': 'DIVENTA UN ATTORE',
+        'artiste': 'DIVENTA UN ARTISTA',
+        'nos_clubs': 'I NOSTRI CLUB',
+        'tournoi_public': 'TORNEO PUBBLICO',
+        'esp': 'SCOPRI DI PIÙ',
+        'connexion': 'Accedi',
+        'inscrire': 'Registrati',
+        'contact.title': 'Contattaci',
+        'contact.subtitle': 'Una domanda, una richiesta di partnership? Scrivici.',
+        'contact.nom': 'Nome *',
+        'contact.email': 'Email *',
+        'contact.sujet': 'Oggetto *',
+        'contact.message': 'Messaggio *',
+        'contact.envoyer': 'Invia',
+        'contact.success_title': 'Messaggio inviato!',
+        'contact.success_message': 'Ti risponderemo il prima possibile.',
+        'contact.fill_all': 'Si prega di compilare tutti i campi.',
+        'contact.error_send': 'Errore durante l\'invio del messaggio.',
+        'footer_conformite': 'Conformità APDP Benin',
+        'footer_reglementation': 'Regolamento FIFA',
+        'footer_double_projet': 'Triplo Progetto Sport-Studi-Carriera',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tutti i diritti riservati.'
+    },
+    ar: {
+        'loader.message': 'جار التحميل...',
+        'hub_market': 'السوق',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'الاستكشاف',
+        'processus': 'العملية',
+        'affiliation': 'الانتماء',
+        'premier_pas': 'الخطوة الأولى',
+        'acteurs': 'كن فاعلاً',
+        'artiste': 'كن فناناً',
+        'nos_clubs': 'أنديتنا',
+        'tournoi_public': 'بطولة عامة',
+        'esp': 'اعرف المزيد',
+        'connexion': 'تسجيل الدخول',
+        'inscrire': 'التسجيل',
+        'contact.title': 'اتصل بنا',
+        'contact.subtitle': 'سؤال، طلب شراكة؟ اكتب لنا.',
+        'contact.nom': 'الاسم *',
+        'contact.email': 'البريد الإلكتروني *',
+        'contact.sujet': 'الموضوع *',
+        'contact.message': 'الرسالة *',
+        'contact.envoyer': 'إرسال',
+        'contact.success_title': 'تم إرسال الرسالة!',
+        'contact.success_message': 'سنرد عليك في أقرب وقت ممكن.',
+        'contact.fill_all': 'يرجى ملء جميع الحقول.',
+        'contact.error_send': 'خطأ أثناء إرسال الرسالة.',
+        'footer_conformite': 'الامتثال لـ APDP بنين',
+        'footer_reglementation': 'لوائح الفيفا',
+        'footer_double_projet': 'مشروع الرياضة والدراسة والمهنة الثلاثي',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. جميع الحقوق محفوظة.'
+    },
+    zh: {
+        'loader.message': '加载中...',
+        'hub_market': '市场',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': '球探',
+        'processus': '流程',
+        'affiliation': '隶属',
+        'premier_pas': '第一步',
+        'acteurs': '成为行动者',
+        'artiste': '成为艺术家',
+        'nos_clubs': '我们的俱乐部',
+        'tournoi_public': '公开锦标赛',
+        'esp': '了解更多',
+        'connexion': '登录',
+        'inscrire': '注册',
+        'contact.title': '联系我们',
+        'contact.subtitle': '有问题，有合作请求？请给我们写信。',
+        'contact.nom': '姓名 *',
+        'contact.email': '电子邮件 *',
+        'contact.sujet': '主题 *',
+        'contact.message': '信息 *',
+        'contact.envoyer': '发送',
+        'contact.success_title': '消息已发送！',
+        'contact.success_message': '我们将尽快回复您。',
+        'contact.fill_all': '请填写所有字段。',
+        'contact.error_send': '发送消息时出错。',
+        'footer_conformite': 'APDP 贝宁合规',
+        'footer_reglementation': 'FIFA 规则',
+        'footer_double_projet': '体育-学业-职业三重项目',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa。 版权所有。'
+    },
+    ru: {
+        'loader.message': 'Загрузка...',
+        'hub_market': 'РЫНОК',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'СКАУТИНГ',
+        'processus': 'ПРОЦЕСС',
+        'affiliation': 'ПАРТНЕРСТВО',
+        'premier_pas': 'ПЕРВЫЙ ШАГ',
+        'acteurs': 'СТАНЬ ДЕЯТЕЛЕМ',
+        'artiste': 'СТАНЬ АРТИСТОМ',
+        'nos_clubs': 'НАШИ КЛУБЫ',
+        'tournoi_public': 'ПУБЛИЧНЫЙ ТУРНИР',
+        'esp': 'УЗНАТЬ БОЛЬШЕ',
+        'connexion': 'Войти',
+        'inscrire': 'Регистрация',
+        'contact.title': 'Свяжитесь с нами',
+        'contact.subtitle': 'Вопрос, запрос на партнерство? Напишите нам.',
+        'contact.nom': 'Имя *',
+        'contact.email': 'Эл. почта *',
+        'contact.sujet': 'Тема *',
+        'contact.message': 'Сообщение *',
+        'contact.envoyer': 'Отправить',
+        'contact.success_title': 'Сообщение отправлено!',
+        'contact.success_message': 'Мы ответим вам как можно скорее.',
+        'contact.fill_all': 'Пожалуйста, заполните все поля.',
+        'contact.error_send': 'Ошибка при отправке сообщения.',
+        'footer_conformite': 'Соответствие APDP Бенин',
+        'footer_reglementation': 'Регламент ФИФА',
+        'footer_double_projet': 'Тройной проект Спорт-Учёба-Карьера',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Все права защищены.'
+    },
+    ja: {
+        'loader.message': '読み込み中...',
+        'hub_market': 'マーケット',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'スカウティング',
+        'processus': 'プロセス',
+        'affiliation': 'アフィリエイト',
+        'premier_pas': '第一歩',
+        'acteurs': 'アクターになる',
+        'artiste': 'アーティストになる',
+        'nos_clubs': '私たちのクラブ',
+        'tournoi_public': '公開トーナメント',
+        'esp': 'もっと知る',
+        'connexion': 'ログイン',
+        'inscrire': '登録',
+        'contact.title': 'お問い合わせ',
+        'contact.subtitle': '質問、パートナーシップのリクエストは？ご連絡ください。',
+        'contact.nom': '名前 *',
+        'contact.email': 'メール *',
+        'contact.sujet': '件名 *',
+        'contact.message': 'メッセージ *',
+        'contact.envoyer': '送信',
+        'contact.success_title': 'メッセージが送信されました！',
+        'contact.success_message': 'できるだけ早くご返信いたします。',
+        'contact.fill_all': 'すべてのフィールドを入力してください。',
+        'contact.error_send': 'メッセージの送信中にエラーが発生しました。',
+        'footer_conformite': 'APDP ベナン準拠',
+        'footer_reglementation': 'FIFA 規則',
+        'footer_double_projet': 'スポーツ・勉強・職業のトリプルプロジェクト',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. 全著作権所有。'
+    },
+    tr: {
+        'loader.message': 'Yükleniyor...',
+        'hub_market': 'PAZAR',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'SÜREÇ',
+        'affiliation': 'BAĞLILIK',
+        'premier_pas': 'İLK ADIM',
+        'acteurs': 'AKTÖR OL',
+        'artiste': 'SANATÇI OL',
+        'nos_clubs': 'KULÜPLERİMİZ',
+        'tournoi_public': 'AÇIK TURNUVA',
+        'esp': 'DAHA FAZLA',
+        'connexion': 'Giriş',
+        'inscrire': 'Kaydol',
+        'contact.title': 'Bize Ulaşın',
+        'contact.subtitle': 'Bir sorunuz mu var, ortaklık talebi mi? Bize yazın.',
+        'contact.nom': 'Ad *',
+        'contact.email': 'E-posta *',
+        'contact.sujet': 'Konu *',
+        'contact.message': 'Mesaj *',
+        'contact.envoyer': 'Gönder',
+        'contact.success_title': 'Mesaj gönderildi!',
+        'contact.success_message': 'En kısa sürede size cevap vereceğiz.',
+        'contact.fill_all': 'Lütfen tüm alanları doldurun.',
+        'contact.error_send': 'Mesaj gönderilirken hata oluştu.',
+        'footer_conformite': 'APDP Benin Uyumluluğu',
+        'footer_reglementation': 'FIFA Düzenlemeleri',
+        'footer_double_projet': 'Üçlü Proje Spor-Eğitim-Kariyer',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tüm hakları saklıdır.'
+    },
+    ko: {
+        'loader.message': '로딩 중...',
+        'hub_market': '마켓',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': '스카우팅',
+        'processus': '프로세스',
+        'affiliation': '제휴',
+        'premier_pas': '첫걸음',
+        'acteurs': '액터 되기',
+        'artiste': '아티스트 되기',
+        'nos_clubs': '우리 클럽',
+        'tournoi_public': '공개 토너먼트',
+        'esp': '더 알아보기',
+        'connexion': '로그인',
+        'inscrire': '가입',
+        'contact.title': '문의하기',
+        'contact.subtitle': '질문이나 파트너십 요청이 있으신가요? 저희에게 편지를 보내주세요.',
+        'contact.nom': '이름 *',
+        'contact.email': '이메일 *',
+        'contact.sujet': '제목 *',
+        'contact.message': '메시지 *',
+        'contact.envoyer': '보내기',
+        'contact.success_title': '메시지가 전송되었습니다!',
+        'contact.success_message': '가능한 한 빨리 답변 드리겠습니다.',
+        'contact.fill_all': '모든 필드를 입력하십시오.',
+        'contact.error_send': '메시지 전송 중 오류가 발생했습니다.',
+        'footer_conformite': 'APDP 베냉 준수',
+        'footer_reglementation': 'FIFA 규정',
+        'footer_double_projet': '스포츠-공부-직업 삼중 프로젝트',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. 모든 권리 보유.'
+    },
+    hi: {
+        'loader.message': 'लोड हो रहा है...',
+        'hub_market': 'बाज़ार',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'स्काउटिंग',
+        'processus': 'प्रक्रिया',
+        'affiliation': 'संबद्धता',
+        'premier_pas': 'पहला कदम',
+        'acteurs': 'एक एक्टर बनें',
+        'artiste': 'एक कलाकार बनें',
+        'nos_clubs': 'हमारे क्लब',
+        'tournoi_public': 'सार्वजनिक टूर्नामेंट',
+        'esp': 'और जानें',
+        'connexion': 'लॉग इन',
+        'inscrire': 'साइन अप',
+        'contact.title': 'हमसे संपर्क करें',
+        'contact.subtitle': 'कोई प्रश्न, साझेदारी का अनुरोध? हमें लिखें।',
+        'contact.nom': 'नाम *',
+        'contact.email': 'ईमेल *',
+        'contact.sujet': 'विषय *',
+        'contact.message': 'संदेश *',
+        'contact.envoyer': 'भेजें',
+        'contact.success_title': 'संदेश भेज दिया गया!',
+        'contact.success_message': 'हम यथाशीघ्र उत्तर देंगे।',
+        'contact.fill_all': 'कृपया सभी फ़ील्ड भरें।',
+        'contact.error_send': 'संदेश भेजने में त्रुटि।',
+        'footer_conformite': 'APDP बेनिन अनुपालन',
+        'footer_reglementation': 'फीफा नियम',
+        'footer_double_projet': 'खेल-अध्ययन-पेशा तिहरा परियोजना',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. सर्वाधिकार सुरक्षित।'
+    },
+    nl: {
+        'loader.message': 'Laden...',
+        'hub_market': 'MARKT',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SCOUTING',
+        'processus': 'PROCES',
+        'affiliation': 'AFFILIATIE',
+        'premier_pas': 'EERSTE STAP',
+        'acteurs': 'WORD EEN ACTEUR',
+        'artiste': 'WORD EEN ARTIST',
+        'nos_clubs': 'ONZE CLUBS',
+        'tournoi_public': 'OPENBAAR TOERNOOI',
+        'esp': 'MEER WETEN',
+        'connexion': 'Inloggen',
+        'inscrire': 'Inschrijven',
+        'contact.title': 'Neem contact met ons op',
+        'contact.subtitle': 'Een vraag, een partnerschapsverzoek? Schrijf ons.',
+        'contact.nom': 'Naam *',
+        'contact.email': 'E-mail *',
+        'contact.sujet': 'Onderwerp *',
+        'contact.message': 'Bericht *',
+        'contact.envoyer': 'Verzenden',
+        'contact.success_title': 'Bericht verzonden!',
+        'contact.success_message': 'We zullen zo snel mogelijk antwoorden.',
+        'contact.fill_all': 'Vul alle velden in.',
+        'contact.error_send': 'Fout bij het verzenden van het bericht.',
+        'footer_conformite': 'APDP Benin Naleving',
+        'footer_reglementation': 'FIFA Regelgeving',
+        'footer_double_projet': 'Triple Project Sport-Studie-Beroep',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Alle rechten voorbehouden.'
+    },
+    pl: {
+        'loader.message': 'Ładowanie...',
+        'hub_market': 'RYNEK',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'SKAUTING',
+        'processus': 'PROCES',
+        'affiliation': 'AFILIACJA',
+        'premier_pas': 'PIERWSZY KROK',
+        'acteurs': 'ZOSTAŃ AKTOREM',
+        'artiste': 'ZOSTAŃ ARTYSTĄ',
+        'nos_clubs': 'NASZE KLUBY',
+        'tournoi_public': 'TURNIEJ PUBLICZNY',
+        'esp': 'DOWIEDZ SIĘ WIĘCEJ',
+        'connexion': 'Zaloguj',
+        'inscrire': 'Zarejestruj',
+        'contact.title': 'Skontaktuj się z nami',
+        'contact.subtitle': 'Pytanie, prośba o partnerstwo? Napisz do nas.',
+        'contact.nom': 'Imię *',
+        'contact.email': 'E-mail *',
+        'contact.sujet': 'Temat *',
+        'contact.message': 'Wiadomość *',
+        'contact.envoyer': 'Wyślij',
+        'contact.success_title': 'Wiadomość wysłana!',
+        'contact.success_message': 'Odpowiemy tak szybko, jak to możliwe.',
+        'contact.fill_all': 'Proszę wypełnić wszystkie pola.',
+        'contact.error_send': 'Błąd podczas wysyłania wiadomości.',
+        'footer_conformite': 'Zgodność APDP Benin',
+        'footer_reglementation': 'Regulacje FIFA',
+        'footer_double_projet': 'Potrójny Projekt Sport-Nauka-Zawód',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Wszelkie prawa zastrzeżone.'
+    },
+    vi: {
+        'loader.message': 'Đang tải...',
+        'hub_market': 'CHỢ',
+        'hub_community': 'HUB COMMUNITY',
+        'scouting': 'TUYỂN TRẠCH',
+        'processus': 'QUY TRÌNH',
+        'affiliation': 'LIÊN KẾT',
+        'premier_pas': 'BƯỚC ĐẦU TIÊN',
+        'acteurs': 'TRỞ THÀNH DIỄN VIÊN',
+        'artiste': 'TRỞ THÀNH NGHỆ SĨ',
+        'nos_clubs': 'CÂU LẠC BỘ CỦA CHÚNG TÔI',
+        'tournoi_public': 'GIẢI ĐẤU CÔNG KHAI',
+        'esp': 'TÌM HIỂU THÊM',
+        'connexion': 'Đăng nhập',
+        'inscrire': 'Đăng ký',
+        'contact.title': 'Liên hệ với chúng tôi',
+        'contact.subtitle': 'Có câu hỏi, yêu cầu hợp tác? Viết thư cho chúng tôi.',
+        'contact.nom': 'Tên *',
+        'contact.email': 'Email *',
+        'contact.sujet': 'Chủ đề *',
+        'contact.message': 'Tin nhắn *',
+        'contact.envoyer': 'Gửi',
+        'contact.success_title': 'Đã gửi tin nhắn!',
+        'contact.success_message': 'Chúng tôi sẽ trả lời trong thời gian sớm nhất.',
+        'contact.fill_all': 'Vui lòng điền đầy đủ các trường.',
+        'contact.error_send': 'Lỗi khi gửi tin nhắn.',
+        'footer_conformite': 'Tuân thủ APDP Benin',
+        'footer_reglementation': 'Quy định FIFA',
+        'footer_double_projet': 'Dự án ba mục Thể thao-Học tập-Nghề nghiệp',
+        'contact_tel': '📞 +229 01 95 97 31 57',
+        'contact_email': '📧 contacthubisoccer@gmail.com',
+        'rccm': 'RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236',
+        'copyright': '© 2026 HubISoccer - Ozawa. Tất cả các quyền được bảo lưu.'
     }
-  });
+};
+// ========== FIN : TRADUCTIONS ==========
+
+// ========== FONCTIONS DE TRADUCTION ==========
+let currentLang = localStorage.getItem('hubiLang') || navigator.language.split('-')[0];
+if (!translations[currentLang]) currentLang = 'fr';
+
+function t(key, params = {}) {
+    let text = translations[currentLang]?.[key] || translations.fr[key] || key;
+    for (const [k, v] of Object.entries(params)) text = text.replace(`{${k}}`, v);
+    return text;
 }
 
-// Envoi du formulaire de contact
-async function sendContactMessage(event) {
-  event.preventDefault();
-  const nom = document.getElementById('nom').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const sujet = document.getElementById('sujet').value.trim();
-  const message = document.getElementById('message').value.trim();
-  const submitBtn = document.querySelector('#contactForm button');
-  const messageDiv = document.getElementById('formMessage');
-  
-  if (!nom || !email || !sujet || !message) {
-    messageDiv.innerHTML = 'Veuillez remplir tous les champs.';
-    messageDiv.className = 'form-message error';
-    return;
-  }
-  
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="spinner"></span> Envoi...';
-  
-  const { error } = await supabaseSpacePublic
-    .from('public_contact_messages')
-    .insert([{ nom, email, sujet, message, lu: false, created_at: new Date().toISOString() }]);
-  
-  submitBtn.disabled = false;
-  submitBtn.innerHTML = 'Envoyer';
-  
-  if (error) {
-    messageDiv.innerHTML = 'Erreur lors de l\'envoi : ' + error.message;
-    messageDiv.className = 'form-message error';
-  } else {
-    messageDiv.innerHTML = 'Message envoyé avec succès. Nous vous répondrons dans les plus brefs délais.';
-    messageDiv.className = 'form-message success';
-    document.getElementById('contactForm').reset();
-    setTimeout(() => {
-      messageDiv.innerHTML = '';
-      messageDiv.className = '';
-    }, 5000);
-  }
+function applyTranslations() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key) {
+            if (el.tagName === 'INPUT' && el.getAttribute('data-i18n-placeholder')) {
+                el.placeholder = t(key);
+            } else {
+                el.innerHTML = t(key);
+            }
+        }
+    });
+    document.querySelectorAll('select option').forEach(opt => {
+        const key = opt.getAttribute('data-i18n');
+        if (key) opt.textContent = t(key);
+    });
 }
 
-// Initialisation
-document.addEventListener('DOMContentLoaded', () => {
-  initMobileMenu();
-  const form = document.getElementById('contactForm');
-  if (form) form.addEventListener('submit', sendContactMessage);
+function changeLanguage(lang) {
+    if (translations[lang]) {
+        currentLang = lang;
+        localStorage.setItem('hubiLang', lang);
+        applyTranslations();
+    }
+}
+// ========== FIN : FONCTIONS DE TRADUCTION ==========
+
+// ========== UTILITAIRES ==========
+function showToast(message, type = 'info', duration = 3000) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-content">${escapeHtml(message)}</div><button class="toast-close">×</button>`;
+    container.appendChild(toast);
+    toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+    setTimeout(() => toast.remove(), duration);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+}
+
+function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
+function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
+// ========== FIN : UTILITAIRES ==========
+
+// ========== ENVOI DU FORMULAIRE ==========
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nom = document.getElementById('nom').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const sujet = document.getElementById('sujet').value.trim();
+    const message = document.getElementById('message').value.trim();
+
+    if (!nom || !email || !sujet || !message) {
+        showToast(t('contact.fill_all'), 'warning');
+        return;
+    }
+
+    showLoader();
+    try {
+        const { error } = await supabasePublic
+            .from('public_contact_messages')
+            .insert([{ nom, email, sujet, message, created_at: new Date().toISOString() }]);
+        if (error) throw error;
+        document.getElementById('contactForm').style.display = 'none';
+        document.getElementById('successMessage').style.display = 'block';
+    } catch (err) {
+        console.error(err);
+        showToast(t('contact.error_send'), 'error');
+    } finally {
+        hideLoader();
+    }
 });
+// ========== FIN : ENVOI DU FORMULAIRE ==========
+
+// ========== MENU MOBILE & LANGUE ==========
+function initMenuMobile() {
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (menuToggle && navLinks) {
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            menuToggle.classList.toggle('open');
+        });
+        document.addEventListener('click', (e) => {
+            if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+                navLinks.classList.remove('active');
+                menuToggle.classList.remove('open');
+            }
+        });
+    }
+}
+
+function initLangSelector() {
+    const langSelect = document.getElementById('langSelect');
+    if (langSelect) {
+        langSelect.value = currentLang;
+        langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
+    }
+}
+
+// ========== INITIALISATION ==========
+document.addEventListener('DOMContentLoaded', () => {
+    applyTranslations();
+    initLangSelector();
+    initMenuMobile();
+});
+/* FIN : contact/contact.js */

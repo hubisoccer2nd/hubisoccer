@@ -1,3 +1,4 @@
+/* DEBUT : public/admin/affiliation-admin/affiliation-admin.js */
 // ========== AFFILIATION-ADMIN.JS (CORRIGÉ) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -223,8 +224,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('statusFilter')?.addEventListener('change', renderAffiliates);
     document.getElementById('paymentStatusFilter')?.addEventListener('change', renderPaymentRequests);
 
-    // Déconnexion (si tu veux plus tard une vraie auth admin)
+    // Déconnexion (redirection vers le portail admin)
     document.getElementById('logoutBtn')?.addEventListener('click', () => {
-        if (confirm('Se déconnecter ?')) window.location.href = '../administration.html';
+        if (confirm('Se déconnecter ?')) window.location.href = '../../index-admin/';
     });
 });
+/* FIN : public/admin/affiliation-admin/affiliation-admin.js */

@@ -1,7 +1,38 @@
-// ========== DEBUT : tournoi/composer-equipe.js ==========
+// ========== DEBUT : tournoi/composer-equipe.js (version complète, sans troncature) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ============================================================
+   CONFIGURATION DES POSTES PAR SPORT ET FORMAT
+   ============================================================ */
+const POSTES = {
+    football: {
+        11: ['Gardien','Défenseur central','Défenseur G','Défenseur D','Milieu défensif','Milieu G','Milieu D','Milieu offensif','Attaquant G','Attaquant D','Attaquant centre'],
+        7: ['Gardien','Défenseur G','Défenseur D','Milieu G','Milieu D','Attaquant G','Attaquant D'],
+        5: ['Gardien','Défenseur','Milieu','Attaquant G','Attaquant D']
+    },
+    basketball: {
+        5: ['Meneur','Arrière','Ailier','Ailier fort','Pivot']
+    },
+    handball: {
+        7: ['Gardien','Ailier G','Arrière G','Demi-centre','Arrière D','Ailier D','Pivot']
+    },
+    rugby: {
+        15: ['Pilier G','Talonneur','Pilier D','Deuxième ligne G','Deuxième ligne D','Troisième ligne aile G','Troisième ligne aile D','Troisième ligne centre','Demi de mêlée','Demi d\'ouverture','Ailier G','Centre G','Centre D','Ailier D','Arrière']
+    },
+    volleyball: {
+        6: ['Passeur','Pointu','Central G','Central D','Réceptionneur-attaquant G','Réceptionneur-attaquant D']
+    }
+};
+
+function getPostesForSport(sport, nbJoueurs) {
+    const key = (sport || '').toLowerCase().replace(/[^a-z]/g, '');
+    if (POSTES[key] && POSTES[key][nbJoueurs]) {
+        return POSTES[key][nbJoueurs];
+    }
+    return Array.from({ length: nbJoueurs }, (_, i) => `Joueur ${i+1}`);
+}
 
 /* ============================================================
    TRADUCTIONS
@@ -17,14 +48,21 @@ const translations = {
         'composer.messagerie': 'Messages',
         'composer.portefeuille': 'Portefeuille',
         'composer.title': 'Composition d\'équipe',
-        'composer.titulaires': 'Titulaires',
-        'composer.remplacants': 'Remplaçants',
-        'composer.save': 'Enregistrer la composition',
+        'composer.select_match': 'Sélectionnez un match à composer',
+        'composer.composer_btn': 'Composer',
         'composer.saved': 'Composition enregistrée avec succès',
         'composer.error': 'Erreur lors de l\'enregistrement',
         'composer.not_capitaine': 'Vous devez être capitaine pour composer l\'équipe',
-        'composer.match_passe': 'Ce match est déjà terminé, vous ne pouvez pas modifier la composition',
-        'composer.no_players': 'Aucun joueur dans cette équipe. Veuillez d\'abord ajouter des joueurs via "Gérer mon équipe".',
+        'composer.match_passe': 'Ce match est déjà terminé',
+        'composer.no_players': 'Aucun joueur dans cette équipe.',
+        'composer.reset': 'Réinitialiser',
+        'composer.save': 'Enregistrer la composition',
+        'composer.titulaires_count': '{count}/{nb} titulaires',
+        'composer.terrain_title': 'Terrain',
+        'composer.banc_title': 'Remplaçants',
+        'composer.terrain_info': 'Faites glisser les joueurs du banc vers les postes souhaités.',
+        'composer.banc_info': 'Glissez un joueur ici pour le remettre sur le banc.',
+        'composer.capitaine_toggle': 'Définir/retirer comme capitaine',
         'footer.badge1': 'Conformité APDP Bénin',
         'footer.badge2': 'Règlementation FIFA',
         'footer.badge3': 'Triple Projet Sport-Études-Carrière',
@@ -43,14 +81,21 @@ const translations = {
         'composer.messagerie': 'Messages',
         'composer.portefeuille': 'Wallet',
         'composer.title': 'Team lineup',
-        'composer.titulaires': 'Starters',
-        'composer.remplacants': 'Substitutes',
-        'composer.save': 'Save lineup',
+        'composer.select_match': 'Select a match to compose',
+        'composer.composer_btn': 'Compose',
         'composer.saved': 'Lineup saved successfully',
         'composer.error': 'Error saving lineup',
-        'composer.not_capitaine': 'You must be the captain to set the lineup',
-        'composer.match_passe': 'This match is already finished, you cannot change the lineup',
-        'composer.no_players': 'No players in this team. Please add players via "Manage my team".',
+        'composer.not_capitaine': 'You must be the captain',
+        'composer.match_passe': 'Match already finished',
+        'composer.no_players': 'No players in this team.',
+        'composer.reset': 'Reset',
+        'composer.save': 'Save lineup',
+        'composer.titulaires_count': '{count}/{nb} starters',
+        'composer.terrain_title': 'Field',
+        'composer.banc_title': 'Substitutes',
+        'composer.terrain_info': 'Drag players from the bench to the desired positions.',
+        'composer.banc_info': 'Drag a player here to move them back to the bench.',
+        'composer.capitaine_toggle': 'Toggle captain',
         'footer.badge1': 'APDP Benin Compliance',
         'footer.badge2': 'FIFA Regulations',
         'footer.badge3': 'Triple Project Sport-Studies-Career',
@@ -85,41 +130,40 @@ function changeLanguage(lang) {
         currentLang = lang;
         localStorage.setItem('composer_lang', lang);
         applyTranslations();
-        chargerComposition();
+        initialiserPage();
     }
 }
 /* FIN TRADUCTIONS */
 
 /* ============================================================
-   GESTION SESSION
+   SESSION
    ============================================================ */
 const userId = sessionStorage.getItem('tournoi_user_id');
 const userNom = sessionStorage.getItem('tournoi_nom');
 const userLogin = sessionStorage.getItem('tournoi_login');
 const userRole = sessionStorage.getItem('tournoi_role');
 
-if (!userId) {
-    window.location.href = 'connexion-tournoi.html';
-}
+if (!userId) window.location.href = 'connexion-tournoi.html';
 document.getElementById('userName').textContent = userNom || userLogin;
 
 const urlParams = new URLSearchParams(window.location.search);
 const matchId = urlParams.get('id');
-if (!matchId) {
-    window.location.href = 'matchs.html';
-}
 /* FIN SESSION */
 
 /* ============================================================
    VARIABLES GLOBALES
    ============================================================ */
-let matchData = null;
 let equipeId = null;
 let joueurs = [];
+let titulaires = [];
+let nbTitulairesRequis = 0;
+let postes = [];
+let capitaineJoueurId = null;
+let matchData = null;
 /* FIN VARIABLES */
 
 /* ============================================================
-   UTILITAIRES
+   UTILITAIRES (COMPLÈTES)
    ============================================================ */
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toastContainer');
@@ -142,145 +186,346 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
 }
 
-function showLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'flex'; }
-function hideLoader() { const l = document.getElementById('globalLoader'); if (l) l.style.display = 'none'; }
+function showLoader() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) loader.style.display = 'flex';
+}
+
+function hideLoader() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) loader.style.display = 'none';
+}
 /* FIN UTILITAIRES */
 
 /* ============================================================
-   CHARGEMENT DE LA COMPOSITION
+   INITIALISATION
    ============================================================ */
-async function chargerComposition() {
+async function initialiserPage() {
+    if (userRole !== 'capitaine') {
+        showToast(t('composer.not_capitaine'), 'error');
+        return;
+    }
+    const { data: equipe, error: eqErr } = await supabasePublic
+        .from('public_equipes')
+        .select('id, nom_equipe, tournoi_id')
+        .eq('capitaine_id', userId)
+        .single();
+    if (eqErr || !equipe) {
+        showToast('Vous n\'êtes capitaine d\'aucune équipe', 'error');
+        return;
+    }
+    equipeId = equipe.id;
+
+    const tournoiId = sessionStorage.getItem('tournoi_tournoi_id');
+    const { data: tournoi } = await supabasePublic
+        .from('public_tournois')
+        .select('sport, format_equipe')
+        .eq('id', tournoiId)
+        .single();
+    nbTitulairesRequis = tournoi?.format_equipe || 11;
+    const sport = tournoi?.sport || 'football';
+    postes = getPostesForSport(sport, nbTitulairesRequis);
+
+    if (matchId) {
+        await chargerCompositionMatch(matchId);
+    } else {
+        await afficherProchainsMatchs();
+    }
+}
+
+/* ============================================================
+   AFFICHAGE LISTE DES MATCHS À VENIR
+   ============================================================ */
+async function afficherProchainsMatchs() {
     showLoader();
     try {
-        if (userRole !== 'capitaine') {
-            showToast(t('composer.not_capitaine'), 'error');
-            document.getElementById('compositionForm').style.display = 'none';
-            document.getElementById('saveCompositionBtn').disabled = true;
-            return;
-        }
-
-        const { data: match, error: matchErr } = await supabasePublic
+        const { data: matchs, error } = await supabasePublic
             .from('public_matchs')
-            .select('*, equipe_domicile:equipe_domicile_id (id, nom_equipe), equipe_exterieur:equipe_exterieur_id (id, nom_equipe)')
-            .eq('id', matchId)
-            .single();
-        if (matchErr || !match) {
-            showToast('Match non trouvé', 'error');
-            return;
-        }
-        matchData = match;
-        if (matchData.statut === 'termine') {
-            showToast(t('composer.match_passe'), 'warning');
-            document.getElementById('compositionForm').style.display = 'none';
-            document.getElementById('saveCompositionBtn').disabled = true;
+            .select('id, date_match, equipe_domicile_id, equipe_exterieur_id, statut')
+            .or(`equipe_domicile_id.eq.${equipeId},equipe_exterieur_id.eq.${equipeId}`)
+            .eq('statut', 'a_venir')
+            .order('date_match', { ascending: true });
+
+        if (error) throw error;
+
+        document.getElementById('selectMatchSection').style.display = 'block';
+        document.getElementById('compositionSection').style.display = 'none';
+
+        const container = document.getElementById('matchsList');
+        if (!matchs || matchs.length === 0) {
+            container.innerHTML = '<p class="empty-message">Aucun match à venir.</p>';
             return;
         }
 
-        const { data: equipe, error: eqErr } = await supabasePublic
+        const ids = new Set();
+        matchs.forEach(m => { ids.add(m.equipe_domicile_id); ids.add(m.equipe_exterieur_id); });
+        const { data: equipes } = await supabasePublic
             .from('public_equipes')
             .select('id, nom_equipe')
-            .eq('capitaine_id', userId)
-            .single();
-        if (eqErr || !equipe) {
-            showToast('Vous n\'êtes capitaine d\'aucune équipe', 'error');
-            return;
-        }
-        equipeId = equipe.id;
-        if (matchData.equipe_domicile_id !== equipeId && matchData.equipe_exterieur_id !== equipeId) {
-            showToast('Cette équipe ne participe pas à ce match', 'error');
-            return;
-        }
+            .in('id', Array.from(ids));
+        const equipeMap = {};
+        equipes.forEach(e => equipeMap[e.id] = e.nom_equipe);
 
-        document.getElementById('matchInfo').innerHTML = `
-            <h2>${escapeHtml(matchData.equipe_domicile?.nom_equipe)} vs ${escapeHtml(matchData.equipe_exterieur?.nom_equipe)}</h2>
-            <p>Date : ${new Date(matchData.date_match).toLocaleDateString()} | ${matchData.heure ? 'Heure : ' + matchData.heure : ''}</p>
-        `;
-
-        const { data: sportifs, error: sErr } = await supabasePublic
-            .from('public_sportifs_equipe')
-            .select('*')
-            .eq('equipe_id', equipeId)
-            .order('numero_maillot', { ascending: true });
-        if (sErr) throw sErr;
-        joueurs = sportifs || [];
-
-        const { data: comps, error: cErr } = await supabasePublic
-            .from('public_compositions_match')
-            .select('*')
-            .eq('match_id', matchId)
-            .eq('equipe_id', equipeId);
-        if (cErr) throw cErr;
-        const compositionMap = {};
-        for (const c of comps || []) {
-            compositionMap[c.joueur_id] = c.titulaire;
-        }
-
-        renderJoueurs(compositionMap);
-
-        // Activer le bouton seulement si l'utilisateur est bien capitaine et match non terminé
-        document.getElementById('saveCompositionBtn').disabled = false;
+        let html = '';
+        matchs.forEach(m => {
+            const dom = equipeMap[m.equipe_domicile_id] || '?';
+            const ext = equipeMap[m.equipe_exterieur_id] || '?';
+            html += `
+                <div class="match-item">
+                    <div class="teams">${escapeHtml(dom)} vs ${escapeHtml(ext)}</div>
+                    <div class="date">${new Date(m.date_match).toLocaleDateString()}</div>
+                    <a href="composer-equipe.html?id=${m.id}" class="btn-composer">${t('composer.composer_btn')}</a>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
     } catch (err) {
         console.error(err);
-        showToast('Erreur chargement des données', 'error');
     } finally {
         hideLoader();
     }
 }
 
-function renderJoueurs(compositionMap) {
-    const container = document.getElementById('joueursList');
-    if (!joueurs.length) {
-        container.innerHTML = '<div class="empty-message">' + t('composer.no_players') + '</div>';
-        return;
-    }
-    let html = '';
-    for (const j of joueurs) {
-        const estTitulaire = compositionMap[j.id] !== undefined ? compositionMap[j.id] : true;
-        html += `
-            <div class="joueur-item" data-joueur-id="${j.id}">
-                <div class="joueur-info">
-                    <span class="joueur-nom">${escapeHtml(j.prenom)} ${escapeHtml(j.nom)}</span>
-                    ${j.numero_maillot ? `<span class="joueur-numero">#${j.numero_maillot}</span>` : ''}
-                    ${j.role_sportif ? `<div class="joueur-poste">${escapeHtml(j.role_sportif)}</div>` : ''}
-                </div>
-                <div class="titulaire-toggle">
-                    <label>Titulaire</label>
-                    <input type="checkbox" class="titulaire-checkbox" ${estTitulaire ? 'checked' : ''}>
-                </div>
-            </div>
+/* ============================================================
+   CHARGEMENT COMPOSITION POUR UN MATCH DONNÉ
+   ============================================================ */
+async function chargerCompositionMatch(idMatch) {
+    showLoader();
+    try {
+        const { data: match, error: matchErr } = await supabasePublic
+            .from('public_matchs')
+            .select('*, equipe_domicile:equipe_domicile_id (id, nom_equipe), equipe_exterieur:equipe_exterieur_id (id, nom_equipe)')
+            .eq('id', idMatch)
+            .single();
+        if (matchErr || !match) { showToast('Match non trouvé', 'error'); return; }
+        if (match.statut === 'termine') { showToast(t('composer.match_passe'), 'warning'); return; }
+        if (match.equipe_domicile_id !== equipeId && match.equipe_exterieur_id !== equipeId) {
+            showToast('Votre équipe ne participe pas à ce match', 'error');
+            return;
+        }
+        matchData = match;
+
+        document.getElementById('matchInfo').innerHTML = `
+            <h2>${escapeHtml(match.equipe_domicile?.nom_equipe)} vs ${escapeHtml(match.equipe_exterieur?.nom_equipe)}</h2>
+            <p>Date : ${new Date(match.date_match).toLocaleDateString()} | Format : ${nbTitulairesRequis} joueurs</p>
         `;
+
+        const { data: sportifs } = await supabasePublic
+            .from('public_sportifs_equipe')
+            .select('*')
+            .eq('equipe_id', equipeId)
+            .order('numero_maillot', { ascending: true });
+        joueurs = sportifs || [];
+
+        const { data: comps } = await supabasePublic
+            .from('public_compositions_match')
+            .select('*')
+            .eq('match_id', idMatch)
+            .eq('equipe_id', equipeId);
+        titulaires = new Array(nbTitulairesRequis).fill(null);
+        capitaineJoueurId = null;
+        if (comps) {
+            const titulairesList = comps.filter(c => c.titulaire);
+            for (let i = 0; i < Math.min(titulairesList.length, nbTitulairesRequis); i++) {
+                titulaires[i] = titulairesList[i].joueur_id;
+            }
+            const cap = comps.find(c => c.capitaine === true);
+            if (cap) capitaineJoueurId = cap.joueur_id;
+        }
+
+        document.getElementById('selectMatchSection').style.display = 'none';
+        document.getElementById('compositionSection').style.display = 'block';
+        renderInterface();
+    } catch (err) {
+        console.error(err);
+        showToast(t('composer.error'), 'error');
+    } finally {
+        hideLoader();
     }
-    container.innerHTML = html;
 }
-/* FIN CHARGEMENT */
 
 /* ============================================================
-   SAUVEGARDE DE LA COMPOSITION
+   RENDU DE L'INTERFACE (TERRAIN + BANC)
+   ============================================================ */
+function renderInterface() {
+    renderTerrain();
+    renderBanc();
+    updateCompteur();
+}
+
+function renderTerrain() {
+    const terrainEl = document.getElementById('terrain');
+    if (!terrainEl) return;
+
+    let html = '';
+    postes.forEach((poste, index) => {
+        const joueurId = titulaires[index];
+        const joueur = joueurId ? joueurs.find(j => j.id == joueurId) : null;
+        const isCapitaine = (joueurId && joueurId === capitaineJoueurId);
+        html += `
+            <div class="position-slot" data-index="${index}" ondragover="allowDrop(event)" ondrop="dropOnTerrain(event, ${index})"
+                 style="position:absolute; top:${getTopForIndex(index, postes.length)}%; left:${getLeftForIndex(index, postes.length)}%; transform:translate(-50%, -50%);">
+                <span class="position-label">${poste}</span>
+                ${joueur ? `
+                    <div class="joueur-badge titulaire" draggable="true" data-joueur-id="${joueur.id}" ondragstart="drag(event, ${joueur.id})">
+                        ${joueur.numero_maillot ? `<span class="joueur-numero">#${joueur.numero_maillot}</span>` : ''}
+                        <span class="joueur-nom">${escapeHtml(joueur.prenom)} ${escapeHtml(joueur.nom)}</span>
+                        <i class="fas fa-star ${isCapitaine ? 'capitaine-etoile-active' : 'capitaine-etoile'}" 
+                           data-joueur-id="${joueur.id}" 
+                           onclick="toggleCapitaine(event, ${joueur.id})" 
+                           title="${t('composer.capitaine_toggle')}"></i>
+                    </div>
+                ` : '<div class="position-empty">Vide</div>'}
+            </div>
+        `;
+    });
+    terrainEl.innerHTML = html;
+}
+
+function renderBanc() {
+    const bancEl = document.getElementById('banc');
+    if (!bancEl) return;
+    const remplacants = joueurs.filter(j => !titulaires.includes(j.id));
+    let html = '';
+    if (remplacants.length === 0) {
+        html = '<p class="empty-message">Tous les joueurs sont sur le terrain.</p>';
+    } else {
+        remplacants.forEach(j => {
+            html += `
+                <div class="joueur-badge remplacant" draggable="true" data-joueur-id="${j.id}" ondragstart="drag(event, ${j.id})">
+                    ${j.numero_maillot ? `<span class="joueur-numero">#${j.numero_maillot}</span>` : ''}
+                    <span class="joueur-nom">${escapeHtml(j.prenom)} ${escapeHtml(j.nom)}</span>
+                </div>
+            `;
+        });
+    }
+    bancEl.innerHTML = html;
+    bancEl.setAttribute('ondragover', 'allowDrop(event)');
+    bancEl.setAttribute('ondrop', 'dropOnBanc(event)');
+}
+
+function getTopForIndex(index, total) {
+    if (index < 1) return 85;
+    if (index < 1+3) return 65;
+    if (index < 1+3+4) return 40;
+    return 15;
+}
+
+function getLeftForIndex(index, total) {
+    const leftMap = { 0: 50, 1: 20, 2: 50, 3: 80, 4: 25, 5: 50, 6: 75, 7: 50, 8: 35, 9: 50, 10: 65 };
+    return leftMap[index] || 50;
+}
+
+function updateCompteur() {
+    const nb = nbTitulairesRequis;
+    const count = titulaires.filter(id => id !== null).length;
+    const compteurEl = document.getElementById('titulairesCount');
+    if (compteurEl) {
+        compteurEl.textContent = t('composer.titulaires_count', { count, nb });
+        compteurEl.className = count === nb ? 'compteur ok' : 'compteur pas-ok';
+    }
+    document.getElementById('saveCompositionBtn').disabled = (count !== nb);
+}
+
+/* ============================================================
+   GESTION DU CAPITAINE
+   ============================================================ */
+function toggleCapitaine(event, joueurId) {
+    event.stopPropagation();
+    if (capitaineJoueurId === joueurId) {
+        capitaineJoueurId = null;
+    } else {
+        capitaineJoueurId = joueurId;
+    }
+    renderTerrain();
+}
+
+/* ============================================================
+   DRAG & DROP
+   ============================================================ */
+function allowDrop(ev) { ev.preventDefault(); }
+
+function drag(ev, joueurId) {
+    ev.dataTransfer.setData("text/plain", joueurId);
+}
+
+function dropOnTerrain(ev, index) {
+    ev.preventDefault();
+    const joueurId = parseInt(ev.dataTransfer.getData("text/plain"));
+    if (!joueurId) return;
+
+    const oldIndex = titulaires.indexOf(joueurId);
+    if (oldIndex !== -1) titulaires[oldIndex] = null;
+
+    titulaires[index] = joueurId;
+    renderInterface();
+}
+
+function dropOnBanc(ev) {
+    ev.preventDefault();
+    const joueurId = parseInt(ev.dataTransfer.getData("text/plain"));
+    if (!joueurId) return;
+    const index = titulaires.indexOf(joueurId);
+    if (index !== -1) titulaires[index] = null;
+    renderInterface();
+}
+
+/* ============================================================
+   RÉINITIALISER
+   ============================================================ */
+document.getElementById('resetCompositionBtn').addEventListener('click', () => {
+    titulaires = new Array(nbTitulairesRequis).fill(null);
+    capitaineJoueurId = null;
+    renderInterface();
+    showToast('Composition réinitialisée', 'info');
+});
+
+/* ============================================================
+   SAUVEGARDE
    ============================================================ */
 document.getElementById('saveCompositionBtn').addEventListener('click', async () => {
+    const nbTitulairesActuels = titulaires.filter(id => id !== null).length;
+    if (nbTitulairesActuels !== nbTitulairesRequis) {
+        showToast(`Vous devez avoir exactement ${nbTitulairesRequis} titulaires.`, 'warning');
+        return;
+    }
     if (!equipeId || !matchId) return;
     showLoader();
     try {
-        const checkboxes = document.querySelectorAll('.titulaire-checkbox');
-        const compositions = [];
-        for (let i = 0; i < joueurs.length; i++) {
-            const estTitulaire = checkboxes[i].checked;
-            compositions.push({
-                match_id: parseInt(matchId),
-                equipe_id: equipeId,
-                joueur_id: joueurs[i].id,
-                titulaire: estTitulaire,
-                poste: joueurs[i].role_sportif || null
-            });
-        }
-        // Supprimer les anciennes compositions
         const { error: delErr } = await supabasePublic
             .from('public_compositions_match')
             .delete()
             .eq('match_id', matchId)
             .eq('equipe_id', equipeId);
         if (delErr) throw delErr;
-        // Insérer les nouvelles
+
+        const compositions = [];
+        titulaires.forEach((joueurId, index) => {
+            if (joueurId) {
+                const j = joueurs.find(p => p.id == joueurId);
+                compositions.push({
+                    match_id: parseInt(matchId),
+                    equipe_id: equipeId,
+                    joueur_id: joueurId,
+                    titulaire: true,
+                    poste: postes[index],
+                    capitaine: joueurId === capitaineJoueurId
+                });
+            }
+        });
+        joueurs.forEach(j => {
+            if (!titulaires.includes(j.id)) {
+                compositions.push({
+                    match_id: parseInt(matchId),
+                    equipe_id: equipeId,
+                    joueur_id: j.id,
+                    titulaire: false,
+                    poste: null,
+                    capitaine: false
+                });
+            }
+        });
+
         if (compositions.length) {
             const { error: insErr } = await supabasePublic
                 .from('public_compositions_match')
@@ -295,7 +540,6 @@ document.getElementById('saveCompositionBtn').addEventListener('click', async ()
         hideLoader();
     }
 });
-/* FIN SAUVEGARDE */
 
 /* ============================================================
    DÉCONNEXION
@@ -304,7 +548,6 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     sessionStorage.clear();
     window.location.href = 'connexion-tournoi.html';
 });
-/* FIN DÉCONNEXION */
 
 /* ============================================================
    MENU MOBILE & LANGUE
@@ -333,7 +576,6 @@ function initLangSelector() {
         langSelect.addEventListener('change', (e) => changeLanguage(e.target.value));
     }
 }
-/* FIN MENU & LANGUE */
 
 /* ============================================================
    INITIALISATION
@@ -342,7 +584,6 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTranslations();
     initLangSelector();
     initMenuMobile();
-    chargerComposition();
+    initialiserPage();
 });
-/* FIN INITIALISATION */
 // ========== FIN : tournoi/composer-equipe.js ==========

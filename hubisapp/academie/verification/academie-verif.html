@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Vérification du Statut · Espace Académie · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="academie-verif.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-shield-alt"></i> Vérification du Statut</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/academie-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/academie-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-school"></i><h3>Menu Académie Sportive</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Pilotage de l'Académie</div>
+        <a href="../dashboard/academie-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../athletes/academie-athletes.html">
+            <i class="fas fa-user-graduate"></i><span>Mes Athlètes</span>
+        </a>
+        <a href="../formateurs/academie-formateurs.html">
+            <i class="fas fa-chalkboard-teacher"></i><span>Mes Formateurs</span>
+        </a>
+        <a href="../programme/academie-prog.html">
+            <i class="fas fa-calendar"></i><span>Programmes</span>
+        </a>
+        <a href="../competitions/academie-compet.html">
+            <i class="fas fa-trophy"></i><span>Compétitions</span>
+        </a>
+        <a href="../stats/academie-stats.html">
+            <i class="fas fa-chart-bar"></i><span>Statistiques</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Mon Institution</div>
+        <a href="academie-verif.html" class="active">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../cv/academie-cv.html">
+            <i class="fas fa-file-alt"></i><span>CV / Présentation</span>
+        </a>
+        <a href="../opportunites/academie-recrutement.html">
+            <i class="fas fa-bullhorn"></i><span>Recrutement & Opportunités</span>
+        </a>
+        <a href="../revenus/academie-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/academie-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="verif-main">
+<div class="verif-container">
+
+    <h1 class="page-title"><i class="fas fa-shield-alt"></i> Vérification du Statut</h1>
+    <p class="page-subtitle">
+        Faites certifier votre académie par HubISoccer — le badge vérifié rassure les
+        talents, les parents et les recruteurs qui consultent votre profil.
+    </p>
+
+    <!-- ===== DEBUT BANNIÈRE STATUT ===== -->
+    <div class="statut-banner" id="statutBanner">
+        <i class="fas fa-info-circle"></i>
+        <span id="statutBannerText">Chargement du statut…</span>
+    </div>
+    <!-- ===== FIN BANNIÈRE STATUT ===== -->
+
+    <div class="verif-layout">
+    <div class="verif-left">
+
+        <!-- ===== DEBUT IDENTITÉ INSTITUTIONNELLE ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-building"></i> Identité institutionnelle</h3>
+
+            <div class="form-group">
+                <label>Nom officiel de l'académie</label>
+                <input type="text" id="nomOfficiel" disabled>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="representantLegal">Représentant légal *</label>
+                    <input type="text" id="representantLegal" placeholder="Ex : Jean KOUASSI">
+                </div>
+                <div class="form-group">
+                    <label for="fonctionRepresentant">Fonction *</label>
+                    <select id="fonctionRepresentant">
+                        <option value="">— Sélectionnez —</option>
+                        <option value="Président">Président</option>
+                        <option value="Directeur">Directeur</option>
+                        <option value="Fondateur">Fondateur</option>
+                        <option value="Gérant">Gérant</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="telephoneSiege">Téléphone du siège</label>
+                    <input type="text" id="telephoneSiege" placeholder="Ex : +229 XX XX XX XX">
+                </div>
+                <div class="form-group">
+                    <label for="adresseSiege">Adresse du siège</label>
+                    <input type="text" id="adresseSiege" placeholder="Ex : Quartier, ville">
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="rccmInput">Numéro RCCM *</label>
+                    <input type="text" id="rccmInput" placeholder="Ex : RB/ABC/24 A 111814">
+                </div>
+                <div class="form-group">
+                    <label for="ifuInput">Numéro IFU *</label>
+                    <input type="text" id="ifuInput" placeholder="Ex : 0201910800236">
+                </div>
+            </div>
+        </div>
+        <!-- ===== FIN IDENTITÉ ===== -->
+
+        <!-- ===== DEBUT DOCUMENTS ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-folder-open"></i> Documents requis</h3>
+            <div class="documents-list" id="documentsList">
+                <!-- Rempli par JS -->
+            </div>
+        </div>
+        <!-- ===== FIN DOCUMENTS ===== -->
+
+        <!-- ===== DEBUT SIGNATURE ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-signature"></i> Signature du représentant légal</h3>
+            <p class="panel-hint">Signez ci-dessous pour attester l'exactitude des informations fournies.</p>
+            <div class="signature-pad-wrap">
+                <canvas id="signatureCanvas"></canvas>
+            </div>
+            <div class="signature-actions">
+                <button class="btn-secondary" id="btnClearSignature"><i class="fas fa-eraser"></i> Effacer</button>
+            </div>
+        </div>
+        <!-- ===== FIN SIGNATURE ===== -->
+
+        <div class="submit-row">
+            <button class="btn-primary btn-submit" id="btnSubmitVerif">
+                <i class="fas fa-paper-plane"></i> Soumettre pour vérification
+            </button>
+        </div>
+
+    </div>
+
+    <div class="verif-right">
+        <!-- ===== DEBUT CARTE D'AFFILIATION ===== -->
+        <div class="glass-card card-panel">
+            <h3 class="section-title"><i class="fas fa-id-card"></i> Carte d'affiliation</h3>
+            <div class="flip-card-container" id="flipCardContainer">
+                <div class="flip-card">
+                    <div class="flip-card-front">
+                        <div class="card-seal"><i class="fas fa-school"></i></div>
+                        <div class="card-brand">HubISoccer</div>
+                        <div class="card-academie-name" id="cardNomRecto">—</div>
+                        <div class="card-id" id="cardIdRecto">ID : —</div>
+                        <div class="card-status-chip" id="cardStatusChip">Non soumise</div>
+                    </div>
+                    <div class="flip-card-back">
+                        <div class="card-back-title">Certificat d'Affiliation</div>
+                        <div class="card-back-row"><span>RCCM</span><span id="cardRccmVerso">—</span></div>
+                        <div class="card-back-row"><span>IFU</span><span id="cardIfuVerso">—</span></div>
+                        <div class="card-back-row"><span>Représentant</span><span id="cardRepVerso">—</span></div>
+                        <div class="card-back-row"><span>Agrément</span><span id="cardAgrementVerso">—</span></div>
+                        <div class="card-back-note">Vérifiez ce certificat sur hubisoccer.site</div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-flip" id="btnFlipCard"><i class="fas fa-sync-alt"></i> Retourner la carte</button>
+        </div>
+        <!-- ===== FIN CARTE ===== -->
+    </div>
+    </div>
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-school"></i> Ministère Sport · APDP Bénin</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="academie-verif.js"></script>
+</body>
+</html>

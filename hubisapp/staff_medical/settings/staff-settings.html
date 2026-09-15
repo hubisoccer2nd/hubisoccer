@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Paramètres · Espace Staff Médical · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="staff-settings.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-cog"></i> Paramètres</span>
+    </div>
+    <div class="nav-right">
+        <a href="../dashboard/staff-dash.html" class="btn-back"><i class="fas fa-arrow-left"></i> <span>Retour</span></a>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="settings-main">
+<div class="settings-container">
+
+    <h1 class="page-title"><i class="fas fa-sliders-h"></i> Paramètres du compte</h1>
+    <p class="page-subtitle">Gérez vos préférences, votre sécurité et vos données personnelles.</p>
+
+    <form id="settingsForm">
+        <!-- ===== SECTION 1 : PREFERENCES DU COMPTE ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-user-circle"></i> Préférences du compte</h3>
+
+            <div class="form-group">
+                <label>Changer l'email</label>
+                <div class="inline-row">
+                    <input type="email" id="new_email" placeholder="Nouvel email">
+                    <input type="password" id="email_password" placeholder="Mot de passe actuel pour confirmer">
+                    <button type="button" class="btn-secondary" id="updateEmailBtn">Mettre à jour</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Changer le mot de passe</label>
+                <div class="inline-row">
+                    <input type="password" id="current_password" placeholder="Mot de passe actuel">
+                    <input type="password" id="new_password" placeholder="Nouveau mot de passe">
+                    <input type="password" id="confirm_password" placeholder="Confirmer">
+                    <button type="button" class="btn-secondary" id="updatePasswordBtn">Mettre à jour</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Téléphone secondaire</label>
+                <div class="inline-row">
+                    <input type="tel" id="secondary_phone" placeholder="+229 01 23 45 67">
+                    <button type="button" class="btn-secondary" id="updatePhoneBtn">Enregistrer</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-shield-virus"></i> Authentification à deux facteurs (2FA)</label>
+                <p class="info-note">Disponible prochainement.</p>
+            </div>
+        </div>
+        <!-- ===== FIN SECTION 1 ===== -->
+
+        <!-- ===== SECTION 2 : NOTIFICATIONS ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-bell"></i> Notifications</h3>
+
+            <label class="checkbox-row"><input type="checkbox" id="notif_email_talents"><span>Talents (nouvelles demandes, réponses)</span></label>
+            <label class="checkbox-row"><input type="checkbox" id="notif_email_contrats"><span>Contrats & Commissions</span></label>
+            <label class="checkbox-row"><input type="checkbox" id="notif_email_messages"><span>Messages</span></label>
+            <label class="checkbox-row"><input type="checkbox" id="notif_push"><span>Notifications push navigateur</span></label>
+
+            <div class="form-group">
+                <label for="summary_frequency">Fréquence des résumés</label>
+                <select id="summary_frequency">
+                    <option value="instant">Instantané</option>
+                    <option value="daily">Quotidien</option>
+                    <option value="weekly">Hebdomadaire</option>
+                </select>
+            </div>
+        </div>
+        <!-- ===== FIN SECTION 2 ===== -->
+
+        <!-- ===== SECTION 3 : CONFIDENTIALITE ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-lock"></i> Confidentialité</h3>
+
+            <div class="form-group">
+                <label for="profile_visibility">Visibilité du profil</label>
+                <select id="profile_visibility">
+                    <option value="public">Public</option>
+                    <option value="talents">Talents & clubs uniquement</option>
+                    <option value="private">Privé</option>
+                </select>
+            </div>
+            <label class="checkbox-row"><input type="checkbox" id="show_age"><span>Afficher mon âge</span></label>
+            <label class="checkbox-row"><input type="checkbox" id="show_location"><span>Afficher ma localisation</span></label>
+            <label class="checkbox-row"><input type="checkbox" id="allow_cv_download"><span>Autoriser le téléchargement de mon CV</span></label>
+
+            <div class="form-group">
+                <label for="blocked_users">Bloquer des utilisateurs (ID ou email)</label>
+                <textarea id="blocked_users" rows="2" placeholder="Un par ligne"></textarea>
+            </div>
+        </div>
+        <!-- ===== FIN SECTION 3 ===== -->
+
+        <!-- ===== SECTION 4 : LANGUE ET ACCESSIBILITE ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-language"></i> Langue et accessibilité</h3>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="interface_language">Langue de l'interface</label>
+                    <select id="interface_language">
+                        <option value="fr">Français</option>
+                        <option value="en">English</option>
+                        <option value="yo">Yoruba</option>
+                        <option value="fon">Fon</option>
+                        <option value="mina">Mina</option>
+                        <option value="lin">Lingala</option>
+                        <option value="wol">Wolof</option>
+                        <option value="diou">Dioula</option>
+                        <option value="ha">Hausa</option>
+                        <option value="sw">Kiswahili</option>
+                        <option value="es">Español</option>
+                        <option value="pt">Português</option>
+                        <option value="de">Deutsch</option>
+                        <option value="it">Italiano</option>
+                        <option value="ar">العربية</option>
+                        <option value="zh">中文</option>
+                        <option value="ru">Русский</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="font_size">Taille de police</label>
+                    <select id="font_size">
+                        <option value="normal">Normale</option>
+                        <option value="large">Grande</option>
+                        <option value="xlarge">Très grande</option>
+                    </select>
+                </div>
+            </div>
+            <label class="checkbox-row"><input type="checkbox" id="high_contrast"><span>Mode contraste élevé</span></label>
+        </div>
+        <!-- ===== FIN SECTION 4 ===== -->
+
+        <!-- ===== SECTION 5 : APPAREILS ET SESSIONS ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-laptop"></i> Appareils et sessions</h3>
+            <div id="sessionsList" class="sessions-list">
+                <p class="info-note">Chargement des sessions actives…</p>
+            </div>
+            <button type="button" class="btn-danger" id="logoutAllDevicesBtn">Se déconnecter de tous les autres appareils</button>
+        </div>
+        <!-- ===== FIN SECTION 5 ===== -->
+
+        <!-- ===== SECTION 6 : DONNEES PERSONNELLES ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-database"></i> Données personnelles</h3>
+            <div class="form-actions-row">
+                <button type="button" class="btn-secondary" id="exportDataBtn"><i class="fas fa-download"></i> Exporter mes données (JSON)</button>
+            </div>
+        </div>
+        <!-- ===== FIN SECTION 6 ===== -->
+
+        <!-- ===== SECTION 7 : SECURITE AVANCEE ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-shield-alt"></i> Sécurité avancée</h3>
+            <div id="loginLogs" class="logs-preview">
+                <p class="info-note">Historique des connexions disponible prochainement.</p>
+            </div>
+        </div>
+        <!-- ===== FIN SECTION 7 ===== -->
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Enregistrer tous les paramètres</button>
+        </div>
+    </form>
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="staff-settings.js"></script>
+</body>
+</html>

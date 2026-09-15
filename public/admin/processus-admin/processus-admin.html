@@ -1,103 +1,61 @@
+<!-- DEBUT : public/admin/processus-admin/processus-admin.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Admin Processus | HubISoccer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestion des étapes | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="processus-admin.css">
 </head>
 <body>
-    <nav class="dashboard-nav">
-        <div class="nav-left">
-            <img src="../../../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../administration.html'">
-            <span class="dashboard-title">Admin / Processus</span>
-        </div>
+    <!-- ========== DÉBUT : LOADER ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> Chargement...
+    </div>
+    <!-- ========== FIN : LOADER ========== -->
+
+    <!-- ========== DÉBUT : NAVIGATION ========== -->
+    <nav>
+        <a href="../../../index.html" class="logo-link">
+            <img src="../img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        </a>
         <div class="nav-right">
-            <button id="logoutBtn" class="logout-btn">Déconnexion</button>
+            <span class="admin-badge"><i class="fas fa-project-diagram"></i> Administration Processus</span>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+            <div class="nav-links" id="navLinks">
+                <a href="../administration/"><i class="fas fa-th-large"></i> Portail</a>
+                <a href="../acteurs-admin/"><i class="fas fa-users"></i> Acteurs</a>
+                <a href="../tournoi-admin/"><i class="fas fa-trophy"></i> Tournois</a>
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
         </div>
     </nav>
+    <!-- ========== FIN : NAVIGATION ========== -->
 
-    <div class="admin-container">
-        <div class="admin-header">
-            <h1><i class="fas fa-chart-line"></i> Gestion du processus</h1>
-            <p>Gérez les étapes et les statistiques de la page processus</p>
-        </div>
+    <!-- ========== DÉBUT : CONTENU PRINCIPAL ========== -->
+    <main class="admin-main">
+        <div class="admin-container">
+            <div class="page-header">
+                <h1><i class="fas fa-project-diagram"></i> Gestion du Processus</h1>
+                <p>Modifiez les titres et descriptions des 5 étapes affichées sur la page publique.</p>
+            </div>
 
-        <div class="section-buttons">
-            <button id="openEtapesModalBtn" class="section-btn"><i class="fas fa-list-ol"></i> Étapes</button>
-            <button id="openStatsModalBtn" class="section-btn"><i class="fas fa-chart-simple"></i> Statistiques</button>
-        </div>
-
-        <!-- MODALE ÉTAPES -->
-        <div id="etapesModal" class="admin-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2><i class="fas fa-list-ol"></i> Gestion des étapes</h2>
-                    <button class="close-modal" onclick="closeModal('etapesModal')">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-section">
-                        <h3>Ajouter une étape</h3>
-                        <form id="addEtapeForm">
-                            <div class="form-group"><label>Titre</label><input type="text" id="etapeTitre" required></div>
-                            <div class="form-group"><label>Description</label><textarea id="etapeDesc" rows="3"></textarea></div>
-                            <div class="form-group"><label>Icône (nom FontAwesome, ex: fa-user-plus)</label><input type="text" id="etapeIcon" placeholder="fa-user-plus"></div>
-                            <div class="form-group"><label>Ordre</label><input type="number" id="etapeOrder" value="0"></div>
-                            <button type="submit">Ajouter</button>
-                        </form>
-                    </div>
-                    <button id="refreshEtapes" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
-                    <div id="etapesList" class="items-list"></div>
-                </div>
+            <div class="form-card">
+                <form id="processusForm">
+                    <div id="stepsContainer"></div>
+                    <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+                </form>
             </div>
         </div>
+    </main>
+    <!-- ========== FIN : CONTENU PRINCIPAL ========== -->
 
-        <!-- MODALE STATISTIQUES -->
-        <div id="statsModal" class="admin-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2><i class="fas fa-chart-simple"></i> Gestion des statistiques</h2>
-                    <button class="close-modal" onclick="closeModal('statsModal')">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-section">
-                        <h3>Ajouter une statistique</h3>
-                        <form id="addStatForm">
-                            <div class="form-group"><label>Nombre (ex: 500+)</label><input type="text" id="statNombre" required></div>
-                            <div class="form-group"><label>Label (ex: Talents détectés)</label><input type="text" id="statLabel" required></div>
-                            <div class="form-group"><label>Ordre</label><input type="number" id="statOrder" value="0"></div>
-                            <button type="submit">Ajouter</button>
-                        </form>
-                    </div>
-                    <button id="refreshStats" class="refresh-btn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
-                    <div id="statsList" class="items-list"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="toastContainer" class="toast-container"></div>
 
-    <footer class="dashboard-footer">
-        <div class="footer-content">
-            <div class="compliance-badges">
-                <span class="badge">Conformité APDP Bénin</span>
-                <span class="badge">Règlementation FIFA</span>
-                <span class="badge">Triple Projet Sport-Études-Carrière</span>
-            </div>
-            <div class="contact-info">
-                <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
-                <a href="mailto:contacthubisoccer@gmail.com"><i class="fas fa-envelope"></i> contacthubisoccer@gmail.com</a>
-            </div>
-            <div class="legal">
-                <p>HubISoccer - The Hub of Inspiration of Soccer</p>
-                <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
-                <p>© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
-            </div>
-        </div>
-    </footer>
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="processus-admin.js"></script>
 </body>
 </html>
+<!-- FIN : public/admin/processus-admin/processus-admin.html -->

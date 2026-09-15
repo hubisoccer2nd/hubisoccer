@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email confirmé | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* DEBUT : RESET & VARIABLES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        :root {
+            --primary: #4B0082;
+            --primary-light: #7B2FBE;
+            --primary-dark: #2E004F;
+            --gold: #FFCC00;
+            --gold-dark: #e6b800;
+            --bg-light: #F0F8FF;
+            --white: #ffffff;
+            --dark: #1a1a1a;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --success: #28a745;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --transition: all 0.3s ease;
+        }
+        /* FIN : RESET & VARIABLES */
+
+        /* DEBUT : CARD */
+        .card {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.1);
+            border-top: 5px solid var(--gold);
+        }
+
+        .icon-check {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        p {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 1.05rem;
+        }
+
+        .countdown {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin: 20px 0;
+        }
+
+        .btn-login {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            margin-top: 15px;
+        }
+
+        .btn-login:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+        /* FIN : CARD */
+
+        /* DEBUT : FOOTER SIMPLE */
+        .footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        /* FIN : FOOTER SIMPLE */
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 25px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-check">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h1>Email confirmé avec succès</h1>
+        <p>Votre compte HubISoccer est maintenant activé.</p>
+        <p>Vous allez être redirigé vers la page de connexion.</p>
+        <div class="countdown" id="countdown">Redirection dans <span id="seconds">5</span> secondes...</div>
+        <a href="../hubisapp/authprive/users/role-select.html?mode=login" class="btn-login">
+            <i class="fas fa-sign-in-alt"></i> Se connecter maintenant
+        </a>
+    </div>
+    <div class="footer">
+        &copy; 2026 HubISoccer. Tous droits réservés.
+    </div>
+
+    <script>
+        /* DEBUT : COMPTE À REBOURS ET REDIRECTION */
+        let seconds = 5;
+        const secondsEl = document.getElementById('seconds');
+        const countdownEl = document.getElementById('countdown');
+
+        const interval = setInterval(function() {
+            seconds--;
+            secondsEl.textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                window.location.href = '../hubisapp/authprive/users/role-select.html?mode=login';
+            }
+        }, 1000);
+        /* FIN : COMPTE À REBOURS ET REDIRECTION */
+    </script>
+</body>
+  </html>

@@ -1,7 +1,19 @@
-// ========== MATCHS-ADMIN.JS – CORRIGÉ ==========
+// ========== DEBUT : matchs-admin.js (session + déconnexion fonctionnelle) ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
 const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ========== DEBUT : VÉRIFICATION DE SESSION ==========
+(async () => {
+    const { data: { session } } = await supabaseAdmin.auth.getSession();
+    if (!session) {
+        window.location.href = '../administration.html';
+        return;
+    }
+    document.getElementById('adminContent') && (document.getElementById('adminContent').style.display = 'block');
+    init();
+})();
+// ========== FIN : VÉRIFICATION DE SESSION ==========
 
 /* ============================================================
    ÉLÉMENTS DOM & UTILITAIRES
@@ -146,7 +158,6 @@ function renderMatchs(matchsCollectif, matchsIndividuel) {
     }
     if (!matchsCollectif.length && !matchsIndividuel.length) html = '<div class="empty-message">Aucun match trouvé.</div>';
     matchsList.innerHTML = html;
-    // Événements
     document.querySelectorAll('.btn-edit-match').forEach(btn => btn.addEventListener('click', () => editMatch(btn.dataset.id, btn.dataset.type)));
     document.querySelectorAll('.btn-actions-match').forEach(btn => btn.addEventListener('click', () => openActionsModal(btn.dataset.id, btn.dataset.type)));
     document.querySelectorAll('.btn-delete-match').forEach(btn => btn.addEventListener('click', () => deleteMatch(btn.dataset.id, btn.dataset.type)));
@@ -209,7 +220,6 @@ async function populateParticipantsByTournoi(tournoiId, selectDom, selectedId = 
         selectDom.appendChild(opt);
     }
 }
-// Changement de tournoi → afficher équipes ou participants
 matchTournoiId.addEventListener('change', async () => {
     const tournoiId = matchTournoiId.value;
     const { data: tournoi } = await supabaseAdmin.from('public_tournois').select('type_tournoi').eq('id', tournoiId).single();
@@ -232,7 +242,6 @@ matchTournoiId.addEventListener('change', async () => {
         }
     }
 });
-// Nouveau match
 newMatchBtn.addEventListener('click', async () => {
     currentMatchId = null;
     currentMatchType = 'collectif';
@@ -248,7 +257,6 @@ newMatchBtn.addEventListener('click', async () => {
     document.getElementById('matchModalTitle').textContent = 'Nouveau match';
     matchModal.classList.add('active');
 });
-// Modifier un match
 async function editMatch(id, type) {
     showLoader();
     try {
@@ -285,7 +293,6 @@ async function editMatch(id, type) {
         matchModal.classList.add('active');
     } catch (err) { showToast('Erreur chargement match', 'error'); } finally { hideLoader(); }
 }
-// Supprimer un match
 async function deleteMatch(id, type) {
     if (!confirm('Supprimer ce match ? Toutes les actions et stats associées seront supprimées.')) return;
     showLoader();
@@ -305,7 +312,6 @@ async function deleteMatch(id, type) {
         chargerMatchs();
     } catch (err) { showToast('Erreur suppression', 'error'); } finally { hideLoader(); }
 }
-// Soumission du formulaire match
 matchForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const tournoiId = matchTournoiId.value;
@@ -317,27 +323,19 @@ matchForm.addEventListener('submit', async (e) => {
     const scoreExt = matchScoreExterieur.value ? parseInt(matchScoreExterieur.value) : null;
     const liveUrl = matchLiveUrl.value || null;
     if (!tournoiId || !date) { showToast('Tournoi et date requis', 'warning'); return; }
-    // Validation : une équipe ne peut pas jouer contre elle-même
     if (type === 'collectif') {
         const equipeDom = matchEquipeDomicile.value;
         const equipeExt = matchEquipeExterieur.value;
         if (!equipeDom || !equipeExt) { showToast('Choisissez les deux équipes', 'warning'); return; }
-        if (equipeDom === equipeExt) {
-            showToast('Une équipe ne peut pas jouer contre elle-même', 'warning');
-            return;
-        }
+        if (equipeDom === equipeExt) { showToast('Une équipe ne peut pas jouer contre elle-même', 'warning'); return; }
     } else {
         const participantDom = matchParticipantDomicile.value;
         const participantExt = matchParticipantExterieur.value;
         if (!participantDom || !participantExt) { showToast('Choisissez les deux participants', 'warning'); return; }
-        if (participantDom === participantExt) {
-            showToast('Un participant ne peut pas jouer contre lui-même', 'warning');
-            return;
-        }
+        if (participantDom === participantExt) { showToast('Un participant ne peut pas jouer contre lui-même', 'warning'); return; }
     }
     showLoader();
     try {
-        // Récupérer les identifiants pour le classement
         let equipeId1 = null, equipeId2 = null;
         if (type === 'collectif') {
             equipeId1 = matchEquipeDomicile.value;
@@ -377,7 +375,6 @@ matchForm.addEventListener('submit', async (e) => {
         }
         matchModal.classList.remove('active');
         chargerMatchs();
-        // Mise à jour du classement si le match est terminé
         if (statut === 'termine' && scoreDom !== null && scoreExt !== null && equipeId1 && equipeId2) {
             await mettreAJourClassement(tournoiId, type, equipeId1, equipeId2, scoreDom, scoreExt);
         }
@@ -431,7 +428,6 @@ async function openActionsModal(matchId, type) {
         }
         actionsMatchInfo.innerHTML = `<p><strong>${escapeHtml(match.equipe_domicile?.nom_equipe || match.participant_domicile?.nom_complet)} vs ${escapeHtml(match.equipe_exterieur?.nom_equipe || match.participant_exterieur?.nom_complet)}</strong><br>Score: ${match.score_domicile !== null ? match.score_domicile : '-'} - ${match.score_exterieur !== null ? match.score_exterieur : '-'}</p>`;
         await chargerActions(matchId);
-        // Remplir le sélecteur d'équipe
         actionEquipe.innerHTML = '<option value="">-- Choisir --</option>';
         for (const [id, nom] of Object.entries(participantsMap)) {
             const opt = document.createElement('option');
@@ -484,7 +480,6 @@ async function deleteAction(actionId, matchId) {
         await chargerActions(matchId);
     } catch (err) { showToast('Erreur', 'error'); } finally { hideLoader(); }
 }
-// Charger les joueurs d'une équipe
 actionEquipe.addEventListener('change', async () => {
     const equipeId = actionEquipe.value;
     if (!equipeId) { actionJoueur.innerHTML = '<option value="">-- Aucun joueur --</option>'; return; }
@@ -499,7 +494,6 @@ actionEquipe.addEventListener('change', async () => {
     }
     actionJoueur.innerHTML = html;
 });
-// Ajouter une action
 addActionBtn.addEventListener('click', async () => {
     const type = actionType.value;
     const minute = parseInt(actionMinute.value);
@@ -629,9 +623,7 @@ saveStatsBtn.addEventListener('click', async () => {
         statsModal.classList.remove('active');
     } catch (err) { showToast('Erreur sauvegarde stats', 'error'); } finally { hideLoader(); }
 });
-// Fermer la modale des actions
 closeActionsBtn.addEventListener('click', () => { actionsModal.classList.remove('active'); });
-// Fermer la modale des statistiques
 closeStatsBtn.addEventListener('click', () => { statsModal.classList.remove('active'); });
 /* FIN STATISTIQUES */
 
@@ -741,8 +733,17 @@ if (menuToggle && navLinks) {
         }
     });
 }
+
+// ========== DEBUT : DÉCONNEXION FONCTIONNELLE ==========
 const logoutBtn = document.getElementById('logoutBtn');
-if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); showToast('Déconnexion (à venir)', 'info'); });
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabaseAdmin.auth.signOut();
+        window.location.href = '../administration.html';
+    });
+}
+// ========== FIN : DÉCONNEXION FONCTIONNELLE ==========
 
 async function init() {
     await chargerTournois();
@@ -757,5 +758,5 @@ async function init() {
     }
     await chargerMatchs();
 }
-init();
 /* FIN INITIALISATION */
+// ========== FIN : matchs-admin.js ==========

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Analyse Vidéo · Espace Coach · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="coach-video.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-film"></i> Analyse Vidéo</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/coach-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/coach-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR (LES 13 PAGES DE L'ESPACE COACH) ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-clipboard-list"></i><h3>Menu Coach / Entraîneur</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Pilotage des Talents</div>
+        <a href="../dashboard/coach-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../talents/coach-talents.html">
+            <i class="fas fa-users"></i><span>Mes Talents (Sportifs & Artistes)</span>
+        </a>
+        <a href="../evaluations/coach-eval.html">
+            <i class="fas fa-star-half-alt"></i><span>Évaluations & Scouting</span>
+        </a>
+        <a href="../planning/coach-planning.html">
+            <i class="fas fa-calendar-alt"></i><span>Planning & Séances</span>
+        </a>
+        <a href="coach-video.html" class="active">
+            <i class="fas fa-film"></i><span>Analyse Vidéo</span>
+        </a>
+        <a href="../triple-projet/coach-triple.html">
+            <i class="fas fa-seedling"></i><span>Suivi Triple Projet</span>
+        </a>
+        <a href="../recommandations/coach-recos.html">
+            <i class="fas fa-award"></i><span>Recommandations</span>
+        </a>
+        <a href="../statistiques/coach-stats.html">
+            <i class="fas fa-chart-line"></i><span>Statistiques du Groupe</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Ma Carrière</div>
+        <a href="../verification/coach-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../licences/coach-licences.html">
+            <i class="fas fa-certificate"></i><span>Licences & Certifs</span>
+        </a>
+        <a href="../cv/coach-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <a href="../opportunites/coach-offres.html">
+            <i class="fas fa-briefcase"></i><span>Opportunités & Offres</span>
+        </a>
+        <a href="../revenus/coach-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/coach-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="video-main">
+<div class="video-container">
+
+    <h1 class="page-title"><i class="fas fa-film"></i> Analyse Vidéo</h1>
+    <p class="page-subtitle">
+        Ajoutez les vidéos de vos talents (matchs, entraînements, prestations scéniques),
+        annotez-les minute par minute avec des repères
+        <span class="tri corps">Corps</span> · <span class="tri ame">Âme</span> · <span class="tri esprit">Esprit</span>,
+        puis certifiez les meilleures : une vidéo certifiée par un coach pèse plus lourd aux yeux des recruteurs.
+    </p>
+
+    <!-- ===== DEBUT STATS RAPIDES ===== -->
+    <div class="video-stats-grid">
+        <div class="vstat-card">
+            <div class="vstat-icon attente"><i class="fas fa-hourglass-half"></i></div>
+            <div class="vstat-body">
+                <span class="vstat-value" id="statAAnalyser">0</span>
+                <span class="vstat-label">À analyser</span>
+            </div>
+        </div>
+        <div class="vstat-card">
+            <div class="vstat-icon faites"><i class="fas fa-clipboard-check"></i></div>
+            <div class="vstat-body">
+                <span class="vstat-value" id="statAnalysees">0</span>
+                <span class="vstat-label">Analysées</span>
+            </div>
+        </div>
+        <div class="vstat-card">
+            <div class="vstat-icon certif"><i class="fas fa-certificate"></i></div>
+            <div class="vstat-body">
+                <span class="vstat-value" id="statCertifiees">0</span>
+                <span class="vstat-label">Certifiées coach</span>
+            </div>
+        </div>
+        <div class="vstat-card">
+            <div class="vstat-icon annots"><i class="fas fa-comment-dots"></i></div>
+            <div class="vstat-body">
+                <span class="vstat-value" id="statAnnotations">0</span>
+                <span class="vstat-label">Annotations posées</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN STATS RAPIDES ===== -->
+
+    <!-- ===== DEBUT AJOUT D'UNE VIDÉO ===== -->
+    <div class="add-video-panel glass-card">
+        <h3 class="section-title"><i class="fas fa-plus-circle"></i> Ajouter une vidéo à analyser</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="videoTalent">Talent concerné *</label>
+                <select id="videoTalent">
+                    <option value="">— Sélectionnez un talent —</option>
+                </select>
+                <p class="field-hint" id="noTalentHint" style="display:none;">
+                    Vous n'avez encore aucun talent lié.
+                    <a href="../talents/coach-talents.html">Liez d'abord un talent →</a>
+                </p>
+            </div>
+            <div class="form-group">
+                <label for="videoTitre">Titre de la vidéo *</label>
+                <input type="text" id="videoTitre" placeholder="Ex : Match vs AS Tonnerre — 1re mi-temps">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="videoUrl">Lien de la vidéo * <span class="label-note">(YouTube recommandé — lecteur intégré)</span></label>
+            <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=…">
+        </div>
+        <div class="form-actions">
+            <button class="btn-primary" id="btnAddVideo"><i class="fas fa-video"></i> Ajouter à la liste d'analyse</button>
+        </div>
+    </div>
+    <!-- ===== FIN AJOUT D'UNE VIDÉO ===== -->
+
+    <!-- ===== DEBUT ATELIER D'ANALYSE (caché tant qu'aucune vidéo ouverte) ===== -->
+    <div class="workspace glass-card" id="workspace" style="display:none;">
+        <h3 class="section-title">
+            <i class="fas fa-microscope"></i> Atelier d'analyse — <span id="wsTitre">—</span>
+        </h3>
+        <p class="ws-talent" id="wsTalent">—</p>
+
+        <div class="ws-layout">
+            <!-- Lecteur -->
+            <div class="ws-player">
+                <div id="wsPlayerBox" class="player-box">
+                    <!-- iframe YouTube OU lien externe injecté par JS -->
+                </div>
+            </div>
+
+            <!-- Annotations -->
+            <div class="ws-annotations">
+                <h4 class="ws-subtitle"><i class="fas fa-comment-dots"></i> Annotations pédagogiques</h4>
+
+                <div class="annot-form">
+                    <input type="text" id="annotTemps" class="annot-temps" placeholder="mm:ss" maxlength="8">
+                    <select id="annotCat" class="annot-cat">
+                        <option value="corps">🔴 Corps</option>
+                        <option value="ame">🔵 Âme</option>
+                        <option value="esprit" selected>🟢 Esprit</option>
+                    </select>
+                    <input type="text" id="annotTexte" class="annot-texte" placeholder="Ex : Regarde ton placement ici…">
+                    <button class="btn-annot-add" id="btnAddAnnot" title="Ajouter l'annotation"><i class="fas fa-plus"></i></button>
+                </div>
+
+                <div id="annotList" class="annot-list">
+                    <p class="empty-state" id="annotEmpty">
+                        <i class="fas fa-comment-slash"></i> Aucune annotation pour l'instant.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conclusion + certification -->
+        <div class="form-group">
+            <label for="wsConclusion"><i class="fas fa-file-signature"></i> Conclusion pédagogique du coach</label>
+            <textarea id="wsConclusion" rows="3" placeholder="Synthèse : ce qui est acquis, ce qui doit progresser, consignes pour la suite…"></textarea>
+        </div>
+        <label class="certif-toggle">
+            <input type="checkbox" id="wsCertifiee">
+            <span class="certif-chip"><i class="fas fa-certificate"></i> Certifier cette vidéo (visible comme "Validée par le coach")</span>
+        </label>
+
+        <div class="form-actions">
+            <button class="btn-secondary" id="btnCloseWs"><i class="fas fa-times"></i> Fermer sans enregistrer</button>
+            <button class="btn-primary" id="btnSaveAnalysis"><i class="fas fa-save"></i> Enregistrer l'analyse</button>
+        </div>
+    </div>
+    <!-- ===== FIN ATELIER D'ANALYSE ===== -->
+
+    <!-- ===== DEBUT VIDÉOS À ANALYSER ===== -->
+    <div class="todo-videos glass-card">
+        <h3 class="section-title"><i class="fas fa-hourglass-half"></i> Vidéos à analyser</h3>
+        <div id="todoList" class="videos-grid">
+            <p class="empty-state" id="todoEmpty">
+                <i class="fas fa-video-slash"></i> Aucune vidéo en attente d'analyse.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN VIDÉOS À ANALYSER ===== -->
+
+    <!-- ===== DEBUT VIDÉOS ANALYSÉES ===== -->
+    <div class="done-videos glass-card">
+        <h3 class="section-title"><i class="fas fa-clipboard-check"></i> Vidéos analysées</h3>
+        <div class="filter-tabs" id="doneFilters">
+            <button class="filter-btn active" data-filter="all"><i class="fas fa-list"></i> Toutes</button>
+            <button class="filter-btn" data-filter="sportif"><i class="fas fa-futbol"></i> Sportifs</button>
+            <button class="filter-btn" data-filter="artiste"><i class="fas fa-music"></i> Artistes</button>
+            <button class="filter-btn" data-filter="certifiee"><i class="fas fa-certificate"></i> Certifiées</button>
+        </div>
+        <div id="doneList" class="videos-grid">
+            <p class="empty-state" id="doneEmpty">
+                <i class="fas fa-folder-open"></i> Aucune vidéo analysée pour l'instant.
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN VIDÉOS ANALYSÉES ===== -->
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-clipboard-list"></i> UEFA · CAF · FIFA</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="coach-video.js"></script>
+</body>
+</html>

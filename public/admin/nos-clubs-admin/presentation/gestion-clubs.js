@@ -1,4 +1,5 @@
-// ========== GESTION-CLUBS.JS – VERSION FINALE SANS QUILL ==========
+/* DEBUT : public/admin/nos-clubs-admin/gestion/gestion-clubs.js */
+// ========== GESTION-CLUBS.JS – VERSION ADMIN CORRIGÉE ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhc2VwbWVsZmxmanRsaWZseXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTA0MDEsImV4cCI6MjA4OTg2NjQwMX0.5_aw5JMVeIB8BePdZylI7gGN7pCD79CkS2AResneVpY';
@@ -221,7 +222,6 @@ function openCreateModal() {
     document.getElementById('logoFileName').textContent = 'Cliquez pour choisir un fichier (JPG, PNG)';
     document.getElementById('banniereFileName').textContent = 'Cliquez pour choisir un fichier (JPG, PNG)';
 
-    // Vider les textarea HTML
     document.getElementById('clubMission').value = '';
     document.getElementById('clubPhilosophie').value = '';
     document.getElementById('clubEngagements').value = '';
@@ -254,7 +254,6 @@ async function openEditModal(clubId) {
     document.getElementById('logoFileName').textContent = club.logo_url ? 'Logo actuel (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
     document.getElementById('banniereFileName').textContent = club.banniere_url ? 'Bannière actuelle (cliquez pour changer)' : 'Cliquez pour choisir un fichier (JPG, PNG)';
 
-    // Remplir les textarea avec le HTML brut
     document.getElementById('clubMission').value = club.mission || '';
     document.getElementById('clubPhilosophie').value = club.philosophie || '';
     document.getElementById('clubEngagements').value = club.engagements || '';
@@ -442,7 +441,7 @@ document.getElementById('refreshClubsBtn').addEventListener('click', () => {
 });
 // ========== FIN : ÉVÉNEMENTS FILTRES ==========
 
-// ========== DÉBUT : MENU MOBILE ==========
+// ========== DÉBUT : MENU MOBILE ET DÉCONNEXION ==========
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 if (menuToggle && navLinks) {
@@ -457,14 +456,17 @@ if (menuToggle && navLinks) {
         }
     });
 }
+
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        showToast('Déconnexion (à implémenter)', 'info');
+        // Nettoyage simple et redirection vers l'accueil public
+        localStorage.removeItem('hubiLang');
+        window.location.href = '../../../index.html';
     });
 }
-// ========== FIN : MENU MOBILE ==========
+// ========== FIN : MENU MOBILE ET DÉCONNEXION ==========
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
@@ -472,3 +474,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadClubs();
 });
 // ========== FIN DE GESTION-CLUBS.JS ==========
+/* FIN : public/admin/nos-clubs-admin/gestion/gestion-clubs.js */

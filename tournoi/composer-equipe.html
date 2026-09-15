@@ -1,4 +1,4 @@
-<!-- ========== DEBUT : tournoi/composer-equipe.html ========== -->
+<!-- DEBUT : tournoi/composer-equipe.html (version terrain visuel, postes, capitaine) -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -15,8 +15,9 @@
         <span data-i18n="loader.message">Chargement...</span>
     </div>
 
+    <!-- ========== NAVIGATION ========== -->
     <nav>
-        <a href="../index.html" class="logo-link">
+        <a href="../" class="logo-link">
             <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
@@ -52,22 +53,58 @@
             <div class="nav-links" id="navLinks">
                 <a href="dashboard-tournoi.html" data-i18n="composer.dashboard">Tableau de bord</a>
                 <a href="gerer-equipe.html" data-i18n="composer.equipe">Mon équipe</a>
-                <a href="matchs.html" data-i18n="composer.matchs">Matchs</a>
+                <a href="composer-equipe.html" class="active" data-i18n="composer.title">Composer l'équipe</a>
+                <a href="../matchs/" data-i18n="composer.matchs">Matchs</a>
                 <a href="classement.html" data-i18n="composer.classement">Classement</a>
-                <a href="messagerie-privee.html" data-i18n="composer.messagerie">Messages</a>
-                <a href="portefeuille.html" data-i18n="composer.portefeuille">Portefeuille</a>
+                <a href="../messagerie-privee/" data-i18n="composer.messagerie">Messages</a>
+                <a href="../portefeuille/" data-i18n="composer.portefeuille">Portefeuille</a>
             </div>
         </div>
     </nav>
 
     <main class="composer-main">
         <div class="container">
-            <h1 class="page-title"><i class="fas fa-users"></i> <span data-i18n="composer.title">Composition d'équipe</span></h1>
+            <h1 class="page-title"><i class="fas fa-clipboard-list"></i> <span data-i18n="composer.title">Composition d'équipe</span></h1>
             <div id="matchInfo" class="match-info-card"></div>
-            <div id="compositionForm" class="composition-form">
-                <div id="joueursList"></div>
+
+            <!-- Sélecteur de match (si pas d'ID) -->
+            <div id="selectMatchSection" style="display:none;">
+                <h2 data-i18n="composer.select_match">Sélectionnez un match à composer</h2>
+                <div id="matchsList" class="matchs-list"></div>
             </div>
-            <button id="saveCompositionBtn" class="btn-save">Enregistrer la composition</button>
+
+            <!-- Interface de composition (apparaît quand un match est sélectionné) -->
+            <div id="compositionSection" style="display:none;">
+                <div class="composition-header">
+                    <span id="titulairesCount" class="compteur"></span>
+                </div>
+
+                <div class="composition-grid">
+                    <!-- Terrain -->
+                    <div class="terrain-container">
+                        <h3 class="terrain-title"><i class="fas fa-futbol"></i> <span data-i18n="composer.terrain_title">Terrain</span></h3>
+                        <div class="terrain" id="terrain">
+                            <!-- Les positions seront insérées par JS (positions absolues) -->
+                        </div>
+                        <p class="info-texte" data-i18n="composer.terrain_info">Faites glisser les joueurs du banc vers les postes souhaités.</p>
+                    </div>
+
+                    <!-- Banc des remplaçants -->
+                    <div class="banc-container">
+                        <h3 class="banc-title"><i class="fas fa-chair"></i> <span data-i18n="composer.banc_title">Remplaçants</span></h3>
+                        <div class="banc" id="banc">
+                            <!-- Joueurs non titulaires -->
+                        </div>
+                        <p class="info-texte" data-i18n="composer.banc_info">Glissez un joueur ici pour le retirer du terrain.</p>
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="actions-bar">
+                    <button id="resetCompositionBtn" class="btn-secondary"><i class="fas fa-undo"></i> <span data-i18n="composer.reset">Réinitialiser</span></button>
+                    <button id="saveCompositionBtn" class="btn-save" disabled><i class="fas fa-save"></i> <span data-i18n="composer.save">Enregistrer la composition</span></button>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -94,4 +131,4 @@
     <script src="composer-equipe.js"></script>
 </body>
 </html>
-<!-- ========== FIN : tournoi/composer-equipe.html ========== -->
+<!-- FIN : tournoi/composer-equipe.html -->

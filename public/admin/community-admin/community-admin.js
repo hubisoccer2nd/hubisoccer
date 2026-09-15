@@ -491,7 +491,7 @@ document.getElementById('postForm').addEventListener('submit', async (e) => {
         hideLoader();
     }
 });
-// ========== FIN : MODALE CREATION/MODIFICATION ==========
+// ========== FIN : MODALE CRÉATION/MODIFICATION ==========
 
 // ========== DÉBUT : MODALE VISUALISATION ==========
 async function openViewPostModal(postId) {

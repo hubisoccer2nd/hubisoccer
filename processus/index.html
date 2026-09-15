@@ -1,31 +1,26 @@
+<!-- DEBUT : processus/index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Processus HubISoccer – De la détection locale à la communauté privée</title>
-    <meta name="description" content="Découvrez le parcours HubISoccer : inscription, examens, obtention de l’ID unique, participation aux tournois et accès à l’espace privé.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://hubisoccer2nd.github.io/hubisoccer/processus.html">
-    <meta property="og:title" content="Processus HubISoccer – De la détection locale à la communauté privée">
-    <meta property="og:description" content="Découvrez le parcours HubISoccer : inscription, examens, obtention de l’ID unique, participation aux tournois et accès à l’espace privé.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://hubisoccer2nd.github.io/hubisoccer/processus.html">
-    <meta property="og:image" content="https://hubisoccer2nd.github.io/hubisoccer/img/stade-cotonou.jpg">
-    <meta property="og:site_name" content="HubISoccer">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Processus HubISoccer – De la détection locale à la communauté privée">
-    <meta name="twitter:description" content="Découvrez le parcours HubISoccer : inscription, examens, obtention de l’ID unique, participation aux tournois et accès à l’espace privé.">
-    <meta name="twitter:image" content="https://hubisoccer2nd.github.io/hubisoccer/img/stade-cotonou.jpg">
+    <title>Processus – Triple Projet | HubISoccer</title>
+    <meta name="description" content="Découvrez le parcours structuré HubISoccer : du premier pas à la carrière professionnelle, en passant par le scouting et les tournois.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/processus.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="processus.css">
 </head>
 <body>
+    <!-- ========== DÉBUT : LOADER ========== -->
+    <div id="globalLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.2rem;">
+        <div class="spinner"></div> <span data-i18n="loader.message">Chargement...</span>
+    </div>
+    <!-- ========== FIN : LOADER ========== -->
+
+    <!-- ========== DÉBUT : NAVBAR OFFICIELLE ========== -->
     <nav>
-        <a href="../index.html" class="logo-link">
-            <img src="img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
+        <a href="../" class="logo-link">
+            <img src="../public/img/logo-navbar.png" alt="HubISoccer" class="logo-nav">
         </a>
         <div class="nav-right">
             <select class="lang-picker" id="langSelect">
@@ -54,57 +49,90 @@
                 <option value="pl">🇵🇱 Polski</option>
                 <option value="vi">🇻🇳 Tiếng Việt</option>
             </select>
-            <button class="menu-toggle" id="menuToggle">
-                <span></span><span></span><span></span>
-            </button>
+            <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
             <div class="nav-links" id="navLinks">
-                <a href="../index.html">Accueil</a>
-                <a href="scouting.html">Scouting</a>
-                <a href="processus.html" class="active">Processus</a>
-                <a href="affiliation.html">Affiliation</a>
-                <a href="parrain.html">Parrain</a>
-                <a href="tournoi.html">Tournois</a>
-                <a href="hub-community.html">Community</a>
-                <a href="e-marketing-hubisoccer.html">Market</a>
-                <a href="auth/role-select.html?action=login" class="btn-auth">Connexion</a>
-                <a href="auth/role-select.html?action=signup" class="btn-auth gold">Inscription</a>
+                <a href="../scouting/" data-i18n="scouting">SCOUTING</a>
+                <a href="../processus/" class="active" data-i18n="processus">PROCESSUS</a>
+                <a href="../affiliation/" data-i18n="affiliation">AFFILIATION</a>
+                <a href="../acteurs/" data-i18n="acteurs">DEVENEZ UN ACTEUR</a>
+                <a href="../artiste-adhesion/" data-i18n="artiste">DEVENEZ UN ARTISTE</a>
+                <a href="../premier-pas/" data-i18n="premier_pas">PREMIER‑PAS</a>
+                <a href="../clubs/" data-i18n="nos_clubs">NOS CLUBS</a>
+                <a href="../tournoi/" data-i18n="tournoi_public">TOURNOI PUBLIC</a>
+                <a href="../hub-community/" data-i18n="hub_community">HUB COMMUNITY</a>
+                <a href="../e-marketing/" data-i18n="hub_market">MARKET</a>
+                <a href="../acteurs-login/" class="btn-auth" data-i18n="connexion">Connexion</a>
+                <a href="../hubisapp/authprive/users/signup/" class="btn-auth gold" data-i18n="inscrire">S'inscrire</a>
             </div>
         </div>
     </nav>
+    <!-- ========== FIN : NAVBAR ========== -->
 
-    <header class="processus-header" style="background: linear-gradient(135deg, rgba(85,27,140,0.8), rgba(0,0,0,0.8)), url('img/stade-cotonou.jpg') center/cover no-repeat;">
-        <h1 class="processus-title">Le Parcours vers le <span class="highlight">Sommet</span></h1>
-        <p class="processus-subtitle">De la détection locale à l’espace privé : un accompagnement complet pour révéler votre talent.</p>
+    <!-- ========== DÉBUT : HEADER ========== -->
+    <header class="processus-header">
+        <h1 data-i18n="processus.header.title">Le Triple Projet HubISoccer</h1>
+        <p data-i18n="processus.header.subtitle">Découvrez le parcours complet qui vous mène du premier pas à la carrière professionnelle.</p>
     </header>
+    <!-- ========== FIN : HEADER ========== -->
 
-    <section class="processus-timeline" id="timelineContainer">
-        <!-- Les étapes seront injectées par JS -->
-    </section>
-
-    <section class="stats-section">
-        <h2>Pourquoi nous choisir ?</h2>
-        <div class="stats-grid" id="statsContainer">
-            <!-- Les stats seront injectées par JS -->
+    <!-- ========== DÉBUT : ÉTAPES ========== -->
+    <section class="steps-section">
+        <div class="step" id="step1">
+            <div class="step-number">1</div>
+            <h2 data-i18n="processus.step1.title">Premier Pas</h2>
+            <p data-i18n="processus.step1.desc">Inscrivez‑vous gratuitement, remplissez votre dossier et obtenez votre identifiant unique.</p>
+        </div>
+        <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <h2 data-i18n="processus.step2.title">Validation Administrative</h2>
+            <p data-i18n="processus.step2.desc">Notre équipe vérifie vos documents et valide votre dossier si tout est conforme.</p>
+        </div>
+        <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <h2 data-i18n="processus.step3.title">Scouting & Détection</h2>
+            <p data-i18n="processus.step3.desc">Votre profil est publié dans notre réseau. Les recruteurs et clubs vous découvrent.</p>
+        </div>
+        <div class="step" id="step4">
+            <div class="step-number">4</div>
+            <h2 data-i18n="processus.step4.title">Tournois & Compétitions</h2>
+            <p data-i18n="processus.step4.desc">Participez à des tournois de détection et montrez votre talent en conditions réelles.</p>
+        </div>
+        <div class="step" id="step5">
+            <div class="step-number">5</div>
+            <h2 data-i18n="processus.step5.title">Carrière Professionnelle</h2>
+            <p data-i18n="processus.step5.desc">Signez dans un club professionnel ou développez votre carrière artistique.</p>
+            <img src="../public/img/pas3.jpg" alt="Carrière professionnelle">
         </div>
     </section>
+    <!-- ========== FIN : ÉTAPES ========== -->
+
+    <!-- ========== DÉBUT : BOUTON D'ACTION ========== -->
+    <div class="cta-section">
+        <a href="../premier-pas/" class="cta-button" data-i18n="processus.cta">Commencer l'aventure</a>
+    </div>
+    <!-- ========== FIN : BOUTON D'ACTION ========== -->
 
     <footer>
         <div class="compliance-badges">
-            <div class="badge-item">Conformité APDP Bénin</div>
-            <div class="badge-item">Règlementation FIFA</div>
-            <div class="badge-item">Triple Projet Sport-Études-Carrière</div>
+            <div class="badge-item" data-i18n="footer_conformite">Conformité APDP Bénin</div>
+            <div class="badge-item" data-i18n="footer_reglementation">Règlementation FIFA</div>
+            <div class="badge-item" data-i18n="footer_double_projet">Triple Projet Sport-Études-Carrière</div>
         </div>
         <div class="contact-box">
-            <a href="tel:+2290195973157" class="contact-item">📞 +229 01 95 97 31 57</a>
-            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item">📧 contacthubisoccer@gmail.com</a>
+            <a href="tel:+2290195973157" class="contact-item" data-i18n="contact_tel">📞 +229 01 95 97 31 57</a>
+            <a href="mailto:contacthubisoccer@gmail.com" class="contact-item" data-i18n="contact_email">📧 contacthubisoccer@gmail.com</a>
         </div>
         <div class="legal">
             <p><strong>HubISoccer - The Hub of Inspiration of Soccer</strong></p>
-            <p>RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
-            <p>&copy; 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
+            <p data-i18n="rccm">RCCM : RB/ABC/24 A 111814 | IFU : 0201910800236</p>
+            <p data-i18n="copyright">© 2026 HubISoccer - Ozawa. Tous droits réservés.</p>
         </div>
     </footer>
 
-    <script src="js/processus.js"></script>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="processus.js"></script>
 </body>
 </html>
+<!-- FIN : processus/index.html -->

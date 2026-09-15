@@ -1489,7 +1489,23 @@ ul {
     border: 1px solid var(--gray-light);
     margin-bottom: 14px;
     transition: var(--transition);
-    overflow: hidden;
+
+    /* CHANTIER 10 — le menu des trois points se coupait.
+       ------------------------------------------------------
+       Cette carte portait « overflow: hidden ». Un menu
+       positionne en absolute a l'interieur d'un parent qui
+       masque son debordement est DECOUPE par ce parent : le
+       navigateur n'a pas le choix, c'est la regle. Sur grand
+       ecran le menu tenait par chance dans la carte et on ne
+       voyait rien ; sur telephone il en sortait et se coupait
+       net. Il fallait dezoomer pour le lire.
+
+       « overflow: hidden » etait la pour que le media respecte
+       les coins arrondis de la carte. Ce n'est plus a la carte
+       de s'en charger : .post-media a deja son propre
+       « overflow: hidden » et arrondit ses coins tout seul.
+       On retire donc le masque ici, et plus rien n'est coupe. */
+    overflow: visible;
 }
 
 .post-card:hover {
@@ -1704,6 +1720,9 @@ ul {
 
 .post-media {
     width: 100%;
+    /* CHANTIER 10 — le media clippe lui-meme, puisque la carte
+       ne le fait plus. */
+    border-radius: var(--radius-sm);
     overflow: hidden;
 }
 
@@ -2905,7 +2924,16 @@ ul {
 @media (max-width: 480px) {
     .story-viewer { border-radius: 0; height: 100vh; max-height: 100vh; }
     .publish-left-actions .pub-action-btn span { display: inline !important; }
-    .post-dropdown { min-width: 160px; right: -10px; }
+    /* CHANTIER 10 — « right: -10px » poussait le menu 10 px
+       HORS de la carte, donc hors de l'ecran sur un telephone.
+       Il est maintenant cale sur le bord droit de son bouton, et
+       sa largeur est bornee par celle de l'ecran : il ne peut
+       plus deborder, quelle que soit la taille du telephone. */
+    .post-dropdown {
+        right: 0;
+        min-width: 168px;
+        max-width: calc(100vw - 32px);
+    }
 }
 
 /* ===== CORRECTIONS FINALES ===== */
@@ -2931,3 +2959,721 @@ ul {
     visibility: visible !important;
     opacity: 1 !important;
 }
+
+/* ===== Choix personnel dans un sondage ===== */
+.poll-option.my-vote {
+    border-color: var(--primary);
+    background: var(--primary-xlight);
+}
+
+/* ===== Visionneuse de stories intégrée au feed ===== */
+.sv-story-text-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.4;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.sv-caption {
+    position: absolute;
+    bottom: 96px;
+    left: 0;
+    right: 0;
+    padding: 12px 18px;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: white;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), transparent);
+    pointer-events: none;
+}
+
+/* ============================================================
+   AJOUTS — CLASSES UTILISÉES PAR feed.js MAIS ABSENTES DU CSS
+   ------------------------------------------------------------
+   Ces sélecteurs sont produits par feed.js (commentaires en ligne,
+   réponses imbriquées, états vides, modales Collections / Masqués)
+   mais n'avaient aucun style : les blocs s'affichaient bruts,
+   sans mise en forme ni alignement.
+   Les styles ci-dessous reprennent la charte déjà utilisée par
+   .comment-item / .comment-bubble plus haut dans ce fichier.
+   ============================================================ */
+
+/* ---------- État vide (fil sans publication, listes vides) ---------- */
+.c-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--gray);
+    font-size: 0.94rem;
+    line-height: 1.55;
+}
+
+.c-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: var(--primary-xlight);
+    color: var(--primary);
+    font-size: 1.7rem;
+}
+
+.c-empty strong,
+.c-empty h3 {
+    color: var(--dark);
+    font-size: 1.02rem;
+    font-weight: 600;
+}
+
+/* ---------- Initiales à la place d'un avatar manquant ----------
+   feed.js affiche ces blocs quand l'utilisateur n'a pas de photo.
+   Ils doivent avoir exactement les dimensions des avatars qu'ils
+   remplacent, sinon la ligne du commentaire se décale. */
+.comment-avatar-initials,
+.comment-input-avatar-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--white);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.comment-input-avatar-initials {
+    cursor: default;
+}
+
+/* Dans une réponse, l'avatar est plus petit (28px) */
+.cm-reply-card .comment-avatar-initials {
+    width: 28px;
+    height: 28px;
+    font-size: 0.66rem;
+}
+
+/* ---------- Boutons média et audio du champ de commentaire ---------- */
+.comment-media-btn,
+.comment-audio-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--gray);
+    font-size: 0.95rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.comment-media-btn:hover,
+.comment-audio-btn:hover {
+    background: var(--primary-xlight);
+    color: var(--primary);
+}
+
+/* Enregistrement en cours : le bouton pulse en rouge */
+.comment-audio-btn.recording {
+    background: var(--danger);
+    color: var(--white);
+    animation: cmRecPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes cmRecPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+    50%      { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0); }
+}
+
+/* ---------- Lecteur audio d'un commentaire ---------- */
+.comment-audio {
+    margin-top: 8px;
+}
+
+.comment-audio audio {
+    width: 100%;
+    max-width: 320px;
+    height: 36px;
+    display: block;
+}
+
+/* ---------- Badge de rôle de l'auteur ---------- */
+.cm-role-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--primary-xlight);
+    color: var(--primary);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* ---------- Mention « (modifié) » ---------- */
+.cm-edited {
+    margin-left: 6px;
+    color: var(--gray);
+    font-size: 0.72rem;
+    font-style: italic;
+}
+
+/* ---------- Bloc des réponses à un commentaire ---------- */
+.cm-replies {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 8px 0 0 42px;
+}
+
+.cm-replies:empty {
+    margin: 0;
+}
+
+/* ---------- Champ de rédaction d'une réponse ---------- */
+.cm-reply-compose {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 0 42px;
+}
+
+.cm-reply-compose input,
+.cm-reply-compose textarea {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 12px;
+    border: 1px solid var(--gray-light);
+    border-radius: 999px;
+    background: var(--gray-xlight);
+    font-family: inherit;
+    font-size: 0.86rem;
+    color: var(--dark);
+    resize: none;
+}
+
+.cm-reply-compose input:focus,
+.cm-reply-compose textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--white);
+}
+
+.cm-reply-compose button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--white);
+    font-size: 0.82rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: filter 0.18s ease;
+}
+
+.cm-reply-compose button:hover { filter: brightness(1.12); }
+.cm-reply-compose button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Carte d'une réponse ---------- */
+.cm-reply-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.cm-reply-bubble {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 11px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
+    background: var(--gray-xlight);
+}
+
+.cm-reply-author {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--dark);
+    cursor: pointer;
+}
+
+.cm-reply-author:hover { color: var(--primary); }
+
+.cm-reply-text {
+    margin-top: 2px;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--gray-dark);
+    word-break: break-word;
+}
+
+/* ---------- Pied d'une réponse : actions et horodatage ---------- */
+.cm-footer {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 5px;
+}
+
+.cm-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--gray);
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.18s ease;
+}
+
+.cm-action-btn:hover { color: var(--primary); }
+.cm-action-btn.liked { color: var(--danger); }
+
+.cm-time {
+    color: var(--gray);
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+/* ---------- Modales Collections et Publications masquées ---------- */
+.hidden-post-item,
+.collection-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.18s ease;
+}
+
+.hidden-post-item:hover,
+.collection-item:hover {
+    background: var(--gray-xlight);
+}
+
+.hidden-post-item:last-child,
+.collection-item:last-child {
+    border-bottom: none !important;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+    .cm-replies,
+    .cm-reply-compose {
+        margin-left: 24px;
+    }
+    .c-empty { padding: 32px 16px; }
+    .comment-audio audio { max-width: 100%; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   CHANTIER 10 — RECHERCHE VIVANTE, LISTES, VUES, SUGGESTIONS
+   ------------------------------------------------------------
+   Aucune couleur nouvelle : tout consomme les variables deja
+   declarees en tete de ce fichier.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── La recherche vivante ─────────────────────────────────── */
+.feed-search-bar { position: relative; }
+
+.feed-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: var(--gray-xlight);
+    color: var(--gray);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    cursor: pointer;
+}
+.feed-search-clear:hover { background: var(--gray-light); color: var(--dark); }
+
+.recherche-vive {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    /* Au-dessus des cartes, et sous les modales. */
+    z-index: 200;
+    max-height: min(60vh, 420px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.recherche-vive-etat {
+    padding: 18px 16px;
+    font-size: 0.82rem;
+    color: var(--gray);
+    text-align: center;
+    line-height: 1.5;
+}
+
+.recherche-vive-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--gray-xlight);
+}
+.recherche-vive-item:last-child { border-bottom: none; }
+.recherche-vive-item:hover { background: var(--gray-xlight); }
+
+.rv-lien {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+}
+.rv-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: none;
+    background: var(--gray-xlight);
+}
+.rv-avatar-lettres {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-xlight, var(--gray-xlight));
+}
+.rv-infos { min-width: 0; }
+.rv-nom {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rv-certifie { color: var(--primary); font-size: 0.74rem; }
+.rv-detail {
+    font-size: 0.74rem;
+    color: var(--gray);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rv-suivre {
+    flex: none;
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: white;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.rv-suivre:hover { filter: brightness(1.08); }
+.rv-suivre.suivi,
+.rv-suivre[disabled] {
+    background: transparent;
+    color: var(--gray);
+    border-color: var(--gray-light);
+    cursor: default;
+}
+
+.recherche-vive-tout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 14px;
+    border-top: 1px solid var(--gray-light);
+    background: var(--gray-xlight);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    position: sticky;
+    bottom: 0;
+}
+.recherche-vive-tout:hover { background: var(--gray-light); }
+.recherche-vive-tout span {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Les compteurs qui ouvrent une liste ──────────────────── */
+.compteur-liste {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 1px 4px;
+    transition: background 0.15s, color 0.15s;
+}
+.compteur-liste:hover {
+    background: var(--primary-xlight, var(--gray-xlight));
+    color: var(--primary);
+    text-decoration: underline;
+}
+.post-action-vues { cursor: pointer; }
+
+/* ── Les listes de personnes (aimé, partagé, vu, abonnés) ── */
+.users-list { list-style: none; margin: 0; padding: 0; }
+
+.ul-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 4px;
+    border-bottom: 1px solid var(--gray-xlight);
+}
+.ul-item:last-child { border-bottom: none; }
+
+.ul-lien {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+}
+.ul-lien:hover .ul-nom { color: var(--primary); }
+
+.ul-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: none;
+    background: var(--gray-xlight);
+}
+.ul-avatar-lettres {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-xlight, var(--gray-xlight));
+}
+.ul-infos { min-width: 0; }
+.ul-nom {
+    font-size: 0.87rem;
+    font-weight: 600;
+    color: var(--dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ul-certifie { color: var(--primary); font-size: 0.74rem; }
+.ul-role { font-size: 0.74rem; color: var(--gray); }
+
+.ul-etiquette {
+    flex: none;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--gray);
+    background: var(--gray-xlight);
+    border-radius: 999px;
+    padding: 3px 9px;
+    white-space: nowrap;
+}
+
+.ul-suivre {
+    flex: none;
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: white;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.ul-suivre:hover { filter: brightness(1.08); }
+.ul-suivre.following {
+    background: transparent;
+    color: var(--gray);
+    border-color: var(--gray-light);
+}
+
+.ul-vide {
+    padding: 22px 14px;
+    text-align: center;
+    font-size: 0.83rem;
+    color: var(--gray);
+    line-height: 1.55;
+}
+
+.liste-aide {
+    font-size: 0.76rem;
+    color: var(--gray);
+    line-height: 1.5;
+    margin: 0 0 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--gray-xlight);
+}
+
+.liste-recherche {
+    position: relative;
+    margin-bottom: 12px;
+}
+.liste-recherche i {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray);
+    font-size: 0.8rem;
+}
+.liste-recherche input {
+    width: 100%;
+    border: 1px solid var(--gray-light);
+    border-radius: 999px;
+    padding: 9px 13px 9px 32px;
+    font-size: 0.84rem;
+    font-family: inherit;
+    background: var(--gray-xlight);
+}
+.liste-recherche input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+}
+
+/* ── Suggestions : le nom devient cliquable, « voir tout » ── */
+.suggestion-lien {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+}
+.suggestion-lien:hover .suggestion-name { color: var(--primary); }
+
+.section-voir-tout {
+    width: 100%;
+    margin-top: 10px;
+    border: 1px solid var(--gray-light);
+    background: transparent;
+    border-radius: 999px;
+    padding: 9px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s;
+}
+.section-voir-tout:hover { background: var(--gray-xlight); }
+
+.stat-cliquable { cursor: pointer; }
+
+/* ── Téléphone ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .recherche-vive { max-height: 52vh; }
+    .rv-avatar { width: 34px; height: 34px; }
+    .ul-avatar { width: 36px; height: 36px; }
+    /* La liste des résultats ne doit jamais déborder l'écran,
+       pour la même raison que le menu des trois points. */
+    .recherche-vive { left: 0; right: 0; max-width: 100%; }
+}
+
+/* ── CHANTIER 10 — la pièce jointe attachée au brouillon ──── */
+.piece-jointe {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 10px 0 0;
+    padding: 11px 13px;
+    border: 1px solid var(--primary);
+    border-left-width: 3px;
+    border-radius: var(--radius-sm);
+    background: var(--primary-xlight, var(--gray-xlight));
+}
+.pj-icone { color: var(--primary); font-size: 1.05rem; flex: none; }
+.pj-corps { flex: 1; min-width: 0; }
+.pj-titre {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+.pj-detail {
+    font-size: 0.78rem;
+    color: var(--gray);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pj-retirer {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    color: var(--gray);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pj-retirer:hover { background: var(--gray-light); color: var(--danger, var(--dark)); }

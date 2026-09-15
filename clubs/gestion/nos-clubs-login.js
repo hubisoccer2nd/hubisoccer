@@ -1,3 +1,4 @@
+/* DEBUT : clubs/gestion/nos-clubs-login.js */
 // ========== NOS-CLUBS-LOGIN.JS – VERSION AVEC RÔLES ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
@@ -5,7 +6,45 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ========== FIN : CONFIGURATION SUPABASE ==========
 
-// ========== DÉBUT : FONCTIONS UTILITAIRES ==========
+// ========== TRADUCTIONS MINIMALES (FR/EN) ==========
+const messages = {
+    fr: {
+        fill_fields: 'Veuillez remplir tous les champs.',
+        id_or_password_incorrect: 'Identifiant ou mot de passe incorrect.',
+        not_validated: 'Votre compte n\'est pas encore validé. Patientez ou contactez l\'administration.',
+        error_verification: 'Erreur lors de la vérification. Réessayez.',
+        error_network: 'Erreur réseau. Vérifiez votre connexion.'
+    },
+    en: {
+        fill_fields: 'Please fill in all fields.',
+        id_or_password_incorrect: 'Incorrect identifier or password.',
+        not_validated: 'Your account has not been validated yet. Please wait or contact the administration.',
+        error_verification: 'Error during verification. Please try again.',
+        error_network: 'Network error. Please check your connection.'
+    }
+};
+
+function getCurrentLang() {
+    let lang = localStorage.getItem('hubiLang');
+    if (!lang || !messages[lang]) {
+        const select = document.getElementById('langSelect');
+        if (select) lang = select.value;
+        if (!lang || !messages[lang]) lang = 'fr';
+    }
+    return lang;
+}
+
+function t(key) {
+    const lang = getCurrentLang();
+    return messages[lang]?.[key] || messages.fr[key] || key;
+}
+
+// ========== GESTION DE LA LANGUE ==========
+document.getElementById('langSelect').addEventListener('change', function() {
+    localStorage.setItem('hubiLang', this.value);
+});
+
+// ========== FONCTIONS UTILITAIRES ==========
 function showToast(message, type = 'info') {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -37,7 +76,6 @@ function hideLoader() {
         btn.disabled = false;
     }
 }
-// ========== FIN : FONCTIONS UTILITAIRES ==========
 
 // ========== DÉBUT : GESTION DE LA CONNEXION ==========
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -47,7 +85,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const password = document.getElementById('loginPassword').value.trim();
 
     if (!identifiant || !password) {
-        showToast('Veuillez remplir tous les champs.', 'error');
+        showToast(t('fill_fields'), 'error');
         return;
     }
 
@@ -66,19 +104,19 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
             if (error) {
                 hideLoader();
-                showToast('Erreur lors de la vérification. Réessayez.', 'error');
+                showToast(t('error_verification'), 'error');
                 return;
             }
 
             if (!data) {
                 hideLoader();
-                showToast('Identifiant ou mot de passe incorrect.', 'error');
+                showToast(t('id_or_password_incorrect'), 'error');
                 return;
             }
 
             if (data.statut !== 'valide') {
                 hideLoader();
-                showToast('Votre compte n\'est pas encore validé. Patientez ou contactez l\'administration.', 'warning');
+                showToast(t('not_validated'), 'warning');
                 return;
             }
 
@@ -98,13 +136,13 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
             if (error) {
                 hideLoader();
-                showToast('Erreur lors de la vérification. Réessayez.', 'error');
+                showToast(t('error_verification'), 'error');
                 return;
             }
 
             if (!data) {
                 hideLoader();
-                showToast('Identifiant ou mot de passe incorrect.', 'error');
+                showToast(t('id_or_password_incorrect'), 'error');
                 return;
             }
 
@@ -124,13 +162,13 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
             if (error) {
                 hideLoader();
-                showToast('Erreur lors de la vérification. Réessayez.', 'error');
+                showToast(t('error_verification'), 'error');
                 return;
             }
 
             if (!data) {
                 hideLoader();
-                showToast('Identifiant ou mot de passe incorrect.', 'error');
+                showToast(t('id_or_password_incorrect'), 'error');
                 return;
             }
 
@@ -142,8 +180,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     } catch (err) {
         console.error(err);
         hideLoader();
-        showToast('Erreur réseau. Vérifiez votre connexion.', 'error');
+        showToast(t('error_network'), 'error');
     }
 });
 // ========== FIN : GESTION DE LA CONNEXION ==========
 // ========== FIN DE NOS-CLUBS-LOGIN.JS ==========
+/* FIN : clubs/gestion/nos-clubs-login.js */

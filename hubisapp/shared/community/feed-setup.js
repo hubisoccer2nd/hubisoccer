@@ -13,6 +13,8 @@ let handleValid    = false;
 let handleTimer    = null;
 let avatarFile     = null;
 let coverFile      = null;
+let avatarPreviewUrl = null;   // URL objet de l'apercu avatar (a liberer)
+let coverPreviewUrl  = null;   // URL objet de l'apercu couverture (a liberer)
 let selectedSport  = '';
 let selectedPrivacy = 'public';
 
@@ -340,8 +342,23 @@ function buildSportGrid() {
     });
 }
 
+// Identifiants réservés au système ou trompeurs
+const RESERVED_HANDLES = [
+    'admin', 'administrateur', 'hubisoccer', 'hubis', 'hubisapp', 'support',
+    'officiel', 'official', 'moderateur', 'moderator', 'staff', 'help', 'aide',
+    'contact', 'root', 'system', 'systeme', 'api', 'www', 'null', 'undefined',
+    'test', 'fifa', 'caf', 'uefa'
+];
+
 function validateHandleFormat(handle) {
-    return /^[a-zA-Z0-9_]{3,30}$/.test(handle);
+    if (!/^[a-zA-Z0-9_]{3,30}$/.test(handle)) return false;
+    // Un identifiant uniquement numérique se confondrait avec un ID interne
+    if (/^\d+$/.test(handle)) return false;
+    return true;
+}
+
+function isReservedHandle(handle) {
+    return RESERVED_HANDLES.includes(String(handle).toLowerCase());
 }
 
 async function checkHandleAvailability(handle) {
@@ -353,6 +370,14 @@ async function checkHandleAvailability(handle) {
         el.innerHTML = '<i class="fas fa-times"></i>';
         el.className = 'id-check invalid';
         handleValid = false;
+        return;
+    }
+
+    if (isReservedHandle(handle)) {
+        el.innerHTML = '<i class="fas fa-times"></i>';
+        el.className = 'id-check invalid';
+        handleValid = false;
+        toast('Cet identifiant est réservé', 'warning');
         return;
     }
 
@@ -431,17 +456,21 @@ function buildRecap() {
     const lang   = document.getElementById('communityLang').value;
     const sport  = SPORTS.find(s => s.id === selectedSport);
 
-    const avatarUrl = avatarFile ? URL.createObjectURL(avatarFile) : '';
-    const coverUrl  = coverFile  ? URL.createObjectURL(coverFile)  : '';
+    // On reutilise les URL d'apercu deja creees a l'etape 2 au lieu
+    // d'en fabriquer de nouvelles a chaque affichage du recapitulatif :
+    // sans cela, chaque aller-retour entre les etapes laissait une URL
+    // objet non liberee en memoire.
+    const avatarUrl = avatarPreviewUrl || (avatarFile ? URL.createObjectURL(avatarFile) : '');
+    const coverUrl  = coverPreviewUrl  || (coverFile  ? URL.createObjectURL(coverFile)  : '');
 
     document.getElementById('recapCard').innerHTML = `
         <div class="recap-row">
             <span class="recap-label">Photo de profil</span>
-            <span class="recap-value">${avatarUrl ? `<img class="recap-avatar" src="${avatarUrl}" alt="">` : '—'}</span>
+            <span class="recap-value">${avatarUrl ? `<img class="recap-avatar" src="${escapeAttr(avatarUrl)}" alt="">` : '—'}</span>
         </div>
         <div class="recap-row">
             <span class="recap-label">Couverture</span>
-            <span class="recap-value">${coverUrl ? `<img class="recap-cover-thumb" src="${coverUrl}" alt="">` : '—'}</span>
+            <span class="recap-value">${coverUrl ? `<img class="recap-cover-thumb" src="${escapeAttr(coverUrl)}" alt="">` : '—'}</span>
         </div>
         <div class="recap-row">
             <span class="recap-label">Nom</span>
@@ -485,6 +514,17 @@ async function createCommunity() {
         const lang = document.getElementById('communityLang').value;
         const specialty = document.getElementById('communitySpecialty').value.trim();
         const website = document.getElementById('communityWebsite').value.trim();
+
+        // Dernière vérification : l'identifiant peut avoir été pris entre-temps
+        const { data: taken } = await sb.from('supabaseAuthPrive_communities')
+            .select('id').eq('feed_id', handle).maybeSingle();
+        if (taken) {
+            toast('Cet identifiant vient d\'être pris. Choisissez-en un autre.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rocket"></i> Lancer ma communauté';
+            setLoader(false);
+            return;
+        }
 
         const socialIds = generateSocialIds(handle);
 
@@ -550,146 +590,251 @@ async function createCommunity() {
     }
 }
 
+// ========== DEBUT : INITIALISATION ==========
+//
+// Regle de securite appliquee ici :
+// chaque bloc de branchement est isole dans wire(). Si un element
+// manque dans le HTML, on ecrit un avertissement dans la console et
+// on CONTINUE. Auparavant, une seule erreur dans init() interrompait
+// tout ce qui suivait et la page restait bloquee sur le loader.
+//
+function wire(label, fn) {
+    try {
+        fn();
+    } catch (err) {
+        console.warn('[feed-setup] branchement "' + label + '" ignore :', err.message);
+    }
+}
+
 async function init() {
     setLoader(true, 'Vérification de votre session...', 20);
+
     const auth = await requireAuth();
     if (!auth) return;
 
     setLoader(true, 'Vérification de ta communauté...', 50);
-    await checkExistingCommunity();
+    try {
+        await checkExistingCommunity();
+    } catch (err) {
+        console.warn('[feed-setup] verification de communaute impossible :', err.message);
+    }
 
-    populateCountries();
-    buildSportGrid();
-
-    document.getElementById('userName').textContent = currentProfile.full_name || currentProfile.display_name || 'Utilisateur';
-    updateAvatarDisplay(currentProfile.avatar_url, currentProfile.full_name || currentProfile.display_name);
-
-    const bioInput = document.getElementById('communityBio');
-    bioInput.addEventListener('input', () => {
-        document.getElementById('bioCount').textContent = bioInput.value.length;
+    wire('listes pays et sports', () => {
+        populateCountries();
+        buildSportGrid();
     });
 
-    document.getElementById('communityHandle').addEventListener('input', (e) => {
-        clearTimeout(handleTimer);
-        let val = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-        e.target.value = val;
-        if (val.length >= 3) {
-            handleTimer = setTimeout(() => checkHandleAvailability(val), 600);
-        } else {
-            document.getElementById('handleCheck').innerHTML = '';
-            handleValid = false;
+    // ---------- En-tete : identite de l'utilisateur ----------
+    wire('identite utilisateur', () => {
+        const nameEl = document.getElementById('userName');
+        if (nameEl) {
+            nameEl.textContent = currentProfile.full_name
+                || currentProfile.display_name
+                || 'Utilisateur';
         }
+        updateAvatarDisplay(
+            currentProfile.avatar_url,
+            currentProfile.full_name || currentProfile.display_name
+        );
     });
 
-    document.getElementById('communityName').addEventListener('input', (e) => {
-        document.getElementById('previewName').textContent = e.target.value || 'Nom de ta communauté';
-    });
-    document.getElementById('communityHandle').addEventListener('input', (e) => {
-        document.getElementById('previewHandle').textContent = '@' + (e.target.value || 'identifiant');
-    });
-
-    const avatarPicker = document.getElementById('avatarPicker');
-    const avatarInput = document.getElementById('avatarInput');
-    avatarPicker.addEventListener('click', () => avatarInput.click());
-    avatarInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 800 * 1024) { toast('Image trop lourde (max 800 Ko)', 'warning'); return; }
-        avatarFile = file;
-        const url = URL.createObjectURL(file);
-        document.getElementById('avatarPreview').innerHTML = `<img src="${url}" alt="">`;
-        document.getElementById('previewAvatarEl').innerHTML = `<img src="${url}" alt="">`;
-    });
-
-    const coverPicker = document.getElementById('coverPicker');
-    const coverInput = document.getElementById('coverInput');
-    coverPicker.addEventListener('click', () => coverInput.click());
-    coverInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { toast('Image trop lourde (max 2 Mo)', 'warning'); return; }
-        coverFile = file;
-        const url = URL.createObjectURL(file);
-        document.getElementById('coverPreview').innerHTML = `<img src="${url}" alt="">`;
-        document.getElementById('previewCoverBg').style.background = `url(${url}) center/cover`;
-    });
-
-    document.querySelectorAll('.privacy-option').forEach(opt => {
-        opt.addEventListener('click', () => {
-            document.querySelectorAll('.privacy-option').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            opt.querySelector('input').checked = true;
-            selectedPrivacy = opt.dataset.value;
+    // ---------- Etape 1 : identite de la communaute ----------
+    wire('compteur de bio', () => {
+        const bioInput = document.getElementById('communityBio');
+        const bioCount = document.getElementById('bioCount');
+        if (!bioInput || !bioCount) return;
+        bioInput.addEventListener('input', () => {
+            bioCount.textContent = bioInput.value.length;
         });
     });
 
-    document.getElementById('step1Next').addEventListener('click', () => {
-        if (validateStep1()) goToStep(2);
-    });
-    document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
-    document.getElementById('step2Next').addEventListener('click', () => {
-        if (validateStep2()) goToStep(3);
-    });
-    document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
-    document.getElementById('step3Next').addEventListener('click', () => {
-        if (validateStep3()) { buildRecap(); goToStep(4); }
-    });
-    document.getElementById('step4Back').addEventListener('click', () => goToStep(3));
+    wire('identifiant de communaute', () => {
+        const handleInput = document.getElementById('communityHandle');
+        if (!handleInput) return;
+        handleInput.addEventListener('input', (e) => {
+            clearTimeout(handleTimer);
+            const val = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+            e.target.value = val;
 
-    document.getElementById('termsAccept').addEventListener('change', (e) => {
-        document.getElementById('createCommunityBtn').disabled = !e.target.checked;
+            // Apercu en direct
+            const prev = document.getElementById('previewHandle');
+            if (prev) prev.textContent = '@' + (val || 'identifiant');
+
+            if (val.length >= 3) {
+                handleTimer = setTimeout(() => checkHandleAvailability(val), 600);
+            } else {
+                const check = document.getElementById('handleCheck');
+                if (check) check.innerHTML = '';
+                handleValid = false;
+            }
+        });
     });
 
-    document.getElementById('createCommunityBtn').addEventListener('click', createCommunity);
-
-    document.getElementById('goToCommunityBtn').addEventListener('click', () => {
-        window.location.href = 'feed.html';
+    wire('apercu du nom', () => {
+        const nameInput = document.getElementById('communityName');
+        const prevName  = document.getElementById('previewName');
+        if (!nameInput || !prevName) return;
+        nameInput.addEventListener('input', (e) => {
+            prevName.textContent = e.target.value || 'Nom de ta communauté';
+        });
     });
 
-    document.getElementById('userMenu').addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.getElementById('userDropdown').classList.toggle('show');
-    });
-    document.addEventListener('click', () => document.getElementById('userDropdown')?.classList.remove('show'));
-    document.getElementById('dropLogout').addEventListener('click', logout);
+    // ---------- Etape 2 : visuels ----------
+    wire('photo de profil', () => {
+        const picker = document.getElementById('avatarPicker');
+        const input  = document.getElementById('avatarInput');
+        if (!picker || !input) return;
 
-    const roleDashboardMap = {
-        'FOOT': '../../footballeur/dashboard/foot-dash.html',
-        'BASK': '../../basketteur/dashboard/basketteur-dash.html',
-        'TENN': '../../tennisman/dashboard/tennisman-dash.html',
-        'ATHL': '../../athlete/dashboard/athlete-dash.html',
-        'HANDB': '../../handballeur/dashboard/handballeur-dash.html',
-        'VOLL': '../../volleyeur/dashboard/volleyeur-dash.html',
-        'RUGBY': '../../rugbyman/dashboard/rugbyman-dash.html',
-        'NATA': '../../nageur/dashboard/nageur-dash.html',
-        'ARTSM': '../../arts_martiaux/dashboard/arts_martiaux-dash.html',
-        'CYCL': '../../cycliste/dashboard/cycliste-dash.html',
-        'CHAN': '../../chanteur/dashboard/chanteur-dash.html',
-        'DANS': '../../danseur/dashboard/danseur-dash.html',
-        'COMP': '../../compositeur/dashboard/compositeur-dash.html',
-        'ACIN': '../../acteur_cinema/dashboard/acteur_cinema-dash.html',
-        'ATHE': '../../acteur_theatre/dashboard/acteur_theatre-dash.html',
-        'HUMO': '../../humoriste/dashboard/humoriste-dash.html',
-        'SLAM': '../../slameur/dashboard/slameur-dash.html',
-        'DJ': '../../dj/dashboard/dj-dash.html',
-        'CIRQ': '../../cirque/dashboard/cirque-dash.html',
-        'VISU': '../../artiste_visuel/dashboard/artiste_visuel-dash.html',
-        'PARRAIN': '../../parrain/dashboard/parrain-dash.html',
-        'AGENT': '../../agent_fifa/dashboard/agent_fifa-dash.html',
-        'COACH': '../../coach/dashboard/coach-dash.html',
-        'MEDIC': '../../staff_medical/dashboard/staff_medical-dash.html',
-        'ARBIT': '../../corps_arbitral/dashboard/corps_arbitral-dash.html',
-        'ACAD': '../../academie_sportive/dashboard/academie_sportive-dash.html',
-        'FORM': '../../formateur/dashboard/formateur-dash.html',
-        'TOURN': '../../gestionnaire_tournoi/dashboard/gestionnaire_tournoi-dash.html',
-        'ADMIN': '../../authprive/admin/admin-dashboard.html'
-    };
-    const dash = roleDashboardMap[currentProfile.role_code] || '../../index.html';
-    document.getElementById('dropDashboard').href = dash;
-    document.getElementById('navLogo').onclick = () => window.location.href = dash;
+        picker.addEventListener('click', () => input.click());
+        input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!/^image\//.test(file.type)) {
+                toast('Ce fichier n\'est pas une image.', 'error');
+                input.value = '';
+                return;
+            }
+            if (file.size > 800 * 1024) {
+                toast('Image trop lourde (max 800 Ko)', 'warning');
+                input.value = '';
+                return;
+            }
+            avatarFile = file;
+
+            // On libere l'URL precedente pour ne pas fuir de memoire
+            if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+            avatarPreviewUrl = URL.createObjectURL(file);
+
+            const prevBox = document.getElementById('avatarPreview');
+            if (prevBox) prevBox.innerHTML = '<img src="' + escapeAttr(avatarPreviewUrl) + '" alt="">';
+            const prevCard = document.getElementById('previewAvatarEl');
+            if (prevCard) prevCard.innerHTML = '<img src="' + escapeAttr(avatarPreviewUrl) + '" alt="">';
+        });
+    });
+
+    wire('photo de couverture', () => {
+        const picker = document.getElementById('coverPicker');
+        const input  = document.getElementById('coverInput');
+        if (!picker || !input) return;
+
+        picker.addEventListener('click', () => input.click());
+        input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!/^image\//.test(file.type)) {
+                toast('Ce fichier n\'est pas une image.', 'error');
+                input.value = '';
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                toast('Image trop lourde (max 2 Mo)', 'warning');
+                input.value = '';
+                return;
+            }
+            coverFile = file;
+
+            if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+            coverPreviewUrl = URL.createObjectURL(file);
+
+            const prevBox = document.getElementById('coverPreview');
+            if (prevBox) prevBox.innerHTML = '<img src="' + escapeAttr(coverPreviewUrl) + '" alt="">';
+            const prevBg = document.getElementById('previewCoverBg');
+            if (prevBg) prevBg.style.backgroundImage = 'url("' + coverPreviewUrl + '")';
+        });
+    });
+
+    // ---------- Etape 3 : confidentialite ----------
+    wire('choix de confidentialite', () => {
+        document.querySelectorAll('.privacy-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('.privacy-option')
+                    .forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                const radio = opt.querySelector('input');
+                if (radio) radio.checked = true;
+                selectedPrivacy = opt.dataset.value || 'public';
+            });
+        });
+    });
+
+    // ---------- Navigation entre les etapes ----------
+    wire('navigation des etapes', () => {
+        const on = (id, handler) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', handler);
+        };
+        on('step1Next', () => { if (validateStep1()) goToStep(2); });
+        on('step2Back', () => goToStep(1));
+        on('step2Next', () => { if (validateStep2()) goToStep(3); });
+        on('step3Back', () => goToStep(2));
+        on('step3Next', () => { if (validateStep3()) { buildRecap(); goToStep(4); } });
+        on('step4Back', () => goToStep(3));
+    });
+
+    // ---------- Etape 4 : conditions et creation ----------
+    wire('acceptation des conditions', () => {
+        const terms = document.getElementById('termsAccept');
+        const create = document.getElementById('createCommunityBtn');
+        if (!terms || !create) return;
+        terms.addEventListener('change', (e) => {
+            create.disabled = !e.target.checked;
+        });
+        create.addEventListener('click', createCommunity);
+    });
+
+    wire('acces au fil apres creation', () => {
+        const go = document.getElementById('goToCommunityBtn');
+        if (go) go.addEventListener('click', () => { window.location.href = 'feed.html'; });
+    });
+
+    // ---------- Menu utilisateur ----------
+    wire('menu utilisateur', () => {
+        const menu = document.getElementById('userMenu');
+        const drop = document.getElementById('userDropdown');
+        if (menu && drop) {
+            menu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                drop.classList.toggle('show');
+            });
+            document.addEventListener('click', () => drop.classList.remove('show'));
+        }
+        const out = document.getElementById('dropLogout');
+        if (out) out.addEventListener('click', logout);
+    });
+
+    // ========== DEBUT : LIENS VERS L'ESPACE PRIVE DU ROLE ==========
+    // La table locale qui se trouvait ici pointait vers des dossiers
+    // inexistants (agent_fifa, academie_sportive, tennisman...) et son
+    // repli '../../index.html' n'existe pas non plus : chaque clic
+    // renvoyait une erreur 404.
+    // Tout est desormais centralise dans role-nav.js, verifie contre
+    // l'arborescence reelle du depot.
+    // applyRoleLinks() met a jour d'un coup :
+    //   - le logo de la navbar        (id navLogo)
+    //   - l'entree du menu deroulant  (id dropDashboard)
+    //   - le bouton de retour         (id backToSpace)
+    //   - le libelle du role          (id roleLabel)
+    wire('liens vers l\'espace prive', () => {
+        if (typeof applyRoleLinks === 'function') {
+            applyRoleLinks(currentProfile.role_code);
+            return;
+        }
+        // Repli defensif si role-nav.js n'a pas ete charge : on envoie
+        // vers la page « en construction », jamais vers un 404.
+        const fallback = '../construction.html';
+        const dd = document.getElementById('dropDashboard');
+        if (dd) dd.href = fallback;
+        const bs = document.getElementById('backToSpace');
+        if (bs) bs.href = fallback;
+        const nl = document.getElementById('navLogo');
+        if (nl) nl.onclick = () => { window.location.href = fallback; };
+        console.warn('[feed-setup] role-nav.js absent : navigation de repli utilisee.');
+    });
+    // ========== FIN : LIENS VERS L'ESPACE PRIVE DU ROLE ==========
 
     setLoader(false);
 }
+// ========== FIN : INITIALISATION ==========
 
 function updateAvatarDisplay(avatarUrl, fullName) {
     const userAvatar = document.getElementById('userAvatar');

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Statistiques du Groupe · Espace Coach · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="coach-stats.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-chart-line"></i> Statistiques du Groupe</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/coach-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/coach-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR (LES 13 PAGES DE L'ESPACE COACH) ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-clipboard-list"></i><h3>Menu Coach / Entraîneur</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Pilotage des Talents</div>
+        <a href="../dashboard/coach-dash.html">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../talents/coach-talents.html">
+            <i class="fas fa-users"></i><span>Mes Talents (Sportifs & Artistes)</span>
+        </a>
+        <a href="../evaluations/coach-eval.html">
+            <i class="fas fa-star-half-alt"></i><span>Évaluations & Scouting</span>
+        </a>
+        <a href="../planning/coach-planning.html">
+            <i class="fas fa-calendar-alt"></i><span>Planning & Séances</span>
+        </a>
+        <a href="../analyse/coach-video.html">
+            <i class="fas fa-film"></i><span>Analyse Vidéo</span>
+        </a>
+        <a href="../triple-projet/coach-triple.html">
+            <i class="fas fa-seedling"></i><span>Suivi Triple Projet</span>
+        </a>
+        <a href="../recommandations/coach-recos.html">
+            <i class="fas fa-award"></i><span>Recommandations</span>
+        </a>
+        <a href="coach-stats.html" class="active">
+            <i class="fas fa-chart-line"></i><span>Statistiques du Groupe</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Ma Carrière</div>
+        <a href="../verification/coach-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../licences/coach-licences.html">
+            <i class="fas fa-certificate"></i><span>Licences & Certifs</span>
+        </a>
+        <a href="../cv/coach-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <a href="../opportunites/coach-offres.html">
+            <i class="fas fa-briefcase"></i><span>Opportunités & Offres</span>
+        </a>
+        <a href="../revenus/coach-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil-gt.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/coach-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="stats-main">
+<div class="stats-container">
+
+    <h1 class="page-title"><i class="fas fa-chart-line"></i> Statistiques du Groupe</h1>
+    <p class="page-subtitle">
+        La vue d'ensemble chiffrée de votre travail : composition du groupe, niveau moyen,
+        activité des derniers mois et classement de vos talents. Toutes les données proviennent
+        de vos pages Talents, Évaluations, Planning, Vidéo, Triple Projet et Recommandations.
+    </p>
+
+    <!-- ===== DEBUT KPI PRINCIPAUX ===== -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon talents"><i class="fas fa-users"></i></div>
+            <div class="kpi-body">
+                <span class="kpi-value" id="kpiTalents">0</span>
+                <span class="kpi-label">Talents encadrés</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon note"><i class="fas fa-star"></i></div>
+            <div class="kpi-body">
+                <span class="kpi-value" id="kpiNoteMoyenne">—</span>
+                <span class="kpi-label">Note moyenne du groupe</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon seances"><i class="fas fa-calendar-check"></i></div>
+            <div class="kpi-body">
+                <span class="kpi-value" id="kpiSeances">0</span>
+                <span class="kpi-label">Séances terminées</span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon volume"><i class="fas fa-stopwatch"></i></div>
+            <div class="kpi-body">
+                <span class="kpi-value" id="kpiVolume">0h</span>
+                <span class="kpi-label">Volume d'entraînement</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN KPI PRINCIPAUX ===== -->
+
+    <!-- ===== DEBUT MINI-STATS ===== -->
+    <div class="ministats-strip glass-card">
+        <div class="ministat"><i class="fas fa-clipboard-check"></i><strong id="miniEvals">0</strong><span>Évals réalisées</span></div>
+        <div class="ministat"><i class="fas fa-film"></i><strong id="miniVideos">0</strong><span>Vidéos analysées</span></div>
+        <div class="ministat"><i class="fas fa-exclamation-circle"></i><strong id="miniAlertes">0</strong><span>Alertes actives</span></div>
+        <div class="ministat"><i class="fas fa-award"></i><strong id="miniRecos">0</strong><span>Recos publiées</span></div>
+    </div>
+    <!-- ===== FIN MINI-STATS ===== -->
+
+    <!-- ===== DEBUT GRILLE DE GRAPHIQUES ===== -->
+    <div class="charts-grid">
+
+        <div class="chart-card glass-card">
+            <h3 class="section-title"><i class="fas fa-chart-pie"></i> Composition du groupe</h3>
+            <div class="chart-body">
+                <canvas id="chartRepartition"></canvas>
+                <p class="chart-empty" id="emptyRepartition" style="display:none;">
+                    <i class="fas fa-user-friends"></i> Liez des talents pour voir la composition.
+                </p>
+            </div>
+        </div>
+
+        <div class="chart-card glass-card">
+            <h3 class="section-title"><i class="fas fa-seedling"></i> Alertes Triple Projet par volet</h3>
+            <div class="chart-body">
+                <canvas id="chartTriple"></canvas>
+                <p class="chart-empty" id="emptyTriple" style="display:none;">
+                    <i class="fas fa-check-circle"></i> Aucune alerte active. Groupe en équilibre. 🌱
+                </p>
+            </div>
+        </div>
+
+        <div class="chart-card glass-card wide">
+            <h3 class="section-title"><i class="fas fa-wave-square"></i> Activité des 6 derniers mois</h3>
+            <div class="chart-body">
+                <canvas id="chartActivite"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card glass-card wide">
+            <h3 class="section-title"><i class="fas fa-ranking-star"></i> Meilleures notes moyennes</h3>
+            <div class="chart-body">
+                <canvas id="chartTopNotes"></canvas>
+                <p class="chart-empty" id="emptyTopNotes" style="display:none;">
+                    <i class="fas fa-star-half-alt"></i> Réalisez des évaluations pour voir le palmarès.
+                </p>
+            </div>
+        </div>
+
+    </div>
+    <!-- ===== FIN GRILLE DE GRAPHIQUES ===== -->
+
+    <!-- ===== DEBUT CLASSEMENT DES TALENTS ===== -->
+    <div class="ranking-panel glass-card">
+        <h3 class="section-title"><i class="fas fa-trophy"></i> Classement de mes talents</h3>
+        <p class="ranking-note">
+            Classés par note moyenne d'évaluation. Les talents non encore évalués figurent en bas de liste.
+        </p>
+        <div id="rankingList" class="ranking-list">
+            <p class="empty-state" id="rankingEmpty">
+                <i class="fas fa-user-friends"></i> Aucun talent lié pour l'instant.
+                <a href="../talents/coach-talents.html" class="inline-link">Liez d'abord un talent →</a>
+            </p>
+        </div>
+    </div>
+    <!-- ===== FIN CLASSEMENT DES TALENTS ===== -->
+
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-clipboard-list"></i> UEFA · CAF · FIFA</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Triple Projet Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="coach-stats.js"></script>
+</body>
+</html>

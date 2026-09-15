@@ -1,4 +1,4 @@
-<!-- ========== DEBUT : public/admin/tournoi-admin/tournoi-admin.html ========== -->
+<!-- DEBUT : public/admin/tournoi-admin/tournoi-admin.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -28,7 +28,7 @@
             </div>
             <div class="nav-right">
                 <button id="refreshAllBtn" class="btn-action" title="Rafraîchir toutes les données"><i class="fas fa-sync-alt"></i> Tout rafraîchir</button>
-                <a href="../administration.html" class="btn-back" title="Retour au portail"><i class="fas fa-th-large"></i> Portail</a>
+                <a href="../../index-admin/" class="btn-back" title="Retour au portail"><i class="fas fa-th-large"></i> Portail</a>
                 <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
             </div>
         </nav>
@@ -146,11 +146,13 @@
                 </div>
                 <div class="form-group">
                     <label>Titre *</label>
-                    <input type="text" id="tournoiTitre" required>
+                    <textarea id="tournoiTitre" rows="2" required></textarea>
+                    <small style="color: var(--gray);">Vous pouvez utiliser du HTML et des styles CSS (ex. &lt;h1 style="..."&gt;...&lt;/h1&gt;).</small>
                 </div>
                 <div class="form-group">
                     <label>Description</label>
-                    <textarea id="tournoiDescription" rows="3"></textarea>
+                    <textarea id="tournoiDescription" rows="6"></textarea>
+                    <small style="color: var(--gray);">HTML et CSS autorisés.</small>
                 </div>
                 <div class="form-group">
                     <label>Ville *</label>
@@ -184,7 +186,8 @@
                 </div>
                 <div class="form-group">
                     <label>Règlements</label>
-                    <textarea id="tournoiReglements" rows="4"></textarea>
+                    <textarea id="tournoiReglements" rows="6"></textarea>
+                    <small style="color: var(--gray);">HTML et CSS autorisés.</small>
                 </div>
                 <div class="form-group">
                     <label>Type de tournoi *</label>
@@ -192,6 +195,16 @@
                         <option value="collectif">Collectif (équipes)</option>
                         <option value="individuel">Individuel</option>
                     </select>
+                </div>
+                <!-- NOUVEAU : Format d'équipe (nombre de titulaires) -->
+                <div class="form-group">
+                    <label>Format d'équipe (nombre de titulaires) *</label>
+                    <select id="tournoiFormatEquipe" required>
+                        <option value="5">5 joueurs</option>
+                        <option value="7" selected>7 joueurs</option>
+                        <option value="11">11 joueurs</option>
+                    </select>
+                    <small style="color: var(--gray);">Définit combien de joueurs peuvent être alignés comme titulaires.</small>
                 </div>
                 <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer</button>
             </form>
@@ -272,15 +285,15 @@
             <span class="close-modal">&times;</span>
             <h3>Valider l'inscription</h3>
             <div id="validationInfo" class="info-box"></div>
-            <div class="form-group">
+            <div class="form-group" id="validationLoginGroup">
                 <label>Login *</label>
                 <input type="text" id="validationLogin" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="validationPasswordGroup">
                 <label>Mot de passe *</label>
                 <input type="text" id="validationPassword" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="validationRoleGroup">
                 <label>Rôle</label>
                 <select id="validationRole">
                     <option value="capitaine">Capitaine</option>
@@ -288,6 +301,25 @@
                 </select>
             </div>
             <button id="saveValidationBtn" class="btn-submit"><i class="fas fa-save"></i> Valider et générer le compte</button>
+
+            <!-- Bloc d'affichage des identifiants après validation -->
+            <div id="validationResultBlock" style="display: none; margin-top: 20px;">
+                <p style="font-weight: 600; color: var(--primary-dark);">✅ Compte créé avec succès</p>
+                <div class="form-group">
+                    <label>Login</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="resultLogin" readonly style="flex:1;">
+                        <button type="button" class="btn-secondary" id="copyLoginBtn"><i class="fas fa-copy"></i> Copier</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="resultPassword" readonly style="flex:1;">
+                        <button type="button" class="btn-secondary" id="copyPasswordBtn"><i class="fas fa-copy"></i> Copier</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <!-- ========== FIN : MODALE VALIDATION ========== -->
@@ -449,4 +481,4 @@
     <!-- ========== FIN : SCRIPTS ========== -->
 </body>
 </html>
-<!-- ========== FIN : public/admin/tournoi-admin/tournoi-admin.html ========== -->
+<!-- FIN : public/admin/tournoi-admin/tournoi-admin.html -->

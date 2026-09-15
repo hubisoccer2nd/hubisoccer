@@ -1,3 +1,4 @@
+/* DEBUT : artiste-adhesion/artiste-adhesion.js */
 // ========== ARTISTE-ADHESION.JS ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
@@ -21,6 +22,7 @@ const translations = {
         'esp': 'SAVOIR+',
         'connexion': 'Connexion',
         'inscrire': 'S\'inscrire',
+        'nos_clubs': 'Nos Clubs',
         'artiste.header.title': 'Adhésion',
         'artiste.header.highlight': 'Artiste',
         'artiste.header.subtitle': 'Rejoignez officiellement le programme HubISoccer et valorisez votre talent.',
@@ -84,6 +86,7 @@ const translations = {
         'esp': 'Learn more',
         'connexion': 'Login',
         'inscrire': 'Sign up',
+        'nos_clubs': 'Our Clubs',
         'artiste.header.title': 'Adhesion',
         'artiste.header.highlight': 'Artist',
         'artiste.header.subtitle': 'Officially join the HubISoccer program and showcase your talent.',
@@ -1942,6 +1945,7 @@ form.addEventListener('submit', async (e) => {
         const modal = document.getElementById('successModal');
         const trackingSpan = document.getElementById('trackingId');
         trackingSpan.textContent = artisteId;
+        document.getElementById('trackingLink').href = '../artistes-login/?id=' + artisteId;
         modal.classList.add('active');
 
         // Réinitialisation du formulaire
@@ -2026,3 +2030,4 @@ if (ref) {
 // ========== INITIALISATION LANGUE ==========
 applyTranslations();
 // ========== FIN ==========
+/* FIN : artiste-adhesion/artiste-adhesion.js */

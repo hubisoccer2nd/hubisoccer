@@ -1,3 +1,4 @@
+/* DEBUT : public/admin/nos-clubs-admin/gestion/gestion-presences.js */
 // ========== GESTION-PRESENCES.JS ==========
 // ========== DÉBUT : CONFIGURATION SUPABASE ==========
 const SUPABASE_URL = 'https://rasepmelflfjtliflyrz.supabase.co';
@@ -142,7 +143,7 @@ document.getElementById('clubFilter').addEventListener('change', loadPresences);
 document.getElementById('dateFilter').addEventListener('change', loadPresences);
 // ========== FIN : ÉVÉNEMENTS ==========
 
-// ========== DÉBUT : MENU MOBILE ==========
+// ========== DÉBUT : MENU MOBILE ET DÉCONNEXION ==========
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 if (menuToggle && navLinks) {
@@ -157,13 +158,16 @@ const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        showToast('Déconnexion (à implémenter)', 'info');
+        // VRAIE DÉCONNEXION
+        localStorage.removeItem('hubiLang');
+        window.location.href = '../../../index.html';
     });
 }
-// ========== FIN : MENU MOBILE ==========
+// ========== FIN : MENU MOBILE ET DÉCONNEXION ==========
 
 // ========== INITIALISATION ==========
 document.addEventListener('DOMContentLoaded', () => {
     loadClubs().then(() => loadPresences());
 });
 // ========== FIN DE GESTION-PRESENCES.JS ==========
+/* FIN : public/admin/nos-clubs-admin/gestion/gestion-presences.js */

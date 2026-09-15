@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Tableau de bord Staff Médical | HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="staff-dash.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner"><div class="spinner"></div><p class="loader-text">Chargement…</p></div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT NAVBAR ===== -->
+<nav class="dashboard-nav">
+    <div class="nav-left">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
+        <span class="dashboard-title"><i class="fas fa-briefcase-medical"></i> Espace Staff Médical</span>
+    </div>
+    <div class="nav-right">
+        <select class="lang-picker" id="langSelect">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <div class="notif-icon" id="notifIcon"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge">0</span></div>
+        <div class="user-menu" id="userMenu">
+            <div id="userAvatarContainer" class="user-avatar-container">
+                <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none;">
+                <div class="avatar-initials" id="userAvatarInitials"></div>
+            </div>
+            <span class="user-name" id="userName">Chargement…</span>
+            <i class="fas fa-chevron-down fa-xs"></i>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="../profile-edit/staff-profile.html"><i class="fas fa-user-edit"></i> Mon profil</a>
+                <a href="../settings/staff-settings.html"><i class="fas fa-cog"></i> Paramètres</a>
+                <hr class="dropdown-divider">
+                <a href="#" id="logoutLink" class="logout-link"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </div>
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+<!-- ===== DEBUT SIDEBAR ===== -->
+<div class="sidebar left-sidebar" id="leftSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="fas fa-briefcase-medical"></i><h3>Menu Staff Médical</h3></div>
+        <button class="close-sidebar" id="closeLeftSidebar"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Mon Espace</div>
+        <a href="staff-dash.html" class="active">
+            <i class="fas fa-tachometer-alt"></i><span>Tableau de bord</span>
+        </a>
+        <a href="../verification/staff-verif.html">
+            <i class="fas fa-shield-alt"></i><span>Vérification du Statut</span>
+        </a>
+        <a href="../scouting/staff-scouting.html">
+            <i class="fas fa-binoculars"></i><span>Scouting</span>
+        </a>
+        <a href="../athletes/staff-athletes.html">
+            <i class="fas fa-user-injured"></i><span>Mes Athlètes Suivis</span>
+        </a>
+        <a href="../traumatologie/staff-trauma.html">
+            <i class="fas fa-bone"></i><span>Traumatologie & Suivi RTP</span>
+        </a>
+        <a href="../biometrie/staff-biometrie.html">
+            <i class="fas fa-weight"></i><span>Biométrie & Nutrition</span>
+        </a>
+        <a href="../soins/staff-soins.html">
+            <i class="fas fa-hand-holding-medical"></i><span>Soins & Physiothérapie</span>
+        </a>
+        <a href="../wellness/staff-wellness.html">
+            <i class="fas fa-heart"></i><span>Wellness Quotidien</span>
+        </a>
+        <a href="../mental/staff-mental.html">
+            <i class="fas fa-brain"></i><span>Préparation Mentale</span>
+        </a>
+        <a href="../sommeil/staff-sommeil.html">
+            <i class="fas fa-moon"></i><span>Neuro-Récupération & Sommeil</span>
+        </a>
+        <a href="../consultations/staff-consultations.html">
+            <i class="fas fa-notes-medical"></i><span>Consultations</span>
+        </a>
+        <a href="../honoraires/staff-honoraires.html">
+            <i class="fas fa-file-invoice-dollar"></i><span>Mes Honoraires</span>
+        </a>
+        <a href="../revenus/staff-revenus.html">
+            <i class="fas fa-coins"></i><span>Mes Revenus</span>
+        </a>
+        <a href="../certifications/staff-certif.html">
+            <i class="fas fa-certificate"></i><span>Diplômes & Certificats</span>
+        </a>
+        <a href="../cv/staff-cv.html">
+            <i class="fas fa-file-alt"></i><span>Mon CV Pro</span>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-group-label">Plateforme</div>
+        <a href="../../shared/community/feed.html"><i class="fas fa-users"></i><span>Communauté</span></a>
+        <a href="../../shared/messagerie/conversation.html"><i class="fas fa-envelope"></i><span>Messages</span></a>
+        <a href="../../shared/gestion-tournoi/acceuil.html"><i class="fas fa-tasks"></i><span>Gestion Tournoi</span></a>
+        <a href="../../shared/suivi-tournoi/suivi-tournoi.html"><i class="fas fa-eye"></i><span>Suivi Tournoi</span></a>
+        <div class="nav-divider"></div>
+        <a href="../support/staff-supp.html"><i class="fas fa-headset"></i><span>Support</span></a>
+        <a href="#" id="logoutLinkSidebar" class="logout-link"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a>
+    </nav>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- ===== FIN SIDEBAR ===== -->
+
+<!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
+<main class="dashboard-main">
+<div class="dashboard-container">
+
+    <!-- ===== DEBUT CARTE PROFIL ===== -->
+    <aside class="profile-card glass-card">
+        <div class="avatar-upload" onclick="triggerUpload()">
+            <div id="profileAvatarContainer" class="avatar-container">
+                <img src="" id="profileDisplay" alt="Avatar" style="display:none;">
+                <div class="profile-initials" id="profileDisplayInitials"></div>
+            </div>
+            <div class="edit-badge"><i class="fas fa-camera"></i></div>
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        </div>
+        <button id="deleteAvatarBtn" class="btn-delete-avatar" style="display:none;">
+            <i class="fas fa-trash-alt"></i> Supprimer la photo
+        </button>
+        <h2 id="dashboardName">—</h2>
+        <div class="medical-pseudo"><i class="fas fa-briefcase-medical"></i><span id="medicalPseudo">—</span></div>
+        <div class="medical-contact">
+            <p><i class="fas fa-phone-alt"></i> <span id="medicalPhone">—</span></p>
+            <p><i class="fas fa-envelope"></i> <span id="medicalEmail">—</span></p>
+            <p><i class="fas fa-flag"></i> <span id="medicalCountryFlag">🌍</span> <span id="medicalCountryName">—</span></p>
+        </div>
+        <p class="role-badge">Staff Médical</p>
+        <div class="id-copy-box" onclick="copyID()">
+            <i class="fas fa-id-card"></i><span id="medicalID">ID : —</span><i class="fas fa-copy copy-icon"></i>
+        </div>
+        <div class="stats-mini-container">
+            <button class="mini-stat-btn" onclick="location.href='../verification/staff-verif.html'">
+                <i class="fas fa-chart-pie"></i>
+                <span class="mini-stat-value" id="profileCompletion">0</span>%
+                <span class="mini-stat-label">Profil complété</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-binoculars"></i>
+                <span class="mini-stat-value" id="scoutingViews">0</span>
+                <span class="mini-stat-label">Vues profil</span>
+            </button>
+            <button class="mini-stat-btn">
+                <i class="fas fa-star"></i>
+                <span class="mini-stat-value" id="recruiterFavs">0</span>
+                <span class="mini-stat-label">Favoris</span>
+            </button>
+        </div>
+        <a href="../cv/staff-cv.html" class="btn-download-cv">
+            <i class="fas fa-file-pdf"></i> Télécharger mon CV PDF
+        </a>
+    </aside>
+    <!-- ===== FIN CARTE PROFIL ===== -->
+
+    <div class="main-panel">
+
+        <!-- En-tête staff médical -->
+        <div class="medical-header glass-card">
+            <div class="medical-header-left">
+                <h1 id="medicalFullName">—</h1>
+                <p class="medical-position" id="medicalPosition">Spécialité non renseignée</p>
+            </div>
+            <div class="medical-header-right">
+                <div class="medical-basic-info">
+                    <span><i class="fas fa-birthday-cake"></i> <span id="medicalAge">—</span> ans</span>
+                    <span><i class="fas fa-globe-africa"></i> <span id="medicalNationality">—</span></span>
+                    <span><i class="fas fa-briefcase-medical"></i> <span id="medicalSpecialite">—</span></span>
+                    <span><i class="fas fa-building"></i> <span id="medicalStructure">—</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== DEBUT WIDGETS DE PILOTAGE ===== -->
+        <div class="pilot-grid">
+            <button class="pilot-card" onclick="location.href='../athletes/staff-athletes.html'">
+                <div class="pilot-icon esprit"><i class="fas fa-user-injured"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotAthletes">0</span>
+                    <span class="pilot-label">Athlètes suivis</span>
+                    <span class="pilot-sub">Sous votre responsabilité</span>
+                </div>
+            </button>
+            <button class="pilot-card" onclick="location.href='../athletes/staff-athletes.html?filtre=rouge'">
+                <div class="pilot-icon corps"><i class="fas fa-circle"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotAlertes">0</span>
+                    <span class="pilot-label">Statuts 🔴 actifs</span>
+                    <span class="pilot-sub">Indisponibilité en cours</span>
+                </div>
+            </button>
+            <button class="pilot-card" onclick="location.href='../consultations/staff-consultations.html'">
+                <div class="pilot-icon ame"><i class="fas fa-notes-medical"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value" id="pilotConsultations">0</span>
+                    <span class="pilot-label">Consultations</span>
+                    <span class="pilot-sub">Total enregistré</span>
+                </div>
+            </button>
+            <button class="pilot-card" onclick="location.href='../honoraires/staff-honoraires.html'">
+                <div class="pilot-icon gold"><i class="fas fa-file-invoice-dollar"></i></div>
+                <div class="pilot-body">
+                    <span class="pilot-value pilot-value-sm" id="pilotHonoraires">0 €</span>
+                    <span class="pilot-label">Honoraires</span>
+                    <span class="pilot-sub">Total calculé</span>
+                </div>
+            </button>
+        </div>
+        <!-- ===== FIN WIDGETS DE PILOTAGE ===== -->
+
+        <!-- ===== DEBUT ALERTES ===== -->
+        <div class="alerts-section glass-card">
+            <h3 class="section-title"><i class="fas fa-bell"></i> Alertes</h3>
+            <div id="alertsList" class="alerts-list">
+                <p class="empty-state" id="alertsEmpty">
+                    <i class="fas fa-check-circle"></i> Tout est en ordre. Aucune alerte pour l'instant. 🌱
+                </p>
+            </div>
+        </div>
+        <!-- ===== FIN ALERTES ===== -->
+
+        <!-- Stats globales -->
+        <div class="global-stats-grid">
+            <div class="stat-card-global"><div class="stat-card-label">ATHLÈTES SUIVIS</div><div class="stat-card-value" id="nbAthletes">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">CONSULTATIONS TOTALES</div><div class="stat-card-value" id="nbConsultations">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">HONORAIRES TOTAUX</div><div class="stat-card-value" id="totalHonoraires">—</div></div>
+            <div class="stat-card-global"><div class="stat-card-label">ANNÉES D'EXPÉRIENCE</div><div class="stat-card-value" id="anneesExp">—</div></div>
+        </div>
+
+        <!-- Compétences principales -->
+        <div class="main-skills glass-card">
+            <h3 class="section-title"><i class="fas fa-chart-bar"></i> Compétences principales</h3>
+            <div class="skills-grid">
+                <div class="skill-item"><span class="skill-label">Traumatologie sportive</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_trauma" style="width:0%"></div></div><span class="skill-value" id="skill_trauma_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Kinésithérapie</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_kine" style="width:0%"></div></div><span class="skill-value" id="skill_kine_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Nutrition sportive</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_nutrition" style="width:0%"></div></div><span class="skill-value" id="skill_nutrition_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Premiers secours / Urgences</span><div class="skill-bar-track"><div class="skill-bar-fill corps" id="skill_urgences" style="width:0%"></div></div><span class="skill-value" id="skill_urgences_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Protocoles RTP</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_rtp" style="width:0%"></div></div><span class="skill-value" id="skill_rtp_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Préparation mentale</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_mental" style="width:0%"></div></div><span class="skill-value" id="skill_mental_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Suivi du sommeil</span><div class="skill-bar-track"><div class="skill-bar-fill esprit" id="skill_sommeil" style="width:0%"></div></div><span class="skill-value" id="skill_sommeil_value">0</span></div>
+                <div class="skill-item"><span class="skill-label">Accompagnement psychologique</span><div class="skill-bar-track"><div class="skill-bar-fill ame" id="skill_psy" style="width:0%"></div></div><span class="skill-value" id="skill_psy_value">0</span></div>
+            </div>
+        </div>
+
+        <!-- Profil détaillé Trinité -->
+        <div class="attributes-section glass-card">
+            <h3 class="section-title"><i class="fas fa-list-ul"></i> Profil détaillé — Corps · Âme · Esprit</h3>
+            <div class="attributes-tabs">
+                <button class="attr-tab active" data-cat="competences"><i class="fas fa-user-md"></i> Esprit — Compétences Médicales</button>
+                <button class="attr-tab" data-cat="activite"><i class="fas fa-chart-pie"></i> Âme — Activité & Suivi</button>
+                <button class="attr-tab" data-cat="contrat"><i class="fas fa-file-contract"></i> Corps — Statut & Structure</button>
+            </div>
+            <div id="competences-attrs" class="attr-content active">
+                <div class="attr-grid">
+                    <div class="attr-item"><span class="attr-name">Diagnostic & évaluation clinique</span><span class="attr-value" id="cp_dia">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Traumatologie sportive</span><span class="attr-value" id="cp_tra">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Kinésithérapie / Réathlétisation</span><span class="attr-value" id="cp_kin">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Nutrition sportive</span><span class="attr-value" id="cp_nut">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Suivi biométrique</span><span class="attr-value" id="cp_bio">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Premiers secours / Urgences</span><span class="attr-value" id="cp_urg">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Préparation mentale</span><span class="attr-value" id="cp_men">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Sophrologie / Cohérence cardiaque</span><span class="attr-value" id="cp_sop">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Suivi du sommeil</span><span class="attr-value" id="cp_som">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Accompagnement psychologique</span><span class="attr-value" id="cp_psy">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Communication avec le staff</span><span class="attr-value" id="cp_com">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Protocoles RTP</span><span class="attr-value" id="cp_rtp">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Éthique médicale</span><span class="attr-value" id="cp_eth">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Pédagogie / Sensibilisation</span><span class="attr-value" id="cp_ped">0</span></div>
+                </div>
+            </div>
+            <div id="activite-attrs" class="attr-content">
+                <div class="attr-grid">
+                    <div class="attr-item"><span class="attr-name">Athlètes suivis (total)</span><span class="attr-value" id="ac_ath">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Consultations réalisées</span><span class="attr-value" id="ac_con">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Blessures traitées</span><span class="attr-value" id="ac_ble">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Retours au jeu réussis (RTP)</span><span class="attr-value" id="ac_rtp">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Score wellness moyen</span><span class="attr-value" id="ac_wel">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Alertes actives</span><span class="attr-value" id="ac_ale">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Années d'expérience</span><span class="attr-value" id="ac_ann">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Taux de disponibilité équipe</span><span class="attr-value" id="ac_dis">0</span></div>
+                </div>
+            </div>
+            <div id="contrat-attrs" class="attr-content">
+                <div class="attr-grid">
+                    <div class="attr-item"><span class="attr-name">Spécialité médicale</span><span class="attr-value" id="co_spe">0</span></div>
+                    <div class="attr-item"><span class="attr-name">N° Ordre professionnel</span><span class="attr-value" id="co_ord">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Structure / Club affilié</span><span class="attr-value" id="co_str">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Date début d'exercice</span><span class="attr-value" id="co_deb">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Assurance RC Pro</span><span class="attr-value" id="co_rcp">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Pays d'exercice</span><span class="attr-value" id="co_pay">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Honoraires totaux perçus</span><span class="attr-value" id="co_hon">0</span></div>
+                    <div class="attr-item"><span class="attr-name">Note d'évaluation</span><span class="attr-value" id="co_not">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes & Évaluations -->
+        <div class="reports-section glass-card">
+            <h3 class="section-title"><i class="fas fa-file-signature"></i> Notes & Évaluations</h3>
+            <div class="reports-body">
+                <p id="scoutingReports" class="reports-text">Aucune note pour le moment.</p>
+            </div>
+        </div>
+
+        <!-- ===== DEBUT ACTIONS RAPIDES ===== -->
+        <div class="quick-actions glass-card">
+            <h3 class="section-title"><i class="fas fa-bolt"></i> Actions rapides</h3>
+            <div class="quick-grid">
+                <a href="../athletes/staff-athletes.html" class="quick-btn">
+                    <i class="fas fa-user-injured"></i><span>Voir mes athlètes</span>
+                </a>
+                <a href="../consultations/staff-consultations.html" class="quick-btn">
+                    <i class="fas fa-notes-medical"></i><span>Nouvelle consultation</span>
+                </a>
+                <a href="../honoraires/staff-honoraires.html" class="quick-btn">
+                    <i class="fas fa-file-invoice-dollar"></i><span>Voir mes honoraires</span>
+                </a>
+                <a href="../verification/staff-verif.html" class="quick-btn">
+                    <i class="fas fa-shield-alt"></i><span>Vérifier mon statut</span>
+                </a>
+            </div>
+        </div>
+        <!-- ===== FIN ACTIONS RAPIDES ===== -->
+
+    </div>
+</div>
+</main>
+<!-- ===== FIN CONTENU PRINCIPAL ===== -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== DEBUT FOOTER ===== -->
+<footer class="dashboard-footer">
+    <div class="footer-content">
+        <div class="compliance-badges">
+            <span class="badge"><i class="fas fa-check-circle"></i> Conformité APDP Bénin</span>
+            <span class="badge"><i class="fas fa-briefcase-medical"></i> HubISoccer · Triple Projet</span>
+            <span class="badge"><i class="fas fa-seedling"></i> Sport-Étude-Carrière</span>
+        </div>
+        <div class="contact-info">
+            <a href="tel:+2290195973157"><i class="fas fa-phone"></i> +229 01 95 97 31 57</a>
+            <a href="mailto:thehubisoccer@gmail.com"><i class="fas fa-envelope"></i> thehubisoccer@gmail.com</a>
+        </div>
+        <div class="legal">
+            <p>HubISoccer — The Hub of Inspiration of Soccer</p>
+            <p>RCCM : RB/ABC/24 A 111814 &nbsp;|&nbsp; IFU : 0201910800236</p>
+            <p>&copy; 2026 HubISoccer. Tous droits réservés.</p>
+        </div>
+    </div>
+</footer>
+<!-- ===== FIN FOOTER ===== -->
+
+<script src="staff-dash.js"></script>
+</body>
+</html>

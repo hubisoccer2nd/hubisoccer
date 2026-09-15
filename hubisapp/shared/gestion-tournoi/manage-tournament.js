@@ -1070,24 +1070,46 @@ async function recalculerLesStatistiques() {
     const idsEquipes = equipes.map(function(e) { return e.id; });
     let effectifs = [];
     if (idsEquipes.length) {
-        const { data: membres } = await supabaseClient
+        // CHANTIER 12 — select('*') et non une liste de colonnes.
+        // L'ancienne liste nommait player_name : une colonne
+        // qu'aucune page n'ecrit plus depuis le retrait de
+        // l'effectif en texte libre (voir section « Effectif
+        // d'une equipe » plus bas). Si elle n'existe pas dans la
+        // base, PostgREST refuse la requete entiere et les
+        // effectifs reviennent vides — sans aucun message.
+        const { data: membres, error: erreurMembres } = await supabaseClient
             .from(TBL_TEAM_PLAYERS)
-            .select('user_id, player_name, member_name, jersey_number, position, team_id')
+            .select('*')
             .in('team_id', idsEquipes);
+        if (erreurMembres) {
+            console.warn('Effectifs indisponibles :', erreurMembres.message);
+            showToast('Effectifs indisponibles : ' + erreurMembres.message +
+                      '. Les postes et les numéros de maillot manqueront dans les feuilles. ' +
+                      'Ouvre gt-diagnostic.html.', 'error');
+        }
         effectifs = membres || [];
     }
     const compositionParEquipe = {};
     effectifs.forEach(function(m) {
-        if (!m.user_id) return;
+        // La cle d'identite : le compte s'il existe, sinon la
+        // fiche d'effectif. Avant, un membre sans compte etait
+        // purement et simplement ignore (return), et ses buts
+        // n'etaient attribues a personne.
+        const cle = m.user_id || m.id;
+        if (!cle) return;
         if (!compositionParEquipe[m.team_id]) compositionParEquipe[m.team_id] = [];
         compositionParEquipe[m.team_id].push({
-            player_id: m.user_id,
+            player_id: cle,
             team_id: m.team_id,
             is_starter: false,
-            position: m.position || null,
+            position: m.position || m.position_detail || null,
             jersey_number: m.jersey_number
         });
-        nomsSportifsTournoi[m.user_id] = m.player_name || m.member_name || 'Sportif';
+        const nom = m.member_name || null;
+        nomsSportifsTournoi[cle] = nom
+            ? ((m.jersey_number != null && m.jersey_number !== '' ? '#' + m.jersey_number + ' · ' : '') + nom)
+            : ((m.jersey_number != null && m.jersey_number !== '' ? '#' + m.jersey_number + ' · ' : '') +
+               'sans nom (' + String(cle).slice(-8) + ')');
     });
 
     // --- 4. Les feuilles deja enregistrees

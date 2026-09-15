@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Diagnostic de la base · HubISoccer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="gt-diagnostic.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="diag-tete">
+    <div class="diag-tete-inner">
+        <div class="diag-marque">
+            <span class="diag-logo">HUB<span>I</span>SOCCER</span>
+            <span class="diag-sous">Gestionnaire de tournoi — outil technique</span>
+        </div>
+        <a class="diag-retour" href="acceuil-gt.html"><i class="fas fa-arrow-left"></i> Retour</a>
+    </div>
+</header>
+
+<main class="diag-page">
+
+    <h1><i class="fas fa-stethoscope"></i> Diagnostic de la base de données</h1>
+
+    <p class="diag-intro">
+        Cette page interroge la vraie base et répond à une seule question :
+        <b>quelles colonnes existent réellement</b>, parmi celles que le code du
+        gestionnaire de tournoi utilise. Puis elle écrit toute seule le SQL qui
+        crée ce qui manque.
+    </p>
+
+    <div class="diag-sur">
+        <i class="fas fa-shield-halved"></i>
+        <div>
+            <b>Elle ne modifie rien.</b> Aucun <code>INSERT</code>, aucun
+            <code>UPDATE</code>, aucun <code>DELETE</code> : uniquement des
+            <code>SELECT … LIMIT 0</code>. Tu peux la lancer autant de fois que
+            tu veux, même pendant une compétition.
+        </div>
+    </div>
+
+    <div class="diag-pourquoi">
+        <h2>Pourquoi cette page existe</h2>
+        <p>
+            Quand une page écrit dans une colonne qui n'existe pas, PostgreSQL
+            répond <code>42703</code> et refuse <b>la ligne entière</b>, pas
+            seulement la colonne fautive. Et jusqu'ici, la plupart de ces échecs
+            finissaient dans un <code>console.warn()</code> : la page affichait
+            quand même « enregistré ».
+        </p>
+        <p>
+            C'est l'origine de <b>« la formation de départ n'est plus là »</b>,
+            de <b>« tout est mélangé »</b> et des relevés qui ne se retiennent
+            pas. Tant qu'on ne sait pas ce que la base contient vraiment, on
+            répare à l'aveugle.
+        </p>
+    </div>
+
+    <div class="diag-lancer">
+        <button id="btnLancer" class="diag-btn"><i class="fas fa-play"></i> Lancer l'analyse</button>
+        <span class="diag-attendu">Vérification de <b id="attendu">—</b></span>
+    </div>
+
+    <div id="avancement" class="diag-avancement" style="display:none;"></div>
+
+    <div id="resume" class="diag-resume" style="display:none;"></div>
+
+    <div id="resultats" class="diag-resultats"></div>
+
+    <section id="sqlBloc" class="diag-sql" style="display:none;">
+        <div class="diag-sql-tete">
+            <h2><i class="fas fa-wrench"></i> Le SQL qui répare</h2>
+            <div class="diag-sql-actions">
+                <button id="btnCopier" class="diag-btn diag-btn-clair"><i class="fas fa-copy"></i> Copier le SQL</button>
+                <button id="btnTelecharger" class="diag-btn diag-btn-clair"><i class="fas fa-download"></i> Télécharger</button>
+            </div>
+        </div>
+        <p class="diag-sql-mode">
+            À coller dans <b>Supabase → SQL Editor → Run</b>, puis relancer
+            l'analyse : tout doit passer au vert. Le script est non destructif —
+            uniquement <code>CREATE TABLE IF NOT EXISTS</code> et
+            <code>ADD COLUMN IF NOT EXISTS</code>.
+        </p>
+        <pre id="sqlTexte" class="diag-sql-texte"></pre>
+    </section>
+
+</main>
+
+<script src="gt-schema.js"></script>
+<script src="gt-diagnostic.js"></script>
+</body>
+</html>

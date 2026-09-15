@@ -188,3 +188,41 @@ select, textarea, input { font-family: inherit; }
     .form-actions { flex-direction: column-reverse; }
     .btn-secondary, .btn-primary { width: 100%; justify-content: center; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CHANTIER 12 — DEUX CLASSES SANS STYLE SUR CETTE PAGE
+   -----------------------------------------------------------
+   .section-title et .section-hint sont posees par
+   match-report.html sur le bloc « À quel titre déposez-vous ? ».
+   Elles n'etaient definies que dans club-draw.css et
+   create-tournament.css — deux feuilles que cette page ne charge
+   pas. Le titre sortait donc au rendu <h2> brut du navigateur,
+   en Times, sans couleur et sans espacement.
+
+   Aucune variable de la charte n'est ajoutee ni modifiee.
+   ═══════════════════════════════════════════════════════════ */
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--font-ui);
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--violet);
+    margin: 0 0 6px;
+    line-height: 1.35;
+}
+.section-title i { font-size: .95rem; color: var(--gold-dark); }
+
+.section-hint {
+    font-size: .84rem;
+    color: var(--gray-600);
+    margin: 0 0 14px;
+    line-height: 1.5;
+}
+.section-hint:empty { display: none; margin: 0; }
+
+@media (max-width: 640px) {
+    .section-title { font-size: .95rem; }
+}

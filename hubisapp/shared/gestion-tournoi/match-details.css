@@ -261,3 +261,59 @@ select { font-family: inherit; }
     border-radius: var(--radius-pill);
 }
 .mds-compo .gt-terrain-cadre { padding: 20px 24px 26px; }
+
+/* ═══════════════════════════════════════════════════════════
+   CHANTIER 12 — DEUX CLASSES SANS STYLE SUR CETTE PAGE
+   -----------------------------------------------------------
+   .btn-primary         pose par match-details.html, mais defini
+                        seulement dans acceuil.css — feuille que
+                        cette page ne charge pas. Le bouton
+                        « Calculer depuis les rapports » sortait
+                        donc sans aucune mise en forme.
+   .classement-groupe   pose par match-details.js pour les titres
+                        de categorie du releve d'observation ;
+                        defini dans gt-classement.css, elle aussi
+                        non chargee ici.
+
+   On les decrit ici, avec les memes variables que le reste de la
+   charte. Aucune variable n'est ajoutee ni modifiee.
+   ═══════════════════════════════════════════════════════════ */
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--violet);
+    color: var(--white);
+    border: none;
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: .84rem;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: background .15s, transform .1s;
+    min-height: 44px;
+}
+.btn-primary:hover { background: var(--violet-light); }
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary:disabled { opacity: .6; cursor: default; }
+
+.classement-groupe {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--violet);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin: 22px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.classement-groupe:first-child { margin-top: 16px; }
+
+@media (max-width: 640px) {
+    .btn-primary { width: 100%; }
+}

@@ -83,7 +83,24 @@ function appliquerLexique() {
 }
 let statsDuMatch = [];        // lignes gt_player_match_stats de ce match
 let effectifDuMatch = [];     // les sportifs des deux equipes
-let nomsDesSportifs = {};     // auth_uuid -> nom affiche
+let nomsDesSportifs = {};     // conserve : cle -> nom brut, pour le reste de la page
+
+// CHANTIER 12 — l'index d'identites.
+// ------------------------------------------------------------
+// Avant, la page cherchait chaque identifiant parmi les COMPTES
+// (profiles.auth_uuid). Or l'arbitre enregistre l'identifiant de
+// la FICHE d'effectif quand le sportif n'a pas de compte. La
+// recherche echouait, et le nom retombait sur le mot du sport :
+// « Footballeur », quatorze fois dans le meme selecteur.
+//
+// L'index de gt-identite.js repond aux deux conventions.
+let indexIdentites = { parCle: {}, liste: [] };
+
+// L'etiquette d'une cle, toujours lisible et toujours UNIQUE.
+function etiquetteDe(identifiant) {
+    if (identifiant == null || identifiant === '') return '';
+    return GTIdentite.etiquetteDepuisIndex(indexIdentites, identifiant);
+}
 let peutGererLesStats = false;
 let sportifEnSaisie = null;
 
@@ -368,11 +385,21 @@ async function loadMatchEvents(idMatch) {
         if (e.assist_player_id && identifiants.indexOf(e.assist_player_id) === -1) identifiants.push(e.assist_player_id);
     });
 
-    if (identifiants.length) {
-        const { data: profils } = await supabaseClient
-            .from(TBL_PROFILES).select('auth_uuid, full_name').in('auth_uuid', identifiants);
-        (profils || []).forEach(function(p) {
-            if (!nomsDesSportifs[p.auth_uuid]) nomsDesSportifs[p.auth_uuid] = p.full_name || mot('{Sportif}');
+    // CHANTIER 12 — on complete l'index plutot que d'interroger
+    // les seuls comptes : un evenement peut porter l'identifiant
+    // d'une fiche d'effectif, et cherchait alors dans le vide.
+    const aCompleter = identifiants.filter(function(id) {
+        return !indexIdentites.parCle[String(id)];
+    });
+    if (aCompleter.length) {
+        indexIdentites = await GTIdentite.completer(
+            supabaseClient,
+            { teamPlayers: TBL_TEAM_PLAYERS, profiles: TBL_PROFILES },
+            indexIdentites,
+            aCompleter
+        );
+        indexIdentites.liste.forEach(function(e) {
+            if (e.nom && !nomsDesSportifs[e.cle]) nomsDesSportifs[e.cle] = e.nom;
         });
     }
 
@@ -381,8 +408,8 @@ async function loadMatchEvents(idMatch) {
 
     conteneur.innerHTML = evenements.map(function(e) {
         const modele = LIBELLES_EVENEMENT[e.event_type] || { icone: '•', label: e.event_type || 'Événement' };
-        const nom = nomsDesSportifs[e.player_id] || (e.player_id ? mot('{Sportif}') : '');
-        const second = nomsDesSportifs[e.assist_player_id] || '';
+        const nom = etiquetteDe(e.player_id);
+        const second = etiquetteDe(e.assist_player_id);
 
         let equipe = '';
         if (matchCourant && e.team_id != null) {
@@ -691,33 +718,68 @@ async function verifierDroitsStatistiques(match) {
 // --- Les deux effectifs -------------------------------------
 async function chargerEffectifDuMatch(match) {
     effectifDuMatch = [];
+    indexIdentites = { parCle: {}, liste: [] };
     const ids = [match.team_a_id, match.team_b_id].filter(Boolean);
     if (!ids.length) return;
 
-    const { data: membres, error } = await supabaseClient
-        .from(TBL_TEAM_PLAYERS)
-        .select('id, user_id, player_name, member_name, jersey_number, position, team_id')
-        .in('team_id', ids);
+    // CHANTIER 12 — trois corrections d'un coup.
+    //
+    // 1. select('*') au lieu d'une liste de colonnes. L'ancienne
+    //    liste nommait player_name : une colonne qu'AUCUNE page
+    //    n'ecrit plus (voir le commentaire de manage-tournament.js,
+    //    section « Effectif d'une equipe »). Si elle n'existe pas,
+    //    PostgREST refuse la requete ENTIERE avec 42703 et
+    //    l'effectif revient vide. C'est ce qui vidait le selecteur
+    //    du releve d'observation.
+    //
+    // 2. La cle d'identite passe par gt-identite.js : user_id
+    //    s'il existe, sinon l'identifiant de la fiche. C'est la
+    //    convention que l'arbitre utilise deja.
+    //
+    // 3. L'echec se voit. Avant, un console.warn() et la page
+    //    continuait comme si de rien n'etait.
+    indexIdentites = await GTIdentite.charger(
+        supabaseClient,
+        { teamPlayers: TBL_TEAM_PLAYERS, profiles: TBL_PROFILES },
+        ids
+    );
 
-    if (error) {
-        console.warn('Effectif indisponible :', error.message);
+    if (indexIdentites.erreur) {
+        signalerEffectifIndisponible(indexIdentites.erreur);
         return;
     }
 
-    effectifDuMatch = (membres || []).map(function(m) {
+    effectifDuMatch = indexIdentites.liste.map(function(e) {
         return {
-            player_id: m.user_id || null,
-            ligne_id: m.id,
-            nom: m.player_name || m.member_name || mot('{Sportif}'),
-            jersey_number: m.jersey_number,
-            position: m.position || null,
-            team_id: m.team_id
+            player_id: e.cle,
+            ligne_id: e.ligne_id,
+            nom: e.nom || e.etiquette,
+            etiquette: e.etiquette,
+            jersey_number: e.jersey_number,
+            position: e.membre ? (e.membre.position || e.membre.position_detail || null) : null,
+            team_id: e.team_id
         };
     });
 
     effectifDuMatch.forEach(function(m) {
         if (m.player_id) nomsDesSportifs[m.player_id] = m.nom;
     });
+}
+
+// L'effectif introuvable n'est plus une ligne de console : c'est
+// un message dans la page, avec le motif exact renvoye par la
+// base. Sans lui, l'organisateur voyait une liste vide sans
+// jamais savoir pourquoi.
+function signalerEffectifIndisponible(erreur) {
+    const panneau = document.getElementById('statsSaisie');
+    const message = 'Effectif indisponible : ' + (erreur.message || 'erreur inconnue') +
+        (erreur.code ? ' (' + erreur.code + ')' : '') +
+        '. Ouvre gt-diagnostic.html pour savoir quelle colonne manque.';
+    console.warn(message);
+    showToast(message, 'error');
+    if (panneau && panneau.style.display !== 'none') {
+        panneau.innerHTML = '<div class="gt-stats-vide">' + escapeHtml(message) + '</div>';
+    }
 }
 
 // --- Les lignes deja enregistrees ---------------------------
@@ -734,19 +796,29 @@ async function chargerStatistiquesDuMatch(idMatch) {
     }
     statsDuMatch = data || [];
 
-    // Les noms manquants : un sportif peut avoir une ligne sans
-    // figurer dans l'effectif courant (transfert, retrait).
+    // Les cles manquantes : un sportif peut avoir une ligne sans
+    // figurer dans l'effectif courant (transfert, retrait), ou
+    // porter une cle ecrite avant le chantier 12.
+    //
+    // completer() cherche le profil, et a defaut fabrique une
+    // entree LISIBLE ET UNIQUE (« inconnu (…3f2a91bc) ») plutot
+    // que de laisser le mot du sport, identique pour tous.
     const inconnus = statsDuMatch
         .map(function(l) { return l.player_id; })
-        .filter(function(id) { return id && !nomsDesSportifs[id]; });
+        .filter(function(id) { return id && !indexIdentites.parCle[String(id)]; });
 
     if (inconnus.length) {
-        const { data: profils } = await supabaseClient
-            .from(TBL_PROFILES).select('auth_uuid, full_name').in('auth_uuid', inconnus);
-        (profils || []).forEach(function(p) {
-            nomsDesSportifs[p.auth_uuid] = p.full_name || mot('{Sportif}');
-        });
+        indexIdentites = await GTIdentite.completer(
+            supabaseClient,
+            { teamPlayers: TBL_TEAM_PLAYERS, profiles: TBL_PROFILES },
+            indexIdentites,
+            inconnus
+        );
     }
+
+    indexIdentites.liste.forEach(function(e) {
+        if (e.nom) nomsDesSportifs[e.cle] = e.nom;
+    });
 }
 
 // --- Le tableau ---------------------------------------------
@@ -807,7 +879,7 @@ function rendreTableauStatistiques() {
                 '</tr></thead><tbody>';
 
         parEquipe[cle].forEach(function(l) {
-            const nom = nomsDesSportifs[l.player_id] || mot('{Sportif}');
+            const nom = etiquetteDe(l.player_id);
             const note = l.match_rating;
             const classe = GTStats.classeNote(note);
             const tirs = GTStats.formater({ cle: 'shots_on_target', type: 'ratio', tente: 'shots_total' }, l);
@@ -886,6 +958,10 @@ async function recalculerLesStatistiquesDuMatch() {
     // chantier « Mon équipe » sera en place ; en attendant, seuls
     // les sportifs apparaissant dans un evenement recoivent des
     // minutes.
+    // La cle vient desormais de gt-identite.js : un sportif sans
+    // compte n'est plus ecarte ici. Avant, player_id valait null
+    // pour lui, le filtre le supprimait, et ses buts n'etaient
+    // jamais attribues a personne.
     const compositions = effectifDuMatch
         .filter(function(m) { return m.player_id; })
         .map(function(m) {
@@ -966,21 +1042,55 @@ async function recalculerLesStatistiquesDuMatch() {
 }
 
 // --- La saisie manuelle -------------------------------------
+// CHANTIER 12 — la liste du selecteur.
+// ------------------------------------------------------------
+// CE QUI N'ALLAIT PAS
+//
+// Chaque entree portait « nomsDesSportifs[id] || mot('{Sportif}') ».
+// Quand les noms ne se resolvaient pas — et ils ne se resolvaient
+// jamais pour un sportif sans compte — TOUTES les options
+// affichaient le meme texte : « Footballeur ».
+//
+// Pire, la liste etait ensuite triee par ce nom :
+//     liste.sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
+// Trier sur une valeur identique laisse l'ordre a la merci du
+// moteur. Il changeait d'un affichage a l'autre. On ouvrait « le
+// troisieme Footballeur » en croyant prendre le numero 14, et on
+// modifiait le numero 9. C'est exactement ce qui a ete constate
+// sur PSG - Inter Milan.
+//
+// CE QUE CA FAIT MAINTENANT
+//
+// L'etiquette vient de gt-identite.js : « #14 · DUPONT Jean », et
+// a defaut de nom « #9 · sans nom (…3f2a91bc) ». Deux options ne
+// peuvent plus porter le meme texte.
+//
+// L'ordre est celui du numero de maillot, puis du nom, puis de la
+// cle : il ne bouge plus jamais.
 function listeDesSportifsSaisissables() {
     const vus = {};
     const liste = [];
-    statsDuMatch.forEach(function(l) {
-        if (!l.player_id || vus[l.player_id]) return;
-        vus[l.player_id] = true;
-        liste.push({ player_id: l.player_id, nom: nomsDesSportifs[l.player_id] || mot('{Sportif}') });
-    });
-    effectifDuMatch.forEach(function(m) {
-        if (!m.player_id || vus[m.player_id]) return;
-        vus[m.player_id] = true;
-        liste.push({ player_id: m.player_id, nom: m.nom });
-    });
-    liste.sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
-    return liste;
+
+    function ajouter(identifiant) {
+        if (identifiant == null || identifiant === '') return;
+        const c = String(identifiant);
+        if (vus[c]) return;
+        vus[c] = true;
+        const e = indexIdentites.parCle[c];
+        liste.push({
+            player_id: c,
+            nom: etiquetteDe(c),
+            jersey_number: e ? e.jersey_number : null,
+            tri: e ? e.nom : null
+        });
+    }
+
+    statsDuMatch.forEach(function(l) { ajouter(l.player_id); });
+    effectifDuMatch.forEach(function(m) { ajouter(m.player_id); });
+
+    return GTIdentite.trier(liste.map(function(x) {
+        return { cle: x.player_id, nom: x.tri, jersey_number: x.jersey_number, _o: x };
+    })).map(function(x) { return x._o; });
 }
 
 function ouvrirLaSaisie(idSportif) {

@@ -230,3 +230,46 @@ select, input { font-family: inherit; }
     .form-row { grid-template-columns: 1fr; gap: 0; }
     .method-tab-btn span { display: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CHANTIER 12 — CLASSES POSÉES SANS AUCUN STYLE
+   -----------------------------------------------------------
+   Relevé automatique : ces classes sont écrites par la page ou
+   son script, et aucune feuille chargée par la page ne les
+   décrivait. L'élément tombait donc sur le rendu brut du
+   navigateur.
+     .context-info         le rappel du tournoi concerné
+     .btn-secondary        bouton secondaire (défini seulement dans create-tournament.css)
+     .btn-annuler-demande  « Annuler la demande » — une action qui se reprend
+
+   Aucune variable de la charte n'est ajoutée ni modifiée : on se
+   sert de celles qui existent déjà.
+   ═══════════════════════════════════════════════════════════ */
+
+.context-info {
+    background: var(--violet-pale);
+    border-left: 4px solid var(--violet);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 12px 14px; margin-bottom: 16px;
+    font-size: .86rem; color: var(--gray-900);
+}
+.context-info b, .context-info strong { color: var(--violet); }
+
+.btn-secondary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--white); color: var(--violet);
+    border: 1.5px solid var(--violet);
+    padding: 10px 18px; border-radius: var(--radius-pill);
+    font-family: var(--font-ui); font-weight: 600; font-size: .84rem;
+    cursor: pointer; min-height: 44px;
+    transition: background .15s, color .15s;
+}
+.btn-secondary:hover { background: var(--violet-pale); }
+.btn-secondary:active { transform: translateY(1px); }
+.btn-secondary:disabled { opacity: .6; cursor: default; }
+
+/* Annuler n'est pas une action neutre : elle se distingue. */
+.btn-annuler-demande { color: var(--corps); border-color: var(--corps); }
+.btn-annuler-demande:hover { background: var(--corps-pale); }
+
+@media (max-width: 640px) { .btn-secondary { width: 100%; } }

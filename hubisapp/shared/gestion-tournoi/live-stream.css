@@ -229,3 +229,22 @@ select, input { font-family: inherit; }
     .score { font-size: 1.5rem; }
     .team-name { font-size: .8rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CHANTIER 12 — CLASSES POSÉES SANS AUCUN STYLE
+   -----------------------------------------------------------
+   Relevé automatique : ces classes sont écrites par la page ou
+   son script, et aucune feuille chargée par la page ne les
+   décrivait. L'élément tombait donc sur le rendu brut du
+   navigateur.
+     .camera-card  le bloc de prise de vue
+
+   Aucune variable de la charte n'est ajoutée ni modifiée : on se
+   sert de celles qui existent déjà.
+   ═══════════════════════════════════════════════════════════ */
+
+.camera-card { border-color: var(--violet-light); }
+.camera-card video, .camera-card canvas {
+    width: 100%; max-width: 100%; height: auto; display: block;
+    border-radius: var(--radius-md); background: var(--ink);
+}

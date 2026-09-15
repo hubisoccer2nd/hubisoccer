@@ -1,0 +1,272 @@
+/* ============================================================
+   HubISoccer — gt-diagnostic.css
+   Systeme Gestion Tournois — outil technique de diagnostic
+   ------------------------------------------------------------
+   Page autonome : elle ne charge aucune autre feuille et n'en
+   nourrit aucune. Elle reprend la charte, sans y toucher.
+   ============================================================ */
+:root {
+    --violet: #551B8C;
+    --violet-light: #7A35B5;
+    --violet-pale: #F3EDFA;
+    --gold: #FFCC00;
+    --gold-dark: #C99A00;
+    --corps: #e74c3c;
+    --corps-pale: #FDECEA;
+    --ame: #3498db;
+    --ame-pale: #EAF4FC;
+    --esprit: #27ae60;
+    --esprit-pale: #E9F7EF;
+    --ink: #16161F;
+    --gray-900: #2A2A38;
+    --gray-600: #63636F;
+    --gray-400: #9797A3;
+    --gray-200: #E4E4EA;
+    --gray-100: #F2F2F6;
+    --bg: #FAFAFB;
+    --white: #FFFFFF;
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-pill: 999px;
+    --shadow-sm: 0 1px 3px rgba(22,22,31,.08);
+    --shadow-md: 0 4px 14px rgba(22,22,31,.10);
+    --shadow-lg: 0 12px 32px rgba(22,22,31,.14);
+    --font-ui: 'Poppins', system-ui, -apple-system, sans-serif;
+    --font-num: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* ── En-tête ── */
+.diag-tete { background: var(--violet); color: var(--white); }
+.diag-tete-inner {
+    max-width: 1080px; margin: 0 auto; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.diag-logo { font-size: 1.15rem; font-weight: 800; letter-spacing: .5px; display: block; }
+.diag-logo span { color: var(--gold); }
+.diag-sous { font-size: .72rem; opacity: .82; }
+.diag-retour {
+    color: var(--white); text-decoration: none; font-size: .85rem; font-weight: 600;
+    border: 1px solid rgba(255,255,255,.35); border-radius: var(--radius-pill);
+    padding: 7px 14px; white-space: nowrap;
+}
+.diag-retour:hover { background: rgba(255,255,255,.12); }
+
+/* ── Page ── */
+.diag-page { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
+
+.diag-page h1 {
+    font-size: 1.5rem; font-weight: 800; color: var(--violet);
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.diag-intro { font-size: .96rem; color: var(--gray-900); margin-bottom: 18px; }
+
+.diag-sur {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--esprit-pale); border-left: 4px solid var(--esprit);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 14px 16px; margin-bottom: 18px; font-size: .9rem;
+}
+.diag-sur i { color: var(--esprit); font-size: 1.1rem; margin-top: 2px; }
+
+.diag-pourquoi {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md); padding: 18px; margin-bottom: 22px;
+    box-shadow: var(--shadow-sm);
+}
+.diag-pourquoi h2 { font-size: 1rem; font-weight: 700; color: var(--violet); margin-bottom: 8px; }
+.diag-pourquoi p { font-size: .9rem; color: var(--gray-900); margin-bottom: 8px; }
+.diag-pourquoi p:last-child { margin-bottom: 0; }
+
+code {
+    font-family: var(--font-num); font-size: .86em;
+    background: var(--gray-100); border: 1px solid var(--gray-200);
+    border-radius: 4px; padding: 1px 5px;
+}
+
+/* ── Lancer ── */
+.diag-lancer {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.diag-btn {
+    font-family: var(--font-ui); font-size: .92rem; font-weight: 700;
+    background: var(--violet); color: var(--white); border: none;
+    border-radius: var(--radius-pill); padding: 12px 22px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: var(--shadow-sm); transition: background .15s, transform .1s;
+}
+.diag-btn:hover:not(:disabled) { background: var(--violet-light); }
+.diag-btn:active:not(:disabled) { transform: translateY(1px); }
+.diag-btn:disabled { opacity: .65; cursor: default; }
+.diag-btn-clair {
+    background: var(--white); color: var(--violet);
+    border: 1.5px solid var(--violet); box-shadow: none;
+}
+.diag-btn-clair:hover:not(:disabled) { background: var(--violet-pale); }
+.diag-attendu { font-size: .85rem; color: var(--gray-600); }
+
+/* ── Avancement ── */
+.diag-avancement { margin-bottom: 18px; }
+.diag-barre {
+    height: 8px; background: var(--gray-200);
+    border-radius: var(--radius-pill); overflow: hidden;
+}
+.diag-barre span {
+    display: block; height: 100%; background: var(--violet);
+    border-radius: var(--radius-pill); transition: width .2s;
+}
+.diag-avance-texte {
+    font-size: .8rem; color: var(--gray-600); margin-top: 6px;
+    font-family: var(--font-num);
+}
+
+/* ── Résumé ── */
+.diag-resume {
+    border-radius: var(--radius-md); padding: 18px;
+    margin-bottom: 22px; box-shadow: var(--shadow-sm);
+}
+.diag-resume-ok { background: var(--esprit-pale); border: 1px solid var(--esprit); }
+.diag-resume-alerte { background: var(--corps-pale); border: 1px solid var(--corps); }
+.diag-resume-titre {
+    font-size: 1.02rem; font-weight: 800; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 9px;
+}
+.diag-resume-ok .diag-resume-titre { color: #1E8449; }
+.diag-resume-alerte .diag-resume-titre { color: #C0392B; }
+
+.diag-chiffres {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+    gap: 10px;
+}
+.diag-chiffre {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm); padding: 10px 12px; text-align: center;
+}
+.diag-chiffre b {
+    display: block; font-family: var(--font-num); font-size: 1.5rem;
+    font-weight: 800; line-height: 1.1;
+}
+.diag-chiffre span { font-size: .72rem; color: var(--gray-600); }
+.diag-chiffre.ok b { color: var(--esprit); }
+.diag-chiffre.ko b { color: var(--corps); }
+.diag-chiffre.attention b { color: var(--gold-dark); }
+.diag-chiffre.neutre b { color: var(--gray-400); }
+.diag-resume-pied {
+    font-size: .76rem; color: var(--gray-600); margin-top: 12px;
+    font-family: var(--font-num);
+}
+
+/* ── Détail par table ── */
+.diag-resultats { display: flex; flex-direction: column; gap: 14px; }
+
+.diag-table {
+    background: var(--white); border: 1px solid var(--gray-200);
+    border-left: 4px solid var(--corps);
+    border-radius: var(--radius-md); padding: 16px;
+    box-shadow: var(--shadow-sm);
+}
+.diag-table-ok { border-left-color: var(--esprit); opacity: .82; }
+.diag-vestige { border-left-color: var(--gold-dark); }
+
+.diag-table-tete {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.diag-table-tete h3 {
+    font-family: var(--font-num); font-size: 1rem; font-weight: 700;
+    color: var(--ink); word-break: break-word;
+}
+.diag-module { font-size: .8rem; color: var(--gray-600); }
+
+.diag-pastille {
+    font-size: .74rem; font-weight: 700; border-radius: var(--radius-pill);
+    padding: 5px 12px; white-space: nowrap; flex: none;
+}
+.diag-pastille.ok { background: var(--esprit-pale); color: #1E8449; }
+.diag-pastille.ko { background: var(--corps-pale); color: #C0392B; }
+.diag-pastille.attention { background: #FFF6D6; color: var(--gold-dark); }
+
+.diag-casse {
+    font-size: .88rem; color: var(--gray-900); background: var(--corps-pale);
+    border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 9px;
+    display: flex; gap: 8px; align-items: flex-start;
+}
+.diag-casse i { color: var(--corps); margin-top: 3px; flex: none; }
+.diag-pages { font-size: .8rem; color: var(--gray-600); margin-bottom: 9px; }
+.diag-message { margin-bottom: 9px; }
+.diag-message code { display: block; padding: 8px 10px; word-break: break-word; }
+
+.diag-colonnes { display: flex; flex-wrap: wrap; gap: 6px; }
+.diag-col {
+    font-family: var(--font-num); font-size: .78rem; font-weight: 600;
+    background: var(--violet-pale); color: var(--violet);
+    border: 1px solid #DCCCEE; border-radius: var(--radius-sm);
+    padding: 4px 9px; display: inline-flex; align-items: baseline; gap: 6px;
+}
+.diag-col em {
+    font-style: normal; font-size: .68rem; font-weight: 400; color: var(--gray-600);
+}
+
+/* ── Le SQL ── */
+.diag-sql {
+    margin-top: 26px; background: var(--white);
+    border: 1px solid var(--gray-200); border-radius: var(--radius-md);
+    padding: 18px; box-shadow: var(--shadow-md);
+}
+.diag-sql-tete {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.diag-sql-tete h2 {
+    font-size: 1.08rem; font-weight: 800; color: var(--violet);
+    display: flex; align-items: center; gap: 9px;
+}
+.diag-sql-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.diag-sql-mode { font-size: .86rem; color: var(--gray-900); margin-bottom: 12px; }
+.diag-sql-texte {
+    font-family: var(--font-num); font-size: .78rem; line-height: 1.6;
+    background: var(--ink); color: #E8E8F0;
+    border-radius: var(--radius-sm); padding: 14px;
+    overflow-x: auto; white-space: pre; max-height: 60vh; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ── Téléphone ── */
+@media (max-width: 640px) {
+    .diag-page { padding: 18px 12px 48px; }
+    .diag-page h1 { font-size: 1.22rem; }
+    .diag-tete-inner { padding: 12px; }
+    .diag-btn { width: 100%; justify-content: center; }
+    .diag-lancer { flex-direction: column; align-items: stretch; }
+    .diag-attendu { text-align: center; }
+    .diag-sql-actions { width: 100%; }
+    .diag-sql-actions .diag-btn { flex: 1; }
+    .diag-chiffres { grid-template-columns: repeat(2, 1fr); }
+    .diag-sql-texte { font-size: .7rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHANTIER 12 — CLASSES POSÉES SANS AUCUN STYLE
+   -----------------------------------------------------------
+   Relevé automatique : ces classes sont écrites par la page ou
+   son script, et aucune feuille chargée par la page ne les
+   décrivait. L'élément tombait donc sur le rendu brut du
+   navigateur.
+     .diag-marque  le bloc de marque de l'en-tête
+
+   Aucune variable de la charte n'est ajoutée ni modifiée : on se
+   sert de celles qui existent déjà.
+   ═══════════════════════════════════════════════════════════ */
+
+.diag-marque { display: flex; flex-direction: column; gap: 1px; min-width: 0; }

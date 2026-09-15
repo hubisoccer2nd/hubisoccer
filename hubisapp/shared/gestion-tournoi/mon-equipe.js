@@ -1433,7 +1433,25 @@ async function enregistrerLaComposition() {
 
     if (!matchChoisi) {
         // --- La composition par défaut de l'équipe
+        //
+        // CHANTIER 12 — POURQUOI LA FORMATION DISPARAISSAIT
+        //
+        // Ces colonnes — pos_x, pos_y, slot_key sur les fiches
+        // d'effectif, default_formation / team_format / sport_code
+        // sur l'equipe — ne sont peut-etre pas presentes dans la
+        // base. Quand elles manquent, PostgreSQL repond 42703 et
+        // refuse la mise a jour ENTIERE.
+        //
+        // Or l'echec finissait dans un console.warn() et le
+        // message vert « Composition par defaut enregistree »
+        // s'affichait quand meme. Au retour sur la page, plus
+        // rien : « la formation de depart n'est plus la ».
+        //
+        // Desormais, si une seule ligne echoue, on le dit, on
+        // donne le motif exact, et on n'annonce surtout pas que
+        // c'est enregistre.
         let erreurs = 0;
+        let premierMotif = null;
         for (let i = 0; i < sportifs.length; i++) {
             const p = sportifs[i];
             const c = compositionCourante[p.id] || {};
@@ -1448,7 +1466,11 @@ async function enregistrerLaComposition() {
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', p.id);
-            if (error) { console.warn('Membre non enregistré :', error.message); erreurs++; }
+            if (error) {
+                console.warn('Membre non enregistré :', error.message);
+                if (!premierMotif) premierMotif = error;
+                erreurs++;
+            }
         }
 
         const { error: erreurEquipe } = await supabaseClient
@@ -1460,13 +1482,35 @@ async function enregistrerLaComposition() {
                 updated_at: new Date().toISOString()
             })
             .eq('id', currentTeam.id);
-        if (erreurEquipe) console.warn('Équipe non mise à jour :', erreurEquipe.message);
+        if (erreurEquipe) {
+            console.warn('Équipe non mise à jour :', erreurEquipe.message);
+            if (!premierMotif) premierMotif = erreurEquipe;
+        }
 
         hideLoader();
+
+        if (erreurs || erreurEquipe) {
+            // Rien n'est annonce comme enregistre tant que ca ne
+            // l'est pas. compositionModifiee reste vrai : le
+            // bouton continue de proposer d'enregistrer.
+            const motif = premierMotif
+                ? (premierMotif.message || 'erreur inconnue') +
+                  (premierMotif.code ? ' (' + premierMotif.code + ')' : '')
+                : 'motif inconnu';
+            afficherLEtatDeLaComposition();
+            showToast('LA COMPOSITION N\'A PAS ÉTÉ ENREGISTRÉE. ' +
+                      (erreurs ? erreurs + ' fiche(s) en échec' : 'La formation de l\'équipe n\'a pas pu être écrite') +
+                      ' — ' + motif + '. ' +
+                      'C\'est presque toujours une colonne absente de la base : ouvre ' +
+                      'gt-diagnostic.html, lance l\'analyse, exécute le SQL qu\'elle propose, ' +
+                      'puis recommence.', 'error');
+            return;
+        }
+
         compositionModifiee = false;
         afficherLEtatDeLaComposition();
-        showToast('Composition par défaut enregistrée' + (erreurs ? ' — ' + erreurs + ' ligne(s) en échec, voir la console.' : '.') +
-                  ' Elle servira de point de départ à chaque nouvelle rencontre.', 'success');
+        showToast('Composition par défaut enregistrée. ' +
+                  'Elle servira de point de départ à chaque nouvelle rencontre.', 'success');
         return;
     }
 
@@ -1494,7 +1538,14 @@ async function enregistrerLaComposition() {
             tournament_id: matchChoisi.tournament_id || currentTeam.tournament_id || null,
             team_id: currentTeam.id,
             team_player_id: p.id,
-            player_id: p.user_id || null,
+            // CHANTIER 12 — la meme cle que l'arbitre.
+            // Avant : p.user_id || null. Un membre sans compte
+            // HubISoccer partait donc avec player_id = null, et
+            // aucune statistique ne pouvait lui etre attribuee.
+            // L'arbitre, lui, enregistrait deja l'identifiant de
+            // la fiche. Les deux pages parlent enfin de la meme
+            // personne.
+            player_id: p.user_id || p.id,
             member_name: memberDisplayName(p),
             jersey_number: p.jersey_number == null ? null : p.jersey_number,
             is_starter: titulaire,

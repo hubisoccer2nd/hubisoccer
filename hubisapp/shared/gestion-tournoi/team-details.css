@@ -285,3 +285,46 @@ select, input { font-family: inherit; }
     .team-hero { flex-direction: column; text-align: center; }
     .form-row { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CHANTIER 12 — CLASSES POSÉES SANS AUCUN STYLE
+   -----------------------------------------------------------
+   Relevé automatique : ces classes sont écrites par la page ou
+   son script, et aucune feuille chargée par la page ne les
+   décrivait. L'élément tombait donc sur le rendu brut du
+   navigateur.
+     .section-hint    le texte d'explication sous un titre
+     .team-stats      le bloc des chiffres de l'équipe
+     .jersey          le numéro de maillot dans la liste
+     .position        le poste dans la liste
+
+   Aucune variable de la charte n'est ajoutée ni modifiée : on se
+   sert de celles qui existent déjà.
+   ═══════════════════════════════════════════════════════════ */
+
+.section-hint { font-size: .84rem; color: var(--gray-600); margin: 0 0 14px; line-height: 1.5; }
+.section-hint:empty { display: none; margin: 0; }
+
+.team-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: 10px;
+}
+
+/* Le numéro de maillot : chiffres tabulaires, pour que les
+   numéros s'alignent d'une ligne à l'autre. */
+.jersey {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 30px; height: 24px; padding: 0 7px;
+    background: var(--violet); color: var(--white);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-num); font-size: .78rem; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    flex: none;
+}
+.position {
+    display: inline-block;
+    font-size: .76rem; font-weight: 600; color: var(--gray-600);
+    background: var(--gray-100); border-radius: var(--radius-pill);
+    padding: 3px 10px;
+}

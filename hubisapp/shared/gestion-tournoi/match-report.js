@@ -328,17 +328,41 @@ async function chargerEffectifs() {
         .from(TBL_TEAMS).select('id, name').in('id', ids);
     equipesDuMatch = equipes || [];
 
-    const { data: membres } = await supabaseClient
-        .from(TBL_TEAM_PLAYERS)
-        .select('id, user_id, player_name, member_name, jersey_number, team_id, position')
-        .in('team_id', ids);
+    // CHANTIER 12 — l'effectif passe par gt-identite.js.
+    //
+    // L'ancienne requete nommait player_name, une colonne
+    // qu'aucune page n'ecrit plus. Si elle n'existe pas dans la
+    // base, PostgREST refuse la requete ENTIERE (42703) : membres
+    // valait null, (membres || []) donnait un tableau vide, et
+    // l'arbitre se retrouvait avec des listes deroulantes sans
+    // personne dedans — sans le moindre message.
+    //
+    // Et le nom de repli etait mot('{Sportif}') : tous les
+    // sportifs sans compte portaient la meme etiquette.
+    const index = await GTIdentite.charger(
+        supabaseClient,
+        { teamPlayers: TBL_TEAM_PLAYERS, profiles: TBL_PROFILES },
+        ids
+    );
 
-    sportifsDuMatch = (membres || []).map(function(j) {
+    if (index.erreur) {
+        const message = 'Effectif indisponible : ' + (index.erreur.message || 'erreur inconnue') +
+            (index.erreur.code ? ' (' + index.erreur.code + ')' : '') +
+            '. Les listes de sportifs resteront vides. Ouvre gt-diagnostic.html.';
+        console.warn(message);
+        showToast(message, 'error');
+        sportifsDuMatch = [];
+        return;
+    }
+
+    // L'etiquette porte deja le numero de maillot : gt-officiels.js
+    // le prefixe a son tour, on ne lui donne donc que le nom.
+    sportifsDuMatch = index.liste.map(function(e) {
         return {
-            id: j.user_id || j.id,
-            nom: j.player_name || j.member_name || mot('{Sportif}'),
-            jersey_number: j.jersey_number,
-            team_id: j.team_id
+            id: e.cle,
+            nom: e.nom || ('sans nom (' + GTIdentite.repere(e.cle) + ')'),
+            jersey_number: e.jersey_number,
+            team_id: e.team_id
         };
     });
 }
@@ -566,6 +590,7 @@ async function submitReport() {
     }]);
 
     // --- Le pont vers les statistiques (chantier 05)
+    let echecEvenements = null;
     // Chaque but, carton et remplacement saisi devient un
     // evenement date. Sans cela, les rapports n'alimentent rien.
     const evenements = GTOfficiels.extraireEvenements(contenu, currentMatchId);
@@ -578,19 +603,39 @@ async function submitReport() {
                 return Object.assign({}, e, { source_report_id: currentMatchId });
             }));
         if (erreurEvenements) {
+            // CHANTIER 12 — cet echec etait invisible.
+            //
+            // Le rapport s'enregistrait, le message « Rapport
+            // depose » s'affichait, et AUCUN evenement n'arrivait
+            // dans la table. Resultat : la page des details ne
+            // pouvait plus attribuer un seul but, un seul carton.
+            // L'arbitre croyait avoir tout transmis.
+            echecEvenements = erreurEvenements;
             console.warn('Événements non enregistrés :', erreurEvenements.message);
         }
     }
 
     hideLoader();
 
-    if (numeroVersion >= 3) {
+    if (echecEvenements) {
+        showToast('Rapport déposé (version ' + numeroVersion + ' sur 3), MAIS les buts, ' +
+                  'cartons et remplacements n\'ont pas pu être transmis aux statistiques : ' +
+                  (echecEvenements.message || 'erreur inconnue') +
+                  (echecEvenements.code ? ' (' + echecEvenements.code + ')' : '') +
+                  '. Préviens l\'organisateur : sans eux, aucune statistique ne peut être calculée.',
+                  'error');
+    } else if (numeroVersion >= 3) {
         showToast('Troisième version déposée. Le rapport est figé et attend l\'approbation de l\'organisateur.', 'success');
     } else {
         showToast('Rapport déposé (version ' + numeroVersion + ' sur 3).', 'success');
     }
 
-    setTimeout(function() { window.location.reload(); }, 2200);
+    // Un rechargement a 2,2 s effacerait le message d'echec avant
+    // qu'il ait ete lu. On laisse la page en place dans ce cas :
+    // l'arbitre doit voir ce qui n'est pas parti.
+    if (!echecEvenements) {
+        setTimeout(function() { window.location.reload(); }, 2200);
+    }
 }
 
 // ═══════════════════════════════════════════════════════════

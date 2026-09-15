@@ -514,3 +514,110 @@
     .gt-stats-cartes { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
     .gt-stat-carte .valeur { font-size: 1.3rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CHANTIER 12 — LES CLASSES QUI N'AVAIENT AUCUN STYLE
+   -----------------------------------------------------------
+   Trois classes etaient posees par match-details.js sans
+   qu'aucune feuille chargee par la page ne les decrive :
+
+     .off-champ-select   le selecteur du releve d'observation.
+                         Cette classe vient du nommage de
+                         gt-officiels.css — feuille que
+                         match-details.html ne charge pas. Le
+                         selecteur tombait donc sur le rendu brut
+                         du navigateur : d'ou le menu geant,
+                         pleine hauteur, des captures.
+     .btn-saisie-stat    le bouton « saisir » de chaque ligne du
+                         tableau des statistiques.
+     .gt-saisie-champ select
+                         les listes Oui / Non du releve : seuls
+                         les <input> etaient habilles, pas les
+                         <select>.
+
+   Rien n'est renomme : on decrit ce que le code pose deja.
+   La charte n'est pas touchee, seules ses variables servent.
+   ═══════════════════════════════════════════════════════════ */
+
+.gt-saisie-champ select,
+.off-champ-select {
+    padding: 9px 34px 9px 11px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-ui);
+    font-size: .9rem;
+    font-weight: 500;
+    color: var(--ink);
+    background-color: var(--white);
+    /* Le chevron est dessine, pas charge : aucune image a
+       trouver, donc rien qui puisse manquer. */
+    background-image: linear-gradient(45deg, transparent 50%, var(--gray-600) 50%),
+                      linear-gradient(135deg, var(--gray-600) 50%, transparent 50%);
+    background-position: calc(100% - 17px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 100%;
+    max-width: 100%;
+    cursor: pointer;
+    /* 44 px : la cible tactile minimale. En dessous, on vise a
+       cote une fois sur trois sur telephone. */
+    min-height: 44px;
+}
+.gt-saisie-champ select:focus,
+.off-champ-select:focus {
+    outline: none;
+    border-color: var(--violet-light);
+    box-shadow: 0 0 0 3px var(--violet-pale);
+}
+.gt-saisie-champ.auto select,
+.gt-saisie-champ select:disabled {
+    background-color: var(--gray-100);
+    color: var(--gray-600);
+    cursor: default;
+}
+.off-champ-select option,
+.gt-saisie-champ select option {
+    font-family: var(--font-ui);
+    color: var(--ink);
+    background: var(--white);
+}
+
+.btn-saisie-stat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 7px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--violet);
+    font-family: var(--font-ui);
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.btn-saisie-stat:hover {
+    background: var(--violet-pale);
+    border-color: var(--violet-light);
+}
+.btn-saisie-stat:active { transform: translateY(1px); }
+
+/* Le selecteur de sportif du releve : il porte un nom, il merite
+   d'etre lisible en entier, y compris sur un petit ecran. */
+.gt-saisie-champ select.off-champ-select {
+    font-family: var(--font-ui);
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+    .gt-saisie-champ select,
+    .off-champ-select { font-size: 16px; }   /* pas de zoom iOS a la mise au point */
+    .btn-saisie-stat { min-width: 44px; min-height: 44px; }
+}

@@ -331,6 +331,26 @@ window.GTSchema = (function () {
             }
         },
         {
+            nom: 'supabaseAuthPrive_notifications',
+            module: 'Notifications (partagée avec toute la plateforme)',
+            pages: ['acceuil.html', 'manage-tournament.html', 'tournament-details.html',
+                    'match-details.html', 'mon-equipe.html', '../community/notifications.html'],
+            casse: "Personne n'est prévenu de rien : ni du calendrier publié, ni d'un match " +
+                   "déplacé, ni d'un résultat, ni d'une qualification. La cloche reste à zéro. " +
+                   "Cette table est partagée avec le reste de la plateforme (revenus, dons, " +
+                   "feed, stories) — si elle manque, c'est tout HubISoccer qui est muet.",
+            colonnes: {
+                id:                      'uuid',
+                recipient_hubisoccer_id: 'text',
+                type:                    'text',
+                title:                   'text',
+                message:                 'text',
+                data:                    'jsonb',
+                read:                    'boolean',
+                created_at:              'timestamptz'
+            }
+        },
+        {
             nom: 'supabaseAuthPrive_gt_tournament_officials',
             module: 'Désignation des officiels',
             pages: ['manage-tournament.html', 'match-report.html', 'match-details.html'],

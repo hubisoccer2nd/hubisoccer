@@ -388,9 +388,34 @@ async function loadTeams(tournamentId) {
 async function loadMatches(tournamentId) {
     const { data, error } = await supabaseClient
         .from(TBL_MATCHES)
-        .select('id, round, team_a_id, team_b_id, score_a, score_b, match_date, status, team_a:' + TBL_TEAMS + '!team_a_id(name), team_b:' + TBL_TEAMS + '!team_b_id(name)')
+        .select('id, round, round_code, round_size, bracket_position, leg, is_bye, ' +
+                'team_a_id, team_b_id, score_a, score_b, penalty_a, penalty_b, ' +
+                'penalty_winner_id, forfeit_team_id, match_date, status')
         .eq('tournament_id', tournamentId)
         .order('match_date', { ascending: true });
+
+    // Les noms des deux équipes, par une requête SÉPARÉE.
+    // La jointure imbriquée d'avant dépendait d'une clé étrangère
+    // déclarée. Quand elle ne l'est pas, PostgREST répond
+    //     « Could not find a relationship between … »
+    // et TOUTE la requête échoue — la liste des matchs reste vide.
+    // C'est exactement ce qui s'est produit sur l'onglet Primes.
+    const idsEquipes = [];
+    (data || []).forEach(function(m) {
+        if (m.team_a_id && idsEquipes.indexOf(m.team_a_id) === -1) idsEquipes.push(m.team_a_id);
+        if (m.team_b_id && idsEquipes.indexOf(m.team_b_id) === -1) idsEquipes.push(m.team_b_id);
+    });
+    if (idsEquipes.length) {
+        const rEq = await supabaseClient.from(TBL_TEAMS).select('id, name').in('id', idsEquipes);
+        if (!rEq.error) {
+            const nomParId = {};
+            (rEq.data || []).forEach(function(e) { nomParId[e.id] = e.name; });
+            (data || []).forEach(function(m) {
+                if (nomParId[m.team_a_id]) m.team_a = { name: nomParId[m.team_a_id] };
+                if (nomParId[m.team_b_id]) m.team_b = { name: nomParId[m.team_b_id] };
+            });
+        }
+    }
 
     document.getElementById('statMatches').textContent = (!error && data) ? data.filter(function(m) { return m.status === 'completed'; }).length + ' / ' + data.length : '—';
 
@@ -842,9 +867,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     // de tournoi, alors que la plateforme tient une vraie table de
     // notifications que 26 autres fichiers alimentent déjà.
     if (typeof GTNotify !== 'undefined' && userProfile && userProfile.hubisoccer_id) {
+        // On ne passe QUE la table des notifications.
+        //
+        // La première version passait aussi TBL_PROFILES — une
+        // constante qui n'existe pas dans acceuil.js ni dans
+        // tournament-details.js. loadProfile() levait alors un
+        // ReferenceError, la page ne finissait jamais de charger et
+        // restait bloquée sur « Chargement en cours… ».
+        //
+        // brancherLaCloche() ne lit que les notifications : cette
+        // dépendance n'avait aucune raison d'être.
         GTNotify.brancherLaCloche(
             supabaseClient,
-            { profiles: TBL_PROFILES, notifications: 'supabaseAuthPrive_notifications' },
+            { notifications: 'supabaseAuthPrive_notifications' },
             userProfile.hubisoccer_id
         );
     }

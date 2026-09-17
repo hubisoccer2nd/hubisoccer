@@ -557,3 +557,90 @@ input, select, textarea { font-family: inherit; }
     border: 1.5px solid var(--corps);
 }
 .btn-refuser-paiement:hover { background: var(--corps-pale); }
+
+/* ═══════════════════════════════════════════════════════════
+   CHANTIER 15 — LA CLÔTURE DU TOURNOI
+   -----------------------------------------------------------
+   Le podium proposé avant confirmation. C'est le moment le plus
+   important du tournoi : l'organisateur doit pouvoir relire
+   calmement qui gagne quoi, et refuser si quelque chose cloche.
+   Rien n'est écrit tant qu'il n'a pas confirmé.
+
+   Aucune variable de la charte n'est ajoutée ni modifiée.
+   ═══════════════════════════════════════════════════════════ */
+
+.cloture-zone { margin-bottom: 18px; }
+
+.cloture-bloc {
+    background: var(--violet-pale);
+    border: 1px solid #DCCCEE;
+    border-radius: var(--radius-md);
+    padding: 18px;
+}
+
+.cloture-titre {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .95rem; font-weight: 800; color: var(--violet);
+    margin: 0 0 6px;
+}
+.cloture-titre i { color: var(--gold-dark); }
+.cloture-titre:not(:first-child) { margin-top: 18px; }
+
+.cloture-source {
+    font-size: .8rem; color: var(--gray-600); margin: 0 0 10px; font-style: italic;
+}
+
+/* Le podium : on lit d'abord le rang, puis le nom. */
+.cloture-podium {
+    list-style: none; margin: 0 0 4px; padding: 0;
+    display: flex; flex-direction: column; gap: 6px;
+}
+.cloture-podium li {
+    display: flex; align-items: baseline; gap: 10px;
+    background: var(--white); border-radius: var(--radius-sm);
+    padding: 9px 12px; font-size: .92rem;
+}
+.cloture-podium li b {
+    min-width: 34px; color: var(--violet); font-family: var(--font-num);
+    font-size: .86rem; flex: none;
+}
+.cloture-podium li:first-child {
+    border-left: 4px solid var(--gold);
+    font-weight: 600;
+}
+.cloture-podium em { font-size: .78rem; color: var(--gray-600); }
+
+.cloture-recompenses {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 7px;
+}
+.cloture-recompenses li {
+    background: var(--white); border-radius: var(--radius-sm);
+    padding: 9px 12px; font-size: .88rem;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 10px;
+}
+.cloture-quoi { font-weight: 700; color: var(--violet); min-width: 92px; }
+.cloture-lot  { color: var(--gray-600); }
+.cloture-qui  { font-weight: 600; margin-left: auto; text-align: right; }
+
+/* Ce qui reste à faire à la main se voit du premier coup d'œil. */
+.cloture-amain { color: var(--gold-dark); font-weight: 400; font-size: .82rem; }
+
+.cloture-refus {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--corps-pale); border-left: 4px solid var(--corps);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 12px 14px; margin: 0; font-size: .9rem; color: var(--gray-900);
+}
+.cloture-refus i { color: var(--corps); margin-top: 3px; flex: none; }
+
+.cloture-actions {
+    display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px;
+}
+
+@media (max-width: 640px) {
+    .cloture-bloc { padding: 14px; }
+    .cloture-qui { margin-left: 0; text-align: left; width: 100%; }
+    .cloture-actions .btn-primary,
+    .cloture-actions .btn-secondary { flex: 1 1 100%; }
+}

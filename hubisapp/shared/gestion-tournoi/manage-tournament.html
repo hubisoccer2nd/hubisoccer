@@ -247,10 +247,18 @@
                     <h2 class="section-title"><i class="fas fa-futbol"></i> Matchs</h2>
                     <div class="section-actions">
                         <button id="genererCalendrierBtn" class="btn-secondary"><i class="fas fa-wand-magic-sparkles"></i> Générer le calendrier</button>
+                        <!-- CHANTIER 13 — le tableau avance tout seul à chaque
+                             résultat enregistré. Ce bouton ne sert que de
+                             rattrapage : après une correction de score, ou si
+                             un résultat a été saisi ailleurs que par cette
+                             page. Le relancer sur un tableau à jour n'écrit
+                             rien. -->
+                        <button id="avancerTableauBtn" class="btn-secondary"><i class="fas fa-sitemap"></i> Faire avancer le tableau</button>
                         <button id="addMatchBtn" class="btn-primary"><i class="fas fa-plus"></i> Ajouter un match</button>
                     </div>
                 </div>
                 <p class="section-hint">Le générateur crée toutes les rencontres d'un coup, d'après le format choisi dans l'onglet <strong>Format</strong>. Ensuite, chaque match reste modifiable un par un : date, heure, résultat, suppression.</p>
+                <p class="section-hint">Sur un tableau à élimination directe, <strong>les vainqueurs montent tout seuls</strong> au tour suivant dès que vous enregistrez un résultat — exemptions, aller-retour, tirs au but et forfaits compris. Les perdants des demi-finales rejoignent le match pour la 3<sup>e</sup> place. Une affiche déjà jouée n'est jamais réécrite.</p>
                 <div id="matchesList" class="matches-list"></div>
             </div>
         </div>
@@ -693,6 +701,7 @@
 <script src="gt-picker.js"></script>
 <script src="gt-formats.js"></script>
 <script src="gt-calendrier.js"></script>
+<script src="gt-tableau.js"></script>
 <script src="gt-classement.js"></script>
 <script src="gt-officiels.js"></script>
 <script src="gt-stats.js"></script>

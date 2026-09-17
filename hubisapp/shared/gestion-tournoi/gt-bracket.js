@@ -121,6 +121,21 @@ window.GTBracket = (function () {
         var manches = affiche.manches;
         var premiere = manches[0];
 
+        // CHANTIER 13 — un seul juge pour le dessin et pour la
+        // propagation.
+        //
+        // Cette fonction ne connaissait ni le forfait ni les tirs au
+        // but : elle rendait null sur une egalite. gt-tableau.js, lui,
+        // fait monter le vainqueur au tour suivant. Le tableau aurait
+        // donc pu AFFICHER une affiche sans vainqueur tout en ayant
+        // deja qualifie quelqu'un — deux verites pour un meme match.
+        //
+        // On delegue. Le code d'origine reste en secours pour les
+        // pages qui ne chargeraient pas gt-tableau.js.
+        if (typeof window !== 'undefined' && window.GTTableau) {
+            return window.GTTableau.resultatDeLAffiche(manches).vainqueur;
+        }
+
         if (premiere.is_bye) return premiere.team_a_id;
 
         var termineesToutes = manches.every(function (m) { return m.status === 'completed'; });

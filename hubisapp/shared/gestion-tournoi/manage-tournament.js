@@ -191,9 +191,19 @@ async function loadProfile() {
     // de tournoi, alors que la plateforme tient une vraie table de
     // notifications que 26 autres fichiers alimentent déjà.
     if (typeof GTNotify !== 'undefined' && userProfile && userProfile.hubisoccer_id) {
+        // On ne passe QUE la table des notifications.
+        //
+        // La première version passait aussi TBL_PROFILES — une
+        // constante qui n'existe pas dans acceuil.js ni dans
+        // tournament-details.js. loadProfile() levait alors un
+        // ReferenceError, la page ne finissait jamais de charger et
+        // restait bloquée sur « Chargement en cours… ».
+        //
+        // brancherLaCloche() ne lit que les notifications : cette
+        // dépendance n'avait aucune raison d'être.
         GTNotify.brancherLaCloche(
             supabaseClient,
-            { profiles: TBL_PROFILES, notifications: 'supabaseAuthPrive_notifications' },
+            { notifications: 'supabaseAuthPrive_notifications' },
             userProfile.hubisoccer_id
         );
     }
@@ -253,6 +263,36 @@ function getTournamentIdFromURL() {
 // ═══════════════════════════════════════════════════════════
 // 12. CHARGEMENT DU TOURNOI + VÉRIFICATION DE PROPRIÉTÉ
 // ═══════════════════════════════════════════════════════════
+// Le type et le sport d'un tournoi, par des requêtes SÉPARÉES.
+//
+// PostgREST n'accepte  table(colonnes)  que si une clé étrangère
+// déclare la relation. Quand elle manque, il refuse TOUTE la requête
+// et la page affiche « Tournoi introuvable ». On range le résultat
+// sous les deux formes que le code lisait déjà : t.sport / t.type.
+async function attacherTypeEtSport(tournois) {
+    const idsType = [], idsSport = [];
+    (tournois || []).forEach(function(t) {
+        if (t.type_id  && idsType.indexOf(t.type_id) === -1)   idsType.push(t.type_id);
+        if (t.sport_id && idsSport.indexOf(t.sport_id) === -1) idsSport.push(t.sport_id);
+    });
+    const parType = {}, parSport = {};
+    if (idsType.length) {
+        const r = await supabaseClient.from(TBL_TYPES).select('id, name, label').in('id', idsType);
+        if (!r.error) (r.data || []).forEach(function(x) { parType[x.id] = x; });
+    }
+    if (idsSport.length) {
+        const r = await supabaseClient.from(TBL_SPORTS).select('id, name').in('id', idsSport);
+        if (!r.error) (r.data || []).forEach(function(x) { parSport[x.id] = x; });
+    }
+    (tournois || []).forEach(function(t) {
+        t[TBL_TYPES]  = parType[t.type_id]   || null;
+        t[TBL_SPORTS] = parSport[t.sport_id] || null;
+        t.type  = t[TBL_TYPES];
+        t.sport = t[TBL_SPORTS];
+    });
+    return tournois;
+}
+
 async function loadTournament() {
     currentTournamentId = getTournamentIdFromURL();
     if (!currentTournamentId) {
@@ -273,9 +313,11 @@ async function loadTournament() {
     showLoader();
     const { data, error } = await supabaseClient
         .from(TBL_TOURNAMENTS)
-        .select('*, sport:' + TBL_SPORTS + '(name), type:' + TBL_TYPES + '(name, label)')
+        .select('*')
         .eq('id', currentTournamentId)
         .single();
+
+    if (data) await attacherTypeEtSport([data]);
     hideLoader();
 
     if (error || !data) {
@@ -674,6 +716,16 @@ async function validerLeTirage() {
 // ---------- GENERATION DU CALENDRIER ----------
 
 async function chargerEquipesDuTournoi() {
+    // CORRECTION — aucun tournoi choisi, aucune requête.
+    //
+    // Sans ce garde-fou, l'identifiant valait null, PostgREST
+    // recevait  tournament_id=eq.null  et PostgreSQL répondait
+    //     « invalid input syntax for type bigint: "null" »
+    // Le message rouge « Impossible de charger les équipes »
+    // s'affichait sur l'écran de choix du tournoi, avant même
+    // qu'on ait choisi quoi que ce soit.
+    if (currentTournamentId == null || currentTournamentId === '') return [];
+
     const { data, error } = await supabaseClient
         .from(TBL_TEAMS)
         .select('id, name, group_name')
@@ -2262,10 +2314,40 @@ async function deleteTeam(teamId) {
 async function loadMatches() {
     const { data, error } = await supabaseClient
         .from(TBL_MATCHES)
-        .select('*, team_a:' + TBL_TEAMS + '!team_a_id(name), team_b:' + TBL_TEAMS + '!team_b_id(name)')
+        .select('*')
         .eq('tournament_id', currentTournamentId)
         .order('match_date', { ascending: true });
-    if (error) { console.error('Erreur chargement matchs:', error.message); return; }
+    if (error) {
+        console.error('Erreur chargement matchs:', error.message);
+        const zone = document.getElementById('matchesList');
+        if (zone) zone.innerHTML = '<p class="empty-hint">Matchs indisponibles : ' +
+            escapeHtml(error.message) + (error.code ? ' (' + escapeHtml(error.code) + ')' : '') + '</p>';
+        return;
+    }
+
+    // Les noms des deux équipes, par une requête SÉPARÉE.
+    // La jointure imbriquée d'avant dépendait d'une clé étrangère
+    // déclarée. Quand elle ne l'est pas, PostgREST répond
+    //     « Could not find a relationship between … »
+    // et TOUTE la requête échoue — la liste des matchs reste vide.
+    // C'est exactement ce qui s'est produit sur l'onglet Primes.
+    const idsEquipes = [];
+    (data || []).forEach(function(m) {
+        if (m.team_a_id && idsEquipes.indexOf(m.team_a_id) === -1) idsEquipes.push(m.team_a_id);
+        if (m.team_b_id && idsEquipes.indexOf(m.team_b_id) === -1) idsEquipes.push(m.team_b_id);
+    });
+    if (idsEquipes.length) {
+        const rEq = await supabaseClient.from(TBL_TEAMS).select('id, name').in('id', idsEquipes);
+        if (!rEq.error) {
+            const nomParId = {};
+            (rEq.data || []).forEach(function(e) { nomParId[e.id] = e.name; });
+            (data || []).forEach(function(m) {
+                if (nomParId[m.team_a_id]) m.team_a = { name: nomParId[m.team_a_id] };
+                if (nomParId[m.team_b_id]) m.team_b = { name: nomParId[m.team_b_id] };
+            });
+        }
+    }
+
     // CHANTIER 11 — on retient les matchs pour pouvoir remplir la
     // modale de modification sans repartir en base.
     matchsEnMemoire = data || [];
@@ -2810,13 +2892,63 @@ function renderReports(reports) {
 // 19. ONGLET PRIMES
 // ═══════════════════════════════════════════════════════════
 async function loadPrizes() {
+    // CORRECTION — la jointure imbriquée est retirée.
+    //
+    // L'ancienne requête demandait
+    //     .select('*, team:supabaseAuthPrive_gt_teams!team_id(name)')
+    // et PostgREST répondait :
+    //     « Could not find a relationship between
+    //       'supabaseAuthPrive_gt_prizes' and
+    //       'supabaseAuthPrive_gt_teams' in the schema cache »
+    // parce qu'aucune clé étrangère ne déclare cette relation.
+    // L'onglet Primes restait donc vide, sans que personne sache
+    // pourquoi.
+    //
+    // Règle de la maison depuis l'incident manage-tournament :
+    // deux requêtes séparées, fusionnées en JavaScript. Ça marche
+    // que la clé étrangère existe ou non.
     const { data, error } = await supabaseClient
         .from(TBL_PRIZES)
-        .select('*, team:' + TBL_TEAMS + '!team_id(name)')
+        .select('*')
         .eq('tournament_id', currentTournamentId)
         .order('created_at', { ascending: false });
-    if (error) { console.error('Erreur chargement primes:', error.message); return; }
-    renderPrizes(data || []);
+    if (error) {
+        // Cet échec ne part plus dans la console seule : l'onglet
+        // Primes restait vide sans explication.
+        console.error('Erreur chargement primes:', error.message);
+        const zone = document.getElementById('prizesList');
+        if (zone) {
+            zone.innerHTML = '<p class="empty-hint">Primes indisponibles : ' +
+                escapeHtml(error.message) + (error.code ? ' (' + escapeHtml(error.code) + ')' : '') + '</p>';
+        }
+        return;
+    }
+
+    const primes = data || [];
+
+    // Le nom des équipes, par une requête SÉPARÉE — c'est la
+    // deuxième moitié du correctif. Sans elle, le rendu afficherait
+    // le mot générique à la place du nom, ce qui serait pire que
+    // l'erreur d'origine.
+    const idsEquipes = primes
+        .filter(function(p) { return p.recipient_type === 'team' && p.recipient_id; })
+        .map(function(p) { return p.recipient_id; })
+        .filter(function(v, i, t) { return t.indexOf(v) === i; });
+
+    if (idsEquipes.length) {
+        const r = await supabaseClient.from(TBL_TEAMS).select('id, name').in('id', idsEquipes);
+        if (!r.error) {
+            const nomParId = {};
+            (r.data || []).forEach(function(e) { nomParId[e.id] = e.name; });
+            primes.forEach(function(p) {
+                if (p.recipient_type === 'team' && nomParId[p.recipient_id]) {
+                    p.team = { name: nomParId[p.recipient_id] };
+                }
+            });
+        }
+    }
+
+    renderPrizes(primes);
 }
 
 function renderPrizes(prizes) {
@@ -2960,9 +3092,12 @@ async function saveTournamentChanges(e) {
         closeModal('editTournamentModal');
         const { data } = await supabaseClient
             .from(TBL_TOURNAMENTS)
-            .select('*, sport:' + TBL_SPORTS + '(name), type:' + TBL_TYPES + '(name, label)')
+            .select('*')
             .eq('id', currentTournamentId)
             .single();
+        // Après modification : le sport et le type se rechargent
+        // eux aussi, sinon fillInfoTab afficherait « — ».
+        if (data) await attacherTypeEtSport([data]);
         if (data) {
             currentTournament = data;
             appliquerLexique();

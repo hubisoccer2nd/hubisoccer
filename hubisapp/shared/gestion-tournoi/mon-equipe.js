@@ -37,6 +37,8 @@ const LOGO_BUCKET                        = 'gt-team-logos';
 const TBL_MATCHES                           = 'supabaseAuthPrive_gt_matches';
 const TBL_LINEUPS                              = 'supabaseAuthPrive_gt_match_lineups';
 const TBL_PLAYER_STATS                            = 'supabaseAuthPrive_gt_player_match_stats';
+// CHANTIER 16 — les cartons, pour calculer les suspensions.
+const TBL_EVENTS                                     = 'supabaseAuthPrive_gt_match_events';
 
 // ═══════════════════════════════════════════════════════════
 // 3. TABLE DE ROUTAGE PROFIL / PARAMETRES PAR ROLE
@@ -693,6 +695,77 @@ async function loadRoster() {
 // se déplace au doigt comme à la souris.
 // ═══════════════════════════════════════════════════════════
 
+// CHANTIER 16 — l'état disciplinaire de l'effectif.
+// ------------------------------------------------------------
+// Les cartons étaient enregistrés depuis toujours, et PERSONNE ne
+// les comptait. is_suspended existait sur la fiche d'un membre
+// mais aucune ligne de code ne le calculait : un interrupteur que
+// l'organisateur devait cocher à la main, en tenant son carnet.
+//
+// Et rien ne l'imposait : la composition se contentait de RANGER
+// les suspendus en fin de liste. On pouvait les aligner.
+let disciplineCourante = { parSportif: {}, reglement: null };
+
+async function chargerLaDiscipline() {
+    disciplineCourante = { parSportif: {}, reglement: null };
+    if (typeof GTDiscipline === 'undefined') return;
+    if (!currentTeam || !currentTeam.tournament_id) return;
+
+    const [rMatchs, rEvenements, rTournoi] = await Promise.all([
+        supabaseClient.from(TBL_MATCHES).select('*').eq('tournament_id', currentTeam.tournament_id),
+        supabaseClient.from(TBL_EVENTS).select('match_id, player_id, team_id, event_type')
+            .eq('event_type', 'yellow_card'),
+        supabaseClient.from(TBL_TOURNAMENTS).select('*').eq('id', currentTeam.tournament_id).maybeSingle()
+    ]);
+
+    // Les rouges, par une seconde requête : PostgREST n'accepte pas
+    // deux .eq() sur la même colonne.
+    const rRouges = await supabaseClient.from(TBL_EVENTS)
+        .select('match_id, player_id, team_id, event_type').eq('event_type', 'red_card');
+
+    if (rMatchs.error || rEvenements.error) {
+        console.warn('Discipline indisponible :', (rMatchs.error || rEvenements.error).message);
+        return;
+    }
+
+    const t = rTournoi.data || {};
+    disciplineCourante = GTDiscipline.calculer({
+        matchs: rMatchs.data || [],
+        evenements: (rEvenements.data || []).concat(rRouges.error ? [] : (rRouges.data || [])),
+        reglement: {
+            jaunesPourSuspension:   t.yellow_cards_for_suspension,
+            matchsApresCumulJaunes: t.suspension_matches_yellow,
+            matchsApresDoubleJaune: t.suspension_matches_double_yellow,
+            matchsApresRouge:       t.suspension_matches_red
+        }
+    });
+}
+
+// La clé d'un membre côté discipline : la même que partout
+// ailleurs depuis le chantier 12 — le compte s'il existe, sinon
+// la fiche d'effectif.
+function cleDiscipline(membre) {
+    if (!membre) return null;
+    return String(membre.user_id || membre.id);
+}
+
+function etatDisciplinaire(membre) {
+    const c = cleDiscipline(membre);
+    if (!c) return null;
+    return disciplineCourante.parSportif[c] || null;
+}
+
+function estSuspendu(membre) {
+    const d = etatDisciplinaire(membre);
+    if (d && d.suspendu) return d;
+    // L'interrupteur manuel reste respecté : un organisateur peut
+    // alourdir une peine que le calcul ne connaît pas.
+    if (membre && membre.is_suspended) {
+        return { suspendu: true, matchsRestants: null, motif: 'suspension déclarée par l\'organisateur' };
+    }
+    return null;
+}
+
 // Les sportifs de terrain — l'encadrement ne se place pas.
 function sportifsDeLEquipe() {
     return effectifCourant.filter(function(p) {
@@ -827,6 +900,8 @@ async function chargerLaComposition() {
         if (deduite && deduite.connue) formationCourante = deduite.code;
     }
     if (!formationCourante) formationCourante = GTTerrain.formationParDefaut(sportCourant, formatCourant);
+
+    await chargerLaDiscipline();
 
     monterLesSelecteurs();
     dessinerLeTerrain();
@@ -1338,6 +1413,26 @@ function deposer(geste, clientX, clientY) {
             return c && c.titulaire && String(p.id) !== String(geste.idMembre);
         }).length;
 
+        // CHANTIER 16 — un suspendu ne monte pas sur le terrain.
+        //
+        // C'est ici que la sanction cesse d'être décorative. Avant,
+        // on pouvait poser n'importe qui : la suspension n'était
+        // qu'un rangement en fin de liste.
+        const membreDepose = sportifsDeLEquipe().filter(function(p) {
+            return String(p.id) === String(geste.idMembre);
+        })[0];
+        const peine = estSuspendu(membreDepose);
+        if (!compo.titulaire && peine) {
+            showToast(memberDisplayName(membreDepose) + ' est SUSPENDU' +
+                      (peine.matchsRestants ? ' pour ' + peine.matchsRestants + ' match' +
+                       (peine.matchsRestants > 1 ? 's' : '') : '') +
+                      ' — ' + peine.motif + '. Il ne peut pas être aligné. ' +
+                      'L\'aligner quand même ferait perdre le match sur tapis vert.', 'error');
+            dessinerLeTerrain();
+            dessinerLeBanc();
+            return;
+        }
+
         if (!compo.titulaire && dejaLa >= attendus) {
             showToast('Le terrain est complet : ' + attendus + ' places pour un ' + formationCourante +
                       '. Sortez d\'abord quelqu\'un, ou changez de formation.', 'warning');
@@ -1546,6 +1641,25 @@ async function enregistrerLaComposition() {
     if (erreurMenage) {
         hideLoader();
         showToast('Impossible de remplacer la feuille existante : ' + erreurMenage.message, 'error');
+        return;
+    }
+
+    // CHANTIER 16 — dernier filet avant l'écriture.
+    //
+    // Le geste est bloqué plus haut, mais une composition peut
+    // avoir été posée AVANT la suspension (un carton pris entre
+    // temps). On refuse d'enregistrer plutôt que de laisser
+    // déposer une feuille qui fera perdre le match sur tapis vert.
+    const suspendusAlignes = sportifs.filter(function(p) {
+        const c = compositionCourante[p.id];
+        return c && c.titulaire && estSuspendu(p);
+    });
+    if (suspendusAlignes.length) {
+        hideLoader();
+        showToast('Feuille refusée : ' +
+                  suspendusAlignes.map(memberDisplayName).join(', ') +
+                  (suspendusAlignes.length > 1 ? ' sont suspendus' : ' est suspendu') +
+                  ' et ne peuvent pas être alignés. Sortez-les du terrain, puis enregistrez.', 'error');
         return;
     }
 

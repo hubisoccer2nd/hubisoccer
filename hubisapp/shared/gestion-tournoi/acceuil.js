@@ -198,8 +198,8 @@ async function loadProfile() {
     if (typeof GTNotify !== 'undefined' && userProfile && userProfile.hubisoccer_id) {
         // On ne passe QUE la table des notifications.
         //
-        // La première version passait aussi TBL_PROFILES — une
-        // constante qui n'existe pas dans acceuil.js ni dans
+        // La première version passait aussi la table des profils —
+        // une constante qui n'existe pas dans acceuil.js ni dans
         // tournament-details.js. loadProfile() levait alors un
         // ReferenceError, la page ne finissait jamais de charger et
         // restait bloquée sur « Chargement en cours… ».

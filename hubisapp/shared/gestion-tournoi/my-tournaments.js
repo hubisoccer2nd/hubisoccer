@@ -192,13 +192,46 @@ function updateNavbarUI() {
 // ═══════════════════════════════════════════════════════════
 // 11. CHARGEMENT DES TOURNOIS DE L'UTILISATEUR
 // ═══════════════════════════════════════════════════════════
+// Le type et le sport d'un tournoi, par des requêtes SÉPARÉES.
+//
+// PostgREST n'accepte  table(colonnes)  que si une clé étrangère
+// déclare la relation. Quand elle manque, il refuse TOUTE la requête.
+// On range le résultat sous la clé du nom de table ET sous un alias
+// court — les deux formes que les pages lisaient avec la jointure.
+async function attacherTypeEtSport(tournois) {
+    const idsType  = [];
+    const idsSport = [];
+    (tournois || []).forEach(function(t) {
+        if (t.type_id  && idsType.indexOf(t.type_id) === -1)   idsType.push(t.type_id);
+        if (t.sport_id && idsSport.indexOf(t.sport_id) === -1) idsSport.push(t.sport_id);
+    });
+    const parType = {}, parSport = {};
+    if (idsType.length) {
+        const r = await supabaseClient.from(TBL_TYPES).select('id, name, label').in('id', idsType);
+        if (!r.error) (r.data || []).forEach(function(x) { parType[x.id] = x; });
+    }
+    if (idsSport.length) {
+        const r = await supabaseClient.from(TBL_SPORTS).select('id, name').in('id', idsSport);
+        if (!r.error) (r.data || []).forEach(function(x) { parSport[x.id] = x; });
+    }
+    (tournois || []).forEach(function(t) {
+        t[TBL_TYPES]  = parType[t.type_id]   || null;
+        t[TBL_SPORTS] = parSport[t.sport_id] || null;
+        t.type  = t[TBL_TYPES];
+        t.sport = t[TBL_SPORTS];
+    });
+    return tournois;
+}
+
 async function loadMyTournaments() {
     showLoader();
     const { data, error } = await supabaseClient
         .from(TBL_TOURNAMENTS)
-        .select('id, name, description, start_date, end_date, location, status, prize_pool, type_id, sport_id, ' + TBL_TYPES + '(name, label), ' + TBL_SPORTS + '(name)')
+        .select('id, name, description, start_date, end_date, location, status, prize_pool, type_id, sport_id')
         .eq('created_by', currentUser.id)
         .order('start_date', { ascending: false });
+
+    if (!error) await attacherTypeEtSport(data || []);
 
     hideLoader();
 

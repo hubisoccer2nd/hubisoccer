@@ -222,7 +222,8 @@ window.GTSchema = (function () {
             nom: 'supabaseAuthPrive_gt_matches',
             module: 'Calendrier et rencontres',
             pages: ['tournament-details.html', 'match-details.html', 'manage-tournament.html'],
-            casse: "Le calendrier, le tableau final et le classement ne se construisent plus.",
+            casse: "Le calendrier, le tableau final et le classement ne se construisent plus. " +
+                   "Sans round_size, les vainqueurs ne montent plus au tour suivant.",
             colonnes: {
                 id:                'uuid',
                 tournament_id:     'uuid',
@@ -231,6 +232,15 @@ window.GTSchema = (function () {
                 match_date:        'timestamptz',
                 venue:             'text',
                 round:             'text',
+                // CHANTIER 13 — sans ces deux colonnes, savoir si
+                // « Quarts de finale » vient avant « Demi-finales »
+                // exigeait d'analyser le nom du tour. round_size est
+                // le nombre d'equipes encore en lice : 2 = finale,
+                // 4 = demi-finales, 8 = quarts. C'est la cle du
+                // tableau qui avance tout seul.
+                round_code:        'text',
+                round_size:        'integer',
+                generated_at:      'timestamptz',
                 matchday:          'integer',
                 leg:               'integer',
                 group_name:        'text',

@@ -836,6 +836,12 @@ async function confirmerGeneration() {
             matchday: m.journee || null,
             group_name: m.groupe || null,
             bracket_position: m.positionTableau || null,
+            // CHANTIER 13 — la taille du tour accompagne la rencontre.
+            // Sans elle, il fallait analyser le nom du tour pour savoir
+            // si « Quarts de finale » venait avant ou apres « Demi-
+            // finales ». Un tournoi renomme cassait le tableau.
+            round_code: m.codeTour || null,
+            round_size: m.tailleTour || null,
             leg: m.manche || 1,
             is_bye: !!m.exemption,
             status: m.exemption ? 'completed' : 'scheduled',
@@ -858,10 +864,18 @@ async function confirmerGeneration() {
         inseres += paquet.length;
     }
 
+    // CHANTIER 13 — les exemptions passent d'office, tout de suite.
+    // Avant, une equipe exemptee au premier tour restait bloquee :
+    // sa case du tour suivant restait vide jusqu'a ce que
+    // l'organisateur la remplisse a la main.
+    const avance = await fairePropagerLeTableau({ silencieux: true });
+
     hideLoader();
     closeModal('genererCalendrierModal');
     calendrierPropose = null;
-    showToast(inseres + ' rencontre(s) générées.', 'success');
+    showToast(inseres + ' rencontre(s) générées.' +
+              (avance && avance.ecrites ? ' ' + avance.ecrites + ' place(s) déjà remplie(s) par les exemptions.' : ''),
+              'success');
     await loadMatches();
 }
 
@@ -2482,11 +2496,95 @@ async function saveMatchResult(e) {
 
     if (error) {
         showToast('Erreur lors de l\'enregistrement : ' + error.message, 'error');
-    } else {
-        showToast('Résultat enregistré !', 'success');
-        closeModal('recordResultModal');
-        loadMatches();
+        return;
     }
+
+    // CHANTIER 13 — le vainqueur monte tout seul.
+    //
+    // C'est ici que tenait le trou le plus couteux du module :
+    // gt-calendrier.js creait bien les affiches des tours suivants,
+    // mais avec team_a_id et team_b_id a null, et RIEN ne les
+    // remplissait jamais. Sur une coupe a 32 equipes, il fallait
+    // saisir 31 affiches a la main en recopiant les vainqueurs.
+    const avance = await fairePropagerLeTableau({ silencieux: true });
+
+    closeModal('recordResultModal');
+    showToast('Résultat enregistré.' +
+              (avance && avance.message ? ' ' + avance.message : ''), 'success');
+    loadMatches();
+}
+
+// ═══════════════════════════════════════════════════════════
+// 17b. LE TABLEAU QUI AVANCE TOUT SEUL (chantier 13)
+// -----------------------------------------------------------
+// Le calcul vit dans gt-tableau.js, sans DOM ni reseau. Ici on
+// ne fait que lire les rencontres, appliquer ce qu'il rend, et
+// dire ce qui s'est passe.
+//
+// La fonction est volontairement rejouable : la relancer sur un
+// tableau deja a jour n'ecrit rien. Elle sert donc aussi de
+// reparation quand un resultat a ete corrige apres coup.
+// ═══════════════════════════════════════════════════════════
+async function fairePropagerLeTableau(options) {
+    options = options || {};
+    if (typeof GTTableau === 'undefined') {
+        if (!options.silencieux) showToast('Le module du tableau n\'est pas chargé (gt-tableau.js).', 'error');
+        return null;
+    }
+    if (!currentTournamentId) return null;
+
+    const { data: rencontres, error } = await supabaseClient
+        .from(TBL_MATCHES)
+        .select('*')
+        .eq('tournament_id', currentTournamentId);
+
+    if (error) {
+        const message = 'Impossible de lire les rencontres pour faire avancer le tableau : ' + error.message;
+        console.warn(message);
+        if (!options.silencieux) showToast(message, 'error');
+        return null;
+    }
+
+    const resultat = GTTableau.propager(rencontres || []);
+
+    // Un tournoi en championnat ou en poules n'a pas de tableau :
+    // le moteur rend une liste vide, on n'a rien a dire.
+    if (!resultat.affiches) return { ecrites: 0, message: null, resultat: resultat };
+
+    let ecrites = 0;
+    let echec = null;
+    for (let i = 0; i < resultat.ecritures.length; i++) {
+        const e = resultat.ecritures[i];
+        const modif = {};
+        if (e.team_a_id !== undefined) modif.team_a_id = e.team_a_id;
+        if (e.team_b_id !== undefined) modif.team_b_id = e.team_b_id;
+        const r = await supabaseClient.from(TBL_MATCHES).update(modif).eq('id', e.id);
+        if (r.error) { echec = r.error; break; }
+        ecrites++;
+    }
+
+    if (echec) {
+        // On ne laisse pas cet echec dans la console : un tableau a
+        // moitie rempli est pire qu'un tableau vide, il faut le savoir.
+        showToast('Le tableau n\'a pas pu être complété (' + ecrites + ' place(s) écrite(s) sur ' +
+                  resultat.ecritures.length + ') : ' + echec.message +
+                  (echec.code ? ' (' + echec.code + ')' : '') +
+                  '. Ouvre gt-diagnostic.html : il manque probablement une colonne.', 'error');
+        return { ecrites: ecrites, message: null, resultat: resultat };
+    }
+
+    // Les noms d'equipes, pour que le message dise « Vainqueur du
+    // tournoi : Inter Milan » et non un identifiant.
+    const noms = {};
+    if (resultat.champion) {
+        const equipes = await chargerEquipesDuTournoi();
+        equipes.forEach(function(eq) { noms[eq.id] = eq.name; });
+    }
+    const message = GTTableau.resumer(resultat, noms);
+    const aQuelqueChoseADire = !!(ecrites || resultat.champion || resultat.refus.length);
+
+    if (!options.silencieux) showToast(message, aQuelqueChoseADire ? 'success' : 'info');
+    return { ecrites: ecrites, message: aQuelqueChoseADire ? message : null, resultat: resultat };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2939,6 +3037,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (champ) champ.style.display = this.value === 'chapeaux' ? 'flex' : 'none';
     });
     document.getElementById('genererCalendrierBtn')?.addEventListener('click', preparerGeneration);
+    document.getElementById('avancerTableauBtn')?.addEventListener('click', async function() {
+        showLoader();
+        await fairePropagerLeTableau({ silencieux: false });
+        hideLoader();
+        await loadMatches();
+    });
     document.getElementById('recalculerClassementBtn')?.addEventListener('click', recalculerLeClassement);
     document.getElementById('recalculerStatsBtn')?.addEventListener('click', recalculerLesStatistiques);
     document.getElementById('payEnregistrerReglages')?.addEventListener('click', enregistrerLesReglagesDePaiement);

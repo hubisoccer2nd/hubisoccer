@@ -290,3 +290,4 @@ window.GTBracket = (function () {
     return { dessiner: dessiner, organiser: organiser, vainqueur: vainqueur };
 
 })();
+

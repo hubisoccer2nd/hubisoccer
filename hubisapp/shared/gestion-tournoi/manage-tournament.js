@@ -185,6 +185,18 @@ async function loadProfile() {
     }
     userProfile = data;
     updateNavbarUI();
+
+    // CHANTIER 14 — la cloche cesse d'être un décor.
+    // Elle affichait « 0 » en dur sur les 26 pages du gestionnaire
+    // de tournoi, alors que la plateforme tient une vraie table de
+    // notifications que 26 autres fichiers alimentent déjà.
+    if (typeof GTNotify !== 'undefined' && userProfile && userProfile.hubisoccer_id) {
+        GTNotify.brancherLaCloche(
+            supabaseClient,
+            { profiles: TBL_PROFILES, notifications: 'supabaseAuthPrive_notifications' },
+            userProfile.hubisoccer_id
+        );
+    }
     applyRoleTier();
     return userProfile;
 }
@@ -873,9 +885,23 @@ async function confirmerGeneration() {
     hideLoader();
     closeModal('genererCalendrierModal');
     calendrierPropose = null;
+    // CHANTIER 14 — les equipes apprennent que le calendrier est sorti.
+    const equipesDuCalendrier = [];
+    lignes.forEach(function(l) {
+        if (l.team_a_id && equipesDuCalendrier.indexOf(l.team_a_id) === -1) equipesDuCalendrier.push(l.team_a_id);
+        if (l.team_b_id && equipesDuCalendrier.indexOf(l.team_b_id) === -1) equipesDuCalendrier.push(l.team_b_id);
+    });
+    const prevenu = await previenirLesEquipes(equipesDuCalendrier, {
+        type: 'tournoi_calendrier',
+        titre: 'Calendrier publié',
+        message: 'Le calendrier de ' + nomDuTournoi() + ' est disponible. Regarde quand tu joues.',
+        lien: GTNotify.lien('tournament-details.html', { id: currentTournamentId })
+    });
+
     showToast(inseres + ' rencontre(s) générées.' +
-              (avance && avance.ecrites ? ' ' + avance.ecrites + ' place(s) déjà remplie(s) par les exemptions.' : ''),
-              'success');
+              (avance && avance.ecrites ? ' ' + avance.ecrites + ' place(s) déjà remplie(s) par les exemptions.' : '') +
+              (prevenu ? ' ' + GTNotify.resumer(prevenu, 'le calendrier') : ''),
+              prevenu && prevenu.erreur ? 'warning' : 'success');
     await loadMatches();
 }
 
@@ -2471,7 +2497,30 @@ async function enregistrerEditionMatch(e) {
         return;
     }
 
-    showToast('Match modifié.', 'success');
+    // CHANTIER 14 — un match deplace sans prevenir, c'est une equipe
+    // qui se presente au mauvais moment ou au mauvais endroit.
+    let motDuDeplacement = null;
+    if (modif.match_date || modif.venue) {
+        const quand = modif.match_date
+            ? new Date(modif.match_date).toLocaleString('fr-FR',
+                { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })
+            : null;
+        const prevenu = await previenirLesEquipes(
+            [modif.team_a_id, modif.team_b_id].filter(Boolean).length
+                ? [modif.team_a_id, modif.team_b_id]
+                : [document.getElementById('editMatchTeamA').value, document.getElementById('editMatchTeamB').value],
+            {
+                type: 'tournoi_match_deplace',
+                titre: 'Match modifié',
+                message: 'Ton match de ' + nomDuTournoi() + ' a changé' +
+                         (quand ? ' — ' + quand : '') +
+                         (modif.venue ? ' à ' + modif.venue : '') + '.',
+                lien: GTNotify.lien('match-details.html', { id: id })
+            });
+        motDuDeplacement = prevenu ? GTNotify.resumer(prevenu, 'le changement') : null;
+    }
+
+    showToast('Match modifié.' + (motDuDeplacement ? ' ' + motDuDeplacement : ''), 'success');
     closeModal('editMatchModal');
     loadMatches();
 }
@@ -2508,10 +2557,77 @@ async function saveMatchResult(e) {
     // saisir 31 affiches a la main en recopiant les vainqueurs.
     const avance = await fairePropagerLeTableau({ silencieux: true });
 
+    // CHANTIER 14 — les deux equipes apprennent le resultat.
+    const laRencontre = (await supabaseClient.from(TBL_MATCHES)
+        .select('team_a_id, team_b_id, round').eq('id', matchId).maybeSingle()).data;
+
+    let motDuResultat = null;
+    if (laRencontre) {
+        const prevenu = await previenirLesEquipes([laRencontre.team_a_id, laRencontre.team_b_id], {
+            type: 'tournoi_resultat',
+            titre: 'Résultat enregistré',
+            message: (laRencontre.round ? laRencontre.round + ' — ' : '') +
+                     'score final ' + scoreA + ' - ' + scoreB + ' (' + nomDuTournoi() + ').',
+            lien: GTNotify.lien('match-details.html', { id: matchId })
+        });
+        motDuResultat = prevenu ? GTNotify.resumer(prevenu, 'le résultat') : null;
+    }
+
     closeModal('recordResultModal');
     showToast('Résultat enregistré.' +
-              (avance && avance.message ? ' ' + avance.message : ''), 'success');
+              (avance && avance.message ? ' ' + avance.message : '') +
+              (motDuResultat ? ' ' + motDuResultat : ''), 'success');
     loadMatches();
+}
+
+// ═══════════════════════════════════════════════════════════
+// 17a. PRÉVENIR LES GENS (chantier 14)
+// -----------------------------------------------------------
+// Un systeme de notifications existait deja sur la plateforme —
+// table supabaseAuthPrive_notifications, page
+// shared/community/notifications.html, abonnement Realtime — et
+// vingt-six fichiers s'en servaient. Le gestionnaire de tournoi
+// etait le SEUL module a n'envoyer jamais rien.
+//
+// Une equipe inscrite ne savait pas qu'elle jouait demain. Une
+// equipe qualifiee au tour suivant ne l'apprenait que si
+// quelqu'un l'appelait.
+//
+// Ces fonctions ne creent rien : elles branchent le tournoi sur
+// ce qui existe. Un echec d'envoi n'empeche JAMAIS l'action
+// (le match reste enregistre), mais il se voit — on ne repete
+// pas l'erreur du chantier 12.
+// ═══════════════════════════════════════════════════════════
+const TABLES_NOTIF = {
+    profiles: TBL_PROFILES,
+    teamPlayers: TBL_TEAM_PLAYERS,
+    teams: TBL_TEAMS,
+    notifications: 'supabaseAuthPrive_notifications'
+};
+
+async function previenirLesEquipes(idsEquipes, contenu) {
+    if (typeof GTNotify === 'undefined') return null;
+    const ids = (idsEquipes || []).filter(Boolean);
+    if (!ids.length) return null;
+
+    const effectif = await GTNotify.comptesDesEquipes(supabaseClient, TABLES_NOTIF, ids);
+    if (effectif.erreur) {
+        return { envoyees: 0, destinataires: 0, erreur: effectif.erreur, ignoree: false };
+    }
+
+    const envoi = await GTNotify.versLesComptes(
+        supabaseClient, TABLES_NOTIF, effectif.comptes,
+        Object.assign({ sauf: currentUser ? currentUser.id : null }, contenu)
+    );
+    // Les membres sans compte ne peuvent rien recevoir : on le dit,
+    // c'est a ca que sert WhatsApp.
+    envoi.sansCompte = (envoi.sansCompte || 0) + (effectif.sansCompte || 0);
+    return envoi;
+}
+
+// Le nom du tournoi, pour que le message dise de quoi il parle.
+function nomDuTournoi() {
+    return (currentTournament && currentTournament.name) ? currentTournament.name : 'le tournoi';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2531,7 +2647,15 @@ async function fairePropagerLeTableau(options) {
         if (!options.silencieux) showToast('Le module du tableau n\'est pas chargé (gt-tableau.js).', 'error');
         return null;
     }
-    if (!currentTournamentId) return null;
+    // Un bouton qui ne répond jamais est pire qu'un bouton absent :
+    // on clique dix fois en se demandant si la page est morte.
+    // Chaque sortie de cette fonction dit désormais quelque chose.
+    if (!currentTournamentId) {
+        if (!options.silencieux) {
+            showToast('Aucun tournoi n\'est ouvert. Choisis d\'abord un tournoi en haut de la page.', 'warning');
+        }
+        return null;
+    }
 
     const { data: rencontres, error } = await supabaseClient
         .from(TBL_MATCHES)
@@ -2547,9 +2671,44 @@ async function fairePropagerLeTableau(options) {
 
     const resultat = GTTableau.propager(rencontres || []);
 
-    // Un tournoi en championnat ou en poules n'a pas de tableau :
-    // le moteur rend une liste vide, on n'a rien a dire.
-    if (!resultat.affiches) return { ecrites: 0, message: null, resultat: resultat };
+    // Aucune affiche reconnue. Ce n'est pas forcément anormal — un
+    // championnat n'a pas de tableau — mais il faut le DIRE, sinon
+    // l'organisateur clique dans le vide sans comprendre.
+    //
+    // On distingue les trois causes, parce qu'elles n'appellent pas
+    // la même réponse.
+    if (!resultat.affiches) {
+        if (!options.silencieux) {
+            const total = (rencontres || []).length;
+            const avecPosition = (rencontres || []).filter(function(m) {
+                return m.bracket_position != null && m.bracket_position !== '';
+            }).length;
+            const reconnues = (rencontres || []).filter(function(m) {
+                return GTTableau.tailleDuTour(m) != null || GTTableau.estTroisiemePlace(m);
+            }).length;
+
+            let pourquoi;
+            if (!total) {
+                pourquoi = 'Ce tournoi n\'a aucune rencontre. Commence par « Générer le calendrier ».';
+            } else if (!avecPosition && !reconnues) {
+                pourquoi = 'Les ' + total + ' rencontres de ce tournoi ne font pas partie d\'un tableau ' +
+                           'à élimination directe — c\'est un championnat ou des poules. ' +
+                           'Ce bouton ne sert que pour une coupe.';
+            } else if (!avecPosition) {
+                pourquoi = total + ' rencontre(s) lues, dont ' + reconnues + ' portent un nom de tour de coupe, ' +
+                           'mais AUCUNE n\'a de position dans le tableau (bracket_position). ' +
+                           'Elles ont probablement été créées à la main, une par une. ' +
+                           'Régénère le calendrier en format « élimination directe » pour que ' +
+                           'le tableau sache qui affronte qui.';
+            } else {
+                pourquoi = total + ' rencontre(s) lues, ' + avecPosition + ' avec une position, ' +
+                           'mais aucun tour de coupe reconnu. Vérifie le nom des tours ' +
+                           '(Finale, Demi-finales, Quarts de finale…).';
+            }
+            showToast(pourquoi, 'warning');
+        }
+        return { ecrites: 0, message: null, resultat: resultat };
+    }
 
     let ecrites = 0;
     let echec = null;
@@ -2580,6 +2739,32 @@ async function fairePropagerLeTableau(options) {
         const equipes = await chargerEquipesDuTournoi();
         equipes.forEach(function(eq) { noms[eq.id] = eq.name; });
     }
+    // CHANTIER 14 — l'equipe qui monte est prevenue, avec le nom du
+    // tour qu'elle vient d'atteindre. C'est LE message qu'un
+    // capitaine attend.
+    if (ecrites) {
+        const parMatch = {};
+        (rencontres || []).forEach(function(m) { parMatch[m.id] = m; });
+        const qualifieesParTour = {};
+        resultat.ecritures.forEach(function(e) {
+            const m = parMatch[e.id];
+            if (!m) return;
+            const tour = m.round || 'le tour suivant';
+            const equipe = e.team_a_id || e.team_b_id;
+            if (!equipe) return;
+            if (!qualifieesParTour[tour]) qualifieesParTour[tour] = [];
+            if (qualifieesParTour[tour].indexOf(equipe) === -1) qualifieesParTour[tour].push(equipe);
+        });
+        for (const tour of Object.keys(qualifieesParTour)) {
+            await previenirLesEquipes(qualifieesParTour[tour], {
+                type: 'tournoi_qualification',
+                titre: 'Qualifiés !',
+                message: 'Vous êtes qualifiés pour : ' + tour + ' (' + nomDuTournoi() + ').',
+                lien: GTNotify.lien('tournament-details.html', { id: currentTournamentId })
+            });
+        }
+    }
+
     const message = GTTableau.resumer(resultat, noms);
     const aQuelqueChoseADire = !!(ecrites || resultat.champion || resultat.refus.length);
 

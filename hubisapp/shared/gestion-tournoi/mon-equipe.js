@@ -313,6 +313,18 @@ async function loadProfile() {
     userProfile = data;
     applyRoleTier();
     updateNavbarUI();
+
+    // CHANTIER 14 — la cloche cesse d'être un décor.
+    // Elle affichait « 0 » en dur sur les 26 pages du gestionnaire
+    // de tournoi, alors que la plateforme tient une vraie table de
+    // notifications que 26 autres fichiers alimentent déjà.
+    if (typeof GTNotify !== 'undefined' && userProfile && userProfile.hubisoccer_id) {
+        GTNotify.brancherLaCloche(
+            supabaseClient,
+            { profiles: TBL_PROFILES, notifications: 'supabaseAuthPrive_notifications' },
+            userProfile.hubisoccer_id
+        );
+    }
     hideLoader();
     return userProfile;
 }

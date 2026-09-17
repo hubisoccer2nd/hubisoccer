@@ -224,13 +224,56 @@ function updateNavbarUI() {
 // ═══════════════════════════════════════════════════════════
 // 12. CHARGEMENT DES DÉTAILS DU TOURNOI
 // ═══════════════════════════════════════════════════════════
+// Le type et le sport d'un tournoi, par des requêtes SÉPARÉES.
+// On range le résultat sous la clé du nom de table — exactement la
+// forme que le reste de la page lisait avec la jointure.
+async function attacherTypeEtSport(tournois) {
+    const idsType  = [];
+    const idsSport = [];
+    (tournois || []).forEach(function(t) {
+        if (t.type_id  && idsType.indexOf(t.type_id) === -1)   idsType.push(t.type_id);
+        if (t.sport_id && idsSport.indexOf(t.sport_id) === -1) idsSport.push(t.sport_id);
+    });
+
+    const parType  = {};
+    const parSport = {};
+    if (idsType.length) {
+        const r = await supabaseClient.from(TBL_TYPES).select('id, name, label').in('id', idsType);
+        if (!r.error) (r.data || []).forEach(function(x) { parType[x.id] = x; });
+    }
+    if (idsSport.length) {
+        const r = await supabaseClient.from(TBL_SPORTS).select('id, name').in('id', idsSport);
+        if (!r.error) (r.data || []).forEach(function(x) { parSport[x.id] = x; });
+    }
+
+    (tournois || []).forEach(function(t) {
+        t[TBL_TYPES]  = parType[t.type_id]   || null;
+        t[TBL_SPORTS] = parSport[t.sport_id] || null;
+        t.type  = t[TBL_TYPES];
+        t.sport = t[TBL_SPORTS];
+    });
+    return tournois;
+}
+
 async function loadTournamentDetails(tournamentId) {
     showLoader();
+    // CORRECTION — jointure imbriquée retirée.
+    //
+    // PostgREST n'accepte  table(colonnes)  que si une clé étrangère
+    // déclare la relation. Quand elle manque, il répond
+    //     « Could not find a relationship between … »
+    // et refuse TOUTE la requête. La page affichait alors
+    // « Tournoi introuvable » ou restait sur « Chargement… ».
+    //
+    // Deux requêtes séparées, fusionnées en JavaScript : ça marche
+    // que la clé étrangère existe ou non.
     const { data, error } = await supabaseClient
         .from(TBL_TOURNAMENTS)
-        .select('*, ' + TBL_TYPES + '(name, label), ' + TBL_SPORTS + '(name)')
+        .select('*')
         .eq('id', tournamentId)
         .single();
+
+    if (data) await attacherTypeEtSport([data]);
 
     hideLoader();
 
@@ -597,15 +640,30 @@ async function loadStandings(tournamentId) {
         .order('goals_for', { ascending: false });
 
     if (error) {
+        // Même correction : la jointure de repli dépendait elle aussi
+        // d'une clé étrangère déclarée.
         const repli = await supabaseClient
             .from(TBL_STANDINGS)
-            .select('id, played, wins, draws, losses, goals_for, goals_against, points, ' +
-                    'team:' + TBL_TEAMS + '!team_id(name)')
+            .select('id, team_id, played, wins, draws, losses, goals_for, goals_against, points')
             .eq('tournament_id', tournamentId)
             .order('points', { ascending: false })
             .order('goals_for', { ascending: false });
         data = repli.data;
         error = repli.error;
+
+        if (!error && data && data.length) {
+            const ids = data.map(function(l) { return l.team_id; }).filter(Boolean);
+            if (ids.length) {
+                const rEq = await supabaseClient.from(TBL_TEAMS).select('id, name').in('id', ids);
+                if (!rEq.error) {
+                    const nomParId = {};
+                    (rEq.data || []).forEach(function(e) { nomParId[e.id] = e.name; });
+                    data.forEach(function(l) {
+                        if (nomParId[l.team_id]) l.team = { name: nomParId[l.team_id] };
+                    });
+                }
+            }
+        }
     }
 
     if (error || !data || data.length === 0) {

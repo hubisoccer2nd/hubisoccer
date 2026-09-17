@@ -196,9 +196,19 @@ async function loadProfile() {
     // de tournoi, alors que la plateforme tient une vraie table de
     // notifications que 26 autres fichiers alimentent déjà.
     if (typeof GTNotify !== 'undefined' && userProfile && userProfile.hubisoccer_id) {
+        // On ne passe QUE la table des notifications.
+        //
+        // La première version passait aussi TBL_PROFILES — une
+        // constante qui n'existe pas dans acceuil.js ni dans
+        // tournament-details.js. loadProfile() levait alors un
+        // ReferenceError, la page ne finissait jamais de charger et
+        // restait bloquée sur « Chargement en cours… ».
+        //
+        // brancherLaCloche() ne lit que les notifications : cette
+        // dépendance n'avait aucune raison d'être.
         GTNotify.brancherLaCloche(
             supabaseClient,
-            { profiles: TBL_PROFILES, notifications: 'supabaseAuthPrive_notifications' },
+            { notifications: 'supabaseAuthPrive_notifications' },
             userProfile.hubisoccer_id
         );
     }

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Découvrir les tournois · HubISoccer</title>
+    <meta name="description" content="Trouvez un tournoi près de chez vous : par nom, par lieu, par sport. Sans compte.">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="decouvrir-tournois.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ===== DEBUT LOADER GLOBAL ===== -->
+<div id="globalLoader" class="global-loader" style="display:none;">
+    <div class="loader-inner">
+        <div class="spinner"></div>
+        <p class="loader-text">Chargement en cours…</p>
+    </div>
+</div>
+<!-- ===== FIN LOADER GLOBAL ===== -->
+
+<!-- ===== DEBUT EN-TETE PUBLIQUE ===== -->
+<header class="entete-publique">
+    <div class="entete-gauche">
+        <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-entete"
+             onclick="window.location.href='../../../index.html'">
+        <span class="entete-titre"><i class="fas fa-search"></i> Découvrir</span>
+    </div>
+    <div class="entete-droite">
+        <select class="lang-picker" id="langSelect" aria-label="Langue">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="yo">🇳🇬 Yoruba</option>
+            <option value="fon">🇧🇯 Fon</option>
+            <option value="mina">🇹🇬 Mina</option>
+            <option value="lin">🇨🇬 Lingala</option>
+            <option value="wol">🇸🇳 Wolof</option>
+            <option value="diou">🇨🇮 Dioula</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+        </select>
+        <a class="btn-entete principal" id="lienConnexion" href="../../authprive/users/login.html">
+            <i class="fas fa-sign-in-alt"></i> Se connecter
+        </a>
+    </div>
+</header>
+<!-- ===== FIN EN-TETE PUBLIQUE ===== -->
+
+<!-- ===== DEBUT BANDEAU ===== -->
+<section class="hero-decouverte">
+    <h1>Trouvez votre tournoi</h1>
+    <p>Par nom, par lieu, par sport. Sans compte, sans code.</p>
+
+    <div class="barre-recherche">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="search" id="champRecherche" placeholder="Nom du tournoi, ville, sport…"
+               autocomplete="off" aria-label="Rechercher un tournoi">
+    </div>
+
+    <!-- L'entree par code reste la : quand on l'a sous les yeux,
+         c'est le chemin le plus court. -->
+    <details class="bloc-code">
+        <summary><i class="fas fa-key"></i> J’ai un code d’inscription</summary>
+        <div class="code-ligne">
+            <input type="text" id="champCode" placeholder="Code d’inscription"
+                   autocomplete="off" aria-label="Code d’inscription">
+            <button class="btn-principal" id="btnCode"><i class="fas fa-arrow-right"></i> Ouvrir</button>
+        </div>
+        <div class="retour-code" id="retourCode" style="display:none;"></div>
+    </details>
+</section>
+<!-- ===== FIN BANDEAU ===== -->
+
+<main class="contenu">
+
+    <!-- ===== DEBUT FILTRES ===== -->
+    <section class="barre-filtres">
+        <div class="puces-etat" role="group" aria-label="État du tournoi">
+            <button class="puce-etat active" data-etat="" aria-pressed="true">Tous</button>
+            <button class="puce-etat" data-etat="upcoming" aria-pressed="false"><i class="fas fa-hourglass-start"></i> À venir</button>
+            <button class="puce-etat" data-etat="ongoing" aria-pressed="false"><i class="fas fa-circle-play"></i> En cours</button>
+            <button class="puce-etat" data-etat="past" aria-pressed="false"><i class="fas fa-flag-checkered"></i> Terminés</button>
+        </div>
+
+        <div class="selecteurs">
+            <select id="filtreSport" aria-label="Sport">
+                <option value="">Tous les sports</option>
+            </select>
+            <select id="filtreTri" aria-label="Trier">
+                <option value="proche">Les plus proches</option>
+                <option value="recent">Les plus récents</option>
+                <option value="dotation">Dotation la plus forte</option>
+            </select>
+            <button class="btn-vider" id="btnVider"><i class="fas fa-rotate-left"></i> Réinitialiser</button>
+        </div>
+    </section>
+    <!-- ===== FIN FILTRES ===== -->
+
+    <div class="ligne-compteur">
+        <span id="compteurResultats"></span>
+    </div>
+
+    <!-- Quand la liste est tronquee, on le dit. On ne cache
+         jamais un resultat en silence. -->
+    <div class="avert-plafond" id="avertPlafond" style="display:none;">
+        <i class="fas fa-circle-info"></i>
+        <span>Seuls les 300 tournois les plus récents sont affichés. Affinez votre recherche pour aller plus loin.</span>
+    </div>
+
+    <!-- ===== DEBUT RESULTATS ===== -->
+    <section class="resultats" id="resultats">
+        <div class="loader-inline">Chargement…</div>
+    </section>
+    <!-- ===== FIN RESULTATS ===== -->
+
+</main>
+
+<!-- ===== DEBUT PIED ===== -->
+<footer class="pied-public">
+    <img src="../../img/logo-navbar.png" alt="HubISoccer" class="pied-logo">
+    <p>Vous organisez un tournoi ? Publiez-le sur <strong>HubISoccer</strong> :
+       calendrier, classement, tableau final et palmarès, tenus tout seuls.</p>
+    <div class="pied-actions">
+        <a class="btn-principal" href="create-tournament.html"><i class="fas fa-plus-circle"></i> Créer un tournoi</a>
+        <a class="btn-secondaire" href="../../authprive/users/signup.html"><i class="fas fa-user-plus"></i> Créer un compte</a>
+    </div>
+</footer>
+<!-- ===== FIN PIED ===== -->
+
+<script src="decouvrir-tournois.js"></script>
+</body>
+</html>

@@ -181,6 +181,120 @@ function handleError(error, context = '') {
     toast(context ? `${context} : ${message}` : message, 'error');
 }
 
+// ============================================================
+// CHANTIER 18 — LA CARTE DE TOURNOI
+// ------------------------------------------------------------
+// POURQUOI ELLE EST ICI
+//
+// Le gestionnaire de tournoi et le fil vivaient dans la meme
+// base sans jamais se parler. Un tournoi pouvait se jouer en
+// entier, couronner un champion, et le fil n'en savait rien.
+//
+// Depuis le chantier 18, l'organisateur publie ses moments dans
+// le fil. Ces publications portent un event_data enrichi :
+//
+//     { title, date, location,            <- ce que le fil sait deja
+//       hubisoccer: { type: 'tournoi', ... } }   <- le bloc en plus
+//
+// Cette fonction dessine le bloc en plus. Elle vit dans utils.js
+// parce que DIX pages de la communaute chargent ce fichier :
+// une seule definition, et la carte est la meme partout.
+//
+// CE QU'ELLE NE CASSE PAS
+//
+// Elle rend une chaine VIDE pour tout event_data ordinaire. Une
+// publication d'evenement classique garde donc exactement la
+// carte qu'elle avait avant, au pixel pres.
+// ============================================================
+
+function carteDeTournoiHtml(evenement) {
+    if (!evenement) return '';
+
+    let evt = evenement;
+    if (typeof evt === 'string') {
+        try { evt = JSON.parse(evt); } catch (e) { return ''; }
+    }
+
+    const h = evt && evt.hubisoccer;
+    if (!h || h.type !== 'tournoi') return '';
+
+    // Le bandeau du haut change selon le moment publie.
+    const GENRES = {
+        annonce:       { icone: 'fa-bullhorn',        mot: 'Tournoi ouvert' },
+        resultat:      { icone: 'fa-futbol',          mot: 'Résultat' },
+        qualification: { icone: 'fa-ticket',          mot: 'Qualification' },
+        palmares:      { icone: 'fa-trophy',          mot: 'Palmarès' }
+    };
+    const genre = GENRES[h.genre] || GENRES.annonce;
+
+    // Le score, quand il y en a un. C'est la partie qu'on lit en
+    // premier : elle passe en gros, avec la police chiffree.
+    let scoreHtml = '';
+    if (h.equipe_a || h.equipe_b) {
+        const sa = (h.score_a === null || h.score_a === undefined) ? '' : h.score_a;
+        const sb = (h.score_b === null || h.score_b === undefined) ? '' : h.score_b;
+        const score = (sa === '' && sb === '') ? 'vs' : (sa + ' - ' + sb);
+
+        let tirs = '';
+        if (h.tirs_a !== null && h.tirs_a !== undefined) {
+            tirs = '<div class="ct-tirs">tirs au but ' + escapeHtml(String(h.tirs_a)) +
+                   ' - ' + escapeHtml(String(h.tirs_b === null || h.tirs_b === undefined ? 0 : h.tirs_b)) +
+                   '</div>';
+        }
+
+        scoreHtml =
+            '<div class="ct-score-ligne">' +
+              '<span class="ct-equipe">' + escapeHtml(h.equipe_a || 'Équipe A') + '</span>' +
+              '<span class="ct-score">' + escapeHtml(String(score)) + '</span>' +
+              '<span class="ct-equipe">' + escapeHtml(h.equipe_b || 'Équipe B') + '</span>' +
+            '</div>' + tirs;
+    }
+
+    // Un titre libre : « Demi-finales », « Vainqueur : … ».
+    const titreHtml = h.titre
+        ? '<div class="ct-titre">' + escapeHtml(h.titre) + '</div>' : '';
+    const detailHtml = h.detail
+        ? '<div class="ct-detail">' + escapeHtml(h.detail) + '</div>' : '';
+
+    // Les reperes : dates, lieu, sport.
+    const reperes = [];
+    if (h.debut) {
+        let quand = '';
+        try {
+            quand = new Date(h.debut).toLocaleDateString('fr-FR',
+                { day: '2-digit', month: 'short', year: 'numeric' });
+        } catch (e) { quand = ''; }
+        if (quand) reperes.push('<span><i class="fas fa-calendar-days"></i> ' + escapeHtml(quand) + '</span>');
+    }
+    if (h.lieu)  reperes.push('<span><i class="fas fa-location-dot"></i> ' + escapeHtml(h.lieu) + '</span>');
+    if (h.sport) reperes.push('<span><i class="fas fa-futbol"></i> ' + escapeHtml(h.sport) + '</span>');
+
+    const embleme = h.logo_url
+        ? '<img class="ct-logo" src="' + escapeAttr(h.logo_url) + '" alt="" loading="lazy">'
+        : '<div class="ct-logo-vide"><i class="fas fa-trophy"></i></div>';
+
+    // Le bouton. Sans lien, pas de bouton mort : on n'affiche
+    // rien plutot qu'un bouton qui ne mene nulle part.
+    const bouton = h.lien
+        ? '<a class="ct-bouton" href="' + escapeAttr(h.lien) + '" target="_blank" rel="noopener">' +
+          'Suivre le tournoi <i class="fas fa-arrow-right"></i></a>'
+        : '';
+
+    return '' +
+        '<div class="carte-tournoi-post">' +
+          '<div class="ct-bandeau"><i class="fas ' + genre.icone + '"></i> ' + genre.mot + '</div>' +
+          '<div class="ct-corps">' +
+            embleme +
+            '<div class="ct-texte">' +
+              '<div class="ct-nom">' + escapeHtml(h.nom || 'Tournoi') + '</div>' +
+              titreHtml + scoreHtml + detailHtml +
+              (reperes.length ? '<div class="ct-reperes">' + reperes.join('') + '</div>' : '') +
+            '</div>' +
+          '</div>' +
+          bouton +
+        '</div>';
+}
+
 // ----------------------------------------------
 // EXPOSITION GLOBALE
 // ----------------------------------------------
@@ -197,6 +311,7 @@ window.timeSince = timeSince;
 window.formatDate = formatDate;
 window.debounce = debounce;
 window.handleError = handleError;
+window.carteDeTournoiHtml = carteDeTournoiHtml;
 
 // Raccourci pour fermer les modales avec Échap
 document.addEventListener('keydown', (e) => {

@@ -124,6 +124,69 @@ function showToast(message, type, duration) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// CHANTIER 20 — PLUS AUCUN ÉCHEC MUET
+// -----------------------------------------------------------
+// Un échec qui ne sort pas de la console est un échec que
+// personne ne corrige. L'utilisateur voit une liste vide et
+// croit que c'est normal : « il n'y a pas encore d'équipes ».
+// Il ne sait pas que la requête a échoué.
+//
+// C'est cette faute-là qui a produit « la formation de départ
+// n'est plus là » et « tout est chamboulé » : la page échouait
+// et se taisait.
+//
+// signalerEchec() fait les deux choses à la fois : la trace
+// technique dans la console POUR MOI, et une phrase en français
+// À L'ÉCRAN pour celui qui est devant.
+//
+//   quoi     ce qui n'a pas pu être fait, en français
+//   erreur   l'objet renvoyé par Supabase (message, code)
+//   options  { zone: 'idElement', icone: 'fa-...', ton: 'error'|'warning' }
+//
+// Quand une zone est indiquée, le motif s'écrit DANS la zone —
+// là où l'utilisateur regarde — au lieu d'un message qui passe.
+// ═══════════════════════════════════════════════════════════
+function signalerEchec(quoi, erreur, options) {
+    options = options || {};
+    const motif = erreur
+        ? ((erreur.message || String(erreur)) + (erreur.code ? ' (' + erreur.code + ')' : ''))
+        : 'motif inconnu';
+
+    console.warn('[HubISoccer] ' + quoi + ' — ' + motif, erreur);
+
+    // Une colonne ou une table absente se répare toujours de la
+    // même façon : on le dit, plutôt que de laisser chercher.
+    const codeSchema = erreur && (erreur.code === '42703' || erreur.code === '42P01');
+    const quoiFaire = codeSchema
+        ? ' Une colonne ou une table manque dans la base : ouvre gt-diagnostic.html, ' +
+          'lance l\'analyse, puis exécute le SQL qu\'elle propose.'
+        : '';
+
+    if (options.zone) {
+        const el = document.getElementById(options.zone);
+        if (el) {
+            const p = document.createElement('div');
+            p.className = 'empty-state echec-lecture';
+            const i = document.createElement('i');
+            i.className = 'fas ' + (options.icone || 'fa-triangle-exclamation');
+            const texte = document.createElement('p');
+            // textContent : le message vient de la base, il ne
+            // doit jamais être interprété comme du HTML.
+            texte.textContent = quoi + ' — ' + motif + '.' + quoiFaire;
+            p.appendChild(i);
+            p.appendChild(texte);
+            el.innerHTML = '';
+            el.appendChild(p);
+            return;
+        }
+    }
+
+    if (typeof showToast === 'function') {
+        showToast(quoi + ' — ' + motif + '.' + quoiFaire, options.ton || 'error');
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
 // 7. UTILITAIRES
 // ═══════════════════════════════════════════════════════════
 function escapeHtml(str) {
@@ -333,9 +396,13 @@ async function loadTeamPlayers() {
         .eq('team_id', teamData.id);
 
     if (error) {
-        console.error('Erreur chargement effectif:', error.message);
-        document.getElementById('playersList').innerHTML =
-            '<p class="empty-hint">' + escapeHtml(mot('Erreur de chargement des {pluriel}.')) + '</p>';
+        signalerEchec('L\'effectif de cette équipe n\'a pas pu être chargé', error);
+        // CHANTIER 20 — « Erreur de chargement » sans le motif,
+        // c'est une impasse : on voit que ça a raté, on ne peut
+        // rien en faire. Le motif et la marche à suivre y sont
+        // désormais.
+        signalerEchec(mot('Les {pluriel} de cette équipe n\'ont pas pu être chargés'), error,
+                      { zone: 'playersList', icone: 'fa-users-slash' });
         return;
     }
 
@@ -401,7 +468,7 @@ async function searchPlayers(query) {
         .ilike('full_name', '%' + query + '%')
         .limit(10);
 
-    if (error) { console.error('Erreur recherche:', error.message); return; }
+    if (error) { signalerEchec('La recherche a échoué', error, { ton: 'warning' }); return; }
 
     const resultsDiv = document.getElementById('playerSearchResults');
     resultsDiv.innerHTML = '';
@@ -697,7 +764,8 @@ async function loadTournamentsForStats() {
         .select('id, name')
         .order('start_date', { ascending: false });
 
-    if (error) { console.error('Erreur chargement tournois pour stats:', error.message); return; }
+    if (error) { signalerEchec('Les tournois de cette équipe n\'ont pas pu être lus — ' +
+                                 'les statistiques resteront vides', error, { ton: 'warning' }); return; }
 
     const select = document.getElementById('tournamentStatsSelect');
     select.innerHTML = '<option value="">Sélectionnez un tournoi</option>';
@@ -758,8 +826,8 @@ async function loadTeamMatches() {
 
     const matchesDiv = document.getElementById('teamMatchesList');
     if (error) {
-        matchesDiv.innerHTML = '<p class="empty-hint">Erreur de chargement des matchs.</p>';
-        console.error(error.message);
+        signalerEchec('Les rencontres de cette équipe n\'ont pas pu être chargées', error,
+                      { zone: 'teamMatchesList', icone: 'fa-calendar-xmark' });
         return;
     }
     if (!data || data.length === 0) {

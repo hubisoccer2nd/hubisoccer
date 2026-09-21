@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Détails de l'équipe · HubISoccer</title>
+    <title>Inviter des participants · HubISoccer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="team-details.css">
+    <link rel="stylesheet" href="invite-participants.css">
     <link rel="stylesheet" href="gt-picker.css">
-    <link rel="stylesheet" href="gt-terrain.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -27,7 +26,7 @@
     <div class="nav-left">
         <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
         <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
-        <span class="dashboard-title"><i class="fas fa-users-cog"></i> Détails d'une équipe</span>
+        <span class="dashboard-title"><i class="fas fa-user-plus"></i> Inviter des participants</span>
     </div>
     <div class="nav-right">
         <select class="lang-picker" id="langSelect">
@@ -93,9 +92,9 @@
         <a href="my-registrations.html"><i class="fas fa-calendar-check"></i><span>Mes inscriptions</span></a>
         <a href="public-register.html"><i class="fas fa-edit"></i><span>S'inscrire à un tournoi</span></a>
         <a href="decouvrir-tournois.html"><i class="fas fa-search"></i><span>Découvrir des tournois</span></a>
-        <a href="invite-participants.html"><i class="fas fa-user-plus"></i><span>Inviter des participants</span></a>
+        <a href="invite-participants.html" class="active"><i class="fas fa-user-plus"></i><span>Inviter des participants</span></a>
         <a href="tournament-details.html"><i class="fas fa-info-circle"></i><span>Détails d'un tournoi</span></a>
-        <a href="team-details.html" class="active"><i class="fas fa-users-cog"></i><span>Détails d'une équipe</span></a>
+        <a href="team-details.html"><i class="fas fa-users-cog"></i><span>Détails d'une équipe</span></a>
         <a href="match-details.html"><i class="fas fa-futbol"></i><span>Détails d'un match</span></a>
         <a href="match-report.html"><i class="fas fa-file-signature"></i><span>Rapport de match</span></a>
         <a href="match-report-export.html"><i class="fas fa-file-export"></i><span>Export rapport de match</span></a>
@@ -131,88 +130,62 @@
 
 <!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
 <main class="dashboard-main">
-    <div class="team-detail-container">
+    <div class="invite-container">
 
         <div id="gtPicker" style="display:none;"></div>
 
         <button class="btn-back" id="backBtn"><i class="fas fa-arrow-left"></i> Retour</button>
+        <h1 class="page-title"><i class="fas fa-user-plus"></i> Inviter des participants</h1>
 
-        <div class="team-hero glass-card">
-            <div class="team-logo" id="teamLogo"><i class="fas fa-users"></i></div>
-            <div class="team-hero-info">
-                <h1 id="teamName">Chargement…</h1>
-                <div class="team-meta-row">
-                    <span><i class="fas fa-tag"></i> <span id="teamCategory">—</span></span>
-                    <span><i class="fas fa-futbol"></i> <span id="teamSport">—</span></span>
-                    <span><i class="fas fa-user"></i> <span id="teamCreator">—</span></span>
-                    <span><i class="fas fa-calendar-alt"></i> <span id="teamCreated">—</span></span>
-                </div>
+        <div id="noTournamentWarning" class="glass-card warning-banner" style="display:none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <strong>Aucun tournoi sélectionné.</strong>
+                <p>Ouvrez cette page depuis "Gérer un tournoi" (onglet Équipes) pour inviter des participants à un tournoi précis.</p>
             </div>
+        </div>
+
+        <div class="glass-card tournament-info">
+            <h2 id="tournamentName">Chargement…</h2>
+            <p id="tournamentDetails">—</p>
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" data-tab="players"><i class="fas fa-users"></i> Effectif</button>
-            <button class="tab-btn" data-tab="composition"><i class="fas fa-th-large"></i> Composition</button>
-            <button class="tab-btn" data-tab="stats"><i class="fas fa-chart-line"></i> Statistiques</button>
-            <button class="tab-btn" data-tab="matches"><i class="fas fa-calendar-week"></i> Matchs</button>
+            <button class="tab-btn active" data-tab="teams"><i class="fas fa-shield-alt"></i> Équipes</button>
+            <button class="tab-btn" data-tab="players" data-lex-html="&lt;i class=&quot;fas fa-user&quot;&gt;&lt;/i&gt; {Pluriel}"><i class="fas fa-user"></i> Sportifs</button>
+            <button class="tab-btn" data-tab="invitations"><i class="fas fa-paper-plane"></i> Invitations envoyées</button>
         </div>
 
-        <!-- Onglet Effectif -->
-        <div id="playersTab" class="tab-content active">
+        <!-- Onglet Équipes -->
+        <div id="teamsTab" class="tab-content active">
             <div class="glass-card">
-                <div class="section-header">
-                    <h2 class="section-title"><i class="fas fa-users"></i> Effectif</h2>
-                    <button id="addPlayerBtn" class="btn-primary" style="display:none;" data-lex-html="&lt;i class=&quot;fas fa-plus&quot;&gt;&lt;/i&gt; Ajouter un {sportif}"><i class="fas fa-plus"></i> Ajouter un sportif</button>
+                <div class="search-section">
+                    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="teamSearch" placeholder="Rechercher une équipe…"></div>
+                    <button id="createTeamBtn" class="btn-secondary"><i class="fas fa-plus"></i> Créer une équipe</button>
                 </div>
-                <div id="playersList" class="players-list">
+                <div id="teamsList" class="items-list">
                     <div class="loader-inline"><i class="fas fa-spinner fa-pulse"></i> Chargement…</div>
                 </div>
             </div>
         </div>
 
-        <!-- Onglet Composition (chantier 06) -->
-        <div id="compositionTab" class="tab-content">
+        <!-- Onglet des pratiquants (libelle selon la discipline) -->
+        <div id="playersTab" class="tab-content">
             <div class="glass-card">
-                <h2 class="section-title"><i class="fas fa-th-large"></i> Composition</h2>
-                <p class="section-hint" id="compoIntro">La composition par défaut de l'équipe. Elle sert de point de départ à chaque rencontre ; la feuille d'un match se prépare depuis « Mon équipe ».</p>
-                <p id="compoEtat" class="gt-compo-etat"></p>
-                <div class="gt-terrain-cadre">
-                    <span class="gt-cote gt-cote-longueur" id="coteLongueur"></span>
-                    <span class="gt-cote gt-cote-largeur" id="coteLargeur"></span>
-                    <div class="gt-terrain" id="terrain" data-sport="football" data-format="11">
-                        <div class="gt-terrain-places" id="terrainPlaces"></div>
-                    </div>
+                <p class="tab-hint" data-lex="Recherchez des {pluriel} de la plateforme à inviter — ceux déjà candidats à ce tournoi n'apparaissent pas ici.">Recherchez des sportifs de la plateforme à inviter — ceux déjà candidats à ce tournoi n'apparaissent pas ici.</p>
+                <div class="search-section">
+                    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="playerSearch" placeholder="Nom ou ID HubIS du sportif…" data-lex-placeholder="Nom ou ID HubIS du {sportif}…"></div>
                 </div>
-                <p class="gt-terrain-rappel" id="terrainRappel"></p>
-                <div class="gt-banc">
-                    <div class="gt-banc-titre">
-                        <span><i class="fas fa-chair"></i> Reste de l'effectif</span>
-                        <span class="compte" id="bancCompte"></span>
-                    </div>
-                    <div class="gt-banc-liste" id="bancListe"></div>
+                <div id="playersList" class="items-list">
+                    <p class="empty-hint">Commencez à taper un nom pour rechercher.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Onglet Statistiques -->
-        <div id="statsTab" class="tab-content">
+        <!-- Onglet Invitations -->
+        <div id="invitationsTab" class="tab-content">
             <div class="glass-card">
-                <h2 class="section-title"><i class="fas fa-chart-line"></i> Statistiques du tournoi</h2>
-                <div class="tournament-selector">
-                    <label>Sélectionner un tournoi</label>
-                    <select id="tournamentStatsSelect"></select>
-                </div>
-                <div id="teamStats" class="team-stats">
-                    <div class="loader-inline"><i class="fas fa-spinner fa-pulse"></i> Chargement…</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Onglet Matchs -->
-        <div id="matchesTab" class="tab-content">
-            <div class="glass-card">
-                <h2 class="section-title"><i class="fas fa-calendar-week"></i> Matchs disputés</h2>
-                <div id="teamMatchesList" class="matches-list">
+                <div id="invitationsList" class="invitations-list">
                     <div class="loader-inline"><i class="fas fa-spinner fa-pulse"></i> Chargement…</div>
                 </div>
             </div>
@@ -222,39 +195,32 @@
 </main>
 <!-- ===== FIN CONTENU PRINCIPAL ===== -->
 
-<!-- ===== MODALE AJOUTER UN SPORTIF ===== -->
-<div id="addPlayerModal" class="modal">
+<!-- ===== MODALE CRÉER UNE ÉQUIPE ===== -->
+<div id="createTeamModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h2 data-lex-html="&lt;i class=&quot;fas fa-plus&quot;&gt;&lt;/i&gt; Ajouter un {sportif}"><i class="fas fa-plus"></i> Ajouter un sportif</h2>
-            <span class="close-modal">&times;</span>
-        </div>
+        <div class="modal-header"><h2><i class="fas fa-plus"></i> Créer une nouvelle équipe</h2><span class="close-modal" id="closeTeamModal">&times;</span></div>
         <div class="modal-body">
-            <form id="addPlayerForm">
-                <div class="form-group">
-                    <label data-lex="Rechercher un {sportif}">Rechercher un sportif</label>
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="playerSearch" placeholder="Nom du sportif…" data-lex-placeholder="Nom du {sportif}…" autocomplete="off">
+            <form id="createTeamForm">
+                <div class="form-group"><label>Nom de l'équipe *</label><input type="text" id="teamName" required></div>
+                <div class="form-group"><label>Catégorie d'âge (optionnel)</label><input type="text" id="teamAgeCategory" placeholder="Ex : U17, Senior"></div>
+                <div class="form-group"><label>Logo de l'équipe</label>
+                    <div class="file-drop-area" id="teamLogoDropArea">
+                        <i class="fas fa-camera"></i>
+                        <span>Cliquez pour choisir une photo</span>
+                        <input type="file" id="teamLogoFile" accept="image/*" style="display:none;">
                     </div>
-                </div>
-                <div id="playerSearchResults" class="player-search-results"></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Numéro de maillot</label><input type="number" id="playerJersey" placeholder="Ex : 10"></div>
-                    <div class="form-group"><label>Poste</label><input type="text" id="playerPosition" placeholder="Ex : Attaquant"></div>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" id="playerIsCaptain">
-                    <label>Capitaine</label>
+                    <div id="teamLogoPreview" class="logo-preview"></div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel">Annuler</button>
-                    <button type="submit" class="btn-confirm"><i class="fas fa-check"></i> Ajouter</button>
+                    <button type="button" class="btn-cancel" id="cancelTeamBtn">Annuler</button>
+                    <button type="submit" class="btn-confirm"><i class="fas fa-check"></i> Créer</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<div id="toastContainer" class="toast-container"></div>
 
 <!-- ===== DEBUT FOOTER ===== -->
 <footer class="dashboard-footer">
@@ -277,11 +243,8 @@
 </footer>
 <!-- ===== FIN FOOTER ===== -->
 
-<div id="toastContainer" class="toast-container"></div>
-
 <script src="gt-lexique.js"></script>
 <script src="gt-picker.js"></script>
-<script src="gt-terrain.js"></script>
-<script src="team-details.js"></script>
+<script src="invite-participants.js"></script>
 </body>
 </html>

@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Détails de l'équipe · HubISoccer</title>
+    <title>Paiement · HubISoccer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="team-details.css">
+    <link rel="stylesheet" href="payment.css">
     <link rel="stylesheet" href="gt-picker.css">
-    <link rel="stylesheet" href="gt-terrain.css">
+    <link rel="stylesheet" href="gt-paiement.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -27,7 +27,7 @@
     <div class="nav-left">
         <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
         <img src="../../img/logo-navbar.png" alt="HubISoccer" class="logo-nav" onclick="window.location.href='../../../index.html'">
-        <span class="dashboard-title"><i class="fas fa-users-cog"></i> Détails d'une équipe</span>
+        <span class="dashboard-title"><i class="fas fa-credit-card"></i> Paiement</span>
     </div>
     <div class="nav-right">
         <select class="lang-picker" id="langSelect">
@@ -95,7 +95,7 @@
         <a href="decouvrir-tournois.html"><i class="fas fa-search"></i><span>Découvrir des tournois</span></a>
         <a href="invite-participants.html"><i class="fas fa-user-plus"></i><span>Inviter des participants</span></a>
         <a href="tournament-details.html"><i class="fas fa-info-circle"></i><span>Détails d'un tournoi</span></a>
-        <a href="team-details.html" class="active"><i class="fas fa-users-cog"></i><span>Détails d'une équipe</span></a>
+        <a href="team-details.html"><i class="fas fa-users-cog"></i><span>Détails d'une équipe</span></a>
         <a href="match-details.html"><i class="fas fa-futbol"></i><span>Détails d'un match</span></a>
         <a href="match-report.html"><i class="fas fa-file-signature"></i><span>Rapport de match</span></a>
         <a href="match-report-export.html"><i class="fas fa-file-export"></i><span>Export rapport de match</span></a>
@@ -109,7 +109,7 @@
         <a href="demande-carte.html"><i class="fas fa-id-card"></i><span>Ma carte de tournoi</span></a>
         <a href="carte-de-tournoi-choix.html"><i class="fas fa-th"></i><span>Choix de la carte</span></a>
         <a href="mon-equipe.html"><i class="fas fa-people-carry"></i><span>Mon équipe</span></a>
-        <a href="payment.html"><i class="fas fa-credit-card"></i><span>Paiement</span></a>
+        <a href="payment.html" class="active"><i class="fas fa-credit-card"></i><span>Paiement</span></a>
         <a href="help-tournament.html"><i class="fas fa-question-circle"></i><span>Aide</span></a>
 
         <div class="nav-divider" data-tier="gestionnaire"></div>
@@ -131,130 +131,84 @@
 
 <!-- ===== DEBUT CONTENU PRINCIPAL ===== -->
 <main class="dashboard-main">
-    <div class="team-detail-container">
+    <div class="payment-container">
 
         <div id="gtPicker" style="display:none;"></div>
 
         <button class="btn-back" id="backBtn"><i class="fas fa-arrow-left"></i> Retour</button>
+        <h1 class="page-title"><i class="fas fa-credit-card"></i> Paiement de la participation</h1>
 
-        <div class="team-hero glass-card">
-            <div class="team-logo" id="teamLogo"><i class="fas fa-users"></i></div>
-            <div class="team-hero-info">
-                <h1 id="teamName">Chargement…</h1>
-                <div class="team-meta-row">
-                    <span><i class="fas fa-tag"></i> <span id="teamCategory">—</span></span>
-                    <span><i class="fas fa-futbol"></i> <span id="teamSport">—</span></span>
-                    <span><i class="fas fa-user"></i> <span id="teamCreator">—</span></span>
-                    <span><i class="fas fa-calendar-alt"></i> <span id="teamCreated">—</span></span>
+        <!-- Contexte du tournoi -->
+        <div class="glass-card tournament-context">
+            <div class="context-row">
+                <div class="context-logo" id="contextLogo"><i class="fas fa-trophy"></i></div>
+                <div class="context-info">
+                    <div class="context-name" id="contextTournamentName">Chargement…</div>
+                    <div class="context-sub" id="contextTournamentSub">—</div>
                 </div>
+            </div>
+            <div class="context-amount">
+                <span class="amount-label">Montant à payer</span>
+                <span class="amount-value tabular" id="contextAmount">—</span>
             </div>
         </div>
 
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="players"><i class="fas fa-users"></i> Effectif</button>
-            <button class="tab-btn" data-tab="composition"><i class="fas fa-th-large"></i> Composition</button>
-            <button class="tab-btn" data-tab="stats"><i class="fas fa-chart-line"></i> Statistiques</button>
-            <button class="tab-btn" data-tab="matches"><i class="fas fa-calendar-week"></i> Matchs</button>
+        <!-- ===== DEBUT MOYENS DE PAIEMENT (chantier 07) ===== -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-hand-holding-dollar"></i> Comment voulez-vous payer ?</h3>
+            <p class="method-hint" id="moyensAide">Ces moyens sont ceux que l'organisateur a activés pour ce tournoi.</p>
+            <p id="moyensEtat" class="gtp-etat-ligne"></p>
+            <div id="moyensListe"></div>
         </div>
+        <!-- ===== FIN MOYENS DE PAIEMENT ===== -->
 
-        <!-- Onglet Effectif -->
-        <div id="playersTab" class="tab-content active">
-            <div class="glass-card">
-                <div class="section-header">
-                    <h2 class="section-title"><i class="fas fa-users"></i> Effectif</h2>
-                    <button id="addPlayerBtn" class="btn-primary" style="display:none;" data-lex-html="&lt;i class=&quot;fas fa-plus&quot;&gt;&lt;/i&gt; Ajouter un {sportif}"><i class="fas fa-plus"></i> Ajouter un sportif</button>
-                </div>
-                <div id="playersList" class="players-list">
-                    <div class="loader-inline"><i class="fas fa-spinner fa-pulse"></i> Chargement…</div>
-                </div>
-            </div>
-        </div>
+        <!-- ===== DEBUT FORMULAIRE DE PAIEMENT ===== -->
+        <div class="glass-card" id="blocPaiement" style="display:none;">
+            <h3 class="section-title"><i class="fas fa-file-invoice-dollar"></i> <span id="titrePaiement">Régler</span></h3>
 
-        <!-- Onglet Composition (chantier 06) -->
-        <div id="compositionTab" class="tab-content">
-            <div class="glass-card">
-                <h2 class="section-title"><i class="fas fa-th-large"></i> Composition</h2>
-                <p class="section-hint" id="compoIntro">La composition par défaut de l'équipe. Elle sert de point de départ à chaque rencontre ; la feuille d'un match se prépare depuis « Mon équipe ».</p>
-                <p id="compoEtat" class="gt-compo-etat"></p>
-                <div class="gt-terrain-cadre">
-                    <span class="gt-cote gt-cote-longueur" id="coteLongueur"></span>
-                    <span class="gt-cote gt-cote-largeur" id="coteLargeur"></span>
-                    <div class="gt-terrain" id="terrain" data-sport="football" data-format="11">
-                        <div class="gt-terrain-places" id="terrainPlaces"></div>
+            <div id="coordonneesOrganisateur"></div>
+
+            <form id="formulairePaiement" autocomplete="off">
+                <div class="gtp-champs" id="champsPayeur"></div>
+
+                <div id="blocPreuve" style="display:none;">
+                    <p class="gtp-groupe-titre">Preuve de paiement</p>
+                    <div class="gtp-preuve" id="zonePreuve">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                        <div class="gtp-preuve-texte">Ajouter la preuve de votre paiement</div>
+                        <div class="gtp-preuve-aide">Capture d'écran, reçu ou photo — image ou PDF, 5 Mo maximum.</div>
+                        <input type="file" id="fichierPreuve" accept="image/*,application/pdf" style="display:none;">
                     </div>
+                    <div id="apercuPreuve"></div>
                 </div>
-                <p class="gt-terrain-rappel" id="terrainRappel"></p>
-                <div class="gt-banc">
-                    <div class="gt-banc-titre">
-                        <span><i class="fas fa-chair"></i> Reste de l'effectif</span>
-                        <span class="compte" id="bancCompte"></span>
-                    </div>
-                    <div class="gt-banc-liste" id="bancListe"></div>
-                </div>
-            </div>
+
+                <div id="erreursPaiement" class="gtp-erreurs"></div>
+
+                <button type="submit" class="btn-primary full-width" style="margin-top:18px;">
+                    <i class="fas fa-paper-plane"></i> <span id="libelleEnvoi">Envoyer la demande de paiement</span>
+                </button>
+            </form>
+        </div>
+        <!-- ===== FIN FORMULAIRE DE PAIEMENT ===== -->
+
+        <!-- Confirmation -->
+        <div id="confirmationBlock" class="glass-card confirmation-block" style="display:none;">
+            <div class="confirm-icon"><i class="fas fa-hourglass-half"></i></div>
+            <h2>Demande de paiement envoyée</h2>
+            <p>Votre paiement est en attente de validation. Vous pouvez suivre son statut ci-dessous, ou depuis votre espace Mes Revenus.</p>
         </div>
 
-        <!-- Onglet Statistiques -->
-        <div id="statsTab" class="tab-content">
-            <div class="glass-card">
-                <h2 class="section-title"><i class="fas fa-chart-line"></i> Statistiques du tournoi</h2>
-                <div class="tournament-selector">
-                    <label>Sélectionner un tournoi</label>
-                    <select id="tournamentStatsSelect"></select>
-                </div>
-                <div id="teamStats" class="team-stats">
-                    <div class="loader-inline"><i class="fas fa-spinner fa-pulse"></i> Chargement…</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Onglet Matchs -->
-        <div id="matchesTab" class="tab-content">
-            <div class="glass-card">
-                <h2 class="section-title"><i class="fas fa-calendar-week"></i> Matchs disputés</h2>
-                <div id="teamMatchesList" class="matches-list">
-                    <div class="loader-inline"><i class="fas fa-spinner fa-pulse"></i> Chargement…</div>
-                </div>
+        <!-- Mes demandes de paiement -->
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fas fa-history"></i> Mes demandes de paiement</h3>
+            <div id="paymentRequestsList" class="requests-list">
+                <div class="loader-inline"><i class="fas fa-spinner fa-pulse"></i> Chargement…</div>
             </div>
         </div>
 
     </div>
 </main>
 <!-- ===== FIN CONTENU PRINCIPAL ===== -->
-
-<!-- ===== MODALE AJOUTER UN SPORTIF ===== -->
-<div id="addPlayerModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 data-lex-html="&lt;i class=&quot;fas fa-plus&quot;&gt;&lt;/i&gt; Ajouter un {sportif}"><i class="fas fa-plus"></i> Ajouter un sportif</h2>
-            <span class="close-modal">&times;</span>
-        </div>
-        <div class="modal-body">
-            <form id="addPlayerForm">
-                <div class="form-group">
-                    <label data-lex="Rechercher un {sportif}">Rechercher un sportif</label>
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="playerSearch" placeholder="Nom du sportif…" data-lex-placeholder="Nom du {sportif}…" autocomplete="off">
-                    </div>
-                </div>
-                <div id="playerSearchResults" class="player-search-results"></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Numéro de maillot</label><input type="number" id="playerJersey" placeholder="Ex : 10"></div>
-                    <div class="form-group"><label>Poste</label><input type="text" id="playerPosition" placeholder="Ex : Attaquant"></div>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" id="playerIsCaptain">
-                    <label>Capitaine</label>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-cancel">Annuler</button>
-                    <button type="submit" class="btn-confirm"><i class="fas fa-check"></i> Ajouter</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <!-- ===== DEBUT FOOTER ===== -->
 <footer class="dashboard-footer">
@@ -279,9 +233,8 @@
 
 <div id="toastContainer" class="toast-container"></div>
 
-<script src="gt-lexique.js"></script>
 <script src="gt-picker.js"></script>
-<script src="gt-terrain.js"></script>
-<script src="team-details.js"></script>
+<script src="gt-paiement.js"></script>
+<script src="payment.js"></script>
 </body>
 </html>

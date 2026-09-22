@@ -1,0 +1,241 @@
+/* ============================================================
+   HubISoccer — hub-lecteur.css
+   Communauté — LOT C
+   L'habillage du lecteur vidéo
+   ------------------------------------------------------------
+   Feuille à part, chargée par les pages qui lisent des vidéos.
+   Elle ne redéfinit AUCUN :root : elle hérite de la charte de
+   la communauté (--primary, --gold, --radius…) et ne change
+   rien à l'existant.
+
+   Toutes les cibles tactiles font au moins 44 px. Ces commandes
+   sont utilisées au pouce, souvent debout, souvent dehors.
+   ============================================================ */
+
+.hl-cadre {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border-radius: var(--radius, 14px);
+    overflow: hidden;
+    outline: none;
+    line-height: 0;                 /* pas de blanc sous la vidéo */
+}
+.hl-cadre:focus-visible { box-shadow: 0 0 0 3px var(--primary, #551B8C); }
+
+.hl-cadre video {
+    display: block;
+    width: 100%;
+    max-height: 70vh;
+    background: #000;
+}
+.hl-cadre.hl-fil video { max-height: 460px; object-fit: contain; }
+
+/* ── Le grand bouton du départ ── */
+.hl-voile {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.28);
+    transition: opacity .2s;
+}
+.hl-gros-bouton {
+    width: 64px; height: 64px;
+    border: none; border-radius: 50%;
+    background: rgba(255,255,255,.92);
+    color: var(--primary, #551B8C);
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    padding-left: 5px;              /* le triangle paraît centré */
+    box-shadow: 0 4px 20px rgba(0,0,0,.35);
+    transition: transform .15s, background .15s;
+}
+.hl-gros-bouton:hover { transform: scale(1.06); background: #fff; }
+
+/* ── L'attente ── */
+.hl-attente {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px;
+    background: rgba(0,0,0,.45);
+    color: #fff;
+    line-height: 1.4;
+}
+.hl-rond {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(255,255,255,.25);
+    border-top-color: var(--gold, #FFCC00);
+    border-radius: 50%;
+    animation: hlTourne .8s linear infinite;
+}
+@keyframes hlTourne { to { transform: rotate(360deg); } }
+.hl-attente-mot { font-size: .82rem; font-weight: 600; }
+
+/* ── Le message : il EXPLIQUE, il ne fige pas ── */
+.hl-message {
+    position: absolute; left: 12px; right: 12px; bottom: 86px;
+    padding: 11px 14px;
+    background: rgba(0,0,0,.82);
+    color: #fff;
+    border-left: 3px solid var(--gold, #FFCC00);
+    border-radius: var(--radius-sm, 10px);
+    font-size: .8rem;
+    line-height: 1.5;
+    z-index: 3;
+}
+.hl-message i { color: var(--gold, #FFCC00); margin-right: 7px; }
+
+/* ── Les commandes ── */
+.hl-commandes {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 26px 12px 10px;
+    background: linear-gradient(to top, rgba(0,0,0,.88) 0%, rgba(0,0,0,.55) 55%, transparent 100%);
+    opacity: 0;
+    transition: opacity .22s;
+    line-height: normal;
+    z-index: 2;
+}
+.hl-cadre:hover .hl-commandes,
+.hl-cadre:focus-within .hl-commandes,
+.hl-cadre:not(.hl-en-lecture) .hl-commandes { opacity: 1; }
+
+/* Sur un écran tactile, il n'y a pas de survol : les commandes
+   restent visibles, sinon on ne les trouve jamais. */
+@media (hover: none) {
+    .hl-commandes { opacity: 1; }
+}
+
+/* ── La ligne du temps ── */
+.hl-ligne { position: relative; height: 22px; display: flex; align-items: center; }
+.hl-rail {
+    position: absolute; left: 0; right: 0; height: 4px;
+    background: rgba(255,255,255,.28);
+    border-radius: 999px;
+    overflow: visible;
+}
+.hl-charge {
+    position: absolute; left: 0; top: 0; height: 100%; width: 0;
+    background: rgba(255,255,255,.4);
+    border-radius: 999px;
+}
+.hl-joue {
+    position: absolute; left: 0; top: 0; height: 100%; width: 0;
+    background: var(--gold, #FFCC00);
+    border-radius: 999px;
+}
+.hl-pouce {
+    position: absolute; top: 50%; left: 0;
+    width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px;
+    background: var(--gold, #FFCC00);
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.5);
+}
+/* Le vrai curseur est transparent, posé par-dessus : il porte
+   le clavier et l'accessibilité, le dessin est en dessous. */
+.hl-curseur {
+    position: relative; width: 100%; height: 22px;
+    margin: 0; padding: 0;
+    -webkit-appearance: none; appearance: none;
+    background: transparent; cursor: pointer;
+}
+.hl-curseur::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px;
+    background: transparent; cursor: pointer;
+}
+.hl-curseur::-moz-range-thumb {
+    width: 22px; height: 22px; background: transparent; border: none; cursor: pointer;
+}
+.hl-curseur:focus-visible { outline: 2px solid var(--gold, #FFCC00); outline-offset: 2px; }
+
+/* ── Les boutons ── */
+.hl-boutons {
+    display: flex; align-items: center; gap: 4px;
+    margin-top: 2px;
+    flex-wrap: nowrap;
+}
+.hl-btn {
+    min-width: 44px; height: 44px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; background: transparent;
+    color: #fff; font-size: .95rem; font-family: inherit;
+    cursor: pointer; border-radius: 8px;
+    flex-shrink: 0;
+    transition: background .15s;
+}
+.hl-btn:hover { background: rgba(255,255,255,.16); }
+.hl-btn.hl-secondaire { font-size: .82rem; opacity: .85; }
+.hl-qualite, .hl-vitesse { font-size: .74rem; font-weight: 700; letter-spacing: .04em; }
+
+.hl-temps {
+    color: #fff; font-size: .76rem; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    margin: 0 6px 0 2px; white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.hl-volume {
+    width: 78px; height: 4px; margin: 0 4px;
+    -webkit-appearance: none; appearance: none;
+    background: rgba(255,255,255,.3); border-radius: 999px; cursor: pointer;
+    flex-shrink: 0;
+}
+.hl-volume::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 13px; height: 13px;
+    background: #fff; border-radius: 50%; cursor: pointer;
+}
+.hl-volume::-moz-range-thumb {
+    width: 13px; height: 13px; background: #fff; border: none; border-radius: 50%; cursor: pointer;
+}
+
+/* ── Le bond de 10 secondes ── */
+.hl-bond {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    padding: 10px 16px;
+    background: rgba(0,0,0,.7); color: #fff;
+    border-radius: 999px; font-size: .88rem; font-weight: 700;
+    animation: hlBond .6s ease-out forwards;
+    pointer-events: none; z-index: 4;
+}
+.hl-bond-g { left: 12%; }
+.hl-bond-d { right: 12%; }
+@keyframes hlBond {
+    0%   { opacity: 0; transform: translateY(-50%) scale(.85); }
+    30%  { opacity: 1; transform: translateY(-50%) scale(1); }
+    100% { opacity: 0; transform: translateY(-50%) scale(1); }
+}
+
+/* ── La reprise ── */
+.hl-reprise {
+    position: absolute; left: 12px; bottom: 86px;
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+    max-width: calc(100% - 24px);
+    padding: 11px 14px;
+    background: rgba(0,0,0,.86); color: #fff;
+    border-radius: var(--radius-sm, 10px);
+    font-size: .8rem;
+    z-index: 4;
+}
+.hl-reprise-oui, .hl-reprise-non {
+    min-height: 36px; padding: 7px 14px;
+    border: none; border-radius: 999px;
+    font-family: inherit; font-size: .78rem; font-weight: 700; cursor: pointer;
+}
+.hl-reprise-oui { background: var(--gold, #FFCC00); color: #16161F; }
+.hl-reprise-non { background: rgba(255,255,255,.18); color: #fff; }
+
+/* ── Téléphone ── */
+@media (max-width: 480px) {
+    .hl-volume { display: none; }        /* les boutons physiques suffisent */
+    .hl-vitesse { display: none; }
+    .hl-temps { font-size: .72rem; margin: 0 4px 0 0; }
+    .hl-btn { min-width: 40px; }
+    .hl-commandes { padding: 22px 8px 8px; }
+    .hl-gros-bouton { width: 56px; height: 56px; font-size: 1.3rem; }
+    .hl-message, .hl-reprise { bottom: 78px; font-size: .76rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hl-rond { animation-duration: 2s; }
+    .hl-bond { animation: none; opacity: 1; }
+}
